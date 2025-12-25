@@ -16,14 +16,14 @@ type TierFeature =
   | 'calendar' 
   | 'crm' 
   | 'body_map' 
-  | 'sms_reminders' 
+  | 'email_reminders' 
   | 'whatsapp_reminders' 
   | 'video_sessions';
 
 const featuresByTier: Record<string, TierFeature[]> = {
   trial: ['tcm_brain', 'calendar', 'crm', 'body_map'],
-  standard: ['tcm_brain', 'calendar', 'crm', 'body_map', 'sms_reminders', 'whatsapp_reminders'],
-  premium: ['tcm_brain', 'calendar', 'crm', 'body_map', 'sms_reminders', 'whatsapp_reminders', 'video_sessions'],
+  standard: ['tcm_brain', 'calendar', 'crm', 'body_map', 'email_reminders', 'whatsapp_reminders'],
+  premium: ['tcm_brain', 'calendar', 'crm', 'body_map', 'email_reminders', 'whatsapp_reminders', 'video_sessions'],
 };
 
 const TierContext = createContext<TierContextType | undefined>(undefined);

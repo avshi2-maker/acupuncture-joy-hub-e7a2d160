@@ -38,11 +38,14 @@ export default function Gate() {
 
   const buildPostLoginRedirect = () => {
     const params = new URLSearchParams(location.search);
-    const redirect = params.get('redirect') || '/dashboard';
+    const redirect = params.get('redirect');
     const question = params.get('question');
+    
+    // Check if therapist has completed profile
+    const hasProfile = localStorage.getItem('therapist_profile');
+    const defaultRedirect = hasProfile ? '/dashboard' : '/therapist-profile';
 
-    // Build a safe same-origin URL and preserve hash/query.
-    const url = new URL(redirect, window.location.origin);
+    const url = new URL(redirect || defaultRedirect, window.location.origin);
     if (question) url.searchParams.set('question', question);
 
     return `${url.pathname}${url.search}${url.hash}`;
