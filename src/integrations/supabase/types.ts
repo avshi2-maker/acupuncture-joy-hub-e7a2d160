@@ -130,6 +130,53 @@ export type Database = {
         }
         Relationships: []
       }
+      appointments: {
+        Row: {
+          created_at: string
+          end_time: string
+          id: string
+          notes: string | null
+          patient_id: string | null
+          start_time: string
+          status: string
+          therapist_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          id?: string
+          notes?: string | null
+          patient_id?: string | null
+          start_time: string
+          status?: string
+          therapist_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          id?: string
+          notes?: string | null
+          patient_id?: string | null
+          start_time?: string
+          status?: string
+          therapist_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conditions: {
         Row: {
           created_at: string

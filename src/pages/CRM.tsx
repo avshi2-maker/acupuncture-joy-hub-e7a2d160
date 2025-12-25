@@ -21,7 +21,8 @@ import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { VisitStatistics } from '@/components/crm/VisitStatistics';
-import { 
+import { AppointmentCalendar } from '@/components/crm/AppointmentCalendar';
+import {
   Users, 
   Plus, 
   Search, 
@@ -42,7 +43,8 @@ import {
   Filter,
   ChevronDown,
   Download,
-  BarChart3
+  BarChart3,
+  CalendarDays
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
@@ -103,6 +105,7 @@ export default function CRM() {
   const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [showStatistics, setShowStatistics] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
   const [filterGender, setFilterGender] = useState<string>('all');
   const [filterDateFrom, setFilterDateFrom] = useState('');
   const [filterDateTo, setFilterDateTo] = useState('');
@@ -671,12 +674,30 @@ export default function CRM() {
                 </DropdownMenuContent>
               </DropdownMenu>
               <Button 
+                variant={showCalendar ? "default" : "outline"} 
+                size="sm" 
+                className="gap-2"
+                onClick={() => {
+                  setShowCalendar(!showCalendar);
+                  if (!showCalendar) {
+                    setShowStatistics(false);
+                    setSelectedPatient(null);
+                  }
+                }}
+              >
+                <CalendarDays className="h-4 w-4" />
+                <span className="hidden sm:inline">יומן</span>
+              </Button>
+              <Button 
                 variant={showStatistics ? "default" : "outline"} 
                 size="sm" 
                 className="gap-2"
                 onClick={() => {
                   setShowStatistics(!showStatistics);
-                  if (!showStatistics) setSelectedPatient(null);
+                  if (!showStatistics) {
+                    setShowCalendar(false);
+                    setSelectedPatient(null);
+                  }
                 }}
               >
                 <BarChart3 className="h-4 w-4" />
@@ -690,10 +711,13 @@ export default function CRM() {
           </div>
         </header>
 
-        {/* Main Content */}
         <main className="flex-1 flex max-w-6xl mx-auto w-full">
-          {/* Statistics View */}
-          {showStatistics ? (
+          {/* Calendar View */}
+          {showCalendar ? (
+            <div className="flex-1 overflow-auto">
+              {user && <AppointmentCalendar userId={user.id} patients={patients} />}
+            </div>
+          ) : showStatistics ? (
             <div className="flex-1 overflow-auto">
               <VisitStatistics 
                 patients={patients} 
