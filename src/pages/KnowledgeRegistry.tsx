@@ -1,5 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -121,7 +122,8 @@ interface FileToImport {
 }
 
 export default function KnowledgeRegistry() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [generatingReport, setGeneratingReport] = useState(false);
   const [report, setReport] = useState<LegalReport | null>(null);
@@ -129,6 +131,13 @@ export default function KnowledgeRegistry() {
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
 
   const { data: documents, isLoading } = useQuery({
     queryKey: ['knowledge-documents'],
