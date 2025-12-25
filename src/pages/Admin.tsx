@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { Copy, Key, LogOut, Loader2, RefreshCw, Leaf, MessageSquare } from 'lucide-react';
+import { Copy, Key, LogOut, Loader2, RefreshCw, Leaf, MessageSquare, Database } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface TherapistRegistration {
@@ -238,6 +238,10 @@ export default function Admin() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => navigate('/admin/knowledge')}>
+                <Database className="h-4 w-4 ml-2" />
+                מאגר ידע
+              </Button>
               <Button variant="outline" onClick={() => navigate('/admin/feedback')}>
                 <MessageSquare className="h-4 w-4 ml-2" />
                 משוב
