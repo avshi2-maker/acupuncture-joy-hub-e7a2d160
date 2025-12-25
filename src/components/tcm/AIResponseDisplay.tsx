@@ -25,10 +25,8 @@ interface AIResponseDisplayProps {
 }
 
 function parseHerbs(text: string): string[] {
-  // Keep it lightweight: extract common herb names if present
   const pattern =
     /\b(Huang Qi|Ren Shen|Bai Zhu|Fu Ling|Dang Gui|Bai Shao|Chuan Xiong|Chai Hu|Sheng Jiang|Da Zao|Gan Cao|Ban Xia|Chen Pi|Zhi Shi|Hou Po|Ge Gen|Ju Hua|Bo He|Shi Gao|Zhi Mu|Huang Qin|Huang Lian|Huang Bai|Long Dan Cao|Jin Yin Hua|Lian Qiao|Pu Gong Ying|Sheng Di Huang|Xuan Shen|Mu Dan Pi|Di Gu Pi|Qing Hao|Da Huang|Mang Xiao|Huo Ma Ren|Rou Gui|Fu Zi|Gan Jiang|Wu Zhu Yu)\b/g;
-
   const matches = text.match(pattern) ?? [];
   return [...new Set(matches)].slice(0, 12);
 }
@@ -54,10 +52,7 @@ export function AIResponseDisplay({
   onViewBodyMap,
   loadingStartTime,
 }: AIResponseDisplayProps) {
-  const [activeSection, setActiveSection] = useState<
-    'points' | 'herbs' | 'nutrition' | 'lifestyle' | null
-  >(null);
-
+  const [activeSection, setActiveSection] = useState<'points' | 'herbs' | 'nutrition' | 'lifestyle' | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -72,7 +67,6 @@ export function AIResponseDisplay({
     if (herbs.length) topics.push(`Herbs: ${herbs.slice(0, 6).join(', ')}${herbs.length > 6 ? '…' : ''}`);
     if (nutrition.length) topics.push(`Nutrition: ${nutrition.slice(0, 2).join(' • ')}${nutrition.length > 2 ? '…' : ''}`);
     if (lifestyle.length) topics.push(`Lifestyle: ${lifestyle.slice(0, 2).join(' • ')}${lifestyle.length > 2 ? '…' : ''}`);
-
     if (!topics.length && content) topics.push('Report received. Use the asset buttons to open quick sections.');
     if (!content && isLoading) topics.push('AI is analyzing your query…');
     return topics.slice(0, 6);
@@ -87,7 +81,6 @@ export function AIResponseDisplay({
       if (timerRef.current) clearInterval(timerRef.current);
       setElapsedTime(0);
     }
-
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
@@ -96,7 +89,7 @@ export function AIResponseDisplay({
   useEffect(() => {
     if (!content || isLoading) return;
     setActiveSection((prev) =>
-      prev ?? (points.length ? 'points' : herbs.length ? 'herbs' : nutrition.length ? 'nutrition' : lifestyle.length ? 'lifestyle' : null),
+      prev ?? (points.length ? 'points' : herbs.length ? 'herbs' : nutrition.length ? 'nutrition' : lifestyle.length ? 'lifestyle' : null)
     );
   }, [content, isLoading, points.length, herbs.length, nutrition.length, lifestyle.length]);
 
@@ -218,7 +211,7 @@ export function AIResponseDisplay({
                       </Badge>
                     )}
                   </Button>
-                )))}
+                ))}
               </div>
 
               {activeSection === 'points' && points.length > 0 && (
