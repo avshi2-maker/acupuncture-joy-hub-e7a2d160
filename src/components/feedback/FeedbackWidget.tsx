@@ -1,4 +1,4 @@
-import { useState, forwardRef } from 'react';
+import { useState } from 'react';
 import { MessageSquarePlus, X, Send, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,7 +11,7 @@ interface FeedbackWidgetProps {
   pageName?: string;
 }
 
-export const FeedbackWidget = forwardRef<HTMLDivElement, FeedbackWidgetProps>(({ pageName }, ref) => {
+export const FeedbackWidget = ({ pageName }: FeedbackWidgetProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -57,7 +57,7 @@ export const FeedbackWidget = forwardRef<HTMLDivElement, FeedbackWidgetProps>(({
   };
 
   return (
-    <div ref={ref}>
+    <>
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(true)}
@@ -162,8 +162,6 @@ export const FeedbackWidget = forwardRef<HTMLDivElement, FeedbackWidgetProps>(({
           </form>
         </div>
       )}
-    </div>
+    </>
   );
-});
-
-FeedbackWidget.displayName = "FeedbackWidget";
+};

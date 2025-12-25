@@ -1,4 +1,4 @@
-import { useState, useEffect, forwardRef } from "react";
+import { useState, useEffect } from "react";
 import { X, Download, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -7,7 +7,7 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
-const InstallBanner = forwardRef<HTMLDivElement>((_, ref) => {
+const InstallBanner = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showBanner, setShowBanner] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
@@ -66,7 +66,7 @@ const InstallBanner = forwardRef<HTMLDivElement>((_, ref) => {
   if (!showBanner) return null;
 
   return (
-    <div ref={ref} className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-card border border-border rounded-xl shadow-lg p-4 z-50 animate-in slide-in-from-bottom-4">
+    <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-card border border-border rounded-xl shadow-lg p-4 z-50 animate-in slide-in-from-bottom-4">
       <button
         onClick={handleDismiss}
         className="absolute top-2 right-2 p-1 hover:bg-muted rounded-full transition-colors"
@@ -104,8 +104,6 @@ const InstallBanner = forwardRef<HTMLDivElement>((_, ref) => {
       )}
     </div>
   );
-});
-
-InstallBanner.displayName = "InstallBanner";
+};
 
 export default InstallBanner;
