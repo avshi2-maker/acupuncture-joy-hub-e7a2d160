@@ -1,4 +1,4 @@
-import { Leaf, Facebook, Instagram, Youtube, Linkedin } from "lucide-react";
+import { Leaf, Facebook, Instagram, Youtube, Linkedin, Mail } from "lucide-react";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -45,7 +45,7 @@ const Footer = () => {
               <div className="p-2 bg-jade rounded-full">
                 <Leaf className="w-6 h-6 text-primary-foreground" />
               </div>
-              <span className="font-display text-2xl font-semibold">Harmony TCM</span>
+              <span className="font-display text-xl font-semibold">Dr Roni Sapir - Complementary Medicine</span>
             </a>
             <p className="font-body text-primary-foreground/70 leading-relaxed mb-6 max-w-sm">
               Bringing 5,000 years of Traditional Chinese Medicine wisdom to 
@@ -118,11 +118,25 @@ const Footer = () => {
           </div>
         </div>
 
+        {/* Technical Support */}
+        <div className="border-t border-primary-foreground/10 pt-6 mb-6">
+          <div className="flex items-center justify-center gap-2 text-primary-foreground/70">
+            <Mail className="w-4 h-4" />
+            <span className="font-body text-sm">Technical Support:</span>
+            <a 
+              href="mailto:ronisapir61@gmail.com" 
+              className="font-body text-sm text-gold hover:text-gold/80 transition-colors"
+            >
+              ronisapir61@gmail.com
+            </a>
+          </div>
+        </div>
+
         {/* Divider */}
         <div className="border-t border-primary-foreground/10 pt-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="font-body text-sm text-primary-foreground/50">
-              © {currentYear} Harmony TCM Clinic. All rights reserved.
+              © {currentYear} Dr Roni Sapir - Complementary Medicine Clinic. All rights reserved.
             </p>
             <p className="font-body text-sm text-primary-foreground/50">
               Licensed Acupuncture & Traditional Chinese Medicine Practice
