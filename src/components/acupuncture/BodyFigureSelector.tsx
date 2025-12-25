@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, MapPin, Info, ZoomIn, ZoomOut } from 'lucide-react';
+import { ArrowLeft, MapPin, Info, ZoomIn, ZoomOut, CheckSquare, Square, Sparkles, X, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 // Import all body figure images
@@ -242,6 +242,7 @@ interface SelectedPoint {
 interface BodyFigureSelectorProps {
   highlightedPoints?: string[]; // Array of point codes to highlight (from AI response)
   onPointSelect?: (pointCode: string) => void;
+  onGenerateProtocol?: (points: string[]) => void; // Callback to generate treatment protocol
 }
 
 // Get point coordinate info by point code
@@ -264,12 +265,16 @@ export function parsePointReferences(text: string): string[] {
   return [...new Set(matches.filter(code => knownCodes.includes(code)))];
 }
 
-export function BodyFigureSelector({ highlightedPoints = [], onPointSelect }: BodyFigureSelectorProps) {
+export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGenerateProtocol }: BodyFigureSelectorProps) {
   const [selectedFigure, setSelectedFigure] = useState<string | null>(null);
   const [selectedPoint, setSelectedPoint] = useState<SelectedPoint | null>(null);
   const [zoom, setZoom] = useState(1);
   const [acuPoints, setAcuPoints] = useState<AcuPoint[]>([]);
   const [loading, setLoading] = useState(false);
+  
+  // Multi-select mode
+  const [multiSelectMode, setMultiSelectMode] = useState(false);
+  const [selectedPoints, setSelectedPoints] = useState<string[]>([]);
 
   // Auto-select figure if highlighted points are provided
   useEffect(() => {
@@ -321,14 +326,26 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect }: Bo
 
   // Handle point click
   const handlePointClick = (point: typeof pointCoordinates[0]) => {
-    const details = getPointDetails(point.point_code);
-    setSelectedPoint({
-      code: point.point_code,
-      x: point.x,
-      y: point.y,
-      details: details || null,
-    });
-    onPointSelect?.(point.point_code);
+    if (multiSelectMode) {
+      // Toggle point selection in multi-select mode
+      setSelectedPoints(prev => {
+        if (prev.includes(point.point_code)) {
+          return prev.filter(p => p !== point.point_code);
+        } else {
+          return [...prev, point.point_code];
+        }
+      });
+    } else {
+      // Single select mode - show details
+      const details = getPointDetails(point.point_code);
+      setSelectedPoint({
+        code: point.point_code,
+        x: point.x,
+        y: point.y,
+        details: details || null,
+      });
+      onPointSelect?.(point.point_code);
+    }
   };
 
   // Get figure display name
@@ -351,11 +368,39 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect }: Bo
     ).length;
   };
 
+  // Get count of selected points on a figure
+  const getFigureSelectedCount = (filename: string) => {
+    return pointCoordinates.filter(
+      p => p.image_name === filename && selectedPoints.includes(p.point_code)
+    ).length;
+  };
+
+  // Handle generate protocol
+  const handleGenerateProtocol = () => {
+    if (selectedPoints.length > 0 && onGenerateProtocol) {
+      onGenerateProtocol(selectedPoints);
+    }
+  };
+
+  // Clear all selected points
+  const clearSelectedPoints = () => {
+    setSelectedPoints([]);
+  };
+
+  // Toggle multi-select mode
+  const toggleMultiSelectMode = () => {
+    setMultiSelectMode(!multiSelectMode);
+    if (multiSelectMode) {
+      // Clear selected points when exiting multi-select mode
+      setSelectedPoints([]);
+    }
+  };
+
   if (selectedFigure) {
     return (
       <div className="space-y-4">
-        {/* Header with back button */}
-        <div className="flex items-center justify-between">
+        {/* Header with back button and mode toggle */}
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <Button 
             variant="ghost" 
             onClick={() => {
@@ -370,6 +415,18 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect }: Bo
           </Button>
           
           <div className="flex items-center gap-2">
+            {/* Multi-select toggle */}
+            <Button
+              variant={multiSelectMode ? "default" : "outline"}
+              size="sm"
+              onClick={toggleMultiSelectMode}
+              className={`gap-2 ${multiSelectMode ? 'bg-jade hover:bg-jade/90' : ''}`}
+            >
+              {multiSelectMode ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+              Multi-Select
+            </Button>
+            
+            {/* Zoom controls */}
             <Button
               variant="outline"
               size="icon"
@@ -392,11 +449,57 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect }: Bo
           </div>
         </div>
 
+        {/* Selected points bar (multi-select mode) */}
+        {multiSelectMode && selectedPoints.length > 0 && (
+          <Card className="bg-jade-light/20 border-jade/30">
+            <CardContent className="py-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="default" className="bg-jade">
+                    {selectedPoints.length} points selected
+                  </Badge>
+                  {selectedPoints.map(code => (
+                    <Badge 
+                      key={code} 
+                      variant="outline" 
+                      className="gap-1 cursor-pointer hover:bg-destructive/10"
+                      onClick={() => setSelectedPoints(prev => prev.filter(p => p !== code))}
+                    >
+                      {code}
+                      <X className="h-3 w-3" />
+                    </Badge>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearSelectedPoints}
+                    className="gap-1 text-muted-foreground"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Clear
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleGenerateProtocol}
+                    className="gap-1 bg-jade hover:bg-jade/90"
+                    disabled={!onGenerateProtocol}
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    Generate Protocol
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Image with points */}
           <Card className="lg:col-span-2 overflow-hidden">
             <CardHeader className="py-3">
-              <CardTitle className="text-lg flex items-center gap-2">
+              <CardTitle className="text-lg flex items-center gap-2 flex-wrap">
                 <MapPin className="h-5 w-5 text-primary" />
                 {getFigureName(selectedFigure)}
                 <Badge variant="secondary" className="ml-2">
@@ -405,6 +508,11 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect }: Bo
                 {highlightedPoints.length > 0 && (
                   <Badge variant="default" className="ml-1 bg-jade">
                     {figurePoints.filter(p => highlightedPoints.includes(p.point_code)).length} recommended
+                  </Badge>
+                )}
+                {multiSelectMode && (
+                  <Badge variant="outline" className="ml-1 border-jade text-jade">
+                    Click points to select
                   </Badge>
                 )}
               </CardTitle>
@@ -429,6 +537,7 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect }: Bo
                   {figurePoints.map((point) => {
                     const isSelected = selectedPoint?.code === point.point_code;
                     const isHighlighted = highlightedPoints.includes(point.point_code);
+                    const isMultiSelected = selectedPoints.includes(point.point_code);
                     // Convert coordinates to percentages (assuming image is ~2800x1400)
                     const xPercent = (point.x / 2800) * 100;
                     const yPercent = (point.y / 1400) * 100;
@@ -438,7 +547,9 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect }: Bo
                         key={point.point_code}
                         onClick={() => handlePointClick(point)}
                         className={`absolute w-6 h-6 -ml-3 -mt-3 rounded-full border-2 transition-all duration-200 flex items-center justify-center text-xs font-bold ${
-                          isSelected 
+                          isMultiSelected
+                            ? 'bg-primary border-primary text-primary-foreground scale-125 ring-4 ring-primary/30'
+                            : isSelected 
                             ? 'bg-primary border-primary text-primary-foreground scale-125 ring-4 ring-primary/30' 
                             : isHighlighted
                             ? 'bg-jade border-jade text-jade-foreground scale-110 ring-4 ring-jade/40 animate-pulse'
@@ -450,6 +561,7 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect }: Bo
                         }}
                         title={point.point_code}
                       >
+                        {isMultiSelected && <span className="text-[8px]">✓</span>}
                         <span className="sr-only">{point.point_code}</span>
                       </button>
                     );
@@ -459,16 +571,74 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect }: Bo
             </CardContent>
           </Card>
 
-          {/* Point details panel */}
+          {/* Point details panel / Multi-select panel */}
           <Card>
             <CardHeader className="py-3">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Info className="h-5 w-5 text-primary" />
-                Point Details
+                {multiSelectMode ? 'Selected Points' : 'Point Details'}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {selectedPoint ? (
+              {multiSelectMode ? (
+                // Multi-select summary
+                <div className="space-y-4">
+                  {selectedPoints.length > 0 ? (
+                    <>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedPoints.length} points selected for protocol generation
+                      </p>
+                      <ScrollArea className="h-64">
+                        <div className="space-y-3">
+                          {selectedPoints.map(code => {
+                            const details = getPointDetails(code);
+                            return (
+                              <div key={code} className="flex items-start gap-2 p-2 rounded-lg bg-muted/50">
+                                <Badge variant="default" className="shrink-0">{code}</Badge>
+                                <div className="flex-1 min-w-0">
+                                  {details ? (
+                                    <>
+                                      <p className="text-sm font-medium truncate">{details.name_english}</p>
+                                      <p className="text-xs text-muted-foreground">{details.meridian} Meridian</p>
+                                    </>
+                                  ) : (
+                                    <p className="text-xs text-muted-foreground">Details not in database</p>
+                                  )}
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 shrink-0"
+                                  onClick={() => setSelectedPoints(prev => prev.filter(p => p !== code))}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </ScrollArea>
+                      <Button
+                        className="w-full gap-2 bg-jade hover:bg-jade/90"
+                        onClick={handleGenerateProtocol}
+                        disabled={!onGenerateProtocol}
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        Generate Treatment Protocol
+                      </Button>
+                    </>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <CheckSquare className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                      <p>Click on points to select them</p>
+                      <p className="text-xs mt-2">
+                        Selected points will be used to generate a treatment protocol
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : selectedPoint ? (
+                // Single point details
                 <div className="space-y-4">
                   <div>
                     <h3 className="text-2xl font-bold text-primary">
@@ -557,15 +727,23 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect }: Bo
                 const details = getPointDetails(point.point_code);
                 const isSelected = selectedPoint?.code === point.point_code;
                 const isHighlighted = highlightedPoints.includes(point.point_code);
+                const isMultiSelected = selectedPoints.includes(point.point_code);
                 return (
                   <Button
                     key={point.point_code}
-                    variant={isSelected ? "default" : isHighlighted ? "default" : "outline"}
+                    variant={isMultiSelected || isSelected ? "default" : isHighlighted ? "default" : "outline"}
                     size="sm"
                     onClick={() => handlePointClick(point)}
-                    className={`gap-1 ${isHighlighted && !isSelected ? 'bg-jade hover:bg-jade/90' : ''}`}
+                    className={`gap-1 ${
+                      isMultiSelected 
+                        ? 'bg-primary' 
+                        : isHighlighted && !isSelected 
+                        ? 'bg-jade hover:bg-jade/90' 
+                        : ''
+                    }`}
                   >
-                    <MapPin className="h-3 w-3" />
+                    {isMultiSelected && <CheckSquare className="h-3 w-3" />}
+                    {!isMultiSelected && <MapPin className="h-3 w-3" />}
                     {point.point_code}
                     {details && (
                       <span className="text-xs opacity-70">
@@ -597,6 +775,49 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect }: Bo
         )}
       </div>
 
+      {/* Multi-select summary bar */}
+      {selectedPoints.length > 0 && (
+        <Card className="bg-jade-light/20 border-jade/30">
+          <CardContent className="py-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="default" className="bg-jade">
+                  {selectedPoints.length} points selected
+                </Badge>
+                {selectedPoints.slice(0, 5).map(code => (
+                  <Badge key={code} variant="outline" className="gap-1">
+                    {code}
+                  </Badge>
+                ))}
+                {selectedPoints.length > 5 && (
+                  <Badge variant="outline">+{selectedPoints.length - 5} more</Badge>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearSelectedPoints}
+                  className="gap-1 text-muted-foreground"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Clear
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleGenerateProtocol}
+                  className="gap-1 bg-jade hover:bg-jade/90"
+                  disabled={!onGenerateProtocol}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Generate Protocol
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {figureCategories.map((category) => {
         const availableFigures = category.figures.filter(f => imageMap[f]);
         if (availableFigures.length === 0) return null;
@@ -610,11 +831,14 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect }: Bo
               {availableFigures.map((figure) => {
                 const pointCount = getPointCount(figure);
                 const highlightedCount = getFigureHighlightedCount(figure);
+                const selectedCount = getFigureSelectedCount(figure);
                 return (
                   <Card
                     key={figure}
                     className={`cursor-pointer transition-all overflow-hidden group ${
-                      highlightedCount > 0 
+                      selectedCount > 0
+                        ? 'ring-2 ring-primary hover:ring-primary/80'
+                        : highlightedCount > 0 
                         ? 'ring-2 ring-jade hover:ring-jade/80' 
                         : 'hover:ring-2 hover:ring-primary/50'
                     }`}
@@ -626,14 +850,21 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect }: Bo
                         alt={getFigureName(figure)}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
-                      {highlightedCount > 0 && (
+                      {selectedCount > 0 && (
+                        <Badge 
+                          className="absolute top-2 right-2 bg-primary"
+                        >
+                          {selectedCount} selected
+                        </Badge>
+                      )}
+                      {highlightedCount > 0 && selectedCount === 0 && (
                         <Badge 
                           className="absolute top-2 right-2 bg-jade"
                         >
                           {highlightedCount} recommended
                         </Badge>
                       )}
-                      {pointCount > 0 && highlightedCount === 0 && (
+                      {pointCount > 0 && highlightedCount === 0 && selectedCount === 0 && (
                         <Badge 
                           className="absolute top-2 right-2 bg-destructive"
                         >

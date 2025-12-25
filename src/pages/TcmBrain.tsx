@@ -1004,7 +1004,30 @@ export default function TcmBrain() {
 
               {/* Body Map Tab */}
               <TabsContent value="bodymap" className="flex-1 overflow-auto p-4">
-                <BodyFigureSelector highlightedPoints={highlightedPoints} />
+                <BodyFigureSelector 
+                  highlightedPoints={highlightedPoints} 
+                  onGenerateProtocol={(points) => {
+                    const prompt = `Generate a detailed TCM treatment protocol for the following acupuncture points: ${points.join(', ')}. 
+
+Include:
+1. Treatment principle and therapeutic goal
+2. Point combination analysis - why these points work together
+3. Needling technique recommendations (depth, angle, stimulation)
+4. Order of point insertion
+5. Recommended needle retention time
+6. Contraindications and precautions
+7. Expected therapeutic effects
+8. Complementary techniques (moxa, cupping, electroacupuncture if applicable)
+9. Treatment frequency and course recommendation`;
+                    streamChat(prompt);
+                    // Switch to chat tab to see the response
+                    setTimeout(() => {
+                      const tabsList = document.querySelector('[role="tablist"]');
+                      const chatTab = tabsList?.querySelector('[value="chat"]') as HTMLButtonElement;
+                      chatTab?.click();
+                    }, 100);
+                  }}
+                />
               </TabsContent>
 
               {/* Herbs Tab */}
