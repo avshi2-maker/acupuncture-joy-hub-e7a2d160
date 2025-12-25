@@ -40,21 +40,27 @@ export default function AppointmentConfirm() {
 
   const fetchAppointmentDetails = async () => {
     try {
-      const { data, error } = await supabase
-        .from('appointment_confirmations')
-        .select('*, appointments(title, start_time, patients(full_name))')
-        .eq('token', token)
-        .single();
+      // Use edge function to fetch details securely (bypasses RLS with service role)
+      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/appointment-confirm?token=${token}&action=details`;
+      
+      const res = await fetch(functionUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-      if (error || !data) {
-        setResult({ error: 'קישור לא תקין או פג תוקף' });
-      } else if (data.response) {
+      const data = await res.json();
+
+      if (data.error) {
+        setResult({ error: data.error });
+      } else if (data.previousResponse) {
         setResult({ 
-          previousResponse: data.response,
-          appointment: data.appointments as any
+          previousResponse: data.previousResponse,
+          appointment: data.appointment
         });
       } else {
-        setResult({ appointment: data.appointments as any });
+        setResult({ appointment: data.appointment });
       }
     } catch (err) {
       setResult({ error: 'שגיאה בטעינת הפרטים' });

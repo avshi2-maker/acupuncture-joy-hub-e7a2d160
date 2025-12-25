@@ -23,13 +23,62 @@ serve(async (req) => {
     const url = new URL(req.url);
     const token = url.searchParams.get("token");
     const response = url.searchParams.get("response"); // 'confirmed' or 'cancelled'
+    const action = url.searchParams.get("action"); // 'details' for fetching only
 
-    console.log(`Processing confirmation: token=${token}, response=${response}`);
+    console.log(`Processing confirmation: token=${token}, response=${response}, action=${action}`);
 
     if (!token) {
       return new Response(
         JSON.stringify({ error: "Missing token" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Handle details-only request (for displaying appointment info)
+    if (action === "details") {
+      const { data: confirmation, error: findError } = await supabase
+        .from("appointment_confirmations")
+        .select(`
+          *, 
+          appointments(
+            id, 
+            title, 
+            start_time, 
+            status,
+            patients(full_name)
+          )
+        `)
+        .eq("token", token)
+        .single();
+
+      if (findError || !confirmation) {
+        return new Response(
+          JSON.stringify({ error: "קישור לא תקין או פג תוקף" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Check if expired
+      if (new Date(confirmation.expires_at) < new Date()) {
+        return new Response(
+          JSON.stringify({ error: "הקישור פג תוקף" }),
+          { status: 410, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (confirmation.response) {
+        return new Response(
+          JSON.stringify({ 
+            previousResponse: confirmation.response,
+            appointment: confirmation.appointments
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ appointment: confirmation.appointments }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
