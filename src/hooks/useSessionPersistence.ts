@@ -110,6 +110,15 @@ export function useSessionPersistence() {
     });
   }, []);
 
+  // Reset only the duration (for extending Zoom sessions)
+  const resetDuration = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      duration: 0,
+      startTime: prev.status === 'running' ? Date.now() : null,
+    }));
+  }, []);
+
   const setNotes = useCallback((notes: string) => {
     setState(prev => ({ ...prev, notes }));
   }, []);
@@ -140,6 +149,7 @@ export function useSessionPersistence() {
     resumeSession,
     endSession,
     resetSession,
+    resetDuration,
     setNotes,
     setPatient,
     setAnxietyConversation,

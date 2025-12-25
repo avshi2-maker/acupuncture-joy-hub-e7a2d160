@@ -74,10 +74,45 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
     resumeSession,
     endSession,
     resetSession,
+    resetDuration,
     setNotes,
     setPatient,
     setAnxietyConversation,
   } = useSessionPersistence();
+
+  // Audio alert function
+  const playAlertSound = useCallback(() => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      // Create a sequence of beeps
+      const playBeep = (startTime: number, frequency: number) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.3, startTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+        
+        oscillator.start(startTime);
+        oscillator.stop(startTime + 0.3);
+      };
+      
+      // Play 3 beeps
+      const now = audioContext.currentTime;
+      playBeep(now, 880);        // A5
+      playBeep(now + 0.4, 880);  // A5
+      playBeep(now + 0.8, 1100); // Higher pitch for urgency
+      
+    } catch (err) {
+      console.error('Could not play audio alert:', err);
+    }
+  }, []);
 
   // Fetch patients function
   const fetchPatients = useCallback(async () => {
@@ -105,23 +140,24 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
     fetchPatients();
   }, [fetchPatients]);
 
-  // 35-minute warning for Zoom
+  // 35-minute warning for Zoom with audio alert
   useEffect(() => {
     if (sessionStatus === 'running' && sessionDuration >= ZOOM_WARNING_SECONDS && !warningShownRef.current) {
       warningShownRef.current = true;
+      playAlertSound();
       toast.warning('⚠️ נותרו 5 דקות! מגבלת Zoom חינם מתקרבת', {
         duration: 10000,
         description: 'שקול לסיים או לחדש את הפגישה',
       });
     }
-  }, [sessionDuration, sessionStatus]);
+  }, [sessionDuration, sessionStatus, playAlertSound]);
 
-  // Reset warning flag when session resets
+  // Reset warning flag when duration resets
   useEffect(() => {
-    if (sessionStatus === 'idle') {
+    if (sessionStatus === 'idle' || sessionDuration < ZOOM_WARNING_SECONDS) {
       warningShownRef.current = false;
     }
-  }, [sessionStatus]);
+  }, [sessionStatus, sessionDuration]);
 
   const handleRefreshPatients = async () => {
     setRefreshingPatients(true);
@@ -135,6 +171,12 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
       setPatient({ id: patientId, name: patientName });
       toast.success(`${patientName} נוסף ונבחר`);
     });
+  };
+
+  const handleExtendZoomTimer = () => {
+    resetDuration();
+    warningShownRef.current = false;
+    toast.success('טיימר Zoom אופס - 40 דקות נוספות');
   };
 
   const formatDuration = (seconds: number) => {
@@ -301,15 +343,26 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
       {sessionStatus !== 'idle' && sessionStatus !== 'ended' && (
         <Card className={`mb-4 ${isZoomExpired ? 'border-destructive bg-destructive/5' : isZoomWarning ? 'border-amber-500 bg-amber-50' : 'border-blue-200 bg-blue-50'}`}>
           <CardContent className="p-3">
-            <div className="flex items-center gap-2 mb-2">
-              {isZoomExpired ? (
-                <AlertTriangle className="h-4 w-4 text-destructive" />
-              ) : (
-                <Clock className={`h-4 w-4 ${isZoomWarning ? 'text-amber-600' : 'text-blue-600'}`} />
-              )}
-              <span className={`text-sm font-medium ${isZoomExpired ? 'text-destructive' : isZoomWarning ? 'text-amber-700' : 'text-blue-700'}`}>
-                {isZoomExpired ? 'זמן Zoom חינם הסתיים!' : `נותרו ${getZoomTimeRemaining()} (מתוך 40 דק׳)`}
-              </span>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                {isZoomExpired ? (
+                  <AlertTriangle className="h-4 w-4 text-destructive" />
+                ) : (
+                  <Clock className={`h-4 w-4 ${isZoomWarning ? 'text-amber-600' : 'text-blue-600'}`} />
+                )}
+                <span className={`text-sm font-medium ${isZoomExpired ? 'text-destructive' : isZoomWarning ? 'text-amber-700' : 'text-blue-700'}`}>
+                  {isZoomExpired ? 'זמן Zoom חינם הסתיים!' : `נותרו ${getZoomTimeRemaining()} (מתוך 40 דק׳)`}
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleExtendZoomTimer}
+                className={`h-7 px-2 text-xs ${isZoomWarning || isZoomExpired ? 'text-amber-700 hover:bg-amber-100' : 'text-blue-700 hover:bg-blue-100'}`}
+              >
+                <RotateCcw className="h-3 w-3 mr-1" />
+                אפס טיימר
+              </Button>
             </div>
             <Progress 
               value={getZoomProgress()} 
