@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { 
   Play, 
   Pause, 
@@ -18,7 +19,10 @@ import {
   Calendar,
   VideoIcon,
   Settings,
-  Users
+  Users,
+  RefreshCw,
+  Clock,
+  AlertTriangle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { saveSessionReport, printReport, LocalSessionReport } from '@/utils/localDataStorage';
@@ -41,15 +45,21 @@ interface VideoSessionPanelProps {
   onSessionEnd?: (report: LocalSessionReport) => void;
 }
 
+// Zoom free tier limits
+const ZOOM_FREE_LIMIT_SECONDS = 40 * 60; // 40 minutes
+const ZOOM_WARNING_SECONDS = 35 * 60; // 35 minutes warning
+
 export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
   const { user } = useAuth();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loadingPatients, setLoadingPatients] = useState(true);
+  const [refreshingPatients, setRefreshingPatients] = useState(false);
   const [showAnxietyQA, setShowAnxietyQA] = useState(false);
   const [showQuickPatient, setShowQuickPatient] = useState(false);
   const [showQuickAppointment, setShowQuickAppointment] = useState(false);
   const [showZoomInvite, setShowZoomInvite] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const warningShownRef = useRef(false);
 
   const {
     status: sessionStatus,
@@ -69,35 +79,84 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
     setAnxietyConversation,
   } = useSessionPersistence();
 
-  // Fetch patients
-  useEffect(() => {
-    const fetchPatients = async () => {
-      if (!user) return;
+  // Fetch patients function
+  const fetchPatients = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('patients')
+        .select('id, full_name, phone')
+        .eq('therapist_id', user.id)
+        .order('full_name');
       
-      try {
-        const { data, error } = await supabase
-          .from('patients')
-          .select('id, full_name, phone')
-          .eq('therapist_id', user.id)
-          .order('full_name');
-        
-        if (error) throw error;
-        setPatients(data || []);
-      } catch (err) {
-        console.error('Error fetching patients:', err);
-      } finally {
-        setLoadingPatients(false);
-      }
-    };
-
-    fetchPatients();
+      if (error) throw error;
+      setPatients(data || []);
+    } catch (err) {
+      console.error('Error fetching patients:', err);
+    } finally {
+      setLoadingPatients(false);
+      setRefreshingPatients(false);
+    }
   }, [user]);
+
+  // Fetch patients on mount
+  useEffect(() => {
+    fetchPatients();
+  }, [fetchPatients]);
+
+  // 35-minute warning for Zoom
+  useEffect(() => {
+    if (sessionStatus === 'running' && sessionDuration >= ZOOM_WARNING_SECONDS && !warningShownRef.current) {
+      warningShownRef.current = true;
+      toast.warning('⚠️ נותרו 5 דקות! מגבלת Zoom חינם מתקרבת', {
+        duration: 10000,
+        description: 'שקול לסיים או לחדש את הפגישה',
+      });
+    }
+  }, [sessionDuration, sessionStatus]);
+
+  // Reset warning flag when session resets
+  useEffect(() => {
+    if (sessionStatus === 'idle') {
+      warningShownRef.current = false;
+    }
+  }, [sessionStatus]);
+
+  const handleRefreshPatients = async () => {
+    setRefreshingPatients(true);
+    await fetchPatients();
+    toast.success('רשימת המטופלים עודכנה');
+  };
+
+  const handlePatientCreated = (patientId: string, patientName: string) => {
+    // Refresh list and select the new patient
+    fetchPatients().then(() => {
+      setPatient({ id: patientId, name: patientName });
+      toast.success(`${patientName} נוסף ונבחר`);
+    });
+  };
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
+
+  const getZoomTimeRemaining = () => {
+    const remaining = ZOOM_FREE_LIMIT_SECONDS - sessionDuration;
+    if (remaining <= 0) return '00:00';
+    const mins = Math.floor(remaining / 60);
+    const secs = remaining % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const getZoomProgress = () => {
+    return Math.min((sessionDuration / ZOOM_FREE_LIMIT_SECONDS) * 100, 100);
+  };
+
+  const isZoomWarning = sessionDuration >= ZOOM_WARNING_SECONDS;
+  const isZoomExpired = sessionDuration >= ZOOM_FREE_LIMIT_SECONDS;
 
   const handleStart = () => {
     startSession();
@@ -220,6 +279,15 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
             <Button
               variant="outline"
               size="icon"
+              onClick={handleRefreshPatients}
+              disabled={refreshingPatients}
+              title="רענן רשימה"
+            >
+              <RefreshCw className={`h-4 w-4 ${refreshingPatients ? 'animate-spin' : ''}`} />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
               onClick={() => setShowSettings(true)}
               title="הגדרות"
             >
@@ -228,6 +296,28 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Zoom Timer - only show when session is active */}
+      {sessionStatus !== 'idle' && sessionStatus !== 'ended' && (
+        <Card className={`mb-4 ${isZoomExpired ? 'border-destructive bg-destructive/5' : isZoomWarning ? 'border-amber-500 bg-amber-50' : 'border-blue-200 bg-blue-50'}`}>
+          <CardContent className="p-3">
+            <div className="flex items-center gap-2 mb-2">
+              {isZoomExpired ? (
+                <AlertTriangle className="h-4 w-4 text-destructive" />
+              ) : (
+                <Clock className={`h-4 w-4 ${isZoomWarning ? 'text-amber-600' : 'text-blue-600'}`} />
+              )}
+              <span className={`text-sm font-medium ${isZoomExpired ? 'text-destructive' : isZoomWarning ? 'text-amber-700' : 'text-blue-700'}`}>
+                {isZoomExpired ? 'זמן Zoom חינם הסתיים!' : `נותרו ${getZoomTimeRemaining()} (מתוך 40 דק׳)`}
+              </span>
+            </div>
+            <Progress 
+              value={getZoomProgress()} 
+              className={`h-2 ${isZoomExpired ? '[&>div]:bg-destructive' : isZoomWarning ? '[&>div]:bg-amber-500' : '[&>div]:bg-blue-500'}`}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Video Area */}
       <Card className="flex-1 bg-muted/50">
@@ -404,6 +494,7 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
       <QuickPatientDialog
         open={showQuickPatient}
         onOpenChange={setShowQuickPatient}
+        onPatientCreated={handlePatientCreated}
       />
       
       <QuickAppointmentDialog
