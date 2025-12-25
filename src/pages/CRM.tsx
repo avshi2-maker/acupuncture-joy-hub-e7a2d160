@@ -34,8 +34,11 @@ import {
   Edit,
   Trash2,
   X,
-  ChevronLeft
+  ChevronLeft,
+  Filter,
+  ChevronDown
 } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface Patient {
   id: string;
@@ -92,6 +95,11 @@ export default function CRM() {
   const [followUps, setFollowUps] = useState<FollowUp[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterGender, setFilterGender] = useState<string>('all');
+  const [filterDateFrom, setFilterDateFrom] = useState('');
+  const [filterDateTo, setFilterDateTo] = useState('');
+  const [filterCondition, setFilterCondition] = useState('');
   const [showAddPatient, setShowAddPatient] = useState(false);
   const [showEditPatient, setShowEditPatient] = useState(false);
   const [showAddVisit, setShowAddVisit] = useState(false);
@@ -472,11 +480,43 @@ export default function CRM() {
     navigate('/');
   };
 
-  const filteredPatients = patients.filter(p =>
-    p.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.phone?.includes(searchQuery) ||
-    p.email?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const clearFilters = () => {
+    setFilterGender('all');
+    setFilterDateFrom('');
+    setFilterDateTo('');
+    setFilterCondition('');
+    setSearchQuery('');
+  };
+
+  const hasActiveFilters = filterGender !== 'all' || filterDateFrom || filterDateTo || filterCondition;
+
+  const filteredPatients = patients.filter(p => {
+    // Search query filter
+    const matchesSearch = searchQuery === '' || 
+      p.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.phone?.includes(searchQuery) ||
+      p.email?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Gender filter
+    const matchesGender = filterGender === 'all' || p.gender === filterGender;
+    
+    // Date of birth range filter
+    let matchesDateRange = true;
+    if (p.date_of_birth) {
+      if (filterDateFrom && p.date_of_birth < filterDateFrom) matchesDateRange = false;
+      if (filterDateTo && p.date_of_birth > filterDateTo) matchesDateRange = false;
+    } else if (filterDateFrom || filterDateTo) {
+      matchesDateRange = false; // Exclude patients without DOB when date filter is active
+    }
+    
+    // Condition filter (searches in medical_history, allergies, notes)
+    const matchesCondition = filterCondition === '' || 
+      p.medical_history?.toLowerCase().includes(filterCondition.toLowerCase()) ||
+      p.allergies?.toLowerCase().includes(filterCondition.toLowerCase()) ||
+      p.notes?.toLowerCase().includes(filterCondition.toLowerCase());
+    
+    return matchesSearch && matchesGender && matchesDateRange && matchesCondition;
+  });
 
   if (!tier || !hasFeature('crm')) return null;
 
@@ -529,6 +569,14 @@ export default function CRM() {
                     dir="rtl"
                   />
                 </div>
+                <Button 
+                  variant={hasActiveFilters ? "default" : "outline"} 
+                  size="icon" 
+                  className="shrink-0"
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <Filter className="h-4 w-4" />
+                </Button>
                 <Dialog open={showAddPatient} onOpenChange={setShowAddPatient}>
                   <DialogTrigger asChild>
                     <Button size="icon" className="shrink-0">
@@ -664,6 +712,77 @@ export default function CRM() {
                   </DialogContent>
                 </Dialog>
               </div>
+
+              {/* Filters Panel */}
+              {showFilters && (
+                <div className="p-3 bg-muted/50 rounded-lg space-y-3 border border-border">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium flex items-center gap-2">
+                      <Filter className="h-3 w-3" />
+                      סינון מטופלים
+                    </span>
+                    {hasActiveFilters && (
+                      <Button variant="ghost" size="sm" onClick={clearFilters} className="h-6 text-xs">
+                        נקה הכל
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <div className="grid gap-3">
+                    <div className="grid gap-1.5">
+                      <Label className="text-xs text-muted-foreground">מין</Label>
+                      <Select value={filterGender} onValueChange={setFilterGender}>
+                        <SelectTrigger className="h-8 text-sm" dir="rtl">
+                          <SelectValue placeholder="הכל" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-card" dir="rtl">
+                          <SelectItem value="all">הכל</SelectItem>
+                          <SelectItem value="male">זכר</SelectItem>
+                          <SelectItem value="female">נקבה</SelectItem>
+                          <SelectItem value="other">אחר</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="grid gap-1.5">
+                      <Label className="text-xs text-muted-foreground">תאריך לידה (טווח)</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          type="date"
+                          value={filterDateFrom}
+                          onChange={(e) => setFilterDateFrom(e.target.value)}
+                          className="h-8 text-sm flex-1"
+                          placeholder="מ-"
+                        />
+                        <Input
+                          type="date"
+                          value={filterDateTo}
+                          onChange={(e) => setFilterDateTo(e.target.value)}
+                          className="h-8 text-sm flex-1"
+                          placeholder="עד"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-1.5">
+                      <Label className="text-xs text-muted-foreground">מצב רפואי / אלרגיה</Label>
+                      <Input
+                        value={filterCondition}
+                        onChange={(e) => setFilterCondition(e.target.value)}
+                        placeholder="חפש במצבים רפואיים..."
+                        className="h-8 text-sm text-right"
+                        dir="rtl"
+                      />
+                    </div>
+                  </div>
+
+                  {hasActiveFilters && (
+                    <p className="text-xs text-muted-foreground">
+                      מציג {filteredPatients.length} מתוך {patients.length} מטופלים
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             <ScrollArea className="flex-1">
