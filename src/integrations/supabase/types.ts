@@ -132,11 +132,18 @@ export type Database = {
       }
       appointments: {
         Row: {
+          clinic_id: string | null
+          color: string | null
           created_at: string
           end_time: string
           id: string
+          is_recurring: boolean | null
           notes: string | null
+          parent_appointment_id: string | null
           patient_id: string | null
+          recurrence_end_date: string | null
+          recurrence_rule: string | null
+          room_id: string | null
           start_time: string
           status: string
           therapist_id: string
@@ -144,11 +151,18 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          clinic_id?: string | null
+          color?: string | null
           created_at?: string
           end_time: string
           id?: string
+          is_recurring?: boolean | null
           notes?: string | null
+          parent_appointment_id?: string | null
           patient_id?: string | null
+          recurrence_end_date?: string | null
+          recurrence_rule?: string | null
+          room_id?: string | null
           start_time: string
           status?: string
           therapist_id: string
@@ -156,11 +170,18 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          clinic_id?: string | null
+          color?: string | null
           created_at?: string
           end_time?: string
           id?: string
+          is_recurring?: boolean | null
           notes?: string | null
+          parent_appointment_id?: string | null
           patient_id?: string | null
+          recurrence_end_date?: string | null
+          recurrence_rule?: string | null
+          room_id?: string | null
           start_time?: string
           status?: string
           therapist_id?: string
@@ -169,10 +190,31 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "appointments_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_parent_appointment_id_fkey"
+            columns: ["parent_appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "appointments_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
             referencedColumns: ["id"]
           },
         ]
@@ -201,6 +243,80 @@ export type Database = {
           rating?: string
           response_content?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      clinic_staff: {
+        Row: {
+          clinic_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          role: Database["public"]["Enums"]["clinic_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          clinic_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          role?: Database["public"]["Enums"]["clinic_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          clinic_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          role?: Database["public"]["Enums"]["clinic_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinic_staff_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clinics: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          owner_id: string
+          phone: string | null
+          timezone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          owner_id: string
+          phone?: string | null
+          timezone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          owner_id?: string
+          phone?: string | null
+          timezone?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -344,62 +460,228 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_consents: {
+        Row: {
+          answers: Json | null
+          clinic_id: string | null
+          consent_type: string
+          created_at: string
+          form_version: string | null
+          id: string
+          ip_address: string | null
+          patient_id: string
+          signature: string | null
+          signed_at: string
+        }
+        Insert: {
+          answers?: Json | null
+          clinic_id?: string | null
+          consent_type: string
+          created_at?: string
+          form_version?: string | null
+          id?: string
+          ip_address?: string | null
+          patient_id: string
+          signature?: string | null
+          signed_at?: string
+        }
+        Update: {
+          answers?: Json | null
+          clinic_id?: string | null
+          consent_type?: string
+          created_at?: string
+          form_version?: string | null
+          id?: string
+          ip_address?: string | null
+          patient_id?: string
+          signature?: string | null
+          signed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_consents_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_consents_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patients: {
         Row: {
           address: string | null
+          age_group: string | null
           allergies: string | null
+          chief_complaint: string | null
+          clinic_id: string | null
+          consent_signature: string | null
+          consent_signed: boolean | null
+          consent_signed_at: string | null
+          constitution_type: string | null
           created_at: string
           date_of_birth: string | null
+          diet_notes: string | null
+          due_date: string | null
           email: string | null
           emergency_contact: string | null
           emergency_phone: string | null
+          exercise_frequency: string | null
           full_name: string
           gender: string | null
           id: string
+          is_pregnant: boolean | null
+          lifestyle_notes: string | null
           medical_history: string | null
           medications: string | null
           notes: string | null
+          obstetric_history: string | null
+          occupation: string | null
           phone: string | null
+          pregnancy_notes: string | null
+          pregnancy_weeks: number | null
+          pulse_notes: string | null
+          sleep_quality: string | null
+          stress_level: string | null
           therapist_id: string
+          tongue_notes: string | null
           updated_at: string
         }
         Insert: {
           address?: string | null
+          age_group?: string | null
           allergies?: string | null
+          chief_complaint?: string | null
+          clinic_id?: string | null
+          consent_signature?: string | null
+          consent_signed?: boolean | null
+          consent_signed_at?: string | null
+          constitution_type?: string | null
           created_at?: string
           date_of_birth?: string | null
+          diet_notes?: string | null
+          due_date?: string | null
           email?: string | null
           emergency_contact?: string | null
           emergency_phone?: string | null
+          exercise_frequency?: string | null
           full_name: string
           gender?: string | null
           id?: string
+          is_pregnant?: boolean | null
+          lifestyle_notes?: string | null
           medical_history?: string | null
           medications?: string | null
           notes?: string | null
+          obstetric_history?: string | null
+          occupation?: string | null
           phone?: string | null
+          pregnancy_notes?: string | null
+          pregnancy_weeks?: number | null
+          pulse_notes?: string | null
+          sleep_quality?: string | null
+          stress_level?: string | null
           therapist_id: string
+          tongue_notes?: string | null
           updated_at?: string
         }
         Update: {
           address?: string | null
+          age_group?: string | null
           allergies?: string | null
+          chief_complaint?: string | null
+          clinic_id?: string | null
+          consent_signature?: string | null
+          consent_signed?: boolean | null
+          consent_signed_at?: string | null
+          constitution_type?: string | null
           created_at?: string
           date_of_birth?: string | null
+          diet_notes?: string | null
+          due_date?: string | null
           email?: string | null
           emergency_contact?: string | null
           emergency_phone?: string | null
+          exercise_frequency?: string | null
           full_name?: string
           gender?: string | null
           id?: string
+          is_pregnant?: boolean | null
+          lifestyle_notes?: string | null
           medical_history?: string | null
           medications?: string | null
           notes?: string | null
+          obstetric_history?: string | null
+          occupation?: string | null
           phone?: string | null
+          pregnancy_notes?: string | null
+          pregnancy_weeks?: number | null
+          pulse_notes?: string | null
+          sleep_quality?: string | null
+          stress_level?: string | null
           therapist_id?: string
+          tongue_notes?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "patients_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          capacity: number | null
+          clinic_id: string
+          color: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          capacity?: number | null
+          clinic_id: string
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          capacity?: number | null
+          clinic_id?: string
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rooms_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       therapist_registrations: {
         Row: {
@@ -535,9 +817,18 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_clinic_admin: {
+        Args: { _clinic_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_clinic_member: {
+        Args: { _clinic_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "therapist" | "patient"
+      clinic_role: "owner" | "admin" | "therapist" | "receptionist"
       registration_status: "pending" | "trial" | "active" | "expired"
       subscription_tier: "trial" | "standard" | "premium"
     }
@@ -668,6 +959,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "therapist", "patient"],
+      clinic_role: ["owner", "admin", "therapist", "receptionist"],
       registration_status: ["pending", "trial", "active", "expired"],
       subscription_tier: ["trial", "standard", "premium"],
     },
