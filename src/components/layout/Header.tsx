@@ -36,11 +36,11 @@ const Header = () => {
     >
       <div className="container mx-auto px-4 flex items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 group">
-          <div className={`p-2 rounded-full transition-all duration-300 ${isScrolled || !isHomePage ? 'bg-jade/10' : 'bg-primary-foreground/10'}`}>
+        <Link to="/" className="flex items-center gap-2 group flex-shrink-0 max-w-[50%] lg:max-w-none">
+          <div className={`p-2 rounded-full transition-all duration-300 flex-shrink-0 ${isScrolled || !isHomePage ? 'bg-jade/10' : 'bg-primary-foreground/10'}`}>
             <Leaf className={`w-6 h-6 transition-colors duration-300 ${isScrolled || !isHomePage ? 'text-jade' : 'text-primary-foreground'}`} />
           </div>
-          <span className={`font-display text-lg md:text-xl font-semibold tracking-wide transition-colors duration-300 ${isScrolled || !isHomePage ? 'text-foreground' : 'text-primary-foreground'} hidden sm:inline`}>
+          <span className={`font-display text-sm lg:text-lg xl:text-xl font-semibold tracking-wide transition-colors duration-300 truncate ${isScrolled || !isHomePage ? 'text-foreground' : 'text-primary-foreground'} hidden sm:inline`}>
             Dr Roni Sapir - Complementary Medicine
           </span>
         </Link>
