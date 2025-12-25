@@ -267,6 +267,7 @@ export default function TcmBrain() {
   const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
   const [loadingStartTime, setLoadingStartTime] = useState<number | null>(null);
   const [currentQuery, setCurrentQuery] = useState<string>('');
+  const [activeFeatureTab, setActiveFeatureTab] = useState<string>('chat');
   
   // Selected question states for all tabs
   const [selectedSymptomQuestion, setSelectedSymptomQuestion] = useState('');
@@ -289,6 +290,7 @@ export default function TcmBrain() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
+  const aiResponseRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!tier) {
@@ -408,21 +410,30 @@ export default function TcmBrain() {
     streamChat(message);
   };
 
+  const scrollToAiResponse = () => {
+    requestAnimationFrame(() => {
+      aiResponseRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
+
   const handleCustomPromptSubmit = () => {
     if (!customPrompt.trim() || isLoading) return;
     const message = customPrompt.trim();
     setCustomPrompt('');
     streamChat(message);
+    scrollToAiResponse();
   };
 
   const handleQuickQuestion = (question: string) => {
     if (isLoading) return;
     streamChat(question);
+    scrollToAiResponse();
   };
 
   const handleQAQuestionSelect = (question: string) => {
     if (!question || isLoading) return;
     streamChat(question);
+    scrollToAiResponse();
   };
 
   // Voice recording functionality
@@ -656,11 +667,7 @@ export default function TcmBrain() {
                     className="gap-1 text-xs px-2 whitespace-nowrap hover:bg-jade-light/50 hover:text-jade"
                     onClick={() => {
                       setShowDetailedView(true);
-                      setTimeout(() => {
-                        const tabsList = document.querySelector('[role="tablist"]');
-                        const targetTab = tabsList?.querySelector(`[value="${tab.id}"]`) as HTMLButtonElement;
-                        targetTab?.click();
-                      }, 50);
+                      setActiveFeatureTab(tab.id);
                     }}
                   >
                     <tab.icon className="h-3 w-3" />
@@ -758,21 +765,19 @@ export default function TcmBrain() {
 
                 {/* AI Response Display - Shows loading animation and organized results */}
                 {(isLoading || messages.length > 0) && (
-                  <AIResponseDisplay
-                    isLoading={isLoading}
-                    content={messages.filter(m => m.role === 'assistant').pop()?.content || ''}
-                    query={currentQuery || messages.filter(m => m.role === 'user').pop()?.content || ''}
-                    loadingStartTime={loadingStartTime || undefined}
-                    onViewBodyMap={(points) => {
-                      setHighlightedPoints(points);
-                      setShowDetailedView(true);
-                      setTimeout(() => {
-                        const tabsList = document.querySelector('[role="tablist"]');
-                        const bodyMapTab = tabsList?.querySelector('[value="bodymap"]') as HTMLButtonElement;
-                        bodyMapTab?.click();
-                      }, 50);
-                    }}
-                  />
+                  <div ref={aiResponseRef}>
+                    <AIResponseDisplay
+                      isLoading={isLoading}
+                      content={messages.filter(m => m.role === 'assistant').pop()?.content || ''}
+                      query={currentQuery || messages.filter(m => m.role === 'user').pop()?.content || ''}
+                      loadingStartTime={loadingStartTime || undefined}
+                      onViewBodyMap={(points) => {
+                        setHighlightedPoints(points);
+                        setShowDetailedView(true);
+                        setActiveFeatureTab('bodymap');
+                      }}
+                    />
+                  </div>
                 )}
 
                 {/* Chat Input at bottom */}
@@ -834,7 +839,7 @@ export default function TcmBrain() {
               </div>
             ) : (
               /* Detailed View - All Topics Tabs (includes Quick Questions) */
-              <Tabs defaultValue="chat" className="flex-1 flex flex-col">
+              <Tabs value={activeFeatureTab} onValueChange={setActiveFeatureTab} className="flex-1 flex flex-col">
                 <div className="px-4 pt-4 overflow-x-auto">
                   <TabsList className="w-max min-w-full justify-start gap-1">
                     {featureTabs.map(tab => (
@@ -981,11 +986,7 @@ Include:
 9. Treatment frequency and course recommendation`;
                     streamChat(prompt);
                     // Switch to chat tab to see the response
-                    setTimeout(() => {
-                      const tabsList = document.querySelector('[role="tablist"]');
-                      const chatTab = tabsList?.querySelector('[value="chat"]') as HTMLButtonElement;
-                      chatTab?.click();
-                    }, 100);
+                    setActiveFeatureTab('chat');
                   }}
                 />
               </TabsContent>
