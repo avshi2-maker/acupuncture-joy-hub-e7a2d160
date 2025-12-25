@@ -6,6 +6,7 @@ interface SessionState {
   status: SessionStatus;
   duration: number;
   startTime: number | null;
+  sessionStartTime: number | null; // When the session originally started
   notes: string;
   patientId: string | null;
   patientName: string | null;
@@ -34,6 +35,7 @@ const getInitialState = (): SessionState => {
     status: 'idle',
     duration: 0,
     startTime: null,
+    sessionStartTime: null,
     notes: '',
     patientId: null,
     patientName: null,
@@ -66,10 +68,12 @@ export function useSessionPersistence() {
   }, [state.status]);
 
   const startSession = useCallback(() => {
+    const now = Date.now();
     setState(prev => ({
       ...prev,
       status: 'running',
-      startTime: Date.now(),
+      startTime: now,
+      sessionStartTime: now,
     }));
   }, []);
 
@@ -102,6 +106,7 @@ export function useSessionPersistence() {
       status: 'idle',
       duration: 0,
       startTime: null,
+      sessionStartTime: null,
       notes: '',
       patientId: null,
       patientName: null,
@@ -144,6 +149,7 @@ export function useSessionPersistence() {
     patientName: state.patientName,
     patientPhone: state.patientPhone,
     anxietyConversation: state.anxietyConversation,
+    sessionStartTime: state.sessionStartTime,
     startSession,
     pauseSession,
     resumeSession,

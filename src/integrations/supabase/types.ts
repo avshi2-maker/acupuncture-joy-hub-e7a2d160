@@ -778,6 +778,53 @@ export type Database = {
         }
         Relationships: []
       }
+      video_sessions: {
+        Row: {
+          anxiety_qa_responses: Json | null
+          created_at: string
+          duration_seconds: number | null
+          ended_at: string | null
+          id: string
+          notes: string | null
+          patient_id: string | null
+          started_at: string
+          therapist_id: string
+          updated_at: string
+        }
+        Insert: {
+          anxiety_qa_responses?: Json | null
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          notes?: string | null
+          patient_id?: string | null
+          started_at: string
+          therapist_id: string
+          updated_at?: string
+        }
+        Update: {
+          anxiety_qa_responses?: Json | null
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          notes?: string | null
+          patient_id?: string | null
+          started_at?: string
+          therapist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_sessions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       visits: {
         Row: {
           chief_complaint: string | null
@@ -845,6 +892,67 @@ export type Database = {
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_recordings: {
+        Row: {
+          audio_url: string
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          patient_id: string | null
+          recording_type: string
+          therapist_id: string
+          transcription: string | null
+          video_session_id: string | null
+          visit_id: string | null
+        }
+        Insert: {
+          audio_url: string
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          patient_id?: string | null
+          recording_type?: string
+          therapist_id: string
+          transcription?: string | null
+          video_session_id?: string | null
+          visit_id?: string | null
+        }
+        Update: {
+          audio_url?: string
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          patient_id?: string | null
+          recording_type?: string
+          therapist_id?: string
+          transcription?: string | null
+          video_session_id?: string | null
+          visit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_recordings_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_recordings_video_session_id_fkey"
+            columns: ["video_session_id"]
+            isOneToOne: false
+            referencedRelation: "video_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_recordings_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
             referencedColumns: ["id"]
           },
         ]

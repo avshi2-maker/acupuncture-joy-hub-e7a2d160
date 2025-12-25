@@ -10,7 +10,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Settings, Video, Save } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Settings, Video, Save, Bell } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface TherapistSettingsDialogProps {
@@ -18,8 +19,18 @@ interface TherapistSettingsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const ZOOM_LINK_STORAGE_KEY = 'therapist_zoom_link';
-const THERAPIST_NAME_KEY = 'therapist_display_name';
+export const ZOOM_LINK_STORAGE_KEY = 'therapist_zoom_link';
+export const THERAPIST_NAME_KEY = 'therapist_display_name';
+export const AUDIO_ALERTS_ENABLED_KEY = 'therapist_audio_alerts_enabled';
+
+export function getAudioAlertsEnabled(): boolean {
+  try {
+    const saved = localStorage.getItem(AUDIO_ALERTS_ENABLED_KEY);
+    return saved === null ? true : saved === 'true'; // Default to enabled
+  } catch {
+    return true;
+  }
+}
 
 export function TherapistSettingsDialog({
   open,
@@ -27,20 +38,24 @@ export function TherapistSettingsDialog({
 }: TherapistSettingsDialogProps) {
   const [zoomLink, setZoomLink] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [audioAlertsEnabled, setAudioAlertsEnabled] = useState(true);
 
   // Load saved settings on mount
   useEffect(() => {
     if (open) {
       const savedLink = localStorage.getItem(ZOOM_LINK_STORAGE_KEY) || '';
       const savedName = localStorage.getItem(THERAPIST_NAME_KEY) || '';
+      const savedAudioAlerts = getAudioAlertsEnabled();
       setZoomLink(savedLink);
       setDisplayName(savedName);
+      setAudioAlertsEnabled(savedAudioAlerts);
     }
   }, [open]);
 
   const handleSave = () => {
     localStorage.setItem(ZOOM_LINK_STORAGE_KEY, zoomLink);
     localStorage.setItem(THERAPIST_NAME_KEY, displayName);
+    localStorage.setItem(AUDIO_ALERTS_ENABLED_KEY, audioAlertsEnabled.toString());
     toast.success('ההגדרות נשמרו בהצלחה');
     onOpenChange(false);
   };
@@ -86,6 +101,26 @@ export function TherapistSettingsDialog({
             <p className="text-xs text-muted-foreground">
               קישור זה ישמש כברירת מחדל בעת שליחת הזמנות לפגישות וידאו
             </p>
+          </div>
+
+          {/* Audio Alerts Toggle */}
+          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Bell className="h-4 w-4 text-amber-500" />
+              <div>
+                <Label htmlFor="audio-alerts" className="text-sm font-medium">
+                  התראות קוליות
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  השמע צליל התראה לפני סיום מגבלת Zoom
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="audio-alerts"
+              checked={audioAlertsEnabled}
+              onCheckedChange={setAudioAlertsEnabled}
+            />
           </div>
 
           {/* Info box */}
