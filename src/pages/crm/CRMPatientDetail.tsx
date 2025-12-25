@@ -6,14 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { format, differenceInYears } from 'date-fns';
+import { he } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { 
   ArrowLeft, User, Phone, Mail, Calendar, MapPin, Heart, 
   Activity, FileText, Plus, Edit, Trash2, Baby, AlertTriangle,
-  Clock, Stethoscope, Pill, Brain, Moon, Utensils
+  Clock, Stethoscope, Pill, Brain, Moon, Utensils, Video, Mic, Play, Pause
 } from 'lucide-react';
 import { VisitFormDialog } from '@/components/crm/VisitFormDialog';
 
@@ -71,6 +71,25 @@ interface Visit {
   created_at: string;
 }
 
+interface VideoSession {
+  id: string;
+  started_at: string;
+  ended_at: string | null;
+  duration_seconds: number | null;
+  notes: string | null;
+  anxiety_qa_responses: unknown; // JSON type from Supabase
+  created_at: string;
+}
+
+interface VoiceRecording {
+  id: string;
+  audio_url: string;
+  transcription: string | null;
+  recording_type: string;
+  duration_seconds: number | null;
+  created_at: string;
+}
+
 function calculateAge(dob: string | null): number | null {
   if (!dob) return null;
   return differenceInYears(new Date(), new Date(dob));
@@ -86,19 +105,32 @@ function getAgeGroupLabel(ageGroup: string | null): string {
   return labels[ageGroup || ''] || 'Unknown';
 }
 
+function formatDuration(seconds: number | null): string {
+  if (!seconds) return '00:00';
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
 export default function CRMPatientDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [patient, setPatient] = useState<Patient | null>(null);
   const [visits, setVisits] = useState<Visit[]>([]);
+  const [videoSessions, setVideoSessions] = useState<VideoSession[]>([]);
+  const [voiceRecordings, setVoiceRecordings] = useState<VoiceRecording[]>([]);
   const [loading, setLoading] = useState(true);
   const [visitDialogOpen, setVisitDialogOpen] = useState(false);
   const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
+  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (id) {
       fetchPatient();
       fetchVisits();
+      fetchVideoSessions();
+      fetchVoiceRecordings();
     }
   }, [id]);
 
@@ -140,6 +172,36 @@ export default function CRMPatientDetail() {
     setVisits(data || []);
   };
 
+  const fetchVideoSessions = async () => {
+    const { data, error } = await supabase
+      .from('video_sessions')
+      .select('*')
+      .eq('patient_id', id)
+      .order('started_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching video sessions:', error);
+      return;
+    }
+
+    setVideoSessions(data || []);
+  };
+
+  const fetchVoiceRecordings = async () => {
+    const { data, error } = await supabase
+      .from('voice_recordings')
+      .select('*')
+      .eq('patient_id', id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching voice recordings:', error);
+      return;
+    }
+
+    setVoiceRecordings(data || []);
+  };
+
   const handleDeleteVisit = async (visitId: string) => {
     if (!confirm('Are you sure you want to delete this visit record?')) return;
 
@@ -155,6 +217,62 @@ export default function CRMPatientDetail() {
 
     toast.success('Visit deleted');
     fetchVisits();
+  };
+
+  const handleDeleteVideoSession = async (sessionId: string) => {
+    if (!confirm('האם אתה בטוח שברצונך למחוק פגישת וידאו זו?')) return;
+
+    const { error } = await supabase
+      .from('video_sessions')
+      .delete()
+      .eq('id', sessionId);
+
+    if (error) {
+      toast.error('שגיאה במחיקת הפגישה');
+      return;
+    }
+
+    toast.success('הפגישה נמחקה');
+    fetchVideoSessions();
+  };
+
+  const handleDeleteVoiceRecording = async (recordingId: string) => {
+    if (!confirm('האם אתה בטוח שברצונך למחוק הקלטה זו?')) return;
+
+    const { error } = await supabase
+      .from('voice_recordings')
+      .delete()
+      .eq('id', recordingId);
+
+    if (error) {
+      toast.error('שגיאה במחיקת ההקלטה');
+      return;
+    }
+
+    toast.success('ההקלטה נמחקה');
+    fetchVoiceRecordings();
+  };
+
+  const toggleAudioPlayback = (recording: VoiceRecording) => {
+    if (playingAudioId === recording.id) {
+      // Stop playing
+      audioElement?.pause();
+      setPlayingAudioId(null);
+      setAudioElement(null);
+    } else {
+      // Stop any existing playback
+      audioElement?.pause();
+      
+      // Start new playback
+      const audio = new Audio(recording.audio_url);
+      audio.onended = () => {
+        setPlayingAudioId(null);
+        setAudioElement(null);
+      };
+      audio.play();
+      setAudioElement(audio);
+      setPlayingAudioId(recording.id);
+    }
   };
 
   const handleVisitSaved = () => {
@@ -234,9 +352,17 @@ export default function CRMPatientDetail() {
 
         {/* Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList>
+          <TabsList className="flex-wrap">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="visits">Visit History ({visits.length})</TabsTrigger>
+            <TabsTrigger value="video-sessions">
+              <Video className="h-4 w-4 mr-1" />
+              Video ({videoSessions.length})
+            </TabsTrigger>
+            <TabsTrigger value="recordings">
+              <Mic className="h-4 w-4 mr-1" />
+              Recordings ({voiceRecordings.length})
+            </TabsTrigger>
             <TabsTrigger value="medical">Medical Info</TabsTrigger>
             <TabsTrigger value="lifestyle">Lifestyle</TabsTrigger>
             <TabsTrigger value="tcm">TCM Assessment</TabsTrigger>
@@ -364,6 +490,38 @@ export default function CRMPatientDetail() {
               </Card>
             )}
 
+            {/* Recent Video Sessions */}
+            {videoSessions.length > 0 && (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Video className="h-4 w-4 text-blue-500" />
+                    פגישות וידאו אחרונות
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {videoSessions.slice(0, 3).map((session) => (
+                      <div key={session.id} className="flex items-center justify-between p-3 rounded-lg bg-blue-50/50">
+                        <div>
+                          <p className="font-medium text-sm">
+                            {format(new Date(session.started_at), 'dd/MM/yyyy HH:mm', { locale: he })}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            משך: {formatDuration(session.duration_seconds)}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          <Video className="h-3 w-3 mr-1" />
+                          וידאו
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Recent Visits */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
@@ -405,6 +563,140 @@ export default function CRMPatientDetail() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Video Sessions Tab */}
+          <TabsContent value="video-sessions" className="space-y-4">
+            {videoSessions.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Video className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                  <p className="text-muted-foreground">אין פגישות וידאו מתועדות</p>
+                </CardContent>
+              </Card>
+            ) : (
+              videoSessions.map((session) => (
+                <Card key={session.id}>
+                  <CardHeader className="flex flex-row items-start justify-between pb-2">
+                    <div>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Video className="h-4 w-4 text-blue-500" />
+                        {format(new Date(session.started_at), 'EEEE, d בMMMM yyyy', { locale: he })}
+                      </CardTitle>
+                      <CardDescription className="flex items-center gap-3 mt-1">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          התחלה: {format(new Date(session.started_at), 'HH:mm')}
+                        </span>
+                        {session.ended_at && (
+                          <span>
+                            סיום: {format(new Date(session.ended_at), 'HH:mm')}
+                          </span>
+                        )}
+                        <Badge variant="outline">
+                          משך: {formatDuration(session.duration_seconds)}
+                        </Badge>
+                      </CardDescription>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => handleDeleteVideoSession(session.id)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {session.notes && (
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">הערות</p>
+                        <p className="text-sm whitespace-pre-wrap">{session.notes}</p>
+                      </div>
+                    )}
+                    {Array.isArray(session.anxiety_qa_responses) && session.anxiety_qa_responses.length > 0 && (
+                      <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
+                        <p className="text-xs text-amber-700 font-medium mb-2">שאלון חרדה</p>
+                        <div className="text-sm text-amber-900 space-y-1">
+                          {(session.anxiety_qa_responses as string[]).slice(0, 3).map((response, idx) => (
+                            <p key={idx}>{response}</p>
+                          ))}
+                          {session.anxiety_qa_responses.length > 3 && (
+                            <p className="text-xs text-amber-600">
+                              +{session.anxiety_qa_responses.length - 3} נוספים
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </TabsContent>
+
+          {/* Voice Recordings Tab */}
+          <TabsContent value="recordings" className="space-y-4">
+            {voiceRecordings.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Mic className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                  <p className="text-muted-foreground">אין הקלטות קוליות</p>
+                </CardContent>
+              </Card>
+            ) : (
+              voiceRecordings.map((recording) => (
+                <Card key={recording.id}>
+                  <CardHeader className="flex flex-row items-start justify-between pb-2">
+                    <div>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Mic className="h-4 w-4 text-amber-500" />
+                        {format(new Date(recording.created_at), 'EEEE, d בMMMM yyyy HH:mm', { locale: he })}
+                      </CardTitle>
+                      <CardDescription className="flex items-center gap-3 mt-1">
+                        <Badge variant="outline">
+                          {recording.recording_type === 'treatment_plan' ? 'תוכנית טיפול' : recording.recording_type}
+                        </Badge>
+                        {recording.duration_seconds && (
+                          <span className="text-xs">
+                            משך: {formatDuration(recording.duration_seconds)}
+                          </span>
+                        )}
+                      </CardDescription>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button 
+                        variant="outline" 
+                        size="icon"
+                        onClick={() => toggleAudioPlayback(recording)}
+                      >
+                        {playingAudioId === recording.id ? (
+                          <Pause className="h-4 w-4" />
+                        ) : (
+                          <Play className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleDeleteVoiceRecording(recording.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  {recording.transcription && (
+                    <CardContent>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">תמלול</p>
+                        <p className="text-sm whitespace-pre-wrap bg-muted/50 p-3 rounded-lg">
+                          {recording.transcription}
+                        </p>
+                      </div>
+                    </CardContent>
+                  )}
+                </Card>
+              ))
+            )}
           </TabsContent>
 
           {/* Visits Tab */}

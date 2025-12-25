@@ -25,7 +25,8 @@ import {
   AlertTriangle,
   CalendarPlus,
   Mic,
-  ClipboardList
+  ClipboardList,
+  Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { saveSessionReport, printReport, LocalSessionReport } from '@/utils/localDataStorage';
@@ -69,6 +70,7 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
   const [showVoiceDictation, setShowVoiceDictation] = useState(false);
   const [showCalendarInvite, setShowCalendarInvite] = useState(false);
   const [currentAppointmentId, setCurrentAppointmentId] = useState<string | null>(null);
+  const [isCancellingBlock, setIsCancellingBlock] = useState(false);
   const warningShownRef = useRef(false);
 
   const {
@@ -346,6 +348,28 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
     toast.success('הפגישה נוספה ליומן - תשוחרר בסיום');
   };
 
+  const handleCancelCalendarBlock = async () => {
+    if (!currentAppointmentId) return;
+
+    setIsCancellingBlock(true);
+    try {
+      const { error } = await supabase
+        .from('appointments')
+        .update({ status: 'cancelled' })
+        .eq('id', currentAppointmentId);
+
+      if (error) throw error;
+
+      setCurrentAppointmentId(null);
+      toast.success('החסימה ביומן בוטלה');
+    } catch (error) {
+      console.error('Error cancelling calendar block:', error);
+      toast.error('שגיאה בביטול החסימה');
+    } finally {
+      setIsCancellingBlock(false);
+    }
+  };
+
   // Format session start time for display
   const getSessionStartTimeDisplay = () => {
     if (!sessionStartTime) return null;
@@ -431,6 +455,36 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
               value={getZoomProgress()} 
               className={`h-2 ${isZoomExpired ? '[&>div]:bg-destructive' : isZoomWarning ? '[&>div]:bg-amber-500' : '[&>div]:bg-blue-500'}`}
             />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Calendar Block Indicator */}
+      {currentAppointmentId && (
+        <Card className="mb-4 border-green-200 bg-green-50">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-green-600" />
+                <span className="text-sm font-medium text-green-700">
+                  40 דקות חסומות ביומן
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCancelCalendarBlock}
+                disabled={isCancellingBlock}
+                className="h-7 px-2 text-xs text-red-600 hover:bg-red-50 hover:text-red-700"
+              >
+                {isCancellingBlock ? (
+                  <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                ) : (
+                  <Trash2 className="h-3 w-3 mr-1" />
+                )}
+                בטל חסימה
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
