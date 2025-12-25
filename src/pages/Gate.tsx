@@ -56,41 +56,29 @@ export default function Gate() {
     try {
       const password = data.password.trim();
 
-      // Check if password exists (then we can show an accurate message)
-      const { data: passwordData, error } = await supabase
-        .from('access_passwords')
-        .select('tier, expires_at, is_used')
-        .eq('plain_password', password)
-        .maybeSingle();
+      // Use secure RPC function to validate password (prevents password enumeration)
+      const { data: validationResult, error } = await supabase
+        .rpc('validate_access_password', { password_input: password });
 
       if (error) throw error;
 
-      if (!passwordData) {
-        toast.error('סיסמה לא תקינה. ודאו שאין רווחים ושהאותיות גדולות/קטנות נכונות.');
-        return;
-      }
-
-      if (passwordData.is_used) {
-        toast.error('הסיסמה כבר נוצלה. צרו קשר לקבלת סיסמה חדשה.');
-        return;
-      }
-
-      // Check expiration
-      if (passwordData.expires_at && new Date(passwordData.expires_at) < new Date()) {
-        toast.error('הסיסמה פגה תוקף. צרו קשר עם ד״ר רוני.');
+      // Check validation result
+      const result = validationResult?.[0];
+      if (!result || !result.valid) {
+        toast.error('סיסמה לא תקינה, בשימוש, או שפג תוקפה.');
         return;
       }
 
       // Set tier and expiration
-      setTier(passwordData.tier as 'trial' | 'standard' | 'premium');
-      if (passwordData.expires_at) {
-        setExpiresAt(new Date(passwordData.expires_at));
+      setTier(result.tier as 'trial' | 'standard' | 'premium');
+      if (result.expires_at) {
+        setExpiresAt(new Date(result.expires_at));
       }
 
       // Log access
       await supabase.from('access_logs').insert({
         action: 'password_login',
-        details: { tier: passwordData.tier },
+        details: { tier: result.tier },
       });
 
       toast.success('ברוכים הבאים!');

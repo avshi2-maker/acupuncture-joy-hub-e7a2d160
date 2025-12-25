@@ -14,6 +14,8 @@ import { useTier } from '@/hooks/useTier';
 import { TierBadge } from '@/components/layout/TierBadge';
 import { ChatMessage, ChatTypingIndicator } from '@/components/chat/ChatMessage';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { 
   Brain, 
   Send, 
@@ -258,6 +260,7 @@ const mainQueryCategories = [
 export default function TcmBrain() {
   const navigate = useNavigate();
   const { tier, hasFeature } = useTier();
+  const { session } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -334,6 +337,13 @@ export default function TcmBrain() {
     setLoadingStartTime(Date.now());
     setCurrentQuery(userMessage);
 
+    // Check for authentication
+    if (!session?.access_token) {
+      toast.error('Please log in to use TCM Brain');
+      setIsLoading(false);
+      return;
+    }
+
     let assistantContent = '';
 
     try {
@@ -341,13 +351,15 @@ export default function TcmBrain() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ messages: [...messages, userMsg] }),
       });
 
       if (!response.ok) {
-        if (response.status === 429) {
+        if (response.status === 401) {
+          toast.error('Session expired. Please log in again.');
+        } else if (response.status === 429) {
           toast.error('Too many requests. Try again in a minute.');
         } else if (response.status === 402) {
           toast.error('Credits exhausted. Please add credits.');
@@ -464,23 +476,17 @@ export default function TcmBrain() {
         reader.onloadend = async () => {
           const base64Audio = (reader.result as string).split(',')[1];
           try {
-            const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-to-text`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-              },
-              body: JSON.stringify({ audio: base64Audio }),
+            // Use supabase.functions.invoke which auto-passes the session JWT
+            const { data, error } = await supabase.functions.invoke('voice-to-text', {
+              body: { audio: base64Audio },
             });
             
-            if (response.ok) {
-              const { text } = await response.json();
-              if (text) {
-                setInput(text);
-                toast.success('Recording transcribed');
-              }
-            } else {
+            if (error) {
+              console.error('Transcription error:', error);
               toast.error('Transcription error');
+            } else if (data?.text) {
+              setInput(data.text);
+              toast.success('Recording transcribed');
             }
           } catch (error) {
             console.error('Transcription error:', error);

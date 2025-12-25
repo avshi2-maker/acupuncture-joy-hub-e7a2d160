@@ -977,6 +977,14 @@ export type Database = {
         Args: { _clinic_id: string; _user_id: string }
         Returns: boolean
       }
+      validate_access_password: {
+        Args: { password_input: string }
+        Returns: {
+          expires_at: string
+          tier: Database["public"]["Enums"]["subscription_tier"]
+          valid: boolean
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "therapist" | "patient"
