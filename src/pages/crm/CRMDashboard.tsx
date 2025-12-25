@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Users, Clock, TrendingUp, Plus, ArrowRight, MessageCircle } from 'lucide-react';
+import { Calendar, Users, Clock, TrendingUp, Plus, ArrowRight } from 'lucide-react';
 import { WhatsAppReminderButton } from '@/components/crm/WhatsAppReminderButton';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -86,23 +86,23 @@ export default function CRMDashboard() {
 
   return (
     <CRMLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-display font-semibold">Dashboard</h1>
+            <h1 className="text-xl md:text-2xl font-display font-semibold">Dashboard</h1>
             <p className="text-sm text-muted-foreground">
               Welcome back! Here's your clinic overview for {format(new Date(), 'EEEE, MMMM d')}
             </p>
           </div>
           <div className="flex gap-2">
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" size="sm" className="flex-1 sm:flex-none">
               <Link to="/crm/patients/new">
                 <Plus className="h-4 w-4 mr-2" />
-                New Patient
+                <span className="hidden xs:inline">New</span> Patient
               </Link>
             </Button>
-            <Button asChild className="bg-jade hover:bg-jade/90">
+            <Button asChild size="sm" className="bg-jade hover:bg-jade/90 flex-1 sm:flex-none">
               <Link to="/crm/calendar">
                 <Calendar className="h-4 w-4 mr-2" />
                 Schedule
@@ -112,19 +112,19 @@ export default function CRMDashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           {statCards.map((stat) => (
             <Card key={stat.title} className="border-border/50">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">{stat.title}</p>
-                    <p className="text-3xl font-semibold mt-1">
+              <CardContent className="p-4 md:p-6">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs md:text-sm text-muted-foreground truncate">{stat.title}</p>
+                    <p className="text-2xl md:text-3xl font-semibold mt-1">
                       {loading ? '—' : stat.value}
                     </p>
                   </div>
-                  <div className={`p-3 rounded-xl ${stat.bg}`}>
-                    <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                  <div className={`p-2 md:p-3 rounded-xl ${stat.bg} shrink-0`}>
+                    <stat.icon className={`h-4 w-4 md:h-6 md:w-6 ${stat.color}`} />
                   </div>
                 </div>
               </CardContent>
@@ -132,20 +132,20 @@ export default function CRMDashboard() {
           ))}
         </div>
 
-        {/* Today's Schedule */}
-        <div className="grid lg:grid-cols-2 gap-6">
+        {/* Today's Schedule & Quick Actions */}
+        <div className="grid lg:grid-cols-2 gap-4 md:gap-6">
           <Card className="border-border/50">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-3 px-4 md:px-6">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">Today's Schedule</CardTitle>
+                <CardTitle className="text-base md:text-lg">Today's Schedule</CardTitle>
                 <Button variant="ghost" size="sm" asChild>
-                  <Link to="/crm/calendar">
-                    View all <ArrowRight className="h-4 w-4 ml-1" />
+                  <Link to="/crm/calendar" className="text-xs md:text-sm">
+                    View all <ArrowRight className="h-3 w-3 md:h-4 md:w-4 ml-1" />
                   </Link>
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 md:px-6">
               {loading ? (
                 <div className="space-y-3">
                   {[1, 2, 3].map((i) => (
@@ -153,10 +153,10 @@ export default function CRMDashboard() {
                   ))}
                 </div>
               ) : todayAppts.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Calendar className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No appointments scheduled for today</p>
-                  <Button variant="link" asChild className="mt-2">
+                <div className="text-center py-6 md:py-8 text-muted-foreground">
+                  <Calendar className="h-10 w-10 md:h-12 md:w-12 mx-auto mb-3 opacity-50" />
+                  <p className="text-sm">No appointments scheduled for today</p>
+                  <Button variant="link" asChild className="mt-2 text-sm">
                     <Link to="/crm/calendar">Schedule an appointment</Link>
                   </Button>
                 </div>
@@ -165,38 +165,40 @@ export default function CRMDashboard() {
                   {todayAppts.slice(0, 5).map((appt) => (
                     <div
                       key={appt.id}
-                      className="flex items-center gap-4 p-3 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors"
+                      className="flex items-center gap-3 md:gap-4 p-3 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors"
                     >
-                      <div className="w-1 h-12 rounded-full bg-jade" />
+                      <div className="w-1 h-10 md:h-12 rounded-full bg-jade shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">
+                        <p className="font-medium text-sm md:text-base truncate">
                           {appt.patients?.full_name || appt.title}
                         </p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground">
                           {format(new Date(appt.start_time), 'h:mm a')} -{' '}
                           {format(new Date(appt.end_time), 'h:mm a')}
                         </p>
                       </div>
-                      <WhatsAppReminderButton
-                        patientName={appt.patients?.full_name || 'Patient'}
-                        patientPhone={appt.patients?.phone}
-                        appointmentId={appt.id}
-                        appointmentDate={appt.start_time}
-                        appointmentTime={format(new Date(appt.start_time), 'HH:mm')}
-                      />
-                      <span
-                        className={`px-2 py-1 text-xs rounded-full ${
-                          appt.status === 'completed'
-                            ? 'bg-emerald-500/10 text-emerald-500'
-                            : appt.status === 'confirmed'
-                            ? 'bg-jade/20 text-jade border border-jade/30'
-                            : appt.status === 'cancelled'
-                            ? 'bg-red-500/10 text-red-500'
-                            : 'bg-blue-500/10 text-blue-500'
-                        }`}
-                      >
-                        {appt.status}
-                      </span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <WhatsAppReminderButton
+                          patientName={appt.patients?.full_name || 'Patient'}
+                          patientPhone={appt.patients?.phone}
+                          appointmentId={appt.id}
+                          appointmentDate={appt.start_time}
+                          appointmentTime={format(new Date(appt.start_time), 'HH:mm')}
+                        />
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full hidden sm:inline-block ${
+                            appt.status === 'completed'
+                              ? 'bg-emerald-500/10 text-emerald-500'
+                              : appt.status === 'confirmed'
+                              ? 'bg-jade/20 text-jade border border-jade/30'
+                              : appt.status === 'cancelled'
+                              ? 'bg-red-500/10 text-red-500'
+                              : 'bg-blue-500/10 text-blue-500'
+                          }`}
+                        >
+                          {appt.status}
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -206,33 +208,33 @@ export default function CRMDashboard() {
 
           {/* Quick Actions */}
           <Card className="border-border/50">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Quick Actions</CardTitle>
+            <CardHeader className="pb-3 px-4 md:px-6">
+              <CardTitle className="text-base md:text-lg">Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-3">
-                <Button variant="outline" className="h-20 flex-col gap-2" asChild>
+            <CardContent className="px-4 md:px-6">
+              <div className="grid grid-cols-2 gap-2 md:gap-3">
+                <Button variant="outline" className="h-16 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm" asChild>
                   <Link to="/crm/patients/new">
-                    <Users className="h-5 w-5" />
-                    <span className="text-sm">Add Patient</span>
+                    <Users className="h-4 w-4 md:h-5 md:w-5" />
+                    <span>Add Patient</span>
                   </Link>
                 </Button>
-                <Button variant="outline" className="h-20 flex-col gap-2" asChild>
+                <Button variant="outline" className="h-16 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm" asChild>
                   <Link to="/crm/calendar">
-                    <Calendar className="h-5 w-5" />
-                    <span className="text-sm">New Appointment</span>
+                    <Calendar className="h-4 w-4 md:h-5 md:w-5" />
+                    <span>New Appointment</span>
                   </Link>
                 </Button>
-                <Button variant="outline" className="h-20 flex-col gap-2" asChild>
+                <Button variant="outline" className="h-16 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm" asChild>
                   <Link to="/crm/rooms">
-                    <Clock className="h-5 w-5" />
-                    <span className="text-sm">Manage Rooms</span>
+                    <Clock className="h-4 w-4 md:h-5 md:w-5" />
+                    <span>Manage Rooms</span>
                   </Link>
                 </Button>
-                <Button variant="outline" className="h-20 flex-col gap-2" asChild>
+                <Button variant="outline" className="h-16 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm" asChild>
                   <Link to="/tcm-brain">
-                    <TrendingUp className="h-5 w-5" />
-                    <span className="text-sm">TCM Brain</span>
+                    <TrendingUp className="h-4 w-4 md:h-5 md:w-5" />
+                    <span>TCM Brain</span>
                   </Link>
                 </Button>
               </div>

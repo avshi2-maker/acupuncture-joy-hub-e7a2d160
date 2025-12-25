@@ -25,6 +25,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  X,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { TierBadge } from '@/components/layout/TierBadge';
@@ -48,13 +49,20 @@ const toolsItems = [
 
 export function CRMSidebar() {
   const navigate = useNavigate();
-  const { state, toggleSidebar } = useSidebar();
+  const { state, toggleSidebar, isMobile, setOpenMobile } = useSidebar();
   const isCollapsed = state === 'collapsed';
 
   const handleLogout = () => {
     localStorage.removeItem('therapist_tier');
     localStorage.removeItem('therapist_expires_at');
     navigate('/');
+  };
+
+  const handleNavClick = () => {
+    // Close sidebar on mobile after navigation
+    if (isMobile) {
+      setOpenMobile(false);
+    }
   };
 
   return (
@@ -69,14 +77,25 @@ export function CRMSidebar() {
               <span className="font-display font-semibold text-lg">TCM Clinic</span>
             </div>
           )}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={toggleSidebar}
-          >
-            {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-          </Button>
+          {isMobile ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setOpenMobile(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={toggleSidebar}
+            >
+              {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            </Button>
+          )}
         </div>
       </SidebarHeader>
 
@@ -93,9 +112,10 @@ export function CRMSidebar() {
                       end={item.url === '/crm'}
                       className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted/50 transition-colors"
                       activeClassName="bg-jade/10 text-jade font-medium"
+                      onClick={handleNavClick}
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
-                      {!isCollapsed && <span>{item.title}</span>}
+                      <span className={isCollapsed && !isMobile ? 'sr-only' : ''}>{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -115,9 +135,10 @@ export function CRMSidebar() {
                       to={item.url}
                       className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted/50 transition-colors"
                       activeClassName="bg-jade/10 text-jade font-medium"
+                      onClick={handleNavClick}
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
-                      {!isCollapsed && <span>{item.title}</span>}
+                      <span className={isCollapsed && !isMobile ? 'sr-only' : ''}>{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -137,9 +158,10 @@ export function CRMSidebar() {
                       to={item.url}
                       className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted/50 transition-colors"
                       activeClassName="bg-jade/10 text-jade font-medium"
+                      onClick={handleNavClick}
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
-                      {!isCollapsed && <span>{item.title}</span>}
+                      <span className={isCollapsed && !isMobile ? 'sr-only' : ''}>{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -150,12 +172,12 @@ export function CRMSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-border/30 p-4">
-        <div className="flex items-center justify-between">
-          {!isCollapsed && <TierBadge />}
+        <div className="flex items-center justify-between gap-2">
+          {(!isCollapsed || isMobile) && <TierBadge />}
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+            className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
             onClick={handleLogout}
             title="Logout"
           >
