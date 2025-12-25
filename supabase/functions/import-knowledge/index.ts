@@ -136,6 +136,36 @@ serve(async (req) => {
               question = row['Clinical Q&A – Question'];
               answer = row['Clinical Q&A – Answer'];
             }
+          } else if (row.Question_Hebrew || row.Question_English) {
+            // TCM Professional Training Syllabus format - bilingual Q&A
+            const nameHe = row.Name_Hebrew || row['Name\\_Hebrew'] || '';
+            const nameEn = row.Name_English || row['Name\\_English'] || '';
+            const pinyin = row.Pinyin || '';
+            const clinical = row.Clinical_Description || row['Clinical\\_Description'] || '';
+            const points = row.Acupuncture_Points || row['Acupuncture\\_Points'] || '';
+            const treatment = row.Treatment_Principle || row['Treatment\\_Principle'] || '';
+            const qHe = row.Question_Hebrew || row['Question\\_Hebrew'] || '';
+            const qEn = row.Question_English || row['Question\\_English'] || '';
+            const category = row.Category || '';
+            const bodySystem = row.Body_System || row['Body\\_System'] || '';
+            
+            // Create bilingual question
+            question = qEn ? `${qEn}` : '';
+            if (qHe) question += ` | ${qHe}`;
+            
+            // Create comprehensive answer
+            answer = `${nameEn}${nameHe ? ` (${nameHe})` : ''}${pinyin ? ` - ${pinyin}` : ''}\n` +
+              `Clinical: ${clinical}\n` +
+              `Acupuncture Points: ${points}\n` +
+              `Treatment Principle: ${treatment}`;
+            
+            content = `Category: ${category}\n` +
+              `Name: ${nameEn}${nameHe ? ` (${nameHe})` : ''}${pinyin ? ` - ${pinyin}` : ''}\n` +
+              `Clinical Description: ${clinical}\n` +
+              `Acupuncture Points: ${points}\n` +
+              `Treatment Principle: ${treatment}\n` +
+              `Body System: ${bodySystem}\n` +
+              `Q: ${question}\nA: ${answer}`;
           } else {
             // Generic: join all values
             content = Object.values(row).filter(Boolean).join(' | ');
