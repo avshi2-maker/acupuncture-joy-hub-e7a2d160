@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Activity,
   Apple,
@@ -113,22 +113,24 @@ export function AIResponseDisplay({
 
           <div className="flex items-center gap-2">
             {(isLoading || content) && (
-              <Tooltip>
-                <TooltipTrigger asChild>
+              <Popover>
+                <PopoverTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-8 w-8">
                     <Sparkles className="h-4 w-4" />
                     <span className="sr-only">Session quick view</span>
                   </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-sm">
+                </PopoverTrigger>
+                <PopoverContent align="end" className="max-w-sm">
                   <div className="text-xs font-medium mb-1">Session quick view</div>
                   <ul className="text-xs space-y-1">
                     {quickTopics.map((t) => (
-                      <li key={t} className="text-muted-foreground">• {t}</li>
+                      <li key={t} className="text-muted-foreground">
+                        • {t}
+                      </li>
                     ))}
                   </ul>
-                </TooltipContent>
-              </Tooltip>
+                </PopoverContent>
+              </Popover>
             )}
 
             {isLoading && (
@@ -182,8 +184,7 @@ export function AIResponseDisplay({
                   variant="outline"
                   size="sm"
                   className="gap-1.5 text-xs"
-                  onClick={() => points.length && onViewBodyMap(points)}
-                  disabled={points.length === 0}
+                  onClick={() => onViewBodyMap(points)}
                 >
                   <User className="h-3 w-3" />
                   Body map
@@ -201,7 +202,6 @@ export function AIResponseDisplay({
                     size="sm"
                     className="gap-1.5 text-xs"
                     onClick={() => setActiveSection(activeSection === asset.id ? null : asset.id)}
-                    disabled={asset.count === 0}
                   >
                     <asset.icon className="h-3 w-3" />
                     {asset.label}
@@ -214,24 +214,31 @@ export function AIResponseDisplay({
                 ))}
               </div>
 
-              {activeSection === 'points' && points.length > 0 && (
+              {activeSection === 'points' && (
                 <div className="rounded-md border border-border/60 bg-muted/20 p-3 space-y-2">
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-destructive" />
                     <span className="text-sm font-medium">Recommended points</span>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {points.map((point) => (
-                      <Badge
-                        key={point}
-                        variant="outline"
-                        className="cursor-pointer border-destructive/30 bg-destructive/10 text-destructive"
-                        onClick={() => onViewBodyMap([point])}
-                      >
-                        {point}
-                      </Badge>
-                    ))}
-                  </div>
+
+                  {points.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {points.map((point) => (
+                        <Badge
+                          key={point}
+                          variant="outline"
+                          className="cursor-pointer border-destructive/30 bg-destructive/10 text-destructive"
+                          onClick={() => onViewBodyMap([point])}
+                        >
+                          {point}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      No acupuncture points detected in this report yet.
+                    </p>
+                  )}
                 </div>
               )}
 

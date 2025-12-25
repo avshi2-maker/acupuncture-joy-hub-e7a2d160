@@ -292,6 +292,14 @@ export default function TcmBrain() {
   const chatInputRef = useRef<HTMLInputElement>(null);
   const aiResponseRef = useRef<HTMLDivElement>(null);
 
+  // Ensure we scroll to the AI response panel as soon as loading starts
+  useEffect(() => {
+    if (!isLoading) return;
+    requestAnimationFrame(() => {
+      aiResponseRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }, [isLoading]);
+
   useEffect(() => {
     if (!tier) {
       navigate('/gate');
@@ -657,25 +665,27 @@ export default function TcmBrain() {
           {/* Main Area */}
           <main className="flex-1 flex flex-col max-w-6xl mx-auto w-full">
             {/* Feature tabs header */}
-            <div className="px-4 pt-4 overflow-x-auto border-b border-border/30 pb-3">
-              <div className="flex gap-1 w-max min-w-full">
-                {featureTabs.map(tab => (
-                  <Button
-                    key={tab.id}
-                    variant="ghost"
-                    size="sm"
-                    className="gap-1 text-xs px-2 whitespace-nowrap hover:bg-jade-light/50 hover:text-jade"
-                    onClick={() => {
-                      setShowDetailedView(true);
-                      setActiveFeatureTab(tab.id);
-                    }}
-                  >
-                    <tab.icon className="h-3 w-3" />
-                    {tab.label}
-                  </Button>
-                ))}
+            {!showDetailedView && (
+              <div className="px-4 pt-4 overflow-x-auto border-b border-border/30 pb-3">
+                <div className="flex gap-1 w-max min-w-full">
+                  {featureTabs.map((tab) => (
+                    <Button
+                      key={tab.id}
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1 text-xs px-2 whitespace-nowrap hover:bg-jade-light/50 hover:text-jade"
+                      onClick={() => {
+                        setShowDetailedView(true);
+                        setActiveFeatureTab(tab.id);
+                      }}
+                    >
+                      <tab.icon className="h-3 w-3" />
+                      {tab.label}
+                    </Button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {!showDetailedView ? (
               /* Main Queries View - First Page (No Quick Questions) */
