@@ -255,14 +255,88 @@ export function getAllPointCodes(): string[] {
   return pointCoordinates.map(p => p.point_code);
 }
 
-// Parse dot# references from AI response text
+/**
+ * Map common point names / pinyin to standard codes.
+ * Expand as needed.
+ */
+const POINT_NAME_MAP: Record<string, string> = {
+  // Pinyin names (lower-cased for matching)
+  zusanli: 'ST36',
+  hegu: 'LI4',
+  quchi: 'LI11',
+  sanyinjiao: 'SP6',
+  taichong: 'LV3',
+  neiguan: 'PC6',
+  waiguan: 'TE5',
+  yintang: 'Yintang',
+  baihui: 'GV20',
+  fengchi: 'GB20',
+  taiyang: 'Taiyang',
+  shenmen: 'HT7',
+  lieque: 'LU7',
+  zhaohai: 'KI6',
+  dazhui: 'GV14',
+  renzhong: 'GV26',
+  shanzhong: 'CV17',
+  qihai: 'CV6',
+  guanyuan: 'CV4',
+  zhongwan: 'CV12',
+  yanglingquan: 'GB34',
+  xuanzhong: 'GB39',
+  xuehai: 'SP10',
+  yinlingquan: 'SP9',
+  fenglong: 'ST40',
+  tianshu: 'ST25',
+};
+
+/**
+ * Normalize a raw point string (e.g. "ST-36", "ST 36", "st36") to the canonical code format (e.g. "ST36").
+ */
+function normalizePointCode(raw: string): string {
+  // Remove hyphens/spaces, uppercase
+  return raw.replace(/[-\s]/g, '').toUpperCase();
+}
+
+/**
+ * Extract acupuncture point codes from AI-generated text.
+ * Supports:
+ *  - Canonical codes: ST36, LI4
+ *  - Hyphenated: ST-36, LI-4
+ *  - Spaced: ST 36, LI 4
+ *  - Common pinyin names: Zusanli, Hegu, etc.
+ */
 export function parsePointReferences(text: string): string[] {
-  // Match patterns like ST36, LI4, GB20, CV12, GV14, etc.
-  const pointPattern = /\b([A-Z]{1,3}\d{1,2})\b/g;
-  const matches = text.match(pointPattern) || [];
-  // Filter to only known point codes
   const knownCodes = getAllPointCodes();
-  return [...new Set(matches.filter(code => knownCodes.includes(code)))];
+  const knownSet = new Set(knownCodes.map((c) => c.toUpperCase()));
+  const found: Set<string> = new Set();
+
+  // 1) Match code-style patterns: ST36 / ST-36 / ST 36 (case-insensitive)
+  //    Allow 1-3 letters, optional hyphen/space, 1-2 digits
+  const codePattern = /\b([A-Za-z]{1,3})[-\s]?(\d{1,2})\b/g;
+  let match: RegExpExecArray | null;
+  while ((match = codePattern.exec(text)) !== null) {
+    const normalized = `${match[1].toUpperCase()}${match[2]}`;
+    if (knownSet.has(normalized)) {
+      // Return the original canonical code from knownCodes (preserves casing like 'Yintang')
+      const original = knownCodes.find((c) => c.toUpperCase() === normalized);
+      if (original) found.add(original);
+    }
+  }
+
+  // 2) Match known point names (case-insensitive whole-word)
+  const lowerText = text.toLowerCase();
+  for (const [name, code] of Object.entries(POINT_NAME_MAP)) {
+    // Whole-word boundary check
+    const regex = new RegExp(`\\b${name}\\b`, 'i');
+    if (regex.test(lowerText)) {
+      // Check if canonical code is in our known list
+      const upperCode = code.toUpperCase();
+      const original = knownCodes.find((c) => c.toUpperCase() === upperCode);
+      if (original) found.add(original);
+    }
+  }
+
+  return [...found];
 }
 
 export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGenerateProtocol }: BodyFigureSelectorProps) {
