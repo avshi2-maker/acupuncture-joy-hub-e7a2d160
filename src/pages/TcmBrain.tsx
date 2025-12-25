@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { BodyFigureSelector } from '@/components/acupuncture/BodyFigureSelector';
+import { BodyFigureSelector, parsePointReferences } from '@/components/acupuncture/BodyFigureSelector';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
@@ -37,10 +37,15 @@ import {
   ClipboardList,
   Pill,
   Trash2,
-  User
+  User,
+  MessageCircle,
+  History,
+  MessageSquare,
+  ChevronRight,
+  ChevronLeft,
+  Menu
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { MessageCircle, Mic as MicIcon, History, MessageSquare } from 'lucide-react';
 import {
   herbsQuestions,
   pointsQuestions,
@@ -62,8 +67,6 @@ interface Message {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tcm-chat`;
 
-type QuickNavSection = 'chat' | 'voice' | 'history' | 'feedback';
-
 // Feature tabs configuration (excluding symptoms/diagnosis/treatment which are on main page)
 const featureTabs = [
   { id: 'chat', icon: Sparkles, label: 'Ask AI' },
@@ -81,7 +84,7 @@ const featureTabs = [
   { id: 'astro', icon: Star, label: 'Astrology' },
 ];
 
-// Symptom Analysis Questions (50) - English, alphabetically sorted
+// Symptom Analysis Questions (50)
 const symptomQuestions = [
   { id: 's1', question: 'Any allergies present?', category: 'Medical' },
   { id: 's2', question: 'Any anxiety or excessive worry?', category: 'Emotions' },
@@ -135,7 +138,7 @@ const symptomQuestions = [
   { id: 's50', question: 'Where is the headache located?', category: 'Head' },
 ];
 
-// Diagnosis Questions (26) - English, alphabetically sorted
+// Diagnosis Questions (26)
 const diagnosisQuestions = [
   { id: 'd1', question: 'Any Blood deficiency present?', category: 'Qi/Blood' },
   { id: 'd2', question: 'Any Blood stagnation?', category: 'Qi/Blood' },
@@ -165,7 +168,7 @@ const diagnosisQuestions = [
   { id: 'd26', question: 'Which organ is primarily affected?', category: 'Organs' },
 ];
 
-// Treatment Questions (50) - English, alphabetically sorted
+// Treatment Questions (50)
 const treatmentQuestions = [
   { id: 't1', question: 'Any additional tests needed?', category: 'Planning' },
   { id: 't2', question: 'Any breathing exercises recommended?', category: 'Practice' },
@@ -219,6 +222,7 @@ const treatmentQuestions = [
   { id: 't50', question: 'Moisten or dry approach?', category: 'Principles' },
 ];
 
+// Quick Questions moved to detailed view
 const quickQuestions = [
   { icon: Leaf, text: 'Best herbs for Spleen Qi deficiency?' },
   { icon: MapPin, text: 'Points for Shao Yang headache?' },
@@ -258,6 +262,8 @@ export default function TcmBrain() {
   const [isLoading, setIsLoading] = useState(false);
   const [customPrompt, setCustomPrompt] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+  const [highlightedPoints, setHighlightedPoints] = useState<string[]>([]);
+  const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
   
   // Selected question states for all tabs
   const [selectedSymptomQuestion, setSelectedSymptomQuestion] = useState('');
@@ -274,14 +280,12 @@ export default function TcmBrain() {
   const [selectedWellnessQuestion, setSelectedWellnessQuestion] = useState('');
   const [selectedSportsQuestion, setSelectedSportsQuestion] = useState('');
   const [selectedAstroQuestion, setSelectedAstroQuestion] = useState('');
-  const [activeNavSection, setActiveNavSection] = useState<QuickNavSection>('chat');
   const [showDetailedView, setShowDetailedView] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
-  const voiceBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!tier) {
@@ -295,42 +299,14 @@ export default function TcmBrain() {
     }
   }, [messages]);
 
-  // Scroll-spy: detect which section is in view
+  // Parse highlighted points from last assistant message
   useEffect(() => {
-    const sections = [
-      { id: 'chat-input-section', nav: 'chat' as QuickNavSection },
-      { id: 'voice-btn-section', nav: 'voice' as QuickNavSection },
-      { id: 'chat-history-section', nav: 'history' as QuickNavSection },
-    ];
-
-    const observerOptions = {
-      root: null,
-      rootMargin: '-20% 0px -60% 0px',
-      threshold: 0
-    };
-
-    const observerCallback: IntersectionObserverCallback = (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const sectionId = entry.target.getAttribute('data-section');
-          const section = sections.find(s => s.id === sectionId);
-          if (section) {
-            setActiveNavSection(section.nav);
-          }
-        }
-      });
-    };
-
-    const observer = new IntersectionObserver(observerCallback, observerOptions);
-
-    // Observe all sections
-    sections.forEach(({ id }) => {
-      const element = document.querySelector(`[data-section="${id}"]`);
-      if (element) observer.observe(element);
-    });
-
-    return () => observer.disconnect();
-  }, []);
+    const lastAssistantMsg = [...messages].reverse().find(m => m.role === 'assistant');
+    if (lastAssistantMsg) {
+      const points = parsePointReferences(lastAssistantMsg.content);
+      setHighlightedPoints(points);
+    }
+  }, [messages]);
 
   const handleLogout = () => {
     localStorage.removeItem('therapist_tier');
@@ -357,11 +333,11 @@ export default function TcmBrain() {
 
       if (!response.ok) {
         if (response.status === 429) {
-          toast.error('יותר מדי בקשות. נסו שוב בעוד דקה.');
+          toast.error('Too many requests. Try again in a minute.');
         } else if (response.status === 402) {
-          toast.error('נגמרו הקרדיטים. יש להוסיף קרדיטים.');
+          toast.error('Credits exhausted. Please add credits.');
         } else {
-          toast.error('שגיאה בשירות AI');
+          toast.error('AI service error');
         }
         setIsLoading(false);
         return;
@@ -412,7 +388,7 @@ export default function TcmBrain() {
       }
     } catch (error) {
       console.error('Chat error:', error);
-      toast.error('שגיאה בצ\'אט');
+      toast.error('Chat error');
     } finally {
       setIsLoading(false);
     }
@@ -459,7 +435,6 @@ export default function TcmBrain() {
         const blob = new Blob(chunks, { type: 'audio/webm' });
         stream.getTracks().forEach(track => track.stop());
         
-        // Convert to base64 and send to transcription
         const reader = new FileReader();
         reader.onloadend = async () => {
           const base64Audio = (reader.result as string).split(',')[1];
@@ -477,14 +452,14 @@ export default function TcmBrain() {
               const { text } = await response.json();
               if (text) {
                 setInput(text);
-                toast.success('הקלטה תומללה בהצלחה');
+                toast.success('Recording transcribed');
               }
             } else {
-              toast.error('שגיאה בתמלול הקלטה');
+              toast.error('Transcription error');
             }
           } catch (error) {
             console.error('Transcription error:', error);
-            toast.error('שגיאה בתמלול');
+            toast.error('Transcription error');
           }
         };
         reader.readAsDataURL(blob);
@@ -492,10 +467,10 @@ export default function TcmBrain() {
 
       mediaRecorder.start();
       setIsRecording(true);
-      toast.success('מקליט... לחץ שוב לסיום');
+      toast.success('Recording... Click again to stop');
     } catch (error) {
       console.error('Recording error:', error);
-      toast.error('לא ניתן לגשת למיקרופון');
+      toast.error('Cannot access microphone');
     }
   };
 
@@ -611,7 +586,7 @@ export default function TcmBrain() {
       <div className="min-h-screen bg-background flex flex-col">
         {/* Minimal Header */}
         <header className="bg-card border-b border-border sticky top-0 z-50">
-          <div className="max-w-6xl mx-auto px-2 py-1.5 flex items-center justify-between">
+          <div className="max-w-7xl mx-auto px-2 py-1.5 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Link to="/dashboard" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
                 <ArrowRight className="h-3 w-3 rotate-180" />
@@ -647,251 +622,368 @@ export default function TcmBrain() {
               <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handleLogout}>
                 <LogOut className="h-3.5 w-3.5" />
               </Button>
+              {/* Right Sidebar Toggle */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
+              >
+                <Menu className="h-3.5 w-3.5" />
+              </Button>
             </div>
           </div>
         </header>
 
-        {/* Sticky Quick Navigation */}
-        <nav className="sticky top-14 z-40 bg-background/95 backdrop-blur-sm border-b border-border/50">
-          <div className="max-w-6xl mx-auto px-4">
-            <div className="flex items-center justify-center gap-2 py-2">
-              <Button
-                variant={activeNavSection === 'chat' ? 'default' : 'ghost'}
-                size="sm"
-                className={`text-xs gap-1.5 transition-all ${
-                  activeNavSection === 'chat' 
-                    ? 'bg-jade text-jade-foreground shadow-sm' 
-                    : ''
-                }`}
-                onClick={() => {
-                  setActiveNavSection('chat');
-                  const tabsList = document.querySelector('[role="tablist"]');
-                  const chatTab = tabsList?.querySelector('[value="chat"]') as HTMLButtonElement;
-                  chatTab?.click();
-                  setTimeout(() => {
-                    const inputSection = document.querySelector('[data-section="chat-input-section"]');
-                    inputSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    chatInputRef.current?.focus();
-                  }, 100);
-                }}
-              >
-                <MessageCircle className="h-3.5 w-3.5" />
-                Chat
-              </Button>
-              <Button
-                variant={activeNavSection === 'voice' ? 'default' : 'ghost'}
-                size="sm"
-                className={`text-xs gap-1.5 transition-all ${
-                  activeNavSection === 'voice' 
-                    ? 'bg-jade text-jade-foreground shadow-sm' 
-                    : ''
-                }`}
-                onClick={() => {
-                  setActiveNavSection('voice');
-                  const tabsList = document.querySelector('[role="tablist"]');
-                  const chatTab = tabsList?.querySelector('[value="chat"]') as HTMLButtonElement;
-                  chatTab?.click();
-                  setTimeout(() => {
-                    const voiceSection = document.querySelector('[data-section="voice-btn-section"]');
-                    voiceSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    voiceBtnRef.current?.focus();
-                  }, 100);
-                }}
-              >
-                <MicIcon className="h-3.5 w-3.5" />
-                Voice
-              </Button>
-              <Button
-                variant={activeNavSection === 'history' ? 'default' : 'ghost'}
-                size="sm"
-                className={`text-xs gap-1.5 transition-all ${
-                  activeNavSection === 'history' 
-                    ? 'bg-jade text-jade-foreground shadow-sm' 
-                    : ''
-                }`}
-                onClick={() => {
-                  setActiveNavSection('history');
-                  const historySection = document.querySelector('[data-section="chat-history-section"]');
-                  historySection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }}
-              >
-                <History className="h-3.5 w-3.5" />
-                History
-              </Button>
-              <Button
-                variant={activeNavSection === 'feedback' ? 'default' : 'ghost'}
-                size="sm"
-                className={`text-xs gap-1.5 transition-all ${
-                  activeNavSection === 'feedback' 
-                    ? 'bg-jade text-jade-foreground shadow-sm' 
-                    : ''
-                }`}
-                asChild
-                onClick={() => setActiveNavSection('feedback')}
-              >
-                <Link to="/feedback">
-                  <MessageSquare className="h-3.5 w-3.5" />
-                  Feedback
-                </Link>
-              </Button>
+        {/* Main Content with Right Sidebar */}
+        <div className="flex-1 flex relative">
+          {/* Main Area */}
+          <main className="flex-1 flex flex-col max-w-6xl mx-auto w-full">
+            {/* Feature tabs header */}
+            <div className="px-4 pt-4 overflow-x-auto border-b border-border/30 pb-3">
+              <div className="flex gap-1 w-max min-w-full">
+                {featureTabs.map(tab => (
+                  <Button
+                    key={tab.id}
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1 text-xs px-2 whitespace-nowrap hover:bg-jade-light/50 hover:text-jade"
+                    onClick={() => {
+                      setShowDetailedView(true);
+                      setTimeout(() => {
+                        const tabsList = document.querySelector('[role="tablist"]');
+                        const targetTab = tabsList?.querySelector(`[value="${tab.id}"]`) as HTMLButtonElement;
+                        targetTab?.click();
+                      }, 50);
+                    }}
+                  >
+                    <tab.icon className="h-3 w-3" />
+                    {tab.label}
+                  </Button>
+                ))}
+              </div>
             </div>
-          </div>
-        </nav>
 
-        {/* Main Content */}
-        <main className="flex-1 flex flex-col max-w-6xl mx-auto w-full">
-          {/* Always visible tabs header */}
-          <div className="px-4 pt-4 overflow-x-auto border-b border-border/30 pb-3">
-            <div className="flex gap-1 w-max min-w-full">
-              {featureTabs.map(tab => (
-                <Button
-                  key={tab.id}
-                  variant="ghost"
-                  size="sm"
-                  className="gap-1 text-xs px-2 whitespace-nowrap hover:bg-jade-light/50 hover:text-jade"
-                  onClick={() => {
-                    setShowDetailedView(true);
-                    // Switch to the appropriate tab after a small delay
-                    setTimeout(() => {
-                      const tabsList = document.querySelector('[role="tablist"]');
-                      const targetTab = tabsList?.querySelector(`[value="${tab.id}"]`) as HTMLButtonElement;
-                      targetTab?.click();
-                    }, 50);
-                  }}
-                >
-                  <tab.icon className="h-3 w-3" />
-                  {tab.label}
-                </Button>
-              ))}
-            </div>
-          </div>
+            {!showDetailedView ? (
+              /* Main Queries View - First Page (No Quick Questions) */
+              <div className="flex-1 p-4 space-y-4">
 
-          {!showDetailedView ? (
-            /* Main Queries View - First Page */
-            <div className="flex-1 p-4 space-y-4">
-
-              {/* 3 Main Query Categories */}
-              <div className="grid md:grid-cols-3 gap-4">
-                {mainQueryCategories.map((category) => {
-                  const categories = [...new Set(category.questions.map(q => q.category))].sort();
-                  const isExpanded = expandedCategory === category.id;
-                  return (
-                    <Card key={category.id} className={`bg-card border-border hover:border-jade/50 transition-colors ${isExpanded ? 'md:col-span-3' : ''}`}>
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-jade-light flex items-center justify-center">
-                            <category.icon className="h-5 w-5 text-jade" />
+                {/* 3 Main Query Categories */}
+                <div className="grid md:grid-cols-3 gap-4">
+                  {mainQueryCategories.map((category) => {
+                    const categories = [...new Set(category.questions.map(q => q.category))].sort();
+                    const isExpanded = expandedCategory === category.id;
+                    return (
+                      <Card key={category.id} className={`bg-card border-border hover:border-jade/50 transition-colors ${isExpanded ? 'md:col-span-3' : ''}`}>
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-jade-light flex items-center justify-center">
+                              <category.icon className="h-5 w-5 text-jade" />
+                            </div>
+                            <div>
+                              <CardTitle className="text-base">{category.title}</CardTitle>
+                              <p className="text-xs text-muted-foreground">{category.description}</p>
+                            </div>
                           </div>
-                          <div>
-                            <CardTitle className="text-base">{category.title}</CardTitle>
-                            <p className="text-xs text-muted-foreground">{category.description}</p>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        {isExpanded ? (
-                          /* Expanded view - show all categories with questions */
-                          <div className="grid md:grid-cols-3 gap-3">
-                            {categories.map(cat => (
-                              <div key={cat} className="space-y-1">
-                                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{cat}</h4>
-                                <div className="space-y-1 max-h-48 overflow-y-auto">
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          {isExpanded ? (
+                            <div className="grid md:grid-cols-3 gap-3">
+                              {categories.map(cat => (
+                                <div key={cat} className="space-y-1">
+                                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{cat}</h4>
+                                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                                    {category.questions
+                                      .filter(q => q.category === cat)
+                                      .sort((a, b) => a.question.localeCompare(b.question))
+                                      .map(q => (
+                                        <button
+                                          key={q.id}
+                                          onClick={() => handleQAQuestionSelect(q.question)}
+                                          className="w-full text-left text-xs p-2 rounded hover:bg-jade-light/50 transition-colors"
+                                        >
+                                          {q.question}
+                                        </button>
+                                      ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            categories.slice(0, 3).map(cat => (
+                              <Select
+                                key={cat}
+                                onValueChange={(value) => handleQAQuestionSelect(value)}
+                              >
+                                <SelectTrigger className="text-left text-sm h-8">
+                                  <SelectValue placeholder={cat} />
+                                </SelectTrigger>
+                                <SelectContent className="bg-card border-border z-50 max-h-60">
                                   {category.questions
                                     .filter(q => q.category === cat)
                                     .sort((a, b) => a.question.localeCompare(b.question))
                                     .map(q => (
-                                      <button
-                                        key={q.id}
-                                        onClick={() => handleQAQuestionSelect(q.question)}
-                                        className="w-full text-left text-xs p-2 rounded hover:bg-jade-light/50 transition-colors"
-                                      >
+                                      <SelectItem key={q.id} value={q.question} className="text-left text-sm">
                                         {q.question}
-                                      </button>
+                                      </SelectItem>
                                     ))}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          /* Collapsed view - show first 3 category dropdowns */
-                          categories.slice(0, 3).map(cat => (
-                            <Select
-                              key={cat}
-                              onValueChange={(value) => handleQAQuestionSelect(value)}
-                            >
-                              <SelectTrigger className="text-left text-sm h-8">
-                                <SelectValue placeholder={cat} />
-                              </SelectTrigger>
-                              <SelectContent className="bg-card border-border z-50 max-h-60">
-                                {category.questions
-                                  .filter(q => q.category === cat)
-                                  .sort((a, b) => a.question.localeCompare(b.question))
-                                  .map(q => (
-                                    <SelectItem key={q.id} value={q.question} className="text-left text-sm">
-                                      {q.question}
-                                    </SelectItem>
-                                  ))}
-                              </SelectContent>
-                            </Select>
-                          ))
-                        )}
+                                </SelectContent>
+                              </Select>
+                            ))
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full text-jade hover:text-jade-dark text-xs h-7"
+                            onClick={() => setExpandedCategory(isExpanded ? null : category.id)}
+                          >
+                            {isExpanded ? '← Collapse' : `View all ${category.questions.length} questions →`}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+
+                {/* Body Map Preview with Highlighted Points */}
+                {highlightedPoints.length > 0 && (
+                  <Card className="border-jade/50 bg-jade-light/10">
+                    <CardHeader className="py-3">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-jade" />
+                        Recommended Points from AI Response
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {highlightedPoints.map(point => (
+                          <Button
+                            key={point}
+                            variant="outline"
+                            size="sm"
+                            className="bg-jade/10 border-jade/30 text-jade"
+                            onClick={() => setShowDetailedView(true)}
+                          >
+                            <MapPin className="h-3 w-3 mr-1" />
+                            {point}
+                          </Button>
+                        ))}
+                      </div>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="bg-jade hover:bg-jade/90"
+                        onClick={() => {
+                          setShowDetailedView(true);
+                          setTimeout(() => {
+                            const tabsList = document.querySelector('[role="tablist"]');
+                            const bodyMapTab = tabsList?.querySelector('[value="bodymap"]') as HTMLButtonElement;
+                            bodyMapTab?.click();
+                          }, 50);
+                        }}
+                      >
+                        View on Body Map →
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Chat Input at bottom */}
+                <div className="pt-4 border-t border-border/50">
+                  <form onSubmit={handleSubmit} className="flex gap-2">
+                    <div className="flex-1 relative">
+                      <Input
+                        ref={chatInputRef}
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder="Ask any TCM question..."
+                        disabled={isLoading}
+                        className="text-left pr-12 h-12 rounded-xl border-border/80 focus:border-jade transition-colors"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={toggleRecording}
+                        className={`absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 rounded-lg ${
+                          isRecording ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20' : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                    <Button 
+                      type="submit" 
+                      disabled={isLoading || !input.trim()}
+                      className="h-12 w-12 rounded-xl bg-jade hover:bg-jade/90"
+                    >
+                      {isLoading ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <Send className="h-5 w-5" />
+                      )}
+                    </Button>
+                  </form>
+                </div>
+
+                {/* Chat History Section */}
+                {messages.length > 0 && (
+                  <div className="pt-4">
+                    <div className="flex items-center justify-between pb-3 border-b border-border/50 mb-3">
+                      <span className="text-sm font-medium">Chat History</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">
+                          {messages.length} messages
+                        </span>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full text-jade hover:text-jade-dark text-xs h-7"
-                          onClick={() => setExpandedCategory(isExpanded ? null : category.id)}
+                          onClick={() => {
+                            setMessages([]);
+                            setHighlightedPoints([]);
+                          }}
+                          className="text-muted-foreground hover:text-destructive text-xs gap-1"
                         >
-                          {isExpanded ? '← Collapse' : `View all ${category.questions.length} questions →`}
+                          <Trash2 className="h-3 w-3" />
+                          Clear
                         </Button>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-
-              {/* Quick Questions */}
-              <div className="pt-4">
-                <h3 className="text-sm font-medium text-muted-foreground mb-3 text-center">Quick Questions</h3>
-                <div className="grid sm:grid-cols-3 gap-3">
-                  {quickQuestions.map((q, i) => (
-                    <button
-                      key={i}
-                      onClick={() => handleQuickQuestion(q.text)}
-                      className="p-4 bg-card border border-border rounded-xl text-left hover:border-jade hover:shadow-elevated transition-all group"
-                    >
-                      <div className="w-8 h-8 rounded-lg bg-jade-light flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                        <q.icon className="h-4 w-4 text-jade" />
                       </div>
-                      <p className="text-sm font-medium leading-relaxed">{q.text}</p>
-                    </button>
-                  ))}
-                </div>
+                    </div>
+                    <ScrollArea className="max-h-96" ref={scrollRef}>
+                      <div className="space-y-4 pb-4">
+                        {messages.map((msg, i) => {
+                          const userMessage = msg.role === 'assistant' && i > 0 
+                            ? messages.slice(0, i).reverse().find(m => m.role === 'user')?.content
+                            : undefined;
+                          return (
+                            <ChatMessage 
+                              key={i} 
+                              role={msg.role} 
+                              content={msg.content} 
+                              userMessage={userMessage}
+                            />
+                          );
+                        })}
+                        {isLoading && messages[messages.length - 1]?.role === 'user' && (
+                          <ChatTypingIndicator />
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                )}
               </div>
+            ) : (
+              /* Detailed View - All Topics Tabs (includes Quick Questions) */
+              <Tabs defaultValue="chat" className="flex-1 flex flex-col">
+                <div className="px-4 pt-4 overflow-x-auto">
+                  <TabsList className="w-max min-w-full justify-start gap-1">
+                    {featureTabs.map(tab => (
+                      <TabsTrigger key={tab.id} value={tab.id} className="gap-1 text-xs px-2 whitespace-nowrap">
+                        <tab.icon className="h-3 w-3" />
+                        {tab.label}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </div>
 
-              {/* Chat Input at bottom */}
-              <div className="pt-4 border-t border-border/50">
-                <form onSubmit={handleSubmit} className="flex gap-2" data-section="chat-input-section">
-                  <div className="flex-1 relative" data-section="voice-btn-section">
+              {/* Chat Tab */}
+              <TabsContent value="chat" className="flex-1 flex flex-col p-4 pt-2">
+                {/* Chat Header with Clear */}
+                {messages.length > 0 && (
+                  <div className="flex items-center justify-between pb-3 border-b border-border/50 mb-3">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setMessages([]);
+                        setHighlightedPoints([]);
+                      }}
+                      className="text-muted-foreground hover:text-destructive text-xs gap-1"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      Clear chat
+                    </Button>
+                    <span className="text-xs text-muted-foreground">
+                      {messages.length} messages
+                    </span>
+                  </div>
+                )}
+
+                <ScrollArea className="flex-1 pl-4" ref={scrollRef}>
+                  <div className="space-y-4 pb-4">
+                    {messages.length === 0 && (
+                      <div className="text-center py-12">
+                        <div className="relative w-24 h-24 mx-auto mb-6">
+                          <div className="absolute inset-0 bg-jade/20 rounded-full animate-pulse-soft" />
+                          <div className="absolute inset-2 bg-gradient-to-br from-jade-light to-gold-light rounded-full flex items-center justify-center border-2 border-jade/30">
+                            <Brain className="h-10 w-10 text-jade" />
+                          </div>
+                        </div>
+                        <h2 className="font-display text-3xl mb-3 text-center bg-gradient-to-r from-jade to-jade-dark bg-clip-text text-transparent">
+                          Welcome to TCM Brain
+                        </h2>
+                        <p className="text-muted-foreground mb-8 text-center max-w-md mx-auto">
+                          Your personal assistant for Traditional Chinese Medicine. Ask any question about herbs, acupuncture points, diagnosis, and more.
+                        </p>
+                        
+                        {/* Quick Questions in detailed view */}
+                        <div className="grid sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                          {quickQuestions.map((q, i) => (
+                            <button
+                              key={i}
+                              onClick={() => handleQuickQuestion(q.text)}
+                              className="p-5 bg-gradient-to-br from-card to-card/80 border border-border/80 rounded-xl text-left hover:border-jade hover:shadow-elevated transition-all group relative overflow-hidden"
+                            >
+                              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-jade/0 via-jade/50 to-jade/0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              <div className="w-10 h-10 rounded-lg bg-jade-light flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                <q.icon className="h-5 w-5 text-jade" />
+                              </div>
+                              <p className="text-sm font-medium leading-relaxed">{q.text}</p>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {messages.map((msg, i) => {
+                      const userMessage = msg.role === 'assistant' && i > 0 
+                        ? messages.slice(0, i).reverse().find(m => m.role === 'user')?.content
+                        : undefined;
+                      return (
+                        <ChatMessage 
+                          key={i} 
+                          role={msg.role} 
+                          content={msg.content} 
+                          userMessage={userMessage}
+                        />
+                      );
+                    })}
+
+                    {isLoading && messages[messages.length - 1]?.role === 'user' && (
+                      <ChatTypingIndicator />
+                    )}
+                  </div>
+                </ScrollArea>
+
+                {/* Enhanced Input */}
+                <form onSubmit={handleSubmit} className="flex gap-2 pt-4 border-t border-border/50 bg-background/50 backdrop-blur-sm -mx-4 px-4 -mb-4 pb-4">
+                  <div className="flex-1 relative">
                     <Input
                       ref={chatInputRef}
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
-                      placeholder="Ask any TCM question..."
+                      placeholder="Ask a TCM question..."
                       disabled={isLoading}
                       className="text-left pr-12 h-12 rounded-xl border-border/80 focus:border-jade transition-colors"
-                      onFocus={() => setActiveNavSection('chat')}
                     />
                     <Button
-                      ref={voiceBtnRef}
                       type="button"
                       variant="ghost"
                       size="icon"
                       onClick={toggleRecording}
-                      data-voice-btn
                       className={`absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 rounded-lg ${
                         isRecording ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20' : 'text-muted-foreground hover:text-foreground'
                       }`}
-                      onFocus={() => setActiveNavSection('voice')}
                     >
                       {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                     </Button>
@@ -908,329 +1000,236 @@ export default function TcmBrain() {
                     )}
                   </Button>
                 </form>
+              </TabsContent>
+
+              {/* Body Map Tab */}
+              <TabsContent value="bodymap" className="flex-1 overflow-auto p-4">
+                <BodyFigureSelector highlightedPoints={highlightedPoints} />
+              </TabsContent>
+
+              {/* Herbs Tab */}
+              <TabsContent value="herbs" className="flex-1 overflow-auto">
+                {renderQASection(
+                  'Chinese Herbal Medicine',
+                  herbsQuestions,
+                  selectedHerbsQuestion,
+                  setSelectedHerbsQuestion
+                )}
+              </TabsContent>
+
+              {/* Points Tab */}
+              <TabsContent value="points" className="flex-1 overflow-auto">
+                {renderQASection(
+                  'Acupuncture Points',
+                  pointsQuestions,
+                  selectedPointsQuestion,
+                  setSelectedPointsQuestion
+                )}
+              </TabsContent>
+
+              {/* Conditions Tab */}
+              <TabsContent value="conditions" className="flex-1 overflow-auto">
+                {renderQASection(
+                  'TCM Conditions & Patterns',
+                  conditionsQuestions,
+                  selectedConditionsQuestion,
+                  setSelectedConditionsQuestion
+                )}
+              </TabsContent>
+
+              {/* Nutrition Tab */}
+              <TabsContent value="nutrition" className="flex-1 overflow-auto">
+                {renderQASection(
+                  'TCM Nutrition',
+                  nutritionQuestions,
+                  selectedNutritionQuestion,
+                  setSelectedNutritionQuestion
+                )}
+              </TabsContent>
+
+              {/* Mental Tab */}
+              <TabsContent value="mental" className="flex-1 overflow-auto">
+                {renderQASection(
+                  'Mental Health in TCM',
+                  mentalQuestions,
+                  selectedMentalQuestion,
+                  setSelectedMentalQuestion
+                )}
+              </TabsContent>
+
+              {/* Sleep Tab */}
+              <TabsContent value="sleep" className="flex-1 overflow-auto">
+                {renderQASection(
+                  'Sleep Quality in TCM',
+                  sleepQuestions,
+                  selectedSleepQuestion,
+                  setSelectedSleepQuestion
+                )}
+              </TabsContent>
+
+              {/* Work-Life Tab */}
+              <TabsContent value="worklife" className="flex-1 overflow-auto">
+                {renderQASection(
+                  'Work-Life Balance',
+                  worklifeQuestions,
+                  selectedWorklifeQuestion,
+                  setSelectedWorklifeQuestion
+                )}
+              </TabsContent>
+
+              {/* Bazi Tab */}
+              <TabsContent value="bazi" className="flex-1 overflow-auto">
+                {renderQASection(
+                  'Bazi - Four Pillars',
+                  baziQuestions,
+                  selectedBaziQuestion,
+                  setSelectedBaziQuestion
+                )}
+              </TabsContent>
+
+              {/* Wellness Tab */}
+              <TabsContent value="wellness" className="flex-1 overflow-auto">
+                {renderQASection(
+                  'General Wellness',
+                  wellnessQuestions,
+                  selectedWellnessQuestion,
+                  setSelectedWellnessQuestion
+                )}
+              </TabsContent>
+
+              {/* Sports Tab */}
+              <TabsContent value="sports" className="flex-1 overflow-auto">
+                {renderQASection(
+                  'Chinese Sports Medicine',
+                  sportsQuestions,
+                  selectedSportsQuestion,
+                  setSelectedSportsQuestion
+                )}
+              </TabsContent>
+
+              {/* Astrology Tab */}
+              <TabsContent value="astro" className="flex-1 overflow-auto">
+                {renderQASection(
+                  'Chinese Astrology',
+                  astroQuestions,
+                  selectedAstroQuestion,
+                  setSelectedAstroQuestion
+                )}
+              </TabsContent>
+              </Tabs>
+            )}
+          </main>
+
+          {/* Right Sidebar */}
+          <aside 
+            className={`fixed right-0 top-[52px] bottom-0 w-64 bg-card border-l border-border z-40 transition-transform duration-300 ${
+              rightSidebarOpen ? 'translate-x-0' : 'translate-x-full'
+            }`}
+          >
+            <div className="p-4 h-full flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-sm">Quick Actions</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  onClick={() => setRightSidebarOpen(false)}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
 
-              {/* Chat History Section */}
-              {messages.length > 0 && (
-                <div className="pt-4" data-section="chat-history-section">
-                  <div className="flex items-center justify-between pb-3 border-b border-border/50 mb-3">
-                    <span className="text-sm font-medium">Chat History</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">
-                        {messages.length} messages
-                      </span>
+              <div className="space-y-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start gap-2 text-sm"
+                  onClick={() => {
+                    chatInputRef.current?.focus();
+                    setRightSidebarOpen(false);
+                  }}
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Chat
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start gap-2 text-sm"
+                  onClick={() => {
+                    toggleRecording();
+                    setRightSidebarOpen(false);
+                  }}
+                >
+                  {isRecording ? <MicOff className="h-4 w-4 text-red-500" /> : <Mic className="h-4 w-4" />}
+                  {isRecording ? 'Stop Recording' : 'Voice Input'}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start gap-2 text-sm"
+                  onClick={() => {
+                    const historySection = document.querySelector('[data-section="chat-history-section"]');
+                    historySection?.scrollIntoView({ behavior: 'smooth' });
+                    setRightSidebarOpen(false);
+                  }}
+                >
+                  <History className="h-4 w-4" />
+                  History
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start gap-2 text-sm"
+                  asChild
+                >
+                  <Link to="/feedback">
+                    <MessageSquare className="h-4 w-4" />
+                    Feedback
+                  </Link>
+                </Button>
+              </div>
+
+              {/* Highlighted Points in Sidebar */}
+              {highlightedPoints.length > 0 && (
+                <div className="mt-6 pt-4 border-t border-border">
+                  <h4 className="text-xs font-medium text-muted-foreground mb-2">
+                    Recommended Points
+                  </h4>
+                  <div className="flex flex-wrap gap-1">
+                    {highlightedPoints.map(point => (
                       <Button
-                        variant="ghost"
+                        key={point}
+                        variant="outline"
                         size="sm"
-                        onClick={() => setMessages([])}
-                        className="text-muted-foreground hover:text-destructive text-xs gap-1"
+                        className="h-6 text-xs bg-jade/10 border-jade/30 text-jade"
+                        onClick={() => {
+                          setShowDetailedView(true);
+                          setRightSidebarOpen(false);
+                          setTimeout(() => {
+                            const tabsList = document.querySelector('[role="tablist"]');
+                            const bodyMapTab = tabsList?.querySelector('[value="bodymap"]') as HTMLButtonElement;
+                            bodyMapTab?.click();
+                          }, 50);
+                        }}
                       >
-                        <Trash2 className="h-3 w-3" />
-                        Clear
+                        {point}
                       </Button>
-                    </div>
+                    ))}
                   </div>
-                  <ScrollArea className="max-h-96" ref={scrollRef}>
-                    <div className="space-y-4 pb-4">
-                      {messages.map((msg, i) => {
-                        const userMessage = msg.role === 'assistant' && i > 0 
-                          ? messages.slice(0, i).reverse().find(m => m.role === 'user')?.content
-                          : undefined;
-                        return (
-                          <ChatMessage 
-                            key={i} 
-                            role={msg.role} 
-                            content={msg.content} 
-                            userMessage={userMessage}
-                          />
-                        );
-                      })}
-                      {isLoading && messages[messages.length - 1]?.role === 'user' && (
-                        <ChatTypingIndicator />
-                      )}
-                    </div>
-                  </ScrollArea>
                 </div>
               )}
             </div>
-          ) : (
-            /* Detailed View - All Topics Tabs */
-            <Tabs defaultValue="chat" className="flex-1 flex flex-col">
-              <div className="px-4 pt-4 overflow-x-auto">
-                <TabsList className="w-max min-w-full justify-start gap-1">
-                  {featureTabs.map(tab => (
-                    <TabsTrigger key={tab.id} value={tab.id} className="gap-1 text-xs px-2 whitespace-nowrap">
-                      <tab.icon className="h-3 w-3" />
-                      {tab.label}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </div>
+          </aside>
 
-            {/* Chat Tab */}
-            <TabsContent value="chat" className="flex-1 flex flex-col p-4 pt-2">
-              {/* Chat Header with Clear */}
-              {messages.length > 0 && (
-                <div className="flex items-center justify-between pb-3 border-b border-border/50 mb-3">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setMessages([])}
-                    className="text-muted-foreground hover:text-destructive text-xs gap-1"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                    Clear chat
-                  </Button>
-                  <span className="text-xs text-muted-foreground">
-                    {messages.length} messages
-                  </span>
-                </div>
-              )}
-
-              <ScrollArea className="flex-1 pl-4" ref={scrollRef} data-section="chat-history-section">
-                <div className="space-y-4 pb-4">
-                  {messages.length === 0 && (
-                    <div className="text-center py-12">
-                      <div className="relative w-24 h-24 mx-auto mb-6">
-                        <div className="absolute inset-0 bg-jade/20 rounded-full animate-pulse-soft" />
-                        <div className="absolute inset-2 bg-gradient-to-br from-jade-light to-gold-light rounded-full flex items-center justify-center border-2 border-jade/30">
-                          <Brain className="h-10 w-10 text-jade" />
-                        </div>
-                      </div>
-                      <h2 className="font-display text-3xl mb-3 text-center bg-gradient-to-r from-jade to-jade-dark bg-clip-text text-transparent">
-                        Welcome to TCM Brain
-                      </h2>
-                      <p className="text-muted-foreground mb-8 text-center max-w-md mx-auto">
-                        Your personal assistant for Traditional Chinese Medicine. Ask any question about herbs, acupuncture points, diagnosis, and more.
-                      </p>
-                      
-                      <div className="grid sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
-                        {quickQuestions.map((q, i) => (
-                          <button
-                            key={i}
-                            onClick={() => handleQuickQuestion(q.text)}
-                            className="p-5 bg-gradient-to-br from-card to-card/80 border border-border/80 rounded-xl text-left hover:border-jade hover:shadow-elevated transition-all group relative overflow-hidden"
-                          >
-                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-jade/0 via-jade/50 to-jade/0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <div className="w-10 h-10 rounded-lg bg-jade-light flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                              <q.icon className="h-5 w-5 text-jade" />
-                            </div>
-                            <p className="text-sm font-medium leading-relaxed">{q.text}</p>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {messages.map((msg, i) => {
-                    // Find the previous user message for assistant responses
-                    const userMessage = msg.role === 'assistant' && i > 0 
-                      ? messages.slice(0, i).reverse().find(m => m.role === 'user')?.content
-                      : undefined;
-                    return (
-                      <ChatMessage 
-                        key={i} 
-                        role={msg.role} 
-                        content={msg.content} 
-                        userMessage={userMessage}
-                      />
-                    );
-                  })}
-
-                  {isLoading && messages[messages.length - 1]?.role === 'user' && (
-                    <ChatTypingIndicator />
-                  )}
-                </div>
-              </ScrollArea>
-
-              {/* Enhanced Input */}
-              <form onSubmit={handleSubmit} className="flex gap-2 pt-4 border-t border-border/50 bg-background/50 backdrop-blur-sm -mx-4 px-4 -mb-4 pb-4" data-section="chat-input-section">
-                <div className="flex-1 relative" data-section="voice-btn-section">
-                  <Input
-                    ref={chatInputRef}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="Ask a TCM question..."
-                    disabled={isLoading}
-                    className="text-left pr-12 h-12 rounded-xl border-border/80 focus:border-jade transition-colors"
-                    onFocus={() => setActiveNavSection('chat')}
-                  />
-                  <Button
-                    ref={voiceBtnRef}
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={toggleRecording}
-                    data-voice-btn
-                    className={`absolute left-1 top-1/2 -translate-y-1/2 h-10 w-10 rounded-lg ${
-                      isRecording ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20' : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                    onFocus={() => setActiveNavSection('voice')}
-                  >
-                    {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                  </Button>
-                </div>
-                <Button 
-                  type="submit" 
-                  disabled={isLoading || !input.trim()}
-                  className="h-12 w-12 rounded-xl bg-jade hover:bg-jade/90"
-                >
-                  {isLoading ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <Send className="h-5 w-5" />
-                  )}
-                </Button>
-              </form>
-            </TabsContent>
-
-            {/* Body Map Tab */}
-            <TabsContent value="bodymap" className="flex-1 overflow-auto p-4">
-              <BodyFigureSelector />
-            </TabsContent>
-
-            {/* Symptoms Tab */}
-            <TabsContent value="symptoms" className="flex-1 overflow-auto">
-              {renderQASection(
-                'Symptom Analysis',
-                symptomQuestions,
-                selectedSymptomQuestion,
-                setSelectedSymptomQuestion
-              )}
-            </TabsContent>
-
-            {/* Diagnosis Tab */}
-            <TabsContent value="diagnosis" className="flex-1 overflow-auto">
-              {renderQASection(
-                'TCM Diagnosis',
-                diagnosisQuestions,
-                selectedDiagnosisQuestion,
-                setSelectedDiagnosisQuestion
-              )}
-            </TabsContent>
-
-            {/* Treatment Tab */}
-            <TabsContent value="treatment" className="flex-1 overflow-auto">
-              {renderQASection(
-                'Treatment Planning',
-                treatmentQuestions,
-                selectedTreatmentQuestion,
-                setSelectedTreatmentQuestion
-              )}
-            </TabsContent>
-
-            {/* Herbs Tab */}
-            <TabsContent value="herbs" className="flex-1 overflow-auto">
-              {renderQASection(
-                'Chinese Herbal Medicine',
-                herbsQuestions,
-                selectedHerbsQuestion,
-                setSelectedHerbsQuestion
-              )}
-            </TabsContent>
-
-            {/* Points Tab */}
-            <TabsContent value="points" className="flex-1 overflow-auto">
-              {renderQASection(
-                'Acupuncture Points',
-                pointsQuestions,
-                selectedPointsQuestion,
-                setSelectedPointsQuestion
-              )}
-            </TabsContent>
-
-            {/* Conditions Tab */}
-            <TabsContent value="conditions" className="flex-1 overflow-auto">
-              {renderQASection(
-                'TCM Conditions & Patterns',
-                conditionsQuestions,
-                selectedConditionsQuestion,
-                setSelectedConditionsQuestion
-              )}
-            </TabsContent>
-
-            {/* Nutrition Tab */}
-            <TabsContent value="nutrition" className="flex-1 overflow-auto">
-              {renderQASection(
-                'TCM Nutrition',
-                nutritionQuestions,
-                selectedNutritionQuestion,
-                setSelectedNutritionQuestion
-              )}
-            </TabsContent>
-
-            {/* Mental Tab */}
-            <TabsContent value="mental" className="flex-1 overflow-auto">
-              {renderQASection(
-                'Mental Health in TCM',
-                mentalQuestions,
-                selectedMentalQuestion,
-                setSelectedMentalQuestion
-              )}
-            </TabsContent>
-
-            {/* Sleep Tab */}
-            <TabsContent value="sleep" className="flex-1 overflow-auto">
-              {renderQASection(
-                'Sleep Quality in TCM',
-                sleepQuestions,
-                selectedSleepQuestion,
-                setSelectedSleepQuestion
-              )}
-            </TabsContent>
-
-            {/* Work-Life Tab */}
-            <TabsContent value="worklife" className="flex-1 overflow-auto">
-              {renderQASection(
-                'Work-Life Balance',
-                worklifeQuestions,
-                selectedWorklifeQuestion,
-                setSelectedWorklifeQuestion
-              )}
-            </TabsContent>
-
-            {/* Bazi Tab */}
-            <TabsContent value="bazi" className="flex-1 overflow-auto">
-              {renderQASection(
-                'Bazi - Four Pillars',
-                baziQuestions,
-                selectedBaziQuestion,
-                setSelectedBaziQuestion
-              )}
-            </TabsContent>
-
-            {/* Wellness Tab */}
-            <TabsContent value="wellness" className="flex-1 overflow-auto">
-              {renderQASection(
-                'General Wellness',
-                wellnessQuestions,
-                selectedWellnessQuestion,
-                setSelectedWellnessQuestion
-              )}
-            </TabsContent>
-
-            {/* Sports Tab */}
-            <TabsContent value="sports" className="flex-1 overflow-auto">
-              {renderQASection(
-                'Chinese Sports Medicine',
-                sportsQuestions,
-                selectedSportsQuestion,
-                setSelectedSportsQuestion
-              )}
-            </TabsContent>
-
-            {/* Astrology Tab */}
-            <TabsContent value="astro" className="flex-1 overflow-auto">
-              {renderQASection(
-                'Chinese Astrology',
-                astroQuestions,
-                selectedAstroQuestion,
-                setSelectedAstroQuestion
-              )}
-            </TabsContent>
-            </Tabs>
+          {/* Sidebar Overlay */}
+          {rightSidebarOpen && (
+            <div 
+              className="fixed inset-0 bg-black/20 z-30 lg:hidden"
+              onClick={() => setRightSidebarOpen(false)}
+            />
           )}
-        </main>
+        </div>
       </div>
     </>
   );

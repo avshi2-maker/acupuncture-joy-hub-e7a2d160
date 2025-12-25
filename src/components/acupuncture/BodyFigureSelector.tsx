@@ -80,7 +80,7 @@ const figureCategories = [
   }
 ];
 
-// Point coordinates data
+// Point coordinates data - maps point codes to body figures
 const pointCoordinates = [
   { point_code: 'LI4', image_name: 'hand.png', x: 1400, y: 800 },
   { point_code: 'LI11', image_name: 'arm.png', x: 1500, y: 900 },
@@ -123,12 +123,48 @@ interface SelectedPoint {
   details?: AcuPoint | null;
 }
 
-export function BodyFigureSelector() {
+interface BodyFigureSelectorProps {
+  highlightedPoints?: string[]; // Array of point codes to highlight (from AI response)
+  onPointSelect?: (pointCode: string) => void;
+}
+
+// Get point coordinate info by point code
+export function getPointCoordinate(pointCode: string) {
+  return pointCoordinates.find(p => p.point_code === pointCode);
+}
+
+// Get all available point codes
+export function getAllPointCodes(): string[] {
+  return pointCoordinates.map(p => p.point_code);
+}
+
+// Parse dot# references from AI response text
+export function parsePointReferences(text: string): string[] {
+  // Match patterns like ST36, LI4, GB20, CV12, GV14, etc.
+  const pointPattern = /\b([A-Z]{1,3}\d{1,2})\b/g;
+  const matches = text.match(pointPattern) || [];
+  // Filter to only known point codes
+  const knownCodes = getAllPointCodes();
+  return [...new Set(matches.filter(code => knownCodes.includes(code)))];
+}
+
+export function BodyFigureSelector({ highlightedPoints = [], onPointSelect }: BodyFigureSelectorProps) {
   const [selectedFigure, setSelectedFigure] = useState<string | null>(null);
   const [selectedPoint, setSelectedPoint] = useState<SelectedPoint | null>(null);
   const [zoom, setZoom] = useState(1);
   const [acuPoints, setAcuPoints] = useState<AcuPoint[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Auto-select figure if highlighted points are provided
+  useEffect(() => {
+    if (highlightedPoints.length > 0 && !selectedFigure) {
+      const firstPoint = highlightedPoints[0];
+      const coord = getPointCoordinate(firstPoint);
+      if (coord) {
+        setSelectedFigure(coord.image_name);
+      }
+    }
+  }, [highlightedPoints, selectedFigure]);
 
   // Fetch acupuncture points from database
   useEffect(() => {
@@ -176,6 +212,7 @@ export function BodyFigureSelector() {
       y: point.y,
       details: details || null,
     });
+    onPointSelect?.(point.point_code);
   };
 
   // Get figure display name
@@ -189,6 +226,13 @@ export function BodyFigureSelector() {
   // Count points per figure
   const getPointCount = (filename: string) => {
     return pointCoordinates.filter(p => p.image_name === filename).length;
+  };
+
+  // Check if figure has highlighted points
+  const getFigureHighlightedCount = (filename: string) => {
+    return pointCoordinates.filter(
+      p => p.image_name === filename && highlightedPoints.includes(p.point_code)
+    ).length;
   };
 
   if (selectedFigure) {
@@ -242,6 +286,11 @@ export function BodyFigureSelector() {
                 <Badge variant="secondary" className="ml-2">
                   {figurePoints.length} points
                 </Badge>
+                {highlightedPoints.length > 0 && (
+                  <Badge variant="default" className="ml-1 bg-jade">
+                    {figurePoints.filter(p => highlightedPoints.includes(p.point_code)).length} recommended
+                  </Badge>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
@@ -263,6 +312,7 @@ export function BodyFigureSelector() {
                   {/* Acupuncture point markers */}
                   {figurePoints.map((point) => {
                     const isSelected = selectedPoint?.code === point.point_code;
+                    const isHighlighted = highlightedPoints.includes(point.point_code);
                     // Convert coordinates to percentages (assuming image is ~2800x1400)
                     const xPercent = (point.x / 2800) * 100;
                     const yPercent = (point.y / 1400) * 100;
@@ -274,6 +324,8 @@ export function BodyFigureSelector() {
                         className={`absolute w-6 h-6 -ml-3 -mt-3 rounded-full border-2 transition-all duration-200 flex items-center justify-center text-xs font-bold ${
                           isSelected 
                             ? 'bg-primary border-primary text-primary-foreground scale-125 ring-4 ring-primary/30' 
+                            : isHighlighted
+                            ? 'bg-jade border-jade text-jade-foreground scale-110 ring-4 ring-jade/40 animate-pulse'
                             : 'bg-destructive/80 border-destructive text-destructive-foreground hover:scale-110 hover:bg-destructive'
                         }`}
                         style={{
@@ -366,7 +418,12 @@ export function BodyFigureSelector() {
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <MapPin className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>Click on a red point marker to view details</p>
+                  <p>Click on a point marker to view details</p>
+                  {highlightedPoints.length > 0 && (
+                    <p className="text-xs mt-2 text-jade">
+                      Green points are recommended by AI
+                    </p>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -383,13 +440,14 @@ export function BodyFigureSelector() {
               {figurePoints.map((point) => {
                 const details = getPointDetails(point.point_code);
                 const isSelected = selectedPoint?.code === point.point_code;
+                const isHighlighted = highlightedPoints.includes(point.point_code);
                 return (
                   <Button
                     key={point.point_code}
-                    variant={isSelected ? "default" : "outline"}
+                    variant={isSelected ? "default" : isHighlighted ? "default" : "outline"}
                     size="sm"
                     onClick={() => handlePointClick(point)}
-                    className="gap-1"
+                    className={`gap-1 ${isHighlighted && !isSelected ? 'bg-jade hover:bg-jade/90' : ''}`}
                   >
                     <MapPin className="h-3 w-3" />
                     {point.point_code}
@@ -416,6 +474,11 @@ export function BodyFigureSelector() {
         <p className="text-muted-foreground">
           Select a body part to explore acupuncture points
         </p>
+        {highlightedPoints.length > 0 && (
+          <p className="text-sm text-jade mt-2">
+            {highlightedPoints.length} points recommended • Select a body part to view
+          </p>
+        )}
       </div>
 
       {figureCategories.map((category) => {
@@ -430,10 +493,15 @@ export function BodyFigureSelector() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {availableFigures.map((figure) => {
                 const pointCount = getPointCount(figure);
+                const highlightedCount = getFigureHighlightedCount(figure);
                 return (
                   <Card
                     key={figure}
-                    className="cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all overflow-hidden group"
+                    className={`cursor-pointer transition-all overflow-hidden group ${
+                      highlightedCount > 0 
+                        ? 'ring-2 ring-jade hover:ring-jade/80' 
+                        : 'hover:ring-2 hover:ring-primary/50'
+                    }`}
                     onClick={() => setSelectedFigure(figure)}
                   >
                     <div className="aspect-square relative bg-muted/30 overflow-hidden">
@@ -442,7 +510,14 @@ export function BodyFigureSelector() {
                         alt={getFigureName(figure)}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
-                      {pointCount > 0 && (
+                      {highlightedCount > 0 && (
+                        <Badge 
+                          className="absolute top-2 right-2 bg-jade"
+                        >
+                          {highlightedCount} recommended
+                        </Badge>
+                      )}
+                      {pointCount > 0 && highlightedCount === 0 && (
                         <Badge 
                           className="absolute top-2 right-2 bg-destructive"
                         >
