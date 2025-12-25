@@ -22,6 +22,7 @@ import { User, Heart, Baby, Activity, Utensils, Moon, Brain, AlertTriangle, File
 // Base patient schema
 const basePatientSchema = z.object({
   // Basic Info
+  id_number: z.string().min(5, 'ID number is required (min 5 digits)').max(15, 'ID number too long'),
   full_name: z.string().min(2, 'Name is required'),
   email: z.string().email('Invalid email').optional().or(z.literal('')),
   phone: z.string().min(8, 'Valid phone is required'),
@@ -128,6 +129,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
   const form = useForm<PatientFormData>({
     resolver: zodResolver(basePatientSchema),
     defaultValues: {
+      id_number: '',
       full_name: '',
       email: '',
       phone: '',
@@ -191,6 +193,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
     if (data) {
       form.reset({
         ...data,
+        id_number: data.id_number || '',
         date_of_birth: data.date_of_birth || '',
         gender: data.gender as 'male' | 'female' | 'other' || 'female',
         sleep_quality: data.sleep_quality as any,
@@ -208,6 +211,19 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
 
     setLoading(true);
     try {
+      // Check for duplicate ID number
+      const { data: existingPatient, error: checkError } = await supabase
+        .from('patients')
+        .select('id')
+        .eq('id_number', data.id_number)
+        .neq('id', patientId || '')
+        .maybeSingle();
+
+      if (existingPatient) {
+        toast.error('מספר ת.ז. כבר קיים במערכת. אנא בדקו שוב.');
+        setLoading(false);
+        return;
+      }
       // Compile notes with age-specific and pregnancy answers
       let compiledNotes = data.lifestyle_notes || '';
       
@@ -231,6 +247,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
       }
 
       const patientData = {
+        id_number: data.id_number,
         full_name: data.full_name,
         therapist_id: user.id,
         email: data.email || null,
@@ -314,6 +331,20 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
             <CardDescription>Patient personal details and contact information</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-6 md:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="id_number"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>ID Number (ת.ז.) *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter ID number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="full_name"

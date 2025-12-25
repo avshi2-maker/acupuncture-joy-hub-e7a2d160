@@ -188,6 +188,8 @@ export default function CRMDashboard() {
                         className={`px-2 py-1 text-xs rounded-full ${
                           appt.status === 'completed'
                             ? 'bg-emerald-500/10 text-emerald-500'
+                            : appt.status === 'confirmed'
+                            ? 'bg-jade/20 text-jade border border-jade/30'
                             : appt.status === 'cancelled'
                             ? 'bg-red-500/10 text-red-500'
                             : 'bg-blue-500/10 text-blue-500'

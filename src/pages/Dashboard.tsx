@@ -110,11 +110,11 @@ export default function Dashboard() {
       feature: 'body_map' as const,
     },
     {
-      id: 'sms_reminders',
-      title: 'תזכורות SMS',
+      id: 'email_reminders',
+      title: 'תזכורות Email / WhatsApp',
       description: 'שליחת תזכורות אוטומטיות',
-      icon: <MessageSquare className={`h-6 w-6 ${hasFeature('sms_reminders') ? 'text-jade' : 'text-muted-foreground'}`} />,
-      feature: 'sms_reminders' as const,
+      icon: <MessageSquare className={`h-6 w-6 ${hasFeature('email_reminders') ? 'text-jade' : 'text-muted-foreground'}`} />,
+      feature: 'email_reminders' as const,
     },
     {
       id: 'video_sessions',

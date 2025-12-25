@@ -574,6 +574,7 @@ export type Database = {
           full_name: string
           gender: string | null
           id: string
+          id_number: string | null
           is_pregnant: boolean | null
           lifestyle_notes: string | null
           medical_history: string | null
@@ -612,6 +613,7 @@ export type Database = {
           full_name: string
           gender?: string | null
           id?: string
+          id_number?: string | null
           is_pregnant?: boolean | null
           lifestyle_notes?: string | null
           medical_history?: string | null
@@ -650,6 +652,7 @@ export type Database = {
           full_name?: string
           gender?: string | null
           id?: string
+          id_number?: string | null
           is_pregnant?: boolean | null
           lifestyle_notes?: string | null
           medical_history?: string | null
@@ -727,6 +730,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          id_number: string | null
           phone: string
           requested_tier: Database["public"]["Enums"]["subscription_tier"]
           status: Database["public"]["Enums"]["registration_status"]
@@ -737,6 +741,7 @@ export type Database = {
           email: string
           full_name: string
           id?: string
+          id_number?: string | null
           phone: string
           requested_tier?: Database["public"]["Enums"]["subscription_tier"]
           status?: Database["public"]["Enums"]["registration_status"]
@@ -747,6 +752,7 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          id_number?: string | null
           phone?: string
           requested_tier?: Database["public"]["Enums"]["subscription_tier"]
           status?: Database["public"]["Enums"]["registration_status"]

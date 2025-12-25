@@ -14,6 +14,7 @@ import { Leaf, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const registerSchema = z.object({
+  idNumber: z.string().min(5, 'מספר ת.ז. חייב להכיל לפחות 5 ספרות').max(15, 'מספר ת.ז. ארוך מדי'),
   fullName: z.string().min(2, 'שם מלא חייב להכיל לפחות 2 תווים').max(100),
   email: z.string().email('כתובת אימייל לא תקינה').max(255),
   phone: z.string().min(9, 'מספר טלפון לא תקין').max(15),
@@ -28,6 +29,7 @@ export default function TherapistRegister() {
   const form = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
+      idNumber: '',
       fullName: '',
       email: '',
       phone: '',
@@ -37,9 +39,23 @@ export default function TherapistRegister() {
   const onSubmit = async (data: RegisterForm) => {
     setIsLoading(true);
     try {
+      // Check for duplicate ID number
+      const { data: existingTherapist } = await supabase
+        .from('therapist_registrations')
+        .select('id')
+        .eq('id_number', data.idNumber)
+        .maybeSingle();
+
+      if (existingTherapist) {
+        toast.error('מספר ת.ז. כבר רשום במערכת');
+        setIsLoading(false);
+        return;
+      }
+
       const { error } = await supabase
         .from('therapist_registrations')
         .insert({
+          id_number: data.idNumber,
           full_name: data.fullName,
           email: data.email,
           phone: data.phone,
@@ -49,7 +65,11 @@ export default function TherapistRegister() {
 
       if (error) {
         if (error.code === '23505') {
-          toast.error('כתובת האימייל כבר רשומה במערכת');
+          if (error.message.includes('id_number')) {
+            toast.error('מספר ת.ז. כבר רשום במערכת');
+          } else {
+            toast.error('כתובת האימייל כבר רשומה במערכת');
+          }
         } else {
           throw error;
         }
@@ -98,10 +118,24 @@ export default function TherapistRegister() {
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <FormField
                     control={form.control}
+                    name="idNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>מספר ת.ז. *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="123456789" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
                     name="fullName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>שם מלא</FormLabel>
+                        <FormLabel>שם מלא *</FormLabel>
                         <FormControl>
                           <Input placeholder="ד״ר ישראל ישראלי" {...field} />
                         </FormControl>
