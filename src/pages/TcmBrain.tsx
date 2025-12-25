@@ -700,9 +700,11 @@ export default function TcmBrain() {
                                         <button
                                           key={q.id}
                                           onClick={() => handleQAQuestionSelect(q.question)}
-                                          className="w-full text-left text-xs p-2 rounded hover:bg-jade-light/50 transition-colors"
+                                          className="w-full text-left text-xs p-2 rounded hover:bg-jade/20 hover:pl-4 transition-all duration-200 group flex items-center gap-2 border border-transparent hover:border-jade/30"
                                         >
-                                          {q.question}
+                                          <Send className="h-3 w-3 opacity-0 group-hover:opacity-100 text-jade transition-opacity shrink-0" />
+                                          <span className="flex-1">{q.question}</span>
+                                          <span className="text-[10px] text-jade opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Click to ask</span>
                                         </button>
                                       ))}
                                   </div>
@@ -723,8 +725,11 @@ export default function TcmBrain() {
                                     .filter(q => q.category === cat)
                                     .sort((a, b) => a.question.localeCompare(b.question))
                                     .map(q => (
-                                      <SelectItem key={q.id} value={q.question} className="text-left text-sm">
-                                        {q.question}
+                                      <SelectItem key={q.id} value={q.question} className="text-left text-sm cursor-pointer">
+                                        <span className="flex items-center gap-2">
+                                          <Send className="h-3 w-3 text-jade" />
+                                          {q.question}
+                                        </span>
                                       </SelectItem>
                                     ))}
                                 </SelectContent>
