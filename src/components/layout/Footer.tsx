@@ -122,13 +122,7 @@ const Footer = () => {
         <div className="border-t border-primary-foreground/10 pt-6 mb-6">
           <div className="flex items-center justify-center gap-2 text-primary-foreground/70">
             <Mail className="w-4 h-4" />
-            <span className="font-body text-sm">Technical Support:</span>
-            <a 
-              href="mailto:ronisapir61@gmail.com" 
-              className="font-body text-sm text-gold hover:text-gold/80 transition-colors"
-            >
-              ronisapir61@gmail.com
-            </a>
+            <span className="font-body text-sm">Technical Support: Contact via form above</span>
           </div>
         </div>
 

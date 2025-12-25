@@ -56,23 +56,6 @@ const Hero = () => {
             </Button>
           </div>
 
-          {/* Stats */}
-          <div className="mt-16 pt-8 border-t border-primary-foreground/20 grid grid-cols-3 gap-8 animate-fade-in-up delay-400">
-            {[
-              { value: "35+", label: "Years Experience" },
-              { value: "10K+", label: "Patients Treated" },
-              { value: "50+", label: "Countries Served" },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center">
-                <div className="font-display text-3xl md:text-4xl font-semibold text-gold mb-1">
-                  {stat.value}
-                </div>
-                <div className="font-body text-sm text-primary-foreground/70 tracking-wide">
-                  {stat.label}
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </section>
