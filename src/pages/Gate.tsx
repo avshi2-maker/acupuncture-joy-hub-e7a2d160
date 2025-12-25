@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { supabase } from '@/integrations/supabase/client';
 import { useTier } from '@/hooks/useTier';
 import { toast } from 'sonner';
-import { Lock, ArrowLeft, Leaf, CreditCard, Upload, CheckCircle, ArrowRight, MessageCircle, Mail } from 'lucide-react';
+import { Lock, ArrowLeft, Leaf, CreditCard, Upload, CheckCircle, ArrowRight, MessageCircle, Mail, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { TierCard } from '@/components/pricing/TierCard';
 
@@ -389,13 +389,20 @@ export default function Gate() {
                       </label>
                     </div>
 
-                    {proofFile && (
+                    {proofFile && therapistName && therapistPhone && (
                       <Button 
                         onClick={handleSendProof} 
                         className="w-full mb-4"
                         disabled={isUploading}
                       >
-                        {isUploading ? 'שולח...' : 'שלח אישור'}
+                        {isUploading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                            שולח אישור...
+                          </>
+                        ) : (
+                          'שלח אישור'
+                        )}
                       </Button>
                     )}
 
