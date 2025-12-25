@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTier } from '@/hooks/useTier';
 import { TierBadge } from '@/components/layout/TierBadge';
+import { ChatMessage, ChatTypingIndicator } from '@/components/chat/ChatMessage';
 import { toast } from 'sonner';
 import { 
   Brain, 
@@ -33,7 +34,8 @@ import {
   MicOff,
   FileText,
   ClipboardList,
-  Pill
+  Pill,
+  Trash2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -564,28 +566,54 @@ export default function TcmBrain() {
 
             {/* Chat Tab */}
             <TabsContent value="chat" className="flex-1 flex flex-col p-4 pt-2">
+              {/* Chat Header with Clear */}
+              {messages.length > 0 && (
+                <div className="flex items-center justify-between pb-3 border-b border-border/50 mb-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setMessages([])}
+                    className="text-muted-foreground hover:text-destructive text-xs gap-1"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                    נקה שיחה
+                  </Button>
+                  <span className="text-xs text-muted-foreground">
+                    {messages.length} הודעות
+                  </span>
+                </div>
+              )}
+
               <ScrollArea className="flex-1 pl-4" ref={scrollRef}>
                 <div className="space-y-4 pb-4" dir="rtl">
                   {messages.length === 0 && (
                     <div className="text-right py-12">
-                      <div className="w-20 h-20 bg-jade-light rounded-full flex items-center justify-center mx-auto mb-6">
-                        <Brain className="h-10 w-10 text-jade" />
+                      <div className="relative w-24 h-24 mx-auto mb-6">
+                        <div className="absolute inset-0 bg-jade/20 rounded-full animate-pulse-soft" />
+                        <div className="absolute inset-2 bg-gradient-to-br from-jade-light to-gold-light rounded-full flex items-center justify-center border-2 border-jade/30">
+                          <Brain className="h-10 w-10 text-jade" />
+                        </div>
                       </div>
-                      <h2 className="font-display text-2xl mb-2 text-center">ברוכים הבאים ל-TCM Brain</h2>
-                      <p className="text-muted-foreground mb-8 text-center">
-                        שאלו כל שאלה ברפואה סינית - עשבים, נקודות דיקור, אבחון ועוד
+                      <h2 className="font-display text-3xl mb-3 text-center bg-gradient-to-l from-jade to-jade-dark bg-clip-text text-transparent">
+                        ברוכים הבאים ל-TCM Brain
+                      </h2>
+                      <p className="text-muted-foreground mb-8 text-center max-w-md mx-auto">
+                        העוזר האישי שלכם ברפואה סינית מסורתית. שאלו כל שאלה על עשבים, נקודות דיקור, אבחון ועוד.
                       </p>
                       
-                      <div className="grid sm:grid-cols-3 gap-3 max-w-2xl mx-auto">
+                      <div className="grid sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
                         {quickQuestions.map((q, i) => (
                           <button
                             key={i}
                             onClick={() => handleQuickQuestion(q.text)}
-                            className="p-4 bg-card border border-border rounded-lg text-right hover:border-jade hover:shadow-soft transition-all group"
+                            className="p-5 bg-gradient-to-br from-card to-card/80 border border-border/80 rounded-xl text-right hover:border-jade hover:shadow-elevated transition-all group relative overflow-hidden"
                             dir="rtl"
                           >
-                            <q.icon className="h-5 w-5 text-jade mb-2 group-hover:scale-110 transition-transform mr-auto" />
-                            <p className="text-sm text-right">{q.text}</p>
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-jade/0 via-jade/50 to-jade/0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className="w-10 h-10 rounded-lg bg-jade-light flex items-center justify-center mb-3 mr-auto group-hover:scale-110 transition-transform">
+                              <q.icon className="h-5 w-5 text-jade" />
+                            </div>
+                            <p className="text-sm font-medium text-right leading-relaxed">{q.text}</p>
                           </button>
                         ))}
                       </div>
@@ -593,50 +621,48 @@ export default function TcmBrain() {
                   )}
 
                   {messages.map((msg, i) => (
-                    <div
-                      key={i}
-                      className={`flex ${msg.role === 'user' ? 'justify-start' : 'justify-end'}`}
-                    >
-                      <Card className={`max-w-[85%] ${msg.role === 'user' ? 'bg-jade text-primary-foreground' : 'bg-card'}`}>
-                        <CardContent className="p-3">
-                          <p className="whitespace-pre-wrap text-sm leading-relaxed text-right">{msg.content}</p>
-                        </CardContent>
-                      </Card>
-                    </div>
+                    <ChatMessage key={i} role={msg.role} content={msg.content} />
                   ))}
 
                   {isLoading && messages[messages.length - 1]?.role === 'user' && (
-                    <div className="flex justify-end">
-                      <Card className="bg-card">
-                        <CardContent className="p-3">
-                          <Loader2 className="h-5 w-5 animate-spin text-jade" />
-                        </CardContent>
-                      </Card>
-                    </div>
+                    <ChatTypingIndicator />
                   )}
                 </div>
               </ScrollArea>
 
-              {/* Input with Voice */}
-              <form onSubmit={handleSubmit} className="flex gap-2 pt-4 border-t border-border">
-                <Input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="שאלו שאלה ברפואה סינית..."
-                  disabled={isLoading}
-                  className="flex-1 text-right"
-                  dir="rtl"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={toggleRecording}
-                  className={isRecording ? 'bg-red-500/10 border-red-500 text-red-500' : ''}
+              {/* Enhanced Input */}
+              <form onSubmit={handleSubmit} className="flex gap-2 pt-4 border-t border-border/50 bg-background/50 backdrop-blur-sm -mx-4 px-4 -mb-4 pb-4">
+                <div className="flex-1 relative">
+                  <Input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="שאלו שאלה ברפואה סינית..."
+                    disabled={isLoading}
+                    className="text-right pr-4 pl-12 h-12 rounded-xl border-border/80 focus:border-jade transition-colors"
+                    dir="rtl"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleRecording}
+                    className={`absolute left-1 top-1/2 -translate-y-1/2 h-10 w-10 rounded-lg ${
+                      isRecording ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                  </Button>
+                </div>
+                <Button 
+                  type="submit" 
+                  disabled={isLoading || !input.trim()}
+                  className="h-12 w-12 rounded-xl bg-jade hover:bg-jade/90"
                 >
-                  {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                </Button>
-                <Button type="submit" disabled={isLoading || !input.trim()}>
-                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  {isLoading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Send className="h-5 w-5" />
+                  )}
                 </Button>
               </form>
             </TabsContent>
