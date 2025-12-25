@@ -21,6 +21,8 @@ import CRMDashboard from "./pages/crm/CRMDashboard";
 import CRMCalendar from "./pages/crm/CRMCalendar";
 import CRMPatients from "./pages/crm/CRMPatients";
 import CRMPatientNew from "./pages/crm/CRMPatientNew";
+import CRMPatientDetail from "./pages/crm/CRMPatientDetail";
+import CRMPatientEdit from "./pages/crm/CRMPatientEdit";
 import CRMRooms from "./pages/crm/CRMRooms";
 
 const queryClient = new QueryClient();
@@ -49,7 +51,10 @@ const App = () => (
                 <Route path="/crm/calendar" element={<CRMCalendar />} />
                 <Route path="/crm/patients" element={<CRMPatients />} />
                 <Route path="/crm/patients/new" element={<CRMPatientNew />} />
+                <Route path="/crm/patients/:id" element={<CRMPatientDetail />} />
+                <Route path="/crm/patients/:id/edit" element={<CRMPatientEdit />} />
                 <Route path="/crm/rooms" element={<CRMRooms />} />
+                <Route path="*" element={<NotFound />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
