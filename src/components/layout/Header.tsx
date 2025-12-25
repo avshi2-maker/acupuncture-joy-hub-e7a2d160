@@ -1,11 +1,17 @@
 import { useState, useEffect } from "react";
-import { Menu, X, Leaf } from "lucide-react";
+import { Menu, X, Leaf, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const { t } = useLanguage();
+
+  const isHomePage = location.pathname === "/";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -16,35 +22,35 @@ const Header = () => {
   }, []);
 
   const navLinks = [
-    { href: "#services", label: "Services" },
-    { href: "#tcm-brain-preview", label: "CM Brain" },
-    { href: "#about", label: "About" },
-    { href: "#testimonials", label: "Testimonials" },
-    { href: "#contact", label: "Contact" },
+    { href: "#services", label: t("services") },
+    { href: "#tcm-brain-preview", label: t("cmBrain") },
+    { href: "#about", label: t("about") },
+    { href: "#testimonials", label: t("testimonials") },
+    { href: "#contact", label: t("contact") },
   ];
 
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        isScrolled
+        isScrolled || !isHomePage
           ? "bg-background/95 backdrop-blur-md shadow-soft py-3"
           : "bg-transparent py-5"
       }`}
     >
       <div className="container mx-auto px-4 flex items-center justify-between">
         {/* Logo */}
-        <a href="#" className="flex items-center gap-2 group">
-          <div className={`p-2 rounded-full transition-all duration-300 ${isScrolled ? 'bg-jade/10' : 'bg-primary-foreground/10'}`}>
-            <Leaf className={`w-6 h-6 transition-colors duration-300 ${isScrolled ? 'text-jade' : 'text-primary-foreground'}`} />
+        <Link to="/" className="flex items-center gap-2 group">
+          <div className={`p-2 rounded-full transition-all duration-300 ${isScrolled || !isHomePage ? 'bg-jade/10' : 'bg-primary-foreground/10'}`}>
+            <Leaf className={`w-6 h-6 transition-colors duration-300 ${isScrolled || !isHomePage ? 'text-jade' : 'text-primary-foreground'}`} />
           </div>
-          <span className={`font-display text-lg md:text-xl font-semibold tracking-wide transition-colors duration-300 ${isScrolled ? 'text-foreground' : 'text-primary-foreground'}`}>
+          <span className={`font-display text-lg md:text-xl font-semibold tracking-wide transition-colors duration-300 ${isScrolled || !isHomePage ? 'text-foreground' : 'text-primary-foreground'} hidden sm:inline`}>
             Dr Roni Sapir - Complementary Medicine
           </span>
-        </a>
+        </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => (
+        <nav className="hidden lg:flex items-center gap-6">
+          {isHomePage && navLinks.map((link) => (
             <a
               key={link.href}
               href={link.href}
@@ -57,32 +63,57 @@ const Header = () => {
               {link.label}
             </a>
           ))}
-          <Button asChild variant={isScrolled ? "outline" : "secondary"} size="sm">
-            <Link to="/therapist-register">הרשמה למטפלים</Link>
+          
+          {/* Dashboard Button */}
+          <Button asChild variant={isScrolled || !isHomePage ? "outline" : "secondary"} size="sm" className="gap-2">
+            <Link to="/crm">
+              <LayoutDashboard className="w-4 h-4" />
+              {t("dashboard")}
+            </Link>
           </Button>
-          <Button variant={isScrolled ? "hero" : "heroOutline"} size="lg">
-            Book Session
+
+          {/* Language Switcher */}
+          <LanguageSwitcher isScrolled={isScrolled || !isHomePage} />
+          
+          <Button asChild variant={isScrolled || !isHomePage ? "outline" : "secondary"} size="sm">
+            <Link to="/therapist-register">{t("therapistRegister")}</Link>
+          </Button>
+          <Button variant={isScrolled || !isHomePage ? "hero" : "heroOutline"} size="lg">
+            {t("bookSession")}
           </Button>
         </nav>
 
         {/* Mobile Menu Button */}
-        <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className={`md:hidden p-2 transition-colors ${isScrolled ? 'text-foreground' : 'text-primary-foreground'}`}
-          aria-label="Toggle menu"
-        >
-          {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+        <div className="lg:hidden flex items-center gap-2">
+          <LanguageSwitcher isScrolled={isScrolled || !isHomePage} />
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className={`p-2 transition-colors ${isScrolled || !isHomePage ? 'text-foreground' : 'text-primary-foreground'}`}
+            aria-label="Toggle menu"
+          >
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu */}
       <div
-        className={`md:hidden absolute top-full left-0 right-0 bg-background/98 backdrop-blur-lg shadow-elevated transition-all duration-300 ${
+        className={`lg:hidden absolute top-full left-0 right-0 bg-background/98 backdrop-blur-lg shadow-elevated transition-all duration-300 ${
           isMobileMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
         }`}
       >
         <nav className="container mx-auto px-4 py-6 flex flex-col gap-4">
-          {navLinks.map((link) => (
+          {/* Dashboard Link - Always visible */}
+          <Link
+            to="/crm"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="font-body text-lg font-medium text-jade hover:text-jade/80 transition-colors py-2 flex items-center gap-2"
+          >
+            <LayoutDashboard className="w-5 h-5" />
+            {t("dashboard")}
+          </Link>
+          
+          {isHomePage && navLinks.map((link) => (
             <a
               key={link.href}
               href={link.href}
@@ -94,11 +125,11 @@ const Header = () => {
           ))}
           <Button asChild variant="outline" className="w-full">
             <Link to="/therapist-register" onClick={() => setIsMobileMenuOpen(false)}>
-              הרשמה למטפלים
+              {t("therapistRegister")}
             </Link>
           </Button>
           <Button variant="hero" size="lg" className="mt-2">
-            Book Session
+            {t("bookSession")}
           </Button>
         </nav>
       </div>
