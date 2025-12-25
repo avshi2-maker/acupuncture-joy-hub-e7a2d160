@@ -8,6 +8,7 @@ import Testimonials from "@/components/sections/Testimonials";
 import BookingCTA from "@/components/sections/BookingCTA";
 import Contact from "@/components/sections/Contact";
 import Footer from "@/components/layout/Footer";
+import InstallBanner from "@/components/pwa/InstallBanner";
 
 const Index = () => {
   return (
@@ -36,6 +37,7 @@ const Index = () => {
           <Contact />
         </main>
         <Footer />
+        <InstallBanner />
       </div>
     </>
   );
