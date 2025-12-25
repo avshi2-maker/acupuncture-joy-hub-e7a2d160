@@ -125,13 +125,24 @@ export default function Gate() {
     }
   };
 
+  // Israeli phone validation regex (05X-XXXXXXX or 05XXXXXXXX formats)
+  const isValidIsraeliPhone = (phone: string) => {
+    const cleanPhone = phone.replace(/[^0-9]/g, '');
+    // Israeli mobile: starts with 05, followed by 8 digits (total 10 digits)
+    return /^05\d{8}$/.test(cleanPhone);
+  };
+
   const handleSendProof = async () => {
-    if (!therapistName.trim()) {
-      toast.error('נא להזין שם מלא');
+    if (!therapistName.trim() || therapistName.trim().length < 2) {
+      toast.error('נא להזין שם מלא (לפחות 2 תווים)');
       return;
     }
     if (!therapistPhone.trim()) {
       toast.error('נא להזין מספר טלפון');
+      return;
+    }
+    if (!isValidIsraeliPhone(therapistPhone)) {
+      toast.error('נא להזין מספר טלפון ישראלי תקין (לדוגמה: 050-1234567)');
       return;
     }
     if (!proofFile) {
