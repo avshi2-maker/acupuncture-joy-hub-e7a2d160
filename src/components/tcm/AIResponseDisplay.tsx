@@ -15,6 +15,7 @@ import {
   User,
 } from 'lucide-react';
 import { parsePointReferences } from '@/components/acupuncture/BodyFigureSelector';
+import { PointInfoCard } from '@/components/tcm/PointInfoCard';
 
 interface AIResponseDisplayProps {
   isLoading: boolean;
@@ -224,14 +225,11 @@ export function AIResponseDisplay({
                   {points.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {points.map((point) => (
-                        <Badge
+                        <PointInfoCard
                           key={point}
-                          variant="outline"
-                          className="cursor-pointer border-destructive/30 bg-destructive/10 text-destructive"
-                          onClick={() => onViewBodyMap([point])}
-                        >
-                          {point}
-                        </Badge>
+                          pointCode={point}
+                          onViewBodyMap={(p) => onViewBodyMap([p])}
+                        />
                       ))}
                     </div>
                   ) : (
