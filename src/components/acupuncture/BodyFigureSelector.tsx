@@ -552,7 +552,7 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
                             : isSelected 
                             ? 'bg-primary border-primary text-primary-foreground scale-125 ring-4 ring-primary/30' 
                             : isHighlighted
-                            ? 'bg-jade border-jade text-jade-foreground scale-110 ring-4 ring-jade/40 animate-pulse'
+                            ? 'bg-red-500 border-red-600 text-white scale-125 ring-4 ring-red-500/50 animate-pulse shadow-lg'
                             : 'bg-destructive/80 border-destructive text-destructive-foreground hover:scale-110 hover:bg-destructive'
                         }`}
                         style={{
