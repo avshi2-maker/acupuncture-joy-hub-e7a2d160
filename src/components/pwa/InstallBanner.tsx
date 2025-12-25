@@ -90,9 +90,9 @@ const InstallBanner = () => {
       </div>
 
       {!isIOS && deferredPrompt && (
-        <Button onClick={handleInstall} className="w-full mt-3" size="sm">
+      <Button onClick={handleInstall} className="w-full mt-3" size="sm">
           <Download className="h-4 w-4 mr-2" />
-          Install App
+          Install Mobile App Android/iOS
         </Button>
       )}
 
