@@ -15,7 +15,10 @@ import { Lock, ArrowLeft, Leaf } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const gateSchema = z.object({
-  password: z.string().min(1, 'נא להזין סיסמה'),
+  password: z
+    .string()
+    .trim()
+    .min(1, 'נא להזין סיסמה'),
 });
 
 type GateForm = z.infer<typeof gateSchema>;
@@ -48,18 +51,24 @@ export default function Gate() {
   const onSubmit = async (data: GateForm) => {
     setIsLoading(true);
     try {
-      // Check if password exists and is valid
+      const password = data.password.trim();
+
+      // Check if password exists (then we can show an accurate message)
       const { data: passwordData, error } = await supabase
         .from('access_passwords')
-        .select('*')
-        .eq('plain_password', data.password)
-        .eq('is_used', false)
+        .select('tier, expires_at, is_used')
+        .eq('plain_password', password)
         .maybeSingle();
 
       if (error) throw error;
 
       if (!passwordData) {
-        toast.error('סיסמה לא תקינה או כבר נוצלה');
+        toast.error('סיסמה לא תקינה. ודאו שאין רווחים ושהאותיות גדולות/קטנות נכונות.');
+        return;
+      }
+
+      if (passwordData.is_used) {
+        toast.error('הסיסמה כבר נוצלה. צרו קשר לקבלת סיסמה חדשה.');
         return;
       }
 
