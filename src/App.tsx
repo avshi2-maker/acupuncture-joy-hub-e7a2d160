@@ -29,6 +29,7 @@ import PatientConsentForm from "./pages/crm/PatientConsentForm";
 import AppointmentConfirm from "./pages/AppointmentConfirm";
 import TherapistProfile from "./pages/TherapistProfile";
 import InstallApp from "./pages/InstallApp";
+import { FeedbackWidget } from "./components/feedback/FeedbackWidget";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,7 @@ const App = () => (
                   <Route path="/install" element={<InstallApp />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
+                <FeedbackWidget />
               </BrowserRouter>
             </TooltipProvider>
           </TierProvider>

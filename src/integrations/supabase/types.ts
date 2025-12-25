@@ -498,6 +498,39 @@ export type Database = {
         }
         Relationships: []
       }
+      page_feedback: {
+        Row: {
+          created_at: string
+          feedback_text: string
+          id: string
+          page_name: string | null
+          page_url: string
+          rating: number | null
+          visitor_email: string | null
+          visitor_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          feedback_text: string
+          id?: string
+          page_name?: string | null
+          page_url: string
+          rating?: number | null
+          visitor_email?: string | null
+          visitor_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          feedback_text?: string
+          id?: string
+          page_name?: string | null
+          page_url?: string
+          rating?: number | null
+          visitor_email?: string | null
+          visitor_name?: string | null
+        }
+        Relationships: []
+      }
       patient_consents: {
         Row: {
           answers: Json | null
