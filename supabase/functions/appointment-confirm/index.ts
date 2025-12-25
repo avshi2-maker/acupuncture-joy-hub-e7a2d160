@@ -1,5 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { Resend } from "https://esm.sh/resend@2.0.0";
+
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -37,10 +40,20 @@ serve(async (req) => {
       );
     }
 
-    // Find the confirmation record
+    // Find the confirmation record with appointment and therapist details
     const { data: confirmation, error: findError } = await supabase
       .from("appointment_confirmations")
-      .select("*, appointments(id, title, start_time, status, patients(full_name))")
+      .select(`
+        *, 
+        appointments(
+          id, 
+          title, 
+          start_time, 
+          status, 
+          therapist_id,
+          patients(full_name, phone)
+        )
+      `)
       .eq("token", token)
       .single();
 
@@ -101,6 +114,80 @@ serve(async (req) => {
     }
 
     console.log(`Appointment ${confirmation.appointment_id} updated to ${newStatus}`);
+
+    // Get therapist email to send notification
+    const therapistId = confirmation.appointments?.therapist_id;
+    if (therapistId) {
+      const { data: therapistAuth } = await supabase.auth.admin.getUserById(therapistId);
+      const therapistEmail = therapistAuth?.user?.email;
+      
+      if (therapistEmail) {
+        const patientName = confirmation.appointments?.patients?.full_name || 'מטופל';
+        const appointmentDate = new Date(confirmation.appointments?.start_time).toLocaleDateString('he-IL', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        });
+        const appointmentTime = new Date(confirmation.appointments?.start_time).toLocaleTimeString('he-IL', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        const statusHebrew = response === "confirmed" ? "אישר/ה הגעה" : "ביטל/ה";
+        const statusColor = response === "confirmed" ? "#10B981" : "#EF4444";
+        const statusEmoji = response === "confirmed" ? "✅" : "❌";
+
+        try {
+          await resend.emails.send({
+            from: "TCM Clinic <onboarding@resend.dev>",
+            to: [therapistEmail],
+            subject: `${statusEmoji} ${patientName} ${statusHebrew} את התור`,
+            html: `
+              <!DOCTYPE html>
+              <html dir="rtl">
+              <head>
+                <style>
+                  body { font-family: 'Segoe UI', Tahoma, sans-serif; line-height: 1.6; color: #333; }
+                  .container { max-width: 500px; margin: 0 auto; padding: 20px; }
+                  .header { background: ${statusColor}; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }
+                  .content { background: #f9fafb; padding: 25px; border-radius: 0 0 10px 10px; }
+                  .info-box { background: white; border-radius: 8px; padding: 15px; margin: 15px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+                </style>
+              </head>
+              <body>
+                <div class="container">
+                  <div class="header">
+                    <h1 style="margin: 0; font-size: 24px;">${statusEmoji} עדכון תור</h1>
+                  </div>
+                  <div class="content">
+                    <p style="font-size: 18px; text-align: center;">
+                      <strong>${patientName}</strong> ${statusHebrew} את התור
+                    </p>
+                    
+                    <div class="info-box">
+                      <p style="margin: 5px 0;"><strong>📅 תאריך:</strong> ${appointmentDate}</p>
+                      <p style="margin: 5px 0;"><strong>🕐 שעה:</strong> ${appointmentTime}</p>
+                    </div>
+                    
+                    ${response === "cancelled" ? `
+                    <p style="text-align: center; color: #666;">
+                      מומלץ ליצור קשר עם המטופל לקביעת תור חלופי
+                    </p>
+                    ` : ''}
+                  </div>
+                </div>
+              </body>
+              </html>
+            `,
+          });
+          console.log(`Email notification sent to therapist: ${therapistEmail}`);
+        } catch (emailError: any) {
+          console.error("Error sending email to therapist:", emailError);
+          // Don't fail the whole request if email fails
+        }
+      }
+    }
 
     return new Response(
       JSON.stringify({
