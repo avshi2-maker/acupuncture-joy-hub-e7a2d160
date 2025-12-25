@@ -36,13 +36,14 @@ const Header = () => {
     >
       <div className="container mx-auto px-4 flex items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 group flex-shrink-0 max-w-[50%] lg:max-w-none">
+        <Link to="/" className="flex items-center gap-2 group flex-shrink-0">
           <div className={`p-2 rounded-full transition-all duration-300 flex-shrink-0 ${isScrolled || !isHomePage ? 'bg-jade/10' : 'bg-primary-foreground/10'}`}>
             <Leaf className={`w-6 h-6 transition-colors duration-300 ${isScrolled || !isHomePage ? 'text-jade' : 'text-primary-foreground'}`} />
           </div>
-          <span className={`font-display text-sm lg:text-lg xl:text-xl font-semibold tracking-wide transition-colors duration-300 truncate ${isScrolled || !isHomePage ? 'text-foreground' : 'text-primary-foreground'} hidden sm:inline`}>
-            Dr Roni Sapir - Complementary Medicine
-          </span>
+          <div className={`font-display font-bold tracking-wide transition-colors duration-300 ${isScrolled || !isHomePage ? 'text-foreground' : 'text-primary-foreground'} hidden sm:flex flex-col leading-tight`}>
+            <span className="text-sm lg:text-base">Dr Roni Sapir</span>
+            <span className="text-xs lg:text-sm opacity-90">Complementary Medicine</span>
+          </div>
         </Link>
 
         {/* Desktop Navigation */}
