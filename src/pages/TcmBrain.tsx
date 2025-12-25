@@ -620,9 +620,20 @@ export default function TcmBrain() {
                     </div>
                   )}
 
-                  {messages.map((msg, i) => (
-                    <ChatMessage key={i} role={msg.role} content={msg.content} />
-                  ))}
+                  {messages.map((msg, i) => {
+                    // Find the previous user message for assistant responses
+                    const userMessage = msg.role === 'assistant' && i > 0 
+                      ? messages.slice(0, i).reverse().find(m => m.role === 'user')?.content
+                      : undefined;
+                    return (
+                      <ChatMessage 
+                        key={i} 
+                        role={msg.role} 
+                        content={msg.content} 
+                        userMessage={userMessage}
+                      />
+                    );
+                  })}
 
                   {isLoading && messages[messages.length - 1]?.role === 'user' && (
                     <ChatTypingIndicator />

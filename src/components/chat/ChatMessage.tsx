@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Brain, User, Copy, Check } from 'lucide-react';
+import { Brain, User, Copy, Check, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ChatMessageProps {
   role: 'user' | 'assistant';
   content: string;
+  userMessage?: string; // The user's question that prompted this response
 }
 
 // Simple markdown-like formatting for chat responses
@@ -195,9 +197,11 @@ function formatInlineText(text: string): React.ReactNode {
   return parts.length > 0 ? parts : text;
 }
 
-export function ChatMessage({ role, content }: ChatMessageProps) {
+export function ChatMessage({ role, content, userMessage }: ChatMessageProps) {
   const isUser = role === 'user';
   const [copied, setCopied] = useState(false);
+  const [feedback, setFeedback] = useState<'positive' | 'negative' | null>(null);
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
 
   const handleCopy = async () => {
     try {
@@ -207,6 +211,33 @@ export function ChatMessage({ role, content }: ChatMessageProps) {
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error('שגיאה בהעתקה');
+    }
+  };
+
+  const handleFeedback = async (rating: 'positive' | 'negative') => {
+    if (feedback || isSubmittingFeedback) return;
+    
+    setIsSubmittingFeedback(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        await supabase.from('chat_feedback').insert({
+          user_id: user.id,
+          message_content: userMessage || '',
+          response_content: content,
+          rating
+        });
+      }
+      
+      setFeedback(rating);
+      toast.success(rating === 'positive' ? 'תודה על המשוב!' : 'תודה, נשתפר!');
+    } catch (error) {
+      console.error('Feedback error:', error);
+      // Still show feedback locally even if save fails
+      setFeedback(rating);
+    } finally {
+      setIsSubmittingFeedback(false);
     }
   };
 
@@ -252,24 +283,67 @@ export function ChatMessage({ role, content }: ChatMessageProps) {
           )}
         </div>
 
-        {/* Copy button for assistant messages */}
+        {/* Action buttons for assistant messages */}
         {!isUser && content && (
-          <button
-            onClick={handleCopy}
-            className={cn(
-              "absolute -bottom-1 left-2 p-1.5 rounded-lg transition-all duration-200",
-              "bg-card border border-border/50 shadow-sm",
-              "opacity-0 group-hover:opacity-100 hover:bg-muted",
-              copied && "opacity-100 bg-jade/10 border-jade/30"
-            )}
-            title="העתק תגובה"
-          >
-            {copied ? (
-              <Check className="h-3.5 w-3.5 text-jade" />
-            ) : (
-              <Copy className="h-3.5 w-3.5 text-muted-foreground" />
-            )}
-          </button>
+          <div className="absolute -bottom-1 left-2 flex gap-1">
+            {/* Copy button */}
+            <button
+              onClick={handleCopy}
+              className={cn(
+                "p-1.5 rounded-lg transition-all duration-200",
+                "bg-card border border-border/50 shadow-sm",
+                "opacity-0 group-hover:opacity-100 hover:bg-muted",
+                copied && "opacity-100 bg-jade/10 border-jade/30"
+              )}
+              title="העתק תגובה"
+            >
+              {copied ? (
+                <Check className="h-3.5 w-3.5 text-jade" />
+              ) : (
+                <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+              )}
+            </button>
+
+            {/* Thumbs up */}
+            <button
+              onClick={() => handleFeedback('positive')}
+              disabled={feedback !== null || isSubmittingFeedback}
+              className={cn(
+                "p-1.5 rounded-lg transition-all duration-200",
+                "bg-card border border-border/50 shadow-sm",
+                feedback === null && "opacity-0 group-hover:opacity-100 hover:bg-jade/10 hover:border-jade/30",
+                feedback === 'positive' && "opacity-100 bg-jade/20 border-jade/40",
+                feedback === 'negative' && "opacity-50",
+                isSubmittingFeedback && "opacity-50 cursor-wait"
+              )}
+              title="תגובה מועילה"
+            >
+              <ThumbsUp className={cn(
+                "h-3.5 w-3.5",
+                feedback === 'positive' ? "text-jade" : "text-muted-foreground"
+              )} />
+            </button>
+
+            {/* Thumbs down */}
+            <button
+              onClick={() => handleFeedback('negative')}
+              disabled={feedback !== null || isSubmittingFeedback}
+              className={cn(
+                "p-1.5 rounded-lg transition-all duration-200",
+                "bg-card border border-border/50 shadow-sm",
+                feedback === null && "opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:border-destructive/30",
+                feedback === 'negative' && "opacity-100 bg-destructive/20 border-destructive/40",
+                feedback === 'positive' && "opacity-50",
+                isSubmittingFeedback && "opacity-50 cursor-wait"
+              )}
+              title="תגובה לא מועילה"
+            >
+              <ThumbsDown className={cn(
+                "h-3.5 w-3.5",
+                feedback === 'negative' ? "text-destructive" : "text-muted-foreground"
+              )} />
+            </button>
+          </div>
         )}
       </div>
     </div>
