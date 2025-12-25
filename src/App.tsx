@@ -17,6 +17,11 @@ import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import TcmBrain from "./pages/TcmBrain";
 import CRM from "./pages/CRM";
+import CRMDashboard from "./pages/crm/CRMDashboard";
+import CRMCalendar from "./pages/crm/CRMCalendar";
+import CRMPatients from "./pages/crm/CRMPatients";
+import CRMPatientNew from "./pages/crm/CRMPatientNew";
+import CRMRooms from "./pages/crm/CRMRooms";
 
 const queryClient = new QueryClient();
 
@@ -39,7 +44,12 @@ const App = () => (
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/tcm-brain" element={<TcmBrain />} />
-                <Route path="/crm" element={<CRM />} />
+                <Route path="/crm" element={<CRMDashboard />} />
+                <Route path="/crm/dashboard" element={<CRMDashboard />} />
+                <Route path="/crm/calendar" element={<CRMCalendar />} />
+                <Route path="/crm/patients" element={<CRMPatients />} />
+                <Route path="/crm/patients/new" element={<CRMPatientNew />} />
+                <Route path="/crm/rooms" element={<CRMRooms />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
