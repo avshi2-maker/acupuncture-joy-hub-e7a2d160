@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { Copy, Key, LogOut, Loader2, RefreshCw, Leaf } from 'lucide-react';
+import { Copy, Key, LogOut, Loader2, RefreshCw, Leaf, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface TherapistRegistration {
@@ -237,10 +237,16 @@ export default function Admin() {
                 <p className="text-muted-foreground">ד״ר רוני ספיר</p>
               </div>
             </div>
-            <Button variant="outline" onClick={() => signOut()}>
-              <LogOut className="h-4 w-4 ml-2" />
-              יציאה
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => navigate('/admin/feedback')}>
+                <MessageSquare className="h-4 w-4 ml-2" />
+                משוב
+              </Button>
+              <Button variant="outline" onClick={() => signOut()}>
+                <LogOut className="h-4 w-4 ml-2" />
+                יציאה
+              </Button>
+            </div>
           </div>
 
           {/* Password Generator */}
