@@ -138,7 +138,7 @@ export default function Dashboard() {
         {/* Header */}
         <header className="bg-card border-b border-border sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <Link to="/" className="flex items-center gap-4 hover:opacity-90 transition-opacity" aria-label="דף הבית">
               <div className="w-10 h-10 bg-jade-light rounded-full flex items-center justify-center">
                 <Leaf className="h-5 w-5 text-jade" />
               </div>
@@ -146,8 +146,11 @@ export default function Dashboard() {
                 <h1 className="font-display text-xl">TCM Clinic</h1>
                 <p className="text-sm text-muted-foreground">דשבורד מטפל</p>
               </div>
-            </div>
-            <div className="flex items-center gap-4">
+            </Link>
+            <div className="flex items-center gap-3">
+              <Button asChild variant="outline" size="sm">
+                <Link to="/#tcm-brain-preview">דף הבית</Link>
+              </Button>
               <TierBadge />
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4" />

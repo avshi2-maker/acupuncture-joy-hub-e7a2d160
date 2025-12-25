@@ -201,7 +201,7 @@ export default function TcmBrainPreview() {
   };
 
   return (
-    <section className="py-20 bg-gradient-to-b from-background to-card/50" dir="rtl">
+    <section id="tcm-brain-preview" className="py-20 bg-gradient-to-b from-background to-card/50" dir="rtl">
       <div className="max-w-6xl mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-12">
@@ -298,7 +298,7 @@ export default function TcmBrainPreview() {
           <Button 
             variant="outline" 
             size="lg" 
-            onClick={() => navigate('/gate')}
+            onClick={() => navigate('/gate?redirect=/tcm-brain')}
             className="gap-2 border-jade/30 hover:bg-jade/10"
           >
             <Brain className="h-5 w-5 text-jade" />
