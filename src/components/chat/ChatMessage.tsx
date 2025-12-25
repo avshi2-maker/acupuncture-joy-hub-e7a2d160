@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Brain, User } from 'lucide-react';
+import { Brain, User, Copy, Check } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ChatMessageProps {
   role: 'user' | 'assistant';
@@ -195,11 +197,23 @@ function formatInlineText(text: string): React.ReactNode {
 
 export function ChatMessage({ role, content }: ChatMessageProps) {
   const isUser = role === 'user';
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopied(true);
+      toast.success('הועתק ללוח');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('שגיאה בהעתקה');
+    }
+  };
 
   return (
     <div
       className={cn(
-        "flex gap-3 animate-fade-in-up",
+        "flex gap-3 animate-fade-in-up group",
         isUser ? "flex-row" : "flex-row-reverse"
       )}
     >
@@ -220,20 +234,42 @@ export function ChatMessage({ role, content }: ChatMessageProps) {
       </div>
 
       {/* Message bubble */}
-      <div
-        className={cn(
-          "flex-1 max-w-[85%] rounded-2xl px-4 py-3 shadow-soft",
-          isUser 
-            ? "bg-jade text-primary-foreground rounded-tr-sm" 
-            : "bg-card border border-border/50 rounded-tl-sm"
-        )}
-      >
-        {isUser ? (
-          <p className="text-sm leading-relaxed text-right whitespace-pre-wrap">{content}</p>
-        ) : (
-          <div className="text-right" dir="rtl">
-            {formatContent(content)}
-          </div>
+      <div className="flex-1 max-w-[85%] relative">
+        <div
+          className={cn(
+            "rounded-2xl px-4 py-3 shadow-soft",
+            isUser 
+              ? "bg-jade text-primary-foreground rounded-tr-sm" 
+              : "bg-card border border-border/50 rounded-tl-sm"
+          )}
+        >
+          {isUser ? (
+            <p className="text-sm leading-relaxed text-right whitespace-pre-wrap">{content}</p>
+          ) : (
+            <div className="text-right" dir="rtl">
+              {formatContent(content)}
+            </div>
+          )}
+        </div>
+
+        {/* Copy button for assistant messages */}
+        {!isUser && content && (
+          <button
+            onClick={handleCopy}
+            className={cn(
+              "absolute -bottom-1 left-2 p-1.5 rounded-lg transition-all duration-200",
+              "bg-card border border-border/50 shadow-sm",
+              "opacity-0 group-hover:opacity-100 hover:bg-muted",
+              copied && "opacity-100 bg-jade/10 border-jade/30"
+            )}
+            title="העתק תגובה"
+          >
+            {copied ? (
+              <Check className="h-3.5 w-3.5 text-jade" />
+            ) : (
+              <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+            )}
+          </button>
         )}
       </div>
     </div>
