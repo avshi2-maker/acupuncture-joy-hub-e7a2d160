@@ -626,7 +626,11 @@ export default function TcmBrain() {
                   const tabsList = document.querySelector('[role="tablist"]');
                   const chatTab = tabsList?.querySelector('[value="chat"]') as HTMLButtonElement;
                   chatTab?.click();
-                  setTimeout(() => chatInputRef.current?.focus(), 100);
+                  setTimeout(() => {
+                    const inputSection = document.querySelector('[data-section="chat-input-section"]');
+                    inputSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    chatInputRef.current?.focus();
+                  }, 100);
                 }}
               >
                 <MessageCircle className="h-3.5 w-3.5" />
@@ -645,7 +649,11 @@ export default function TcmBrain() {
                   const tabsList = document.querySelector('[role="tablist"]');
                   const chatTab = tabsList?.querySelector('[value="chat"]') as HTMLButtonElement;
                   chatTab?.click();
-                  setTimeout(() => voiceBtnRef.current?.focus(), 100);
+                  setTimeout(() => {
+                    const voiceSection = document.querySelector('[data-section="voice-btn-section"]');
+                    voiceSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    voiceBtnRef.current?.focus();
+                  }, 100);
                 }}
               >
                 <MicIcon className="h-3.5 w-3.5" />
@@ -661,8 +669,8 @@ export default function TcmBrain() {
                 }`}
                 onClick={() => {
                   setActiveNavSection('history');
-                  const scrollArea = scrollRef.current;
-                  if (scrollArea) scrollArea.scrollTop = 0;
+                  const historySection = document.querySelector('[data-section="chat-history-section"]');
+                  historySection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }}
               >
                 <History className="h-3.5 w-3.5" />
