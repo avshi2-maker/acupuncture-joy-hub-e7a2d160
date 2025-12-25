@@ -53,7 +53,8 @@ const Contact = () => {
     }
   };
 
-  const whatsappLink = "#contact";
+  const whatsappNumber = "972544634923";
+  const whatsappLink = `https://wa.me/${whatsappNumber}`;
 
   // Google Maps embed URL - update with actual clinic coordinates
   const googleMapsEmbedUrl = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3381.0!2d34.78!3d32.08!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzLCsDA0JzQ4LjAiTiAzNMKwNDYnNDguMCJF!5e0!3m2!1sen!2sil!4v1`;
@@ -98,10 +99,19 @@ const Contact = () => {
               <MessageCircle className="w-5 h-5 text-green-600" />
             </div>
             <h3 className="font-display text-lg font-semibold text-foreground mb-2">
-              WhatsApp
+              WhatsApp Only
             </h3>
-            <p className="font-body text-sm text-muted-foreground">Contact for details</p>
-            <p className="font-body text-sm text-amber-600 font-medium">Messages preferred</p>
+            <p className="font-body text-sm text-muted-foreground">054-4634923</p>
+            <p className="font-body text-sm text-amber-600 font-medium">Messages only - No calls</p>
+            <a
+              href={whatsappLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors"
+            >
+              <MessageCircle className="w-4 h-4" />
+              Send Message
+            </a>
           </div>
 
           {/* Email Card */}
