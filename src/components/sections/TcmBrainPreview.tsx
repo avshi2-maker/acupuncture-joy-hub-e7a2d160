@@ -163,8 +163,8 @@ const queryBoxes = [
   {
     id: 'diagnosis',
     icon: ClipboardList,
-    title: 'אבחון TCM',
-    titleEn: 'TCM Diagnosis',
+    title: 'אבחון CM',
+    titleEn: 'CM Diagnosis',
     description: '30 שאלות מוכנות לאבחון',
     questions: diagnosisQuestions,
     gradient: 'from-purple-500/20 to-pink-500/20',
@@ -207,14 +207,14 @@ export default function TcmBrainPreview() {
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-jade/10 border border-jade/20 mb-6">
             <Brain className="h-5 w-5 text-jade" />
-            <span className="text-jade font-medium">TCM Brain AI</span>
+            <span className="text-jade font-medium">CM Brain AI</span>
             <Sparkles className="h-4 w-4 text-gold" />
           </div>
           <h2 className="font-display text-4xl md:text-5xl mb-4 bg-gradient-to-l from-jade to-jade-dark bg-clip-text text-transparent">
             שאלו את ה-AI המומחה
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            בחרו שאלה מוכנה מהקטגוריות למטה ושלחו ישירות ל-TCM Brain לקבלת תשובה מקצועית
+            בחרו שאלה מוכנה מהקטגוריות למטה ושלחו ישירות ל-CM Brain לקבלת תשובה מקצועית
           </p>
         </div>
 
@@ -283,7 +283,7 @@ export default function TcmBrainPreview() {
                         className="w-full bg-jade hover:bg-jade/90 gap-2"
                       >
                         <ArrowLeft className="h-4 w-4" />
-                        שלח ל-TCM Brain
+                        שלח ל-CM Brain
                       </Button>
                     </div>
                   )}
@@ -302,7 +302,7 @@ export default function TcmBrainPreview() {
             className="gap-2 border-jade/30 hover:bg-jade/10"
           >
             <Brain className="h-5 w-5 text-jade" />
-            גישה ל-TCM Brain המלא
+            גישה ל-CM Brain המלא
           </Button>
         </div>
       </div>

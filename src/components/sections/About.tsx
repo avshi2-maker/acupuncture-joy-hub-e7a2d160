@@ -10,7 +10,7 @@ const values = [
   {
     icon: Award,
     title: "Expert Practitioners",
-    description: "Our team holds advanced certifications and decades of combined experience in TCM.",
+    description: "Our team holds advanced certifications and decades of combined experience in Complementary Medicine.",
   },
   {
     icon: Globe,
@@ -40,10 +40,10 @@ const About = () => {
               <span className="text-jade">& Modern Wellness</span>
             </h2>
             <p className="font-body text-muted-foreground text-lg leading-relaxed mb-6">
-              For over 15 years, Harmony TCM Clinic has been a sanctuary for those seeking 
+              For over 35 years, Dr Roni Sapir has been a sanctuary for those seeking 
               natural, holistic healing. Founded on the principles of Traditional Chinese 
-              Medicine, we integrate time-tested therapies with contemporary healthcare 
-              standards.
+              Medicine and Complementary therapies, we integrate time-tested methods with 
+              contemporary healthcare standards.
             </p>
             <p className="font-body text-muted-foreground leading-relaxed mb-8">
               Our practitioners have trained with master acupuncturists across Asia and 

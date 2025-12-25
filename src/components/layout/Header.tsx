@@ -17,7 +17,7 @@ const Header = () => {
 
   const navLinks = [
     { href: "#services", label: "Services" },
-    { href: "#tcm-brain-preview", label: "TCM Brain" },
+    { href: "#tcm-brain-preview", label: "CM Brain" },
     { href: "#about", label: "About" },
     { href: "#testimonials", label: "Testimonials" },
     { href: "#contact", label: "Contact" },
