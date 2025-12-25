@@ -12,10 +12,12 @@ import { toast } from 'sonner';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, addMonths, subMonths, startOfWeek, endOfWeek, isToday } from 'date-fns';
 import { he } from 'date-fns/locale';
 import { ChevronRight, ChevronLeft, Plus, Clock, User, Trash2, Edit, X } from 'lucide-react';
+import { WhatsAppReminderButton } from '@/components/crm/WhatsAppReminderButton';
 
 interface Patient {
   id: string;
   full_name: string;
+  phone?: string | null;
 }
 
 interface Appointment {
@@ -199,6 +201,11 @@ export function AppointmentCalendar({ userId, patients }: AppointmentCalendarPro
     return patients.find(p => p.id === patientId)?.full_name;
   };
 
+  const getPatientPhone = (patientId: string | null) => {
+    if (!patientId) return null;
+    return patients.find(p => p.id === patientId)?.phone || null;
+  };
+
   const statusColors: Record<string, string> = {
     scheduled: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
     completed: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
@@ -312,6 +319,14 @@ export function AppointmentCalendar({ userId, patients }: AppointmentCalendarPro
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    {apt.patient_id && (
+                      <WhatsAppReminderButton
+                        patientName={getPatientName(apt.patient_id) || 'Patient'}
+                        patientPhone={getPatientPhone(apt.patient_id)}
+                        appointmentDate={apt.start_time}
+                        appointmentTime={format(new Date(apt.start_time), 'HH:mm')}
+                      />
+                    )}
                     <Select value={apt.status} onValueChange={(v) => handleStatusChange(apt.id, v)}>
                       <SelectTrigger className="h-7 text-xs w-24">
                         <SelectValue />

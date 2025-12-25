@@ -35,7 +35,9 @@ import {
   X,
   Edit,
   Trash2,
+  MessageCircle,
 } from 'lucide-react';
+import { WhatsAppReminderButton } from '@/components/crm/WhatsAppReminderButton';
 
 interface Room {
   id: string;
@@ -57,12 +59,13 @@ interface Appointment {
   recurrence_rule: string | null;
   recurrence_end_date: string | null;
   parent_appointment_id: string | null;
-  patients?: { full_name: string } | null;
+  patients?: { full_name: string; phone?: string | null } | null;
 }
 
 interface Patient {
   id: string;
   full_name: string;
+  phone?: string | null;
 }
 
 interface DragState {
@@ -137,14 +140,14 @@ export default function CRMCalendar() {
 
       const { data: apptsData } = await supabase
         .from('appointments')
-        .select('*, patients(full_name)')
+        .select('*, patients(full_name, phone)')
         .gte('start_time', startDate.toISOString())
         .lte('start_time', endDate.toISOString())
         .order('start_time');
 
       const { data: patientsData } = await supabase
         .from('patients')
-        .select('id, full_name')
+        .select('id, full_name, phone')
         .order('full_name');
 
       setRooms(roomsData || []);
@@ -898,6 +901,16 @@ export default function CRMCalendar() {
                 )}
                 
                 <div className="flex gap-2 pt-4">
+                  {editingAppt.patient_id && editingAppt.patients?.phone && (
+                    <WhatsAppReminderButton
+                      patientName={editingAppt.patients?.full_name || 'Patient'}
+                      patientPhone={editingAppt.patients?.phone}
+                      appointmentDate={editingAppt.start_time}
+                      appointmentTime={format(new Date(editingAppt.start_time), 'HH:mm')}
+                      variant="outline"
+                      size="default"
+                    />
+                  )}
                   <Button 
                     variant="outline" 
                     className="flex-1"
