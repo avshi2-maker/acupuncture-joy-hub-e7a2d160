@@ -37,8 +37,8 @@ const Header = () => {
           <div className={`p-2 rounded-full transition-all duration-300 ${isScrolled ? 'bg-jade/10' : 'bg-primary-foreground/10'}`}>
             <Leaf className={`w-6 h-6 transition-colors duration-300 ${isScrolled ? 'text-jade' : 'text-primary-foreground'}`} />
           </div>
-          <span className={`font-display text-2xl font-semibold tracking-wide transition-colors duration-300 ${isScrolled ? 'text-foreground' : 'text-primary-foreground'}`}>
-            Harmony TCM
+          <span className={`font-display text-lg md:text-xl font-semibold tracking-wide transition-colors duration-300 ${isScrolled ? 'text-foreground' : 'text-primary-foreground'}`}>
+            Dr Roni Sapir - Complementary Medicine
           </span>
         </a>
 

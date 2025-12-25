@@ -1,6 +1,6 @@
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import heroBg from "@/assets/hero-bg.jpg";
+import heroBg from "@/assets/hero-meridian-bg.png";
 
 const Hero = () => {
   return (
@@ -59,7 +59,7 @@ const Hero = () => {
           {/* Stats */}
           <div className="mt-16 pt-8 border-t border-primary-foreground/20 grid grid-cols-3 gap-8 animate-fade-in-up delay-400">
             {[
-              { value: "15+", label: "Years Experience" },
+              { value: "35+", label: "Years Experience" },
               { value: "10K+", label: "Patients Treated" },
               { value: "50+", label: "Countries Served" },
             ].map((stat) => (

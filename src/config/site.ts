@@ -1,8 +1,8 @@
 // Site configuration
 export const siteConfig = {
-  name: "Roni Sapir Wellness",
+  name: "Dr Roni Sapir - Complementary Medicine Clinic",
   domain: "www.ronisapirwellness.com",
   url: "https://www.ronisapirwellness.com",
   description: "Traditional Chinese Medicine & Holistic Wellness",
-  author: "Roni Sapir",
+  author: "Dr Roni Sapir",
 };
