@@ -16,25 +16,29 @@ import {
   ChevronDown,
   Sparkles,
   UserPlus,
-  Calendar
+  Calendar,
+  VideoIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { saveSessionReport, printReport, LocalSessionReport } from '@/utils/localDataStorage';
 import { AnxietyQADialog } from './AnxietyQADialog';
 import { QuickPatientDialog } from './QuickPatientDialog';
 import { QuickAppointmentDialog } from './QuickAppointmentDialog';
+import { ZoomInviteDialog } from './ZoomInviteDialog';
 
 type SessionStatus = 'idle' | 'running' | 'paused' | 'ended';
 
 interface VideoSessionPanelProps {
   selectedPatientId?: string;
   selectedPatientName?: string;
+  selectedPatientPhone?: string;
   onSessionEnd?: (report: LocalSessionReport) => void;
 }
 
 export function VideoSessionPanel({ 
   selectedPatientId, 
   selectedPatientName,
+  selectedPatientPhone,
   onSessionEnd 
 }: VideoSessionPanelProps) {
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>('idle');
@@ -43,6 +47,7 @@ export function VideoSessionPanel({
   const [showAnxietyQA, setShowAnxietyQA] = useState(false);
   const [showQuickPatient, setShowQuickPatient] = useState(false);
   const [showQuickAppointment, setShowQuickAppointment] = useState(false);
+  const [showZoomInvite, setShowZoomInvite] = useState(false);
   const [anxietyConversation, setAnxietyConversation] = useState<string[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -210,6 +215,15 @@ export function VideoSessionPanel({
               <Calendar className="h-4 w-4" />
               קביעת תור
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowZoomInvite(true)}
+              className="gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+            >
+              <VideoIcon className="h-4 w-4" />
+              הזמנת Zoom
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -318,6 +332,13 @@ export function VideoSessionPanel({
         onOpenChange={setShowQuickAppointment}
         patientId={selectedPatientId}
         patientName={selectedPatientName}
+      />
+      
+      <ZoomInviteDialog
+        open={showZoomInvite}
+        onOpenChange={setShowZoomInvite}
+        patientName={selectedPatientName}
+        patientPhone={selectedPatientPhone}
       />
     </div>
   );
