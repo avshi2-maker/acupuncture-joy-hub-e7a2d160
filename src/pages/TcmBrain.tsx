@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { BodyFigureSelector, parsePointReferences } from '@/components/acupuncture/BodyFigureSelector';
+import { AIResponseDisplay } from '@/components/tcm/AIResponseDisplay';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
@@ -264,6 +265,8 @@ export default function TcmBrain() {
   const [isRecording, setIsRecording] = useState(false);
   const [highlightedPoints, setHighlightedPoints] = useState<string[]>([]);
   const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
+  const [loadingStartTime, setLoadingStartTime] = useState<number | null>(null);
+  const [currentQuery, setCurrentQuery] = useState<string>('');
   
   // Selected question states for all tabs
   const [selectedSymptomQuestion, setSelectedSymptomQuestion] = useState('');
@@ -318,6 +321,8 @@ export default function TcmBrain() {
     const userMsg: Message = { role: 'user', content: userMessage };
     setMessages(prev => [...prev, userMsg]);
     setIsLoading(true);
+    setLoadingStartTime(Date.now());
+    setCurrentQuery(userMessage);
 
     let assistantContent = '';
 
@@ -391,6 +396,7 @@ export default function TcmBrain() {
       toast.error('Chat error');
     } finally {
       setIsLoading(false);
+      setLoadingStartTime(null);
     }
   };
 
@@ -750,47 +756,23 @@ export default function TcmBrain() {
                   })}
                 </div>
 
-                {/* Body Map Preview with Highlighted Points */}
-                {highlightedPoints.length > 0 && (
-                  <Card className="border-jade/50 bg-jade-light/10">
-                    <CardHeader className="py-3">
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-jade" />
-                        Recommended Points from AI Response
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {highlightedPoints.map(point => (
-                          <Button
-                            key={point}
-                            variant="outline"
-                            size="sm"
-                            className="bg-jade/10 border-jade/30 text-jade"
-                            onClick={() => setShowDetailedView(true)}
-                          >
-                            <MapPin className="h-3 w-3 mr-1" />
-                            {point}
-                          </Button>
-                        ))}
-                      </div>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        className="bg-jade hover:bg-jade/90"
-                        onClick={() => {
-                          setShowDetailedView(true);
-                          setTimeout(() => {
-                            const tabsList = document.querySelector('[role="tablist"]');
-                            const bodyMapTab = tabsList?.querySelector('[value="bodymap"]') as HTMLButtonElement;
-                            bodyMapTab?.click();
-                          }, 50);
-                        }}
-                      >
-                        View on Body Map →
-                      </Button>
-                    </CardContent>
-                  </Card>
+                {/* AI Response Display - Shows loading animation and organized results */}
+                {(isLoading || messages.length > 0) && (
+                  <AIResponseDisplay
+                    isLoading={isLoading}
+                    content={messages.filter(m => m.role === 'assistant').pop()?.content || ''}
+                    query={currentQuery || messages.filter(m => m.role === 'user').pop()?.content || ''}
+                    loadingStartTime={loadingStartTime || undefined}
+                    onViewBodyMap={(points) => {
+                      setHighlightedPoints(points);
+                      setShowDetailedView(true);
+                      setTimeout(() => {
+                        const tabsList = document.querySelector('[role="tablist"]');
+                        const bodyMapTab = tabsList?.querySelector('[value="bodymap"]') as HTMLButtonElement;
+                        bodyMapTab?.click();
+                      }, 50);
+                    }}
+                  />
                 )}
 
                 {/* Chat Input at bottom */}
@@ -831,49 +813,22 @@ export default function TcmBrain() {
                   </form>
                 </div>
 
-                {/* Chat History Section */}
-                {messages.length > 0 && (
-                  <div className="pt-4">
-                    <div className="flex items-center justify-between pb-3 border-b border-border/50 mb-3">
-                      <span className="text-sm font-medium">Chat History</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">
-                          {messages.length} messages
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setMessages([]);
-                            setHighlightedPoints([]);
-                          }}
-                          className="text-muted-foreground hover:text-destructive text-xs gap-1"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                          Clear
-                        </Button>
-                      </div>
-                    </div>
-                    <ScrollArea className="max-h-96" ref={scrollRef}>
-                      <div className="space-y-4 pb-4">
-                        {messages.map((msg, i) => {
-                          const userMessage = msg.role === 'assistant' && i > 0 
-                            ? messages.slice(0, i).reverse().find(m => m.role === 'user')?.content
-                            : undefined;
-                          return (
-                            <ChatMessage 
-                              key={i} 
-                              role={msg.role} 
-                              content={msg.content} 
-                              userMessage={userMessage}
-                            />
-                          );
-                        })}
-                        {isLoading && messages[messages.length - 1]?.role === 'user' && (
-                          <ChatTypingIndicator />
-                        )}
-                      </div>
-                    </ScrollArea>
+                {/* Clear Chat Button */}
+                {messages.length > 0 && !isLoading && (
+                  <div className="flex justify-end pt-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setMessages([]);
+                        setHighlightedPoints([]);
+                        setCurrentQuery('');
+                      }}
+                      className="text-muted-foreground hover:text-destructive text-xs gap-1"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      Clear & start new query
+                    </Button>
                   </div>
                 )}
               </div>
