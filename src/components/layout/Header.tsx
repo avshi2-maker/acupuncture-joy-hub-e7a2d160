@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Menu, X, Leaf } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -55,6 +56,9 @@ const Header = () => {
               {link.label}
             </a>
           ))}
+          <Button asChild variant={isScrolled ? "outline" : "secondary"} size="sm">
+            <Link to="/therapist-register">הרשמה למטפלים</Link>
+          </Button>
           <Button variant={isScrolled ? "hero" : "heroOutline"} size="lg">
             Book Session
           </Button>
@@ -87,7 +91,12 @@ const Header = () => {
               {link.label}
             </a>
           ))}
-          <Button variant="hero" size="lg" className="mt-4">
+          <Button asChild variant="outline" className="w-full">
+            <Link to="/therapist-register" onClick={() => setIsMobileMenuOpen(false)}>
+              הרשמה למטפלים
+            </Link>
+          </Button>
+          <Button variant="hero" size="lg" className="mt-2">
             Book Session
           </Button>
         </nav>
