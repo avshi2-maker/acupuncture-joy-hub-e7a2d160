@@ -1,7 +1,8 @@
-import { Mail, MessageCircle, MapPin, Clock, Send } from "lucide-react";
+import { Mail, MessageCircle, MapPin, Clock, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -10,22 +11,48 @@ const Contact = () => {
     phone: "",
     message: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Clinic location - update these values with actual address
-  const [clinicAddress, setClinicAddress] = useState("Tel Aviv, Israel");
-  const [businessHours, setBusinessHours] = useState([
+  const [clinicAddress] = useState("Tel Aviv, Israel");
+  const [businessHours] = useState([
     { day: "Sunday - Thursday", hours: "9:00 AM - 7:00 PM" },
     { day: "Friday", hours: "9:00 AM - 2:00 PM" },
     { day: "Saturday", hours: "Closed" },
   ]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Message sent! We'll get back to you within 24 hours.");
-    setFormData({ name: "", email: "", phone: "", message: "" });
+    
+    if (!formData.name || !formData.email || !formData.message) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('send-contact-email', {
+        body: {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          message: formData.message,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success("Message sent! We'll get back to you within 24 hours.");
+      setFormData({ name: "", email: "", phone: "", message: "" });
+    } catch (error: any) {
+      console.error("Error sending message:", error);
+      toast.error("Failed to send message. Please try again or contact us via WhatsApp.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const whatsappNumber = "";
   const whatsappLink = "#contact";
 
   // Google Maps embed URL - update with actual clinic coordinates
@@ -216,9 +243,13 @@ const Contact = () => {
                 />
               </div>
 
-              <Button type="submit" variant="jade" size="lg" className="w-full">
-                <Send className="w-5 h-5" />
-                Send Message
+              <Button type="submit" variant="jade" size="lg" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Send className="w-5 h-5" />
+                )}
+                {isSubmitting ? "Sending..." : "Send Message"}
               </Button>
             </form>
           </div>
