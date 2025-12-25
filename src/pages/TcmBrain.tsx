@@ -740,21 +740,47 @@ export default function TcmBrain() {
 
         {/* Main Content */}
         <main className="flex-1 flex flex-col max-w-6xl mx-auto w-full">
+          {/* Always visible tabs header */}
+          <div className="px-4 pt-4 overflow-x-auto border-b border-border/30 pb-3">
+            <div className="flex gap-1 w-max min-w-full">
+              {featureTabs.map(tab => (
+                <Button
+                  key={tab.id}
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1 text-xs px-2 whitespace-nowrap hover:bg-jade-light/50 hover:text-jade"
+                  onClick={() => {
+                    setShowDetailedView(true);
+                    // Switch to the appropriate tab after a small delay
+                    setTimeout(() => {
+                      const tabsList = document.querySelector('[role="tablist"]');
+                      const targetTab = tabsList?.querySelector(`[value="${tab.id}"]`) as HTMLButtonElement;
+                      targetTab?.click();
+                    }, 50);
+                  }}
+                >
+                  <tab.icon className="h-3 w-3" />
+                  {tab.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
           {!showDetailedView ? (
             /* Main Queries View - First Page */
             <div className="flex-1 p-4 space-y-6">
-              <div className="text-center py-8">
-                <div className="relative w-20 h-20 mx-auto mb-4">
+              <div className="text-center py-6">
+                <div className="relative w-16 h-16 mx-auto mb-3">
                   <div className="absolute inset-0 bg-jade/20 rounded-full animate-pulse-soft" />
                   <div className="absolute inset-2 bg-gradient-to-br from-jade-light to-gold-light rounded-full flex items-center justify-center border-2 border-jade/30">
-                    <Brain className="h-8 w-8 text-jade" />
+                    <Brain className="h-6 w-6 text-jade" />
                   </div>
                 </div>
-                <h2 className="font-display text-2xl mb-2 bg-gradient-to-r from-jade to-jade-dark bg-clip-text text-transparent">
+                <h2 className="font-display text-xl mb-1 bg-gradient-to-r from-jade to-jade-dark bg-clip-text text-transparent">
                   TCM Brain Assistant
                 </h2>
-                <p className="text-muted-foreground max-w-md mx-auto">
-                  Select a query category below or use the chat for custom questions
+                <p className="text-muted-foreground text-sm max-w-md mx-auto">
+                  Select a query category below or click any topic above
                 </p>
               </div>
 
