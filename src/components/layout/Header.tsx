@@ -22,10 +22,7 @@ const Header = () => {
   }, []);
 
   const navLinks = [
-    { href: "#services", label: t("services") },
     { href: "#tcm-brain-preview", label: t("cmBrain") },
-    { href: "#about", label: t("about") },
-    { href: "#testimonials", label: t("testimonials") },
     { href: "#contact", label: t("contact") },
   ];
 
