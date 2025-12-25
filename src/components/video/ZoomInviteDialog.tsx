@@ -11,8 +11,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Video, MessageCircle, Copy, Check, Link } from 'lucide-react';
+import { Video, MessageCircle, Copy, Check, Link, Loader2, Sparkles, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ZoomInviteDialogProps {
   open: boolean;
@@ -22,6 +23,14 @@ interface ZoomInviteDialogProps {
 }
 
 const ZOOM_LINK_STORAGE_KEY = 'therapist_zoom_link';
+
+interface ZoomMeeting {
+  id: number;
+  joinUrl: string;
+  startUrl: string;
+  password: string;
+  topic: string;
+}
 
 export function ZoomInviteDialog({
   open,
@@ -33,12 +42,21 @@ export function ZoomInviteDialog({
   const [customMessage, setCustomMessage] = useState('');
   const [copied, setCopied] = useState(false);
   const [saveLink, setSaveLink] = useState(true);
+  const [isCreatingMeeting, setIsCreatingMeeting] = useState(false);
+  const [createdMeeting, setCreatedMeeting] = useState<ZoomMeeting | null>(null);
 
   // Load saved Zoom link on mount
   useEffect(() => {
     const savedLink = localStorage.getItem(ZOOM_LINK_STORAGE_KEY);
     if (savedLink) {
       setZoomLink(savedLink);
+    }
+  }, [open]);
+
+  // Reset created meeting when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setCreatedMeeting(null);
     }
   }, [open]);
 
@@ -58,10 +76,46 @@ export function ZoomInviteDialog({
     const greeting = `שלום ${patientName || 'לך'}! 🌿`;
     const intro = '\n\nמזמין/ה אותך לפגישת וידאו:';
     const link = `\n\n🔗 קישור לפגישה:\n${zoomLink}`;
+    const password = createdMeeting?.password ? `\n\n🔐 סיסמה: ${createdMeeting.password}` : '';
     const custom = customMessage ? `\n\n${customMessage}` : '';
     const closing = '\n\nנתראה! 💚';
     
-    return greeting + intro + link + custom + closing;
+    return greeting + intro + link + password + custom + closing;
+  };
+
+  const handleCreateZoomMeeting = async () => {
+    setIsCreatingMeeting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-zoom-meeting', {
+        body: {
+          patientName: patientName,
+          duration: 40,
+        },
+      });
+
+      if (error) {
+        console.error('Error creating Zoom meeting:', error);
+        toast.error('שגיאה ביצירת פגישת Zoom');
+        return;
+      }
+
+      if (data.error) {
+        console.error('Zoom API error:', data.error, data.details);
+        toast.error(`שגיאה: ${data.error}`);
+        return;
+      }
+
+      const meeting = data.meeting as ZoomMeeting;
+      setCreatedMeeting(meeting);
+      setZoomLink(meeting.joinUrl);
+      
+      toast.success('פגישת Zoom נוצרה בהצלחה!');
+    } catch (err) {
+      console.error('Error:', err);
+      toast.error('שגיאה ביצירת פגישה');
+    } finally {
+      setIsCreatingMeeting(false);
+    }
   };
 
   const handleSendWhatsApp = () => {
@@ -76,7 +130,7 @@ export function ZoomInviteDialog({
     }
 
     // Save link if checkbox is checked
-    if (saveLink) {
+    if (saveLink && !createdMeeting) {
       localStorage.setItem(ZOOM_LINK_STORAGE_KEY, zoomLink);
     }
 
@@ -111,6 +165,12 @@ export function ZoomInviteDialog({
     toast.success('הקישור הועתק');
   };
 
+  const handleOpenHostMeeting = () => {
+    if (createdMeeting?.startUrl) {
+      window.open(createdMeeting.startUrl, '_blank');
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md" dir="rtl">
@@ -120,7 +180,7 @@ export function ZoomInviteDialog({
             הזמנה לפגישת וידאו
           </DialogTitle>
           <DialogDescription>
-            שלח קישור לפגישת Zoom למטופל בוואטסאפ
+            צור פגישת Zoom חדשה או שלח קישור קיים
           </DialogDescription>
         </DialogHeader>
 
@@ -134,6 +194,50 @@ export function ZoomInviteDialog({
               )}
             </div>
           )}
+
+          {/* Create Zoom Meeting Button */}
+          <div className="flex flex-col gap-2">
+            <Button
+              onClick={handleCreateZoomMeeting}
+              disabled={isCreatingMeeting}
+              className="w-full bg-blue-600 hover:bg-blue-700 gap-2"
+            >
+              {isCreatingMeeting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4" />
+              )}
+              {isCreatingMeeting ? 'יוצר פגישה...' : 'צור פגישת Zoom חדשה'}
+            </Button>
+            
+            {createdMeeting && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg space-y-2">
+                <p className="text-sm font-medium text-green-800">✓ פגישה נוצרה בהצלחה!</p>
+                <p className="text-xs text-green-700">מזהה פגישה: {createdMeeting.id}</p>
+                {createdMeeting.password && (
+                  <p className="text-xs text-green-700">סיסמה: {createdMeeting.password}</p>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleOpenHostMeeting}
+                  className="w-full gap-2 mt-2 border-green-300 text-green-700 hover:bg-green-100"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  התחל פגישה כמארח
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">או השתמש בקישור קיים</span>
+            </div>
+          </div>
 
           {/* Zoom Link Input */}
           <div className="space-y-2">
@@ -160,18 +264,20 @@ export function ZoomInviteDialog({
                 <Copy className="h-4 w-4" />
               </Button>
             </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="save-link"
-                checked={saveLink}
-                onChange={(e) => setSaveLink(e.target.checked)}
-                className="rounded border-input"
-              />
-              <Label htmlFor="save-link" className="text-sm text-muted-foreground cursor-pointer">
-                שמור קישור לשימוש עתידי
-              </Label>
-            </div>
+            {!createdMeeting && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="save-link"
+                  checked={saveLink}
+                  onChange={(e) => setSaveLink(e.target.checked)}
+                  className="rounded border-input"
+                />
+                <Label htmlFor="save-link" className="text-sm text-muted-foreground cursor-pointer">
+                  שמור קישור לשימוש עתידי
+                </Label>
+              </div>
+            )}
           </div>
 
           {/* Custom Message */}
