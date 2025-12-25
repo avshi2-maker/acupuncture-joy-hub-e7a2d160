@@ -84,6 +84,8 @@ export default function Gate() {
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [therapistName, setTherapistName] = useState('');
+  const [therapistPhone, setTherapistPhone] = useState('');
 
   const form = useForm<GateForm>({
     resolver: zodResolver(gateSchema),
@@ -124,6 +126,14 @@ export default function Gate() {
   };
 
   const handleSendProof = async () => {
+    if (!therapistName.trim()) {
+      toast.error('נא להזין שם מלא');
+      return;
+    }
+    if (!therapistPhone.trim()) {
+      toast.error('נא להזין מספר טלפון');
+      return;
+    }
     if (!proofFile) {
       toast.error('נא לבחור קובץ אישור תשלום');
       return;
@@ -149,6 +159,8 @@ export default function Gate() {
         body: { 
           tierName, 
           fileName: proofFile.name,
+          therapistName: therapistName.trim(),
+          therapistPhone: therapistPhone.trim(),
         },
       });
 
@@ -321,8 +333,30 @@ export default function Gate() {
                       שלחו אישור תשלום
                     </h3>
                     <p className="text-sm text-muted-foreground mb-4">
-                      שלחו צילום מסך או אישור תשלום מהבנק/כרטיס האשראי לד״ר רוני ספיר:
+                      מלאו את הפרטים ושלחו אישור תשלום לד״ר רוני ספיר:
                     </p>
+
+                    {/* Therapist Info */}
+                    <div className="space-y-3 mb-4">
+                      <div>
+                        <label className="text-sm font-medium mb-1 block">שם מלא *</label>
+                        <Input 
+                          placeholder="הזינו את שמכם המלא"
+                          value={therapistName}
+                          onChange={(e) => setTherapistName(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-1 block">טלפון נייד *</label>
+                        <Input 
+                          placeholder="050-1234567"
+                          value={therapistPhone}
+                          onChange={(e) => setTherapistPhone(e.target.value)}
+                          dir="ltr"
+                          className="text-left"
+                        />
+                      </div>
+                    </div>
 
                     {/* Upload Option */}
                     <div className="border-2 border-dashed border-border rounded-lg p-4 mb-4">

@@ -11,7 +11,8 @@ const corsHeaders = {
 interface PaymentProofRequest {
   tierName: string;
   fileName: string;
-  uploaderInfo?: string;
+  therapistName: string;
+  therapistPhone: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -21,9 +22,9 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { tierName, fileName, uploaderInfo }: PaymentProofRequest = await req.json();
+    const { tierName, fileName, therapistName, therapistPhone }: PaymentProofRequest = await req.json();
 
-    console.log(`Sending payment proof notification for tier: ${tierName}, file: ${fileName}`);
+    console.log(`Sending payment proof notification for tier: ${tierName}, therapist: ${therapistName}, phone: ${therapistPhone}`);
 
     const emailResponse = await resend.emails.send({
       from: "TCM Clinic <onboarding@resend.dev>",
@@ -54,9 +55,11 @@ const handler = async (req: Request): Promise<Response> => {
               <p>התקבל אישור תשלום חדש במערכת:</p>
               
               <div class="highlight">
+                <p><strong>שם המטפל:</strong> ${therapistName}</p>
+                <p><strong>טלפון:</strong> <a href="tel:${therapistPhone}" style="color: #2D5A4A;">${therapistPhone}</a></p>
+                <p><strong>WhatsApp:</strong> <a href="https://wa.me/${therapistPhone.replace(/[^0-9]/g, '').replace(/^0/, '972')}" style="color: #25D366;">שלח הודעה</a></p>
                 <p><strong>תוכנית:</strong> ${tierName}</p>
                 <p><strong>קובץ:</strong> ${fileName}</p>
-                ${uploaderInfo ? `<p><strong>פרטים נוספים:</strong> ${uploaderInfo}</p>` : ''}
                 <p><strong>זמן העלאה:</strong> ${new Date().toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' })}</p>
               </div>
               
