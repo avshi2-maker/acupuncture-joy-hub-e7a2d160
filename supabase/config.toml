@@ -2,3 +2,6 @@ project_id = "hwwwioyrsbewptuwvrix"
 
 [functions.tcm-chat]
 verify_jwt = false
+
+[functions.voice-to-text]
+verify_jwt = false

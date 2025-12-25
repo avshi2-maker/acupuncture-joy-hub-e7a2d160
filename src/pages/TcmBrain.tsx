@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTier } from '@/hooks/useTier';
 import { TierBadge } from '@/components/layout/TierBadge';
 import { toast } from 'sonner';
@@ -18,7 +20,20 @@ import {
   Stethoscope,
   ArrowRight,
   Sparkles,
-  LogOut
+  LogOut,
+  Apple,
+  Heart,
+  Moon,
+  Briefcase,
+  Compass,
+  Activity,
+  Dumbbell,
+  Star,
+  Mic,
+  MicOff,
+  FileText,
+  ClipboardList,
+  Pill
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -28,6 +43,163 @@ interface Message {
 }
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tcm-chat`;
+
+// Feature tabs configuration
+const featureTabs = [
+  { id: 'chat', icon: Sparkles, label: 'שאל AI' },
+  { id: 'symptoms', icon: FileText, label: 'סימפטומים' },
+  { id: 'diagnosis', icon: ClipboardList, label: 'אבחון' },
+  { id: 'treatment', icon: Pill, label: 'טיפול' },
+  { id: 'herbs', icon: Leaf, label: 'עשבים' },
+  { id: 'points', icon: MapPin, label: 'נקודות' },
+  { id: 'conditions', icon: Stethoscope, label: 'מצבים' },
+  { id: 'nutrition', icon: Apple, label: 'תזונה' },
+  { id: 'mental', icon: Heart, label: 'מנטלי' },
+  { id: 'sleep', icon: Moon, label: 'שינה' },
+  { id: 'worklife', icon: Briefcase, label: 'איזון' },
+  { id: 'bazi', icon: Compass, label: 'באזי' },
+  { id: 'wellness', icon: Activity, label: 'רווחה' },
+  { id: 'sports', icon: Dumbbell, label: 'ספורט' },
+  { id: 'astro', icon: Star, label: 'אסטרולוגיה' },
+];
+
+// Symptom Analysis Questions (50)
+const symptomQuestions = [
+  { id: 's1', question: 'מהו התסמין העיקרי?', category: 'כללי' },
+  { id: 's2', question: 'מתי התחילו התסמינים?', category: 'כללי' },
+  { id: 's3', question: 'האם יש כאב? היכן?', category: 'כאב' },
+  { id: 's4', question: 'מהו אופי הכאב? (חד, עמום, דוקר)', category: 'כאב' },
+  { id: 's5', question: 'האם הכאב קבוע או לסירוגין?', category: 'כאב' },
+  { id: 's6', question: 'מה מחמיר את הכאב?', category: 'כאב' },
+  { id: 's7', question: 'מה מקל על הכאב?', category: 'כאב' },
+  { id: 's8', question: 'האם יש בחילות?', category: 'עיכול' },
+  { id: 's9', question: 'מהי תדירות היציאות?', category: 'עיכול' },
+  { id: 's10', question: 'האם יש שלשול או עצירות?', category: 'עיכול' },
+  { id: 's11', question: 'מהי התיאבון?', category: 'עיכול' },
+  { id: 's12', question: 'האם יש צמא מוגבר?', category: 'עיכול' },
+  { id: 's13', question: 'מהי איכות השינה?', category: 'שינה' },
+  { id: 's14', question: 'האם יש קושי להירדם?', category: 'שינה' },
+  { id: 's15', question: 'האם יש התעוררויות בלילה?', category: 'שינה' },
+  { id: 's16', question: 'האם יש חלומות מרובים?', category: 'שינה' },
+  { id: 's17', question: 'מהי רמת האנרגיה?', category: 'אנרגיה' },
+  { id: 's18', question: 'האם יש עייפות כרונית?', category: 'אנרגיה' },
+  { id: 's19', question: 'באיזה שעה ביום העייפות גרועה יותר?', category: 'אנרגיה' },
+  { id: 's20', question: 'האם יש הזעה מוגברת?', category: 'חום/קור' },
+  { id: 's21', question: 'האם יש תחושת קור?', category: 'חום/קור' },
+  { id: 's22', question: 'האם יש גפיים קרות?', category: 'חום/קור' },
+  { id: 's23', question: 'האם יש חום או חמימות?', category: 'חום/קור' },
+  { id: 's24', question: 'מהו צבע השתן?', category: 'שתן' },
+  { id: 's25', question: 'מהי תדירות ההשתנה?', category: 'שתן' },
+  { id: 's26', question: 'האם יש כאב בהשתנה?', category: 'שתן' },
+  { id: 's27', question: 'מהו המצב הרגשי?', category: 'רגשות' },
+  { id: 's28', question: 'האם יש חרדה או דאגנות?', category: 'רגשות' },
+  { id: 's29', question: 'האם יש עצבנות?', category: 'רגשות' },
+  { id: 's30', question: 'האם יש דיכאון?', category: 'רגשות' },
+  { id: 's31', question: 'האם יש כאבי ראש?', category: 'ראש' },
+  { id: 's32', question: 'היכן ממוקם כאב הראש?', category: 'ראש' },
+  { id: 's33', question: 'האם יש סחרחורות?', category: 'ראש' },
+  { id: 's34', question: 'האם יש בעיות ראייה?', category: 'ראש' },
+  { id: 's35', question: 'האם יש טינטון?', category: 'ראש' },
+  { id: 's36', question: 'מהו מצב הלשון? (צבע, ציפוי)', category: 'אבחון' },
+  { id: 's37', question: 'מהו הדופק? (מהיר, איטי, חלש)', category: 'אבחון' },
+  { id: 's38', question: 'האם יש נפיחות?', category: 'גוף' },
+  { id: 's39', question: 'האם יש בעיות עור?', category: 'גוף' },
+  { id: 's40', question: 'האם יש כאבי גב?', category: 'גוף' },
+  { id: 's41', question: 'האם יש כאבי מפרקים?', category: 'גוף' },
+  { id: 's42', question: 'מהו המחזור החודשי? (לנשים)', category: 'נשים' },
+  { id: 's43', question: 'האם יש כאבי מחזור?', category: 'נשים' },
+  { id: 's44', question: 'האם יש הפרשות?', category: 'נשים' },
+  { id: 's45', question: 'מהם ההרגלי אכילה?', category: 'אורח חיים' },
+  { id: 's46', question: 'האם יש פעילות גופנית?', category: 'אורח חיים' },
+  { id: 's47', question: 'מהי רמת הסטרס?', category: 'אורח חיים' },
+  { id: 's48', question: 'האם יש שימוש בתרופות?', category: 'רפואי' },
+  { id: 's49', question: 'האם יש מחלות רקע?', category: 'רפואי' },
+  { id: 's50', question: 'האם יש אלרגיות?', category: 'רפואי' },
+];
+
+// Diagnosis Questions (25+)
+const diagnosisQuestions = [
+  { id: 'd1', question: 'מהו דפוס האי-איזון העיקרי?', category: 'דפוס' },
+  { id: 'd2', question: 'האם יש חוסר או עודף?', category: 'דפוס' },
+  { id: 'd3', question: 'האם יש חום או קור?', category: 'דפוס' },
+  { id: 'd4', question: 'האם יש לחות או יובש?', category: 'דפוס' },
+  { id: 'd5', question: 'איזה איבר מעורב בעיקר?', category: 'איברים' },
+  { id: 'd6', question: 'מהו מצב הכבד?', category: 'איברים' },
+  { id: 'd7', question: 'מהו מצב הכליות?', category: 'איברים' },
+  { id: 'd8', question: 'מהו מצב הטחול?', category: 'איברים' },
+  { id: 'd9', question: 'מהו מצב הלב?', category: 'איברים' },
+  { id: 'd10', question: 'מהו מצב הריאות?', category: 'איברים' },
+  { id: 'd11', question: 'האם יש קיפאון צ\'י?', category: 'צ\'י/דם' },
+  { id: 'd12', question: 'האם יש חוסר צ\'י?', category: 'צ\'י/דם' },
+  { id: 'd13', question: 'האם יש קיפאון דם?', category: 'צ\'י/דם' },
+  { id: 'd14', question: 'האם יש חוסר דם?', category: 'צ\'י/דם' },
+  { id: 'd15', question: 'האם יש חוסר יין?', category: 'יין/יאנג' },
+  { id: 'd16', question: 'האם יש חוסר יאנג?', category: 'יין/יאנג' },
+  { id: 'd17', question: 'האם יש עודף יאנג?', category: 'יין/יאנג' },
+  { id: 'd18', question: 'האם יש רוח פתוגנית?', category: 'גורמים' },
+  { id: 'd19', question: 'האם יש קור פתוגני?', category: 'גורמים' },
+  { id: 'd20', question: 'האם יש חום פתוגני?', category: 'גורמים' },
+  { id: 'd21', question: 'האם יש לחות פתוגנית?', category: 'גורמים' },
+  { id: 'd22', question: 'האם יש ליחה?', category: 'גורמים' },
+  { id: 'd23', question: 'מהו עיקרון הטיפול?', category: 'טיפול' },
+  { id: 'd24', question: 'איזה מרידיאן מעורב?', category: 'מרידיאנים' },
+  { id: 'd25', question: 'מהי חומרת המצב?', category: 'הערכה' },
+  { id: 'd26', question: 'האם המצב חריף או כרוני?', category: 'הערכה' },
+];
+
+// Treatment Questions (50)
+const treatmentQuestions = [
+  { id: 't1', question: 'מהו עיקרון הטיפול העיקרי?', category: 'עקרונות' },
+  { id: 't2', question: 'האם לחזק או לפזר?', category: 'עקרונות' },
+  { id: 't3', question: 'האם לחמם או לקרר?', category: 'עקרונות' },
+  { id: 't4', question: 'האם ללחלח או לייבש?', category: 'עקרונות' },
+  { id: 't5', question: 'איזו נוסחת עשבים מומלצת?', category: 'עשבים' },
+  { id: 't6', question: 'מהי המינון המומלץ?', category: 'עשבים' },
+  { id: 't7', question: 'כמה זמן לקחת את העשבים?', category: 'עשבים' },
+  { id: 't8', question: 'האם יש התוויות נגד?', category: 'עשבים' },
+  { id: 't9', question: 'אילו נקודות דיקור מומלצות?', category: 'דיקור' },
+  { id: 't10', question: 'באיזו טכניקת דיקור להשתמש?', category: 'דיקור' },
+  { id: 't11', question: 'כמה טיפולי דיקור נדרשים?', category: 'דיקור' },
+  { id: 't12', question: 'מהי תדירות הטיפולים?', category: 'דיקור' },
+  { id: 't13', question: 'האם להשתמש במוקסה?', category: 'טכניקות' },
+  { id: 't14', question: 'האם להשתמש בכוסות רוח?', category: 'טכניקות' },
+  { id: 't15', question: 'האם להשתמש בגואשה?', category: 'טכניקות' },
+  { id: 't16', question: 'האם להשתמש באלקטרו-דיקור?', category: 'טכניקות' },
+  { id: 't17', question: 'מהן המלצות התזונה?', category: 'תזונה' },
+  { id: 't18', question: 'אילו מזונות להימנע?', category: 'תזונה' },
+  { id: 't19', question: 'אילו מזונות להוסיף?', category: 'תזונה' },
+  { id: 't20', question: 'האם יש המלצות לתה או מרק?', category: 'תזונה' },
+  { id: 't21', question: 'מהן המלצות אורח החיים?', category: 'אורח חיים' },
+  { id: 't22', question: 'האם יש המלצות לפעילות גופנית?', category: 'אורח חיים' },
+  { id: 't23', question: 'האם יש המלצות לשינה?', category: 'אורח חיים' },
+  { id: 't24', question: 'האם יש המלצות לניהול סטרס?', category: 'אורח חיים' },
+  { id: 't25', question: 'מהן תרגילי צ\'י גונג מומלצים?', category: 'תרגול' },
+  { id: 't26', question: 'האם יש תרגילי נשימה מומלצים?', category: 'תרגול' },
+  { id: 't27', question: 'האם יש תרגילי מתיחה מומלצים?', category: 'תרגול' },
+  { id: 't28', question: 'האם יש המלצות לטאי צ\'י?', category: 'תרגול' },
+  { id: 't29', question: 'מהו משך הטיפול הצפוי?', category: 'תכנון' },
+  { id: 't30', question: 'מהם סימני שיפור צפויים?', category: 'תכנון' },
+  { id: 't31', question: 'מתי לבצע מעקב?', category: 'תכנון' },
+  { id: 't32', question: 'האם יש צורך בבדיקות נוספות?', category: 'תכנון' },
+  { id: 't33', question: 'מהן נקודות אוזן מומלצות?', category: 'אוזן' },
+  { id: 't34', question: 'האם להשתמש בזרעי אוזן?', category: 'אוזן' },
+  { id: 't35', question: 'מהן נקודות קרקפת מומלצות?', category: 'קרקפת' },
+  { id: 't36', question: 'האם יש המלצות לרפלקסולוגיה?', category: 'רפלקסולוגיה' },
+  { id: 't37', question: 'מהו טיפול עונתי מומלץ?', category: 'עונתי' },
+  { id: 't38', question: 'האם יש התייחסות לשעון הביולוגי?', category: 'עונתי' },
+  { id: 't39', question: 'מהי גישת 5 האלמנטים?', category: 'אלמנטים' },
+  { id: 't40', question: 'איזה אלמנט לחזק?', category: 'אלמנטים' },
+  { id: 't41', question: 'איזה אלמנט להרגיע?', category: 'אלמנטים' },
+  { id: 't42', question: 'האם יש טיפול רגשי נדרש?', category: 'רגשי' },
+  { id: 't43', question: 'מהן המלצות למדיטציה?', category: 'רגשי' },
+  { id: 't44', question: 'האם יש שימוש בשמנים אתריים?', category: 'משלים' },
+  { id: 't45', question: 'האם יש שימוש בקריסטלים?', category: 'משלים' },
+  { id: 't46', question: 'מהן אמצעי זהירות?', category: 'בטיחות' },
+  { id: 't47', question: 'מהן תגובות אפשריות?', category: 'בטיחות' },
+  { id: 't48', question: 'מתי להפנות לרופא?', category: 'בטיחות' },
+  { id: 't49', question: 'מהו הפרוגנוזיס?', category: 'תחזית' },
+  { id: 't50', question: 'האם יש טיפול מניעתי?', category: 'מניעה' },
+];
 
 const quickQuestions = [
   { icon: Leaf, text: 'מהם העשבים הטובים לחיזוק הטחול?', textEn: 'Best herbs for Spleen Qi deficiency?' },
@@ -41,7 +213,13 @@ export default function TcmBrain() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const [selectedSymptomQuestion, setSelectedSymptomQuestion] = useState('');
+  const [selectedDiagnosisQuestion, setSelectedDiagnosisQuestion] = useState('');
+  const [selectedTreatmentQuestion, setSelectedTreatmentQuestion] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
   useEffect(() => {
     if (!tier) {
@@ -96,7 +274,6 @@ export default function TcmBrain() {
       const decoder = new TextDecoder();
       let buffer = '';
 
-      // Add empty assistant message
       setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
 
       while (true) {
@@ -136,7 +313,7 @@ export default function TcmBrain() {
       }
     } catch (error) {
       console.error('Chat error:', error);
-      toast.error('שגיאה בצ׳אט');
+      toast.error('שגיאה בצ\'אט');
     } finally {
       setIsLoading(false);
     }
@@ -150,12 +327,192 @@ export default function TcmBrain() {
     streamChat(message);
   };
 
+  const handleCustomPromptSubmit = () => {
+    if (!customPrompt.trim() || isLoading) return;
+    const message = customPrompt.trim();
+    setCustomPrompt('');
+    streamChat(message);
+  };
+
   const handleQuickQuestion = (question: string) => {
     if (isLoading) return;
     streamChat(question);
   };
 
+  const handleQAQuestionSelect = (question: string) => {
+    if (!question || isLoading) return;
+    streamChat(question);
+  };
+
+  // Voice recording functionality
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      const chunks: BlobPart[] = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        chunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        stream.getTracks().forEach(track => track.stop());
+        
+        // Convert to base64 and send to transcription
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          const base64Audio = (reader.result as string).split(',')[1];
+          try {
+            const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-to-text`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+              },
+              body: JSON.stringify({ audio: base64Audio }),
+            });
+            
+            if (response.ok) {
+              const { text } = await response.json();
+              if (text) {
+                setInput(text);
+                toast.success('הקלטה תומללה בהצלחה');
+              }
+            } else {
+              toast.error('שגיאה בתמלול הקלטה');
+            }
+          } catch (error) {
+            console.error('Transcription error:', error);
+            toast.error('שגיאה בתמלול');
+          }
+        };
+        reader.readAsDataURL(blob);
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      toast.success('מקליט... לחץ שוב לסיום');
+    } catch (error) {
+      console.error('Recording error:', error);
+      toast.error('לא ניתן לגשת למיקרופון');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+
   if (!tier || !hasFeature('tcm_brain')) return null;
+
+  const renderPlaceholderTab = (icon: React.ElementType, title: string) => {
+    const Icon = icon;
+    return (
+      <div className="text-center py-12">
+        <Icon className="h-12 w-12 text-jade mx-auto mb-4" />
+        <h3 className="font-display text-xl mb-2">{title}</h3>
+        <p className="text-muted-foreground">בקרוב! בינתיים, שאלו את ה-AI</p>
+      </div>
+    );
+  };
+
+  const renderQASection = (
+    title: string,
+    questions: typeof symptomQuestions,
+    selectedValue: string,
+    onSelect: (value: string) => void
+  ) => {
+    const categories = [...new Set(questions.map(q => q.category))];
+    
+    return (
+      <div className="space-y-6 p-4">
+        <div className="text-center">
+          <h3 className="font-display text-xl mb-2">{title}</h3>
+          <p className="text-muted-foreground text-sm">בחרו שאלה מהרשימה או כתבו שאלה משלכם</p>
+        </div>
+        
+        <div className="grid gap-4">
+          {categories.map(category => (
+            <Card key={category} className="bg-card">
+              <CardHeader className="py-3">
+                <CardTitle className="text-sm font-medium text-jade">{category}</CardTitle>
+              </CardHeader>
+              <CardContent className="py-2">
+                <Select
+                  value={selectedValue}
+                  onValueChange={(value) => {
+                    onSelect(value);
+                    handleQAQuestionSelect(value);
+                  }}
+                >
+                  <SelectTrigger className="text-right">
+                    <SelectValue placeholder="בחרו שאלה..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border z-50 max-h-60">
+                    {questions
+                      .filter(q => q.category === category)
+                      .map(q => (
+                        <SelectItem key={q.id} value={q.question} className="text-right">
+                          {q.question}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Custom Prompt Section */}
+        <Card className="bg-jade-light/20 border-jade/30">
+          <CardHeader className="py-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              כתבו שאלה משלכם
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="py-2 space-y-3">
+            <Textarea
+              value={customPrompt}
+              onChange={(e) => setCustomPrompt(e.target.value)}
+              placeholder="הקלידו את השאלה שלכם כאן..."
+              className="min-h-[100px] text-right"
+              dir="rtl"
+            />
+            <div className="flex gap-2">
+              <Button
+                onClick={handleCustomPromptSubmit}
+                disabled={!customPrompt.trim() || isLoading}
+                className="flex-1"
+              >
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4 ml-2" />}
+                שלח שאלה
+              </Button>
+              <Button
+                variant="outline"
+                onClick={toggleRecording}
+                className={isRecording ? 'bg-red-500/10 border-red-500 text-red-500' : ''}
+              >
+                {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -167,7 +524,7 @@ export default function TcmBrain() {
       <div className="min-h-screen bg-background flex flex-col" dir="rtl">
         {/* Header */}
         <header className="bg-card border-b border-border sticky top-0 z-50">
-          <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Link to="/dashboard" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
                 <ArrowRight className="h-4 w-4" />
@@ -191,32 +548,22 @@ export default function TcmBrain() {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 flex flex-col max-w-5xl mx-auto w-full">
+        <main className="flex-1 flex flex-col max-w-6xl mx-auto w-full">
           <Tabs defaultValue="chat" className="flex-1 flex flex-col">
-            <div className="px-4 pt-4">
-              <TabsList className="w-full justify-start">
-                <TabsTrigger value="chat" className="gap-2">
-                  <Sparkles className="h-4 w-4" />
-                  שאל את ה-AI
-                </TabsTrigger>
-                <TabsTrigger value="herbs" className="gap-2">
-                  <Leaf className="h-4 w-4" />
-                  עשבים
-                </TabsTrigger>
-                <TabsTrigger value="points" className="gap-2">
-                  <MapPin className="h-4 w-4" />
-                  נקודות
-                </TabsTrigger>
-                <TabsTrigger value="conditions" className="gap-2">
-                  <Stethoscope className="h-4 w-4" />
-                  מצבים
-                </TabsTrigger>
+            <div className="px-4 pt-4 overflow-x-auto">
+              <TabsList className="w-max min-w-full justify-start gap-1">
+                {featureTabs.map(tab => (
+                  <TabsTrigger key={tab.id} value={tab.id} className="gap-1 text-xs px-2 whitespace-nowrap">
+                    <tab.icon className="h-3 w-3" />
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
               </TabsList>
             </div>
 
+            {/* Chat Tab */}
             <TabsContent value="chat" className="flex-1 flex flex-col p-4 pt-2">
-              {/* Chat Messages */}
-              <ScrollArea className="flex-1 pr-4" ref={scrollRef}>
+              <ScrollArea className="flex-1 pl-4" ref={scrollRef}>
                 <div className="space-y-4 pb-4">
                   {messages.length === 0 && (
                     <div className="text-center py-12">
@@ -228,7 +575,6 @@ export default function TcmBrain() {
                         שאלו כל שאלה ברפואה סינית - עשבים, נקודות דיקור, אבחון ועוד
                       </p>
                       
-                      {/* Quick Questions */}
                       <div className="grid sm:grid-cols-3 gap-3 max-w-2xl mx-auto">
                         {quickQuestions.map((q, i) => (
                           <button
@@ -251,7 +597,7 @@ export default function TcmBrain() {
                     >
                       <Card className={`max-w-[85%] ${msg.role === 'user' ? 'bg-jade text-primary-foreground' : 'bg-card'}`}>
                         <CardContent className="p-3">
-                          <p className="whitespace-pre-wrap text-sm leading-relaxed">{msg.content}</p>
+                          <p className="whitespace-pre-wrap text-sm leading-relaxed text-right">{msg.content}</p>
                         </CardContent>
                       </Card>
                     </div>
@@ -269,43 +615,103 @@ export default function TcmBrain() {
                 </div>
               </ScrollArea>
 
-              {/* Input */}
+              {/* Input with Voice */}
               <form onSubmit={handleSubmit} className="flex gap-2 pt-4 border-t border-border">
                 <Input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="שאלו שאלה ברפואה סינית..."
                   disabled={isLoading}
-                  className="flex-1"
+                  className="flex-1 text-right"
+                  dir="rtl"
                 />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={toggleRecording}
+                  className={isRecording ? 'bg-red-500/10 border-red-500 text-red-500' : ''}
+                >
+                  {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </Button>
                 <Button type="submit" disabled={isLoading || !input.trim()}>
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 </Button>
               </form>
             </TabsContent>
 
+            {/* Symptoms Tab */}
+            <TabsContent value="symptoms" className="flex-1 overflow-auto">
+              {renderQASection(
+                'ניתוח סימפטומים',
+                symptomQuestions,
+                selectedSymptomQuestion,
+                setSelectedSymptomQuestion
+              )}
+            </TabsContent>
+
+            {/* Diagnosis Tab */}
+            <TabsContent value="diagnosis" className="flex-1 overflow-auto">
+              {renderQASection(
+                'אבחון TCM',
+                diagnosisQuestions,
+                selectedDiagnosisQuestion,
+                setSelectedDiagnosisQuestion
+              )}
+            </TabsContent>
+
+            {/* Treatment Tab */}
+            <TabsContent value="treatment" className="flex-1 overflow-auto">
+              {renderQASection(
+                'תכנית טיפול',
+                treatmentQuestions,
+                selectedTreatmentQuestion,
+                setSelectedTreatmentQuestion
+              )}
+            </TabsContent>
+
+            {/* Placeholder Tabs */}
             <TabsContent value="herbs" className="flex-1 p-4">
-              <div className="text-center py-12">
-                <Leaf className="h-12 w-12 text-jade mx-auto mb-4" />
-                <h3 className="font-display text-xl mb-2">מאגר עשבים סיניים</h3>
-                <p className="text-muted-foreground">מאגר העשבים נמצא בבנייה. בינתיים, שאלו את ה-AI!</p>
-              </div>
+              {renderPlaceholderTab(Leaf, 'מאגר עשבים סיניים')}
             </TabsContent>
 
             <TabsContent value="points" className="flex-1 p-4">
-              <div className="text-center py-12">
-                <MapPin className="h-12 w-12 text-jade mx-auto mb-4" />
-                <h3 className="font-display text-xl mb-2">מאגר נקודות דיקור</h3>
-                <p className="text-muted-foreground">מאגר הנקודות נמצא בבנייה. בינתיים, שאלו את ה-AI!</p>
-              </div>
+              {renderPlaceholderTab(MapPin, 'מאגר נקודות דיקור')}
             </TabsContent>
 
             <TabsContent value="conditions" className="flex-1 p-4">
-              <div className="text-center py-12">
-                <Stethoscope className="h-12 w-12 text-jade mx-auto mb-4" />
-                <h3 className="font-display text-xl mb-2">מאגר מצבים ודפוסים</h3>
-                <p className="text-muted-foreground">מאגר המצבים נמצא בבנייה. בינתיים, שאלו את ה-AI!</p>
-              </div>
+              {renderPlaceholderTab(Stethoscope, 'מאגר מצבים ודפוסים')}
+            </TabsContent>
+
+            <TabsContent value="nutrition" className="flex-1 p-4">
+              {renderPlaceholderTab(Apple, 'המלצות תזונה')}
+            </TabsContent>
+
+            <TabsContent value="mental" className="flex-1 p-4">
+              {renderPlaceholderTab(Heart, 'בריאות מנטלית')}
+            </TabsContent>
+
+            <TabsContent value="sleep" className="flex-1 p-4">
+              {renderPlaceholderTab(Moon, 'איכות שינה')}
+            </TabsContent>
+
+            <TabsContent value="worklife" className="flex-1 p-4">
+              {renderPlaceholderTab(Briefcase, 'איזון עבודה-חיים')}
+            </TabsContent>
+
+            <TabsContent value="bazi" className="flex-1 p-4">
+              {renderPlaceholderTab(Compass, 'באזי - 4 עמודים')}
+            </TabsContent>
+
+            <TabsContent value="wellness" className="flex-1 p-4">
+              {renderPlaceholderTab(Activity, 'רווחה כללית')}
+            </TabsContent>
+
+            <TabsContent value="sports" className="flex-1 p-4">
+              {renderPlaceholderTab(Dumbbell, 'רפואת ספורט')}
+            </TabsContent>
+
+            <TabsContent value="astro" className="flex-1 p-4">
+              {renderPlaceholderTab(Star, 'אסטרולוגיה סינית')}
             </TabsContent>
           </Tabs>
         </main>
