@@ -172,6 +172,53 @@ export type Database = {
         }
         Relationships: []
       }
+      follow_ups: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          patient_id: string
+          reason: string | null
+          scheduled_date: string
+          status: string
+          therapist_id: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          patient_id: string
+          reason?: string | null
+          scheduled_date: string
+          status?: string
+          therapist_id: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          reason?: string | null
+          scheduled_date?: string
+          status?: string
+          therapist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follow_ups_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       herbs: {
         Row: {
           actions: string[] | null
@@ -220,6 +267,63 @@ export type Database = {
           name_pinyin?: string
           nature?: string | null
           notes?: string | null
+        }
+        Relationships: []
+      }
+      patients: {
+        Row: {
+          address: string | null
+          allergies: string | null
+          created_at: string
+          date_of_birth: string | null
+          email: string | null
+          emergency_contact: string | null
+          emergency_phone: string | null
+          full_name: string
+          gender: string | null
+          id: string
+          medical_history: string | null
+          medications: string | null
+          notes: string | null
+          phone: string | null
+          therapist_id: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          allergies?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          emergency_contact?: string | null
+          emergency_phone?: string | null
+          full_name: string
+          gender?: string | null
+          id?: string
+          medical_history?: string | null
+          medications?: string | null
+          notes?: string | null
+          phone?: string | null
+          therapist_id: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          allergies?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          emergency_contact?: string | null
+          emergency_phone?: string | null
+          full_name?: string
+          gender?: string | null
+          id?: string
+          medical_history?: string | null
+          medications?: string | null
+          notes?: string | null
+          phone?: string | null
+          therapist_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -273,6 +377,77 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      visits: {
+        Row: {
+          chief_complaint: string | null
+          created_at: string
+          cupping: boolean | null
+          follow_up_recommended: string | null
+          herbs_prescribed: string | null
+          id: string
+          moxa: boolean | null
+          notes: string | null
+          other_techniques: string | null
+          patient_id: string
+          points_used: string[] | null
+          pulse_diagnosis: string | null
+          tcm_pattern: string | null
+          therapist_id: string
+          tongue_diagnosis: string | null
+          treatment_principle: string | null
+          updated_at: string
+          visit_date: string
+        }
+        Insert: {
+          chief_complaint?: string | null
+          created_at?: string
+          cupping?: boolean | null
+          follow_up_recommended?: string | null
+          herbs_prescribed?: string | null
+          id?: string
+          moxa?: boolean | null
+          notes?: string | null
+          other_techniques?: string | null
+          patient_id: string
+          points_used?: string[] | null
+          pulse_diagnosis?: string | null
+          tcm_pattern?: string | null
+          therapist_id: string
+          tongue_diagnosis?: string | null
+          treatment_principle?: string | null
+          updated_at?: string
+          visit_date?: string
+        }
+        Update: {
+          chief_complaint?: string | null
+          created_at?: string
+          cupping?: boolean | null
+          follow_up_recommended?: string | null
+          herbs_prescribed?: string | null
+          id?: string
+          moxa?: boolean | null
+          notes?: string | null
+          other_techniques?: string | null
+          patient_id?: string
+          points_used?: string[] | null
+          pulse_diagnosis?: string | null
+          tcm_pattern?: string | null
+          therapist_id?: string
+          tongue_diagnosis?: string | null
+          treatment_principle?: string | null
+          updated_at?: string
+          visit_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visits_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

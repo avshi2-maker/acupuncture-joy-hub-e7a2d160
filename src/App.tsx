@@ -16,6 +16,7 @@ import Admin from "./pages/Admin";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import TcmBrain from "./pages/TcmBrain";
+import CRM from "./pages/CRM";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/tcm-brain" element={<TcmBrain />} />
+                <Route path="/crm" element={<CRM />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

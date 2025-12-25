@@ -100,6 +100,7 @@ export default function Dashboard() {
       description: 'CRM מותאם למטפלים',
       icon: <Users className={`h-6 w-6 ${hasFeature('crm') ? 'text-jade' : 'text-muted-foreground'}`} />,
       feature: 'crm' as const,
+      href: '/crm',
     },
     {
       id: 'body_map',
