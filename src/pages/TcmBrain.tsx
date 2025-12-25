@@ -38,6 +38,19 @@ import {
   Trash2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import {
+  herbsQuestions,
+  pointsQuestions,
+  conditionsQuestions,
+  nutritionQuestions,
+  mentalQuestions,
+  sleepQuestions,
+  worklifeQuestions,
+  baziQuestions,
+  wellnessQuestions,
+  sportsQuestions,
+  astroQuestions
+} from '@/data/tcmBrainQuestions';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -217,9 +230,23 @@ export default function TcmBrain() {
   const [isLoading, setIsLoading] = useState(false);
   const [customPrompt, setCustomPrompt] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+  
+  // Selected question states for all tabs
   const [selectedSymptomQuestion, setSelectedSymptomQuestion] = useState('');
   const [selectedDiagnosisQuestion, setSelectedDiagnosisQuestion] = useState('');
   const [selectedTreatmentQuestion, setSelectedTreatmentQuestion] = useState('');
+  const [selectedHerbsQuestion, setSelectedHerbsQuestion] = useState('');
+  const [selectedPointsQuestion, setSelectedPointsQuestion] = useState('');
+  const [selectedConditionsQuestion, setSelectedConditionsQuestion] = useState('');
+  const [selectedNutritionQuestion, setSelectedNutritionQuestion] = useState('');
+  const [selectedMentalQuestion, setSelectedMentalQuestion] = useState('');
+  const [selectedSleepQuestion, setSelectedSleepQuestion] = useState('');
+  const [selectedWorklifeQuestion, setSelectedWorklifeQuestion] = useState('');
+  const [selectedBaziQuestion, setSelectedBaziQuestion] = useState('');
+  const [selectedWellnessQuestion, setSelectedWellnessQuestion] = useState('');
+  const [selectedSportsQuestion, setSelectedSportsQuestion] = useState('');
+  const [selectedAstroQuestion, setSelectedAstroQuestion] = useState('');
+  
   const scrollRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
@@ -418,17 +445,6 @@ export default function TcmBrain() {
   };
 
   if (!tier || !hasFeature('tcm_brain')) return null;
-
-  const renderPlaceholderTab = (icon: React.ElementType, title: string) => {
-    const Icon = icon;
-    return (
-      <div className="text-center py-12" dir="rtl">
-        <Icon className="h-12 w-12 text-jade mx-auto mb-4" />
-        <h3 className="font-display text-xl mb-2 text-right">{title}</h3>
-        <p className="text-muted-foreground text-right">{'\u0628\u0642\u0631\u0648\u0628! בינתיים, שאלו את ה-AI'}</p>
-      </div>
-    );
-  };
 
   const renderQASection = (
     title: string,
@@ -708,49 +724,114 @@ export default function TcmBrain() {
               )}
             </TabsContent>
 
-            {/* Placeholder Tabs */}
-            <TabsContent value="herbs" className="flex-1 p-4">
-              {renderPlaceholderTab(Leaf, 'מאגר עשבים סיניים')}
+            {/* Herbs Tab */}
+            <TabsContent value="herbs" className="flex-1 overflow-auto">
+              {renderQASection(
+                'מאגר עשבים סיניים',
+                herbsQuestions,
+                selectedHerbsQuestion,
+                setSelectedHerbsQuestion
+              )}
             </TabsContent>
 
-            <TabsContent value="points" className="flex-1 p-4">
-              {renderPlaceholderTab(MapPin, 'מאגר נקודות דיקור')}
+            {/* Points Tab */}
+            <TabsContent value="points" className="flex-1 overflow-auto">
+              {renderQASection(
+                'נקודות דיקור',
+                pointsQuestions,
+                selectedPointsQuestion,
+                setSelectedPointsQuestion
+              )}
             </TabsContent>
 
-            <TabsContent value="conditions" className="flex-1 p-4">
-              {renderPlaceholderTab(Stethoscope, 'מאגר מצבים ודפוסים')}
+            {/* Conditions Tab */}
+            <TabsContent value="conditions" className="flex-1 overflow-auto">
+              {renderQASection(
+                'מצבים ודפוסי TCM',
+                conditionsQuestions,
+                selectedConditionsQuestion,
+                setSelectedConditionsQuestion
+              )}
             </TabsContent>
 
-            <TabsContent value="nutrition" className="flex-1 p-4">
-              {renderPlaceholderTab(Apple, 'המלצות תזונה')}
+            {/* Nutrition Tab */}
+            <TabsContent value="nutrition" className="flex-1 overflow-auto">
+              {renderQASection(
+                'תזונה לפי TCM',
+                nutritionQuestions,
+                selectedNutritionQuestion,
+                setSelectedNutritionQuestion
+              )}
             </TabsContent>
 
-            <TabsContent value="mental" className="flex-1 p-4">
-              {renderPlaceholderTab(Heart, 'בריאות מנטלית')}
+            {/* Mental Tab */}
+            <TabsContent value="mental" className="flex-1 overflow-auto">
+              {renderQASection(
+                'בריאות מנטלית ב-TCM',
+                mentalQuestions,
+                selectedMentalQuestion,
+                setSelectedMentalQuestion
+              )}
             </TabsContent>
 
-            <TabsContent value="sleep" className="flex-1 p-4">
-              {renderPlaceholderTab(Moon, 'איכות שינה')}
+            {/* Sleep Tab */}
+            <TabsContent value="sleep" className="flex-1 overflow-auto">
+              {renderQASection(
+                'איכות שינה ב-TCM',
+                sleepQuestions,
+                selectedSleepQuestion,
+                setSelectedSleepQuestion
+              )}
             </TabsContent>
 
-            <TabsContent value="worklife" className="flex-1 p-4">
-              {renderPlaceholderTab(Briefcase, 'איזון עבודה-חיים')}
+            {/* Work-Life Tab */}
+            <TabsContent value="worklife" className="flex-1 overflow-auto">
+              {renderQASection(
+                'איזון עבודה-חיים',
+                worklifeQuestions,
+                selectedWorklifeQuestion,
+                setSelectedWorklifeQuestion
+              )}
             </TabsContent>
 
-            <TabsContent value="bazi" className="flex-1 p-4">
-              {renderPlaceholderTab(Compass, 'באזי - 4 עמודים')}
+            {/* Bazi Tab */}
+            <TabsContent value="bazi" className="flex-1 overflow-auto">
+              {renderQASection(
+                'באזי - 4 עמודים',
+                baziQuestions,
+                selectedBaziQuestion,
+                setSelectedBaziQuestion
+              )}
             </TabsContent>
 
-            <TabsContent value="wellness" className="flex-1 p-4">
-              {renderPlaceholderTab(Activity, 'רווחה כללית')}
+            {/* Wellness Tab */}
+            <TabsContent value="wellness" className="flex-1 overflow-auto">
+              {renderQASection(
+                'רווחה כללית',
+                wellnessQuestions,
+                selectedWellnessQuestion,
+                setSelectedWellnessQuestion
+              )}
             </TabsContent>
 
-            <TabsContent value="sports" className="flex-1 p-4">
-              {renderPlaceholderTab(Dumbbell, 'רפואת ספורט')}
+            {/* Sports Tab */}
+            <TabsContent value="sports" className="flex-1 overflow-auto">
+              {renderQASection(
+                'רפואת ספורט סינית',
+                sportsQuestions,
+                selectedSportsQuestion,
+                setSelectedSportsQuestion
+              )}
             </TabsContent>
 
-            <TabsContent value="astro" className="flex-1 p-4">
-              {renderPlaceholderTab(Star, 'אסטרולוגיה סינית')}
+            {/* Astrology Tab */}
+            <TabsContent value="astro" className="flex-1 overflow-auto">
+              {renderQASection(
+                'אסטרולוגיה סינית',
+                astroQuestions,
+                selectedAstroQuestion,
+                setSelectedAstroQuestion
+              )}
             </TabsContent>
           </Tabs>
         </main>
