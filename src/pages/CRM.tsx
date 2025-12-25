@@ -93,7 +93,10 @@ export default function CRM() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [showAddPatient, setShowAddPatient] = useState(false);
+  const [showEditPatient, setShowEditPatient] = useState(false);
   const [showAddVisit, setShowAddVisit] = useState(false);
+  const [showEditVisit, setShowEditVisit] = useState(false);
+  const [editingVisit, setEditingVisit] = useState<Visit | null>(null);
   const [showAddFollowUp, setShowAddFollowUp] = useState(false);
 
   // Form states
@@ -234,6 +237,75 @@ export default function CRM() {
     }
   };
 
+  const handleEditPatient = async () => {
+    if (!user || !selectedPatient || !patientForm.full_name.trim()) {
+      toast.error('יש להזין שם מלא');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('patients')
+      .update({
+        full_name: patientForm.full_name,
+        phone: patientForm.phone || null,
+        email: patientForm.email || null,
+        date_of_birth: patientForm.date_of_birth || null,
+        gender: patientForm.gender || null,
+        address: patientForm.address || null,
+        emergency_contact: patientForm.emergency_contact || null,
+        emergency_phone: patientForm.emergency_phone || null,
+        medical_history: patientForm.medical_history || null,
+        allergies: patientForm.allergies || null,
+        medications: patientForm.medications || null,
+        notes: patientForm.notes || null
+      })
+      .eq('id', selectedPatient.id);
+
+    if (error) {
+      console.error('Error updating patient:', error);
+      toast.error('שגיאה בעדכון מטופל');
+    } else {
+      toast.success('מטופל עודכן בהצלחה');
+      setShowEditPatient(false);
+      fetchPatients();
+      // Update selectedPatient with new data
+      setSelectedPatient({
+        ...selectedPatient,
+        full_name: patientForm.full_name,
+        phone: patientForm.phone || null,
+        email: patientForm.email || null,
+        date_of_birth: patientForm.date_of_birth || null,
+        gender: patientForm.gender || null,
+        address: patientForm.address || null,
+        emergency_contact: patientForm.emergency_contact || null,
+        emergency_phone: patientForm.emergency_phone || null,
+        medical_history: patientForm.medical_history || null,
+        allergies: patientForm.allergies || null,
+        medications: patientForm.medications || null,
+        notes: patientForm.notes || null
+      });
+    }
+  };
+
+  const openEditPatient = () => {
+    if (!selectedPatient) return;
+    setPatientForm({
+      full_name: selectedPatient.full_name,
+      phone: selectedPatient.phone || '',
+      email: selectedPatient.email || '',
+      date_of_birth: selectedPatient.date_of_birth || '',
+      gender: selectedPatient.gender || '',
+      address: selectedPatient.address || '',
+      emergency_contact: selectedPatient.emergency_contact || '',
+      emergency_phone: selectedPatient.emergency_phone || '',
+      medical_history: selectedPatient.medical_history || '',
+      allergies: selectedPatient.allergies || '',
+      medications: selectedPatient.medications || '',
+      notes: selectedPatient.notes || ''
+    });
+    setShowEditPatient(true);
+  };
+
   const handleAddVisit = async () => {
     if (!user || !selectedPatient) return;
 
@@ -267,6 +339,76 @@ export default function CRM() {
         other_techniques: '', notes: '', follow_up_recommended: ''
       });
       fetchVisits(selectedPatient.id);
+    }
+  };
+
+  const handleEditVisit = async () => {
+    if (!user || !selectedPatient || !editingVisit) return;
+
+    const { error } = await supabase
+      .from('visits')
+      .update({
+        chief_complaint: visitForm.chief_complaint || null,
+        tongue_diagnosis: visitForm.tongue_diagnosis || null,
+        pulse_diagnosis: visitForm.pulse_diagnosis || null,
+        tcm_pattern: visitForm.tcm_pattern || null,
+        treatment_principle: visitForm.treatment_principle || null,
+        points_used: visitForm.points_used ? visitForm.points_used.split(',').map(p => p.trim()) : null,
+        herbs_prescribed: visitForm.herbs_prescribed || null,
+        cupping: visitForm.cupping,
+        moxa: visitForm.moxa,
+        other_techniques: visitForm.other_techniques || null,
+        notes: visitForm.notes || null,
+        follow_up_recommended: visitForm.follow_up_recommended || null
+      })
+      .eq('id', editingVisit.id);
+
+    if (error) {
+      console.error('Error updating visit:', error);
+      toast.error('שגיאה בעדכון ביקור');
+    } else {
+      toast.success('ביקור עודכן בהצלחה');
+      setShowEditVisit(false);
+      setEditingVisit(null);
+      setVisitForm({
+        chief_complaint: '', tongue_diagnosis: '', pulse_diagnosis: '',
+        tcm_pattern: '', treatment_principle: '', points_used: '',
+        herbs_prescribed: '', cupping: false, moxa: false,
+        other_techniques: '', notes: '', follow_up_recommended: ''
+      });
+      fetchVisits(selectedPatient.id);
+    }
+  };
+
+  const openEditVisit = (visit: Visit) => {
+    setEditingVisit(visit);
+    setVisitForm({
+      chief_complaint: visit.chief_complaint || '',
+      tongue_diagnosis: visit.tongue_diagnosis || '',
+      pulse_diagnosis: visit.pulse_diagnosis || '',
+      tcm_pattern: visit.tcm_pattern || '',
+      treatment_principle: visit.treatment_principle || '',
+      points_used: visit.points_used?.join(', ') || '',
+      herbs_prescribed: visit.herbs_prescribed || '',
+      cupping: visit.cupping,
+      moxa: visit.moxa,
+      other_techniques: visit.other_techniques || '',
+      notes: visit.notes || '',
+      follow_up_recommended: visit.follow_up_recommended || ''
+    });
+    setShowEditVisit(true);
+  };
+
+  const handleDeleteVisit = async (visitId: string) => {
+    if (!confirm('האם למחוק את הביקור? פעולה זו לא ניתנת לביטול.')) return;
+
+    const { error } = await supabase.from('visits').delete().eq('id', visitId);
+
+    if (error) {
+      toast.error('שגיאה במחיקת ביקור');
+    } else {
+      toast.success('ביקור נמחק');
+      if (selectedPatient) fetchVisits(selectedPatient.id);
     }
   };
 
@@ -601,16 +743,156 @@ export default function CRM() {
                         </div>
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive"
-                      onClick={() => handleDeletePatient(selectedPatient.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={openEditPatient}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive"
+                        onClick={() => handleDeletePatient(selectedPatient.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
+
+                {/* Edit Patient Dialog */}
+                <Dialog open={showEditPatient} onOpenChange={setShowEditPatient}>
+                  <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" dir="rtl">
+                    <DialogHeader>
+                      <DialogTitle className="text-right">עריכת מטופל</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <Label className="text-right">שם מלא *</Label>
+                        <Input
+                          value={patientForm.full_name}
+                          onChange={(e) => setPatientForm({...patientForm, full_name: e.target.value})}
+                          className="text-right"
+                          dir="rtl"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                          <Label className="text-right">טלפון</Label>
+                          <Input
+                            value={patientForm.phone}
+                            onChange={(e) => setPatientForm({...patientForm, phone: e.target.value})}
+                            dir="ltr"
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label className="text-right">אימייל</Label>
+                          <Input
+                            type="email"
+                            value={patientForm.email}
+                            onChange={(e) => setPatientForm({...patientForm, email: e.target.value})}
+                            dir="ltr"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                          <Label className="text-right">תאריך לידה</Label>
+                          <Input
+                            type="date"
+                            value={patientForm.date_of_birth}
+                            onChange={(e) => setPatientForm({...patientForm, date_of_birth: e.target.value})}
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label className="text-right">מין</Label>
+                          <Select value={patientForm.gender} onValueChange={(v) => setPatientForm({...patientForm, gender: v})}>
+                            <SelectTrigger dir="rtl">
+                              <SelectValue placeholder="בחר..." />
+                            </SelectTrigger>
+                            <SelectContent className="bg-card" dir="rtl">
+                              <SelectItem value="male">זכר</SelectItem>
+                              <SelectItem value="female">נקבה</SelectItem>
+                              <SelectItem value="other">אחר</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label className="text-right">כתובת</Label>
+                        <Input
+                          value={patientForm.address}
+                          onChange={(e) => setPatientForm({...patientForm, address: e.target.value})}
+                          className="text-right"
+                          dir="rtl"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                          <Label className="text-right">איש קשר לחירום</Label>
+                          <Input
+                            value={patientForm.emergency_contact}
+                            onChange={(e) => setPatientForm({...patientForm, emergency_contact: e.target.value})}
+                            className="text-right"
+                            dir="rtl"
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label className="text-right">טלפון חירום</Label>
+                          <Input
+                            value={patientForm.emergency_phone}
+                            onChange={(e) => setPatientForm({...patientForm, emergency_phone: e.target.value})}
+                            dir="ltr"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label className="text-right">היסטוריה רפואית</Label>
+                        <Textarea
+                          value={patientForm.medical_history}
+                          onChange={(e) => setPatientForm({...patientForm, medical_history: e.target.value})}
+                          className="text-right"
+                          dir="rtl"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                          <Label className="text-right">אלרגיות</Label>
+                          <Input
+                            value={patientForm.allergies}
+                            onChange={(e) => setPatientForm({...patientForm, allergies: e.target.value})}
+                            className="text-right"
+                            dir="rtl"
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label className="text-right">תרופות</Label>
+                          <Input
+                            value={patientForm.medications}
+                            onChange={(e) => setPatientForm({...patientForm, medications: e.target.value})}
+                            className="text-right"
+                            dir="rtl"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label className="text-right">הערות</Label>
+                        <Textarea
+                          value={patientForm.notes}
+                          onChange={(e) => setPatientForm({...patientForm, notes: e.target.value})}
+                          className="text-right"
+                          dir="rtl"
+                        />
+                      </div>
+                      <Button onClick={handleEditPatient} className="w-full">
+                        שמור שינויים
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
 
                 {/* Patient Tabs */}
                 <Tabs defaultValue="info" className="flex-1 flex flex-col">
@@ -846,6 +1128,142 @@ export default function CRM() {
                         </DialogContent>
                       </Dialog>
 
+                      {/* Edit Visit Dialog */}
+                      <Dialog open={showEditVisit} onOpenChange={(open) => {
+                        setShowEditVisit(open);
+                        if (!open) {
+                          setEditingVisit(null);
+                          setVisitForm({
+                            chief_complaint: '', tongue_diagnosis: '', pulse_diagnosis: '',
+                            tcm_pattern: '', treatment_principle: '', points_used: '',
+                            herbs_prescribed: '', cupping: false, moxa: false,
+                            other_techniques: '', notes: '', follow_up_recommended: ''
+                          });
+                        }
+                      }}>
+                        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" dir="rtl">
+                          <DialogHeader>
+                            <DialogTitle className="text-right">עריכת ביקור</DialogTitle>
+                          </DialogHeader>
+                          <div className="grid gap-4 py-4">
+                            <div className="grid gap-2">
+                              <Label className="text-right">תלונה עיקרית</Label>
+                              <Textarea
+                                value={visitForm.chief_complaint}
+                                onChange={(e) => setVisitForm({...visitForm, chief_complaint: e.target.value})}
+                                className="text-right"
+                                dir="rtl"
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="grid gap-2">
+                                <Label className="text-right">אבחון לשון</Label>
+                                <Input
+                                  value={visitForm.tongue_diagnosis}
+                                  onChange={(e) => setVisitForm({...visitForm, tongue_diagnosis: e.target.value})}
+                                  className="text-right"
+                                  dir="rtl"
+                                />
+                              </div>
+                              <div className="grid gap-2">
+                                <Label className="text-right">אבחון דופק</Label>
+                                <Input
+                                  value={visitForm.pulse_diagnosis}
+                                  onChange={(e) => setVisitForm({...visitForm, pulse_diagnosis: e.target.value})}
+                                  className="text-right"
+                                  dir="rtl"
+                                />
+                              </div>
+                            </div>
+                            <div className="grid gap-2">
+                              <Label className="text-right">דפוס TCM</Label>
+                              <Input
+                                value={visitForm.tcm_pattern}
+                                onChange={(e) => setVisitForm({...visitForm, tcm_pattern: e.target.value})}
+                                className="text-right"
+                                dir="rtl"
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label className="text-right">עיקרון טיפול</Label>
+                              <Input
+                                value={visitForm.treatment_principle}
+                                onChange={(e) => setVisitForm({...visitForm, treatment_principle: e.target.value})}
+                                className="text-right"
+                                dir="rtl"
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label className="text-right">נקודות (מופרדות בפסיק)</Label>
+                              <Input
+                                value={visitForm.points_used}
+                                onChange={(e) => setVisitForm({...visitForm, points_used: e.target.value})}
+                                placeholder="LI-4, ST-36, SP-6"
+                                dir="ltr"
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label className="text-right">עשבים</Label>
+                              <Textarea
+                                value={visitForm.herbs_prescribed}
+                                onChange={(e) => setVisitForm({...visitForm, herbs_prescribed: e.target.value})}
+                                className="text-right"
+                                dir="rtl"
+                              />
+                            </div>
+                            <div className="flex gap-4">
+                              <div className="flex items-center gap-2">
+                                <Checkbox
+                                  id="edit-cupping"
+                                  checked={visitForm.cupping}
+                                  onCheckedChange={(c) => setVisitForm({...visitForm, cupping: c as boolean})}
+                                />
+                                <Label htmlFor="edit-cupping">כוסות רוח</Label>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Checkbox
+                                  id="edit-moxa"
+                                  checked={visitForm.moxa}
+                                  onCheckedChange={(c) => setVisitForm({...visitForm, moxa: c as boolean})}
+                                />
+                                <Label htmlFor="edit-moxa">מוקסה</Label>
+                              </div>
+                            </div>
+                            <div className="grid gap-2">
+                              <Label className="text-right">טכניקות נוספות</Label>
+                              <Input
+                                value={visitForm.other_techniques}
+                                onChange={(e) => setVisitForm({...visitForm, other_techniques: e.target.value})}
+                                className="text-right"
+                                dir="rtl"
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label className="text-right">הערות</Label>
+                              <Textarea
+                                value={visitForm.notes}
+                                onChange={(e) => setVisitForm({...visitForm, notes: e.target.value})}
+                                className="text-right"
+                                dir="rtl"
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label className="text-right">המלצת מעקב</Label>
+                              <Input
+                                value={visitForm.follow_up_recommended}
+                                onChange={(e) => setVisitForm({...visitForm, follow_up_recommended: e.target.value})}
+                                placeholder="לדוגמה: שבוע, שבועיים"
+                                className="text-right"
+                                dir="rtl"
+                              />
+                            </div>
+                            <Button onClick={handleEditVisit} className="w-full">
+                              שמור שינויים
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+
                       {visits.length === 0 ? (
                         <div className="text-center py-12 text-muted-foreground">
                           <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -860,11 +1278,29 @@ export default function CRM() {
                                   <CardTitle className="text-sm font-medium">
                                     {format(new Date(visit.visit_date), 'dd/MM/yyyy HH:mm')}
                                   </CardTitle>
-                                  {visit.tcm_pattern && (
-                                    <span className="text-xs bg-jade-light text-jade px-2 py-1 rounded">
-                                      {visit.tcm_pattern}
-                                    </span>
-                                  )}
+                                  <div className="flex items-center gap-2">
+                                    {visit.tcm_pattern && (
+                                      <span className="text-xs bg-jade-light text-jade px-2 py-1 rounded">
+                                        {visit.tcm_pattern}
+                                      </span>
+                                    )}
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7"
+                                      onClick={() => openEditVisit(visit)}
+                                    >
+                                      <Edit className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 text-destructive"
+                                      onClick={() => handleDeleteVisit(visit.id)}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </div>
                                 </div>
                               </CardHeader>
                               <CardContent className="py-2 space-y-2 text-sm">
