@@ -489,51 +489,19 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
         </Card>
       )}
 
-      {/* Video Area */}
-      <Card className="flex-1 bg-muted/50">
-        <CardContent className="p-0 h-full flex items-center justify-center relative">
-          <div className="w-full h-full min-h-[300px] bg-gradient-to-br from-jade/10 to-jade/5 rounded-lg flex flex-col items-center justify-center">
-            <Video className="h-16 w-16 text-jade/40 mb-4" />
-            <p className="text-muted-foreground text-lg">אזור וידאו</p>
-            <p className="text-sm text-muted-foreground mt-1">Zoom / Google Meet</p>
-            
-            {/* Session Status Badge */}
-            {sessionStatus !== 'idle' && (
-              <Badge 
-                className={`mt-4 ${
-                  sessionStatus === 'running' ? 'bg-jade animate-pulse' : 
-                  sessionStatus === 'paused' ? 'bg-gold' : 
-                  'bg-destructive'
-                }`}
-              >
-                {sessionStatus === 'running' ? '● בשידור חי' :
-                 sessionStatus === 'paused' ? '⏸ מושהה' :
-                 '■ הסתיים'}
-              </Badge>
-            )}
-            
-            {/* Timer */}
-            <p className="text-2xl font-mono mt-4 text-jade">
-              {formatDuration(sessionDuration)}
-            </p>
-            
-            {/* Session start time stamp */}
-            {sessionStartTime && sessionStatus !== 'idle' && (
-              <p className="text-xs text-muted-foreground mt-1">
-                התחלה: {getSessionStartTimeDisplay()}
-              </p>
-            )}
-            
-            {/* Active patient indicator */}
-            {selectedPatientName && sessionStatus === 'running' && (
-              <Badge variant="outline" className="mt-2">
-                {selectedPatientName}
-              </Badge>
-            )}
-          </div>
-          
-          {/* Quick Action Buttons */}
-          <div className="absolute top-4 right-4 flex flex-col gap-2">
+      {/* Quick Actions Bar - moved outside video area */}
+      <Card className="mb-4">
+        <CardContent className="p-3">
+          <div className="flex flex-wrap gap-2 justify-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowFollowUpPlan(true)}
+              className="gap-2 bg-jade/10 hover:bg-jade/20 text-jade border-jade/30"
+            >
+              <ClipboardList className="h-4 w-4" />
+              תוכנית המשך
+            </Button>
             <Button
               variant="secondary"
               size="sm"
@@ -542,6 +510,15 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
             >
               <Sparkles className="h-4 w-4" />
               שאלון חרדה
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowVoiceDictation(true)}
+              className="gap-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200"
+            >
+              <Mic className="h-4 w-4" />
+              הקלטה קולית
             </Button>
             <Button
               variant="outline"
@@ -580,27 +557,50 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
               הזמנת Zoom
             </Button>
           </div>
-          
-          {/* Left side action buttons */}
-          <div className="absolute top-4 left-4 flex flex-col gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowFollowUpPlan(true)}
-              className="gap-2 bg-jade/10 hover:bg-jade/20 text-jade border-jade/30"
-            >
-              <ClipboardList className="h-4 w-4" />
-              תוכנית המשך
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowVoiceDictation(true)}
-              className="gap-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200"
-            >
-              <Mic className="h-4 w-4" />
-              הקלטה קולית
-            </Button>
+        </CardContent>
+      </Card>
+
+      {/* Video Area - now clean without overlays */}
+      <Card className="flex-1 bg-muted/50">
+        <CardContent className="p-0 h-full flex items-center justify-center">
+          <div className="w-full h-full min-h-[200px] bg-gradient-to-br from-jade/10 to-jade/5 rounded-lg flex flex-col items-center justify-center">
+            <Video className="h-16 w-16 text-jade/40 mb-4" />
+            <p className="text-muted-foreground text-lg">אזור וידאו</p>
+            <p className="text-sm text-muted-foreground mt-1">Zoom / Google Meet</p>
+            
+            {/* Session Status Badge */}
+            {sessionStatus !== 'idle' && (
+              <Badge 
+                className={`mt-4 ${
+                  sessionStatus === 'running' ? 'bg-jade animate-pulse' : 
+                  sessionStatus === 'paused' ? 'bg-gold' : 
+                  'bg-destructive'
+                }`}
+              >
+                {sessionStatus === 'running' ? '● בשידור חי' :
+                 sessionStatus === 'paused' ? '⏸ מושהה' :
+                 '■ הסתיים'}
+              </Badge>
+            )}
+            
+            {/* Timer */}
+            <p className="text-2xl font-mono mt-4 text-jade">
+              {formatDuration(sessionDuration)}
+            </p>
+            
+            {/* Session start time stamp */}
+            {sessionStartTime && sessionStatus !== 'idle' && (
+              <p className="text-xs text-muted-foreground mt-1">
+                התחלה: {getSessionStartTimeDisplay()}
+              </p>
+            )}
+            
+            {/* Active patient indicator */}
+            {selectedPatientName && sessionStatus === 'running' && (
+              <Badge variant="outline" className="mt-2">
+                {selectedPatientName}
+              </Badge>
+            )}
           </div>
         </CardContent>
       </Card>
