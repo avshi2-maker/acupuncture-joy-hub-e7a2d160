@@ -81,142 +81,142 @@ const featureTabs = [
   { id: 'astro', icon: Star, label: 'Astrology' },
 ];
 
-// Symptom Analysis Questions (50)
+// Symptom Analysis Questions (50) - English, alphabetically sorted
 const symptomQuestions = [
-  { id: 's1', question: 'מהו התסמין העיקרי?', category: 'כללי' },
-  { id: 's2', question: 'מתי התחילו התסמינים?', category: 'כללי' },
-  { id: 's3', question: 'האם יש כאב? היכן?', category: 'כאב' },
-  { id: 's4', question: 'מהו אופי הכאב? (חד, עמום, דוקר)', category: 'כאב' },
-  { id: 's5', question: 'האם הכאב קבוע או לסירוגין?', category: 'כאב' },
-  { id: 's6', question: 'מה מחמיר את הכאב?', category: 'כאב' },
-  { id: 's7', question: 'מה מקל על הכאב?', category: 'כאב' },
-  { id: 's8', question: 'האם יש בחילות?', category: 'עיכול' },
-  { id: 's9', question: 'מהי תדירות היציאות?', category: 'עיכול' },
-  { id: 's10', question: 'האם יש שלשול או עצירות?', category: 'עיכול' },
-  { id: 's11', question: 'מהי התיאבון?', category: 'עיכול' },
-  { id: 's12', question: 'האם יש צמא מוגבר?', category: 'עיכול' },
-  { id: 's13', question: 'מהי איכות השינה?', category: 'שינה' },
-  { id: 's14', question: 'האם יש קושי להירדם?', category: 'שינה' },
-  { id: 's15', question: 'האם יש התעוררויות בלילה?', category: 'שינה' },
-  { id: 's16', question: 'האם יש חלומות מרובים?', category: 'שינה' },
-  { id: 's17', question: 'מהי רמת האנרגיה?', category: 'אנרגיה' },
-  { id: 's18', question: 'האם יש עייפות כרונית?', category: 'אנרגיה' },
-  { id: 's19', question: 'באיזה שעה ביום העייפות גרועה יותר?', category: 'אנרגיה' },
-  { id: 's20', question: 'האם יש הזעה מוגברת?', category: 'חום/קור' },
-  { id: 's21', question: 'האם יש תחושת קור?', category: 'חום/קור' },
-  { id: 's22', question: 'האם יש גפיים קרות?', category: 'חום/קור' },
-  { id: 's23', question: 'האם יש חום או חמימות?', category: 'חום/קור' },
-  { id: 's24', question: 'מהו צבע השתן?', category: 'שתן' },
-  { id: 's25', question: 'מהי תדירות ההשתנה?', category: 'שתן' },
-  { id: 's26', question: 'האם יש כאב בהשתנה?', category: 'שתן' },
-  { id: 's27', question: 'מהו המצב הרגשי?', category: 'רגשות' },
-  { id: 's28', question: 'האם יש חרדה או דאגנות?', category: 'רגשות' },
-  { id: 's29', question: 'האם יש עצבנות?', category: 'רגשות' },
-  { id: 's30', question: 'האם יש דיכאון?', category: 'רגשות' },
-  { id: 's31', question: 'האם יש כאבי ראש?', category: 'ראש' },
-  { id: 's32', question: 'היכן ממוקם כאב הראש?', category: 'ראש' },
-  { id: 's33', question: 'האם יש סחרחורות?', category: 'ראש' },
-  { id: 's34', question: 'האם יש בעיות ראייה?', category: 'ראש' },
-  { id: 's35', question: 'האם יש טינטון?', category: 'ראש' },
-  { id: 's36', question: 'מהו מצב הלשון? (צבע, ציפוי)', category: 'אבחון' },
-  { id: 's37', question: 'מהו הדופק? (מהיר, איטי, חלש)', category: 'אבחון' },
-  { id: 's38', question: 'האם יש נפיחות?', category: 'גוף' },
-  { id: 's39', question: 'האם יש בעיות עור?', category: 'גוף' },
-  { id: 's40', question: 'האם יש כאבי גב?', category: 'גוף' },
-  { id: 's41', question: 'האם יש כאבי מפרקים?', category: 'גוף' },
-  { id: 's42', question: 'מהו המחזור החודשי? (לנשים)', category: 'נשים' },
-  { id: 's43', question: 'האם יש כאבי מחזור?', category: 'נשים' },
-  { id: 's44', question: 'האם יש הפרשות?', category: 'נשים' },
-  { id: 's45', question: 'מהם ההרגלי אכילה?', category: 'אורח חיים' },
-  { id: 's46', question: 'האם יש פעילות גופנית?', category: 'אורח חיים' },
-  { id: 's47', question: 'מהי רמת הסטרס?', category: 'אורח חיים' },
-  { id: 's48', question: 'האם יש שימוש בתרופות?', category: 'רפואי' },
-  { id: 's49', question: 'האם יש מחלות רקע?', category: 'רפואי' },
-  { id: 's50', question: 'האם יש אלרגיות?', category: 'רפואי' },
+  { id: 's1', question: 'Any allergies present?', category: 'Medical' },
+  { id: 's2', question: 'Any anxiety or excessive worry?', category: 'Emotions' },
+  { id: 's3', question: 'Any back pain present?', category: 'Body' },
+  { id: 's4', question: 'Any bloating or swelling?', category: 'Body' },
+  { id: 's5', question: 'Any chronic fatigue present?', category: 'Energy' },
+  { id: 's6', question: 'Any cold extremities?', category: 'Heat/Cold' },
+  { id: 's7', question: 'Any constipation or diarrhea?', category: 'Digestion' },
+  { id: 's8', question: 'Any depression symptoms?', category: 'Emotions' },
+  { id: 's9', question: 'Any difficulty falling asleep?', category: 'Sleep' },
+  { id: 's10', question: 'Any discharge present? (women)', category: 'Women' },
+  { id: 's11', question: 'Any dizziness or vertigo?', category: 'Head' },
+  { id: 's12', question: 'Any excessive dreams?', category: 'Sleep' },
+  { id: 's13', question: 'Any excessive sweating?', category: 'Heat/Cold' },
+  { id: 's14', question: 'Any excessive thirst?', category: 'Digestion' },
+  { id: 's15', question: 'Any feeling of cold?', category: 'Heat/Cold' },
+  { id: 's16', question: 'Any fever or heat sensation?', category: 'Heat/Cold' },
+  { id: 's17', question: 'Any headaches present?', category: 'Head' },
+  { id: 's18', question: 'Any irritability present?', category: 'Emotions' },
+  { id: 's19', question: 'Any joint pain?', category: 'Body' },
+  { id: 's20', question: 'Any menstrual cycle issues? (women)', category: 'Women' },
+  { id: 's21', question: 'Any menstrual pain? (women)', category: 'Women' },
+  { id: 's22', question: 'Any nausea present?', category: 'Digestion' },
+  { id: 's23', question: 'Any night wakings?', category: 'Sleep' },
+  { id: 's24', question: 'Any pain during urination?', category: 'Urination' },
+  { id: 's25', question: 'Any pain present? Where?', category: 'Pain' },
+  { id: 's26', question: 'Any physical exercise routine?', category: 'Lifestyle' },
+  { id: 's27', question: 'Any pre-existing conditions?', category: 'Medical' },
+  { id: 's28', question: 'Any skin problems?', category: 'Body' },
+  { id: 's29', question: 'Any tinnitus or ear ringing?', category: 'Head' },
+  { id: 's30', question: 'Any vision problems?', category: 'Head' },
+  { id: 's31', question: 'Current emotional state?', category: 'Emotions' },
+  { id: 's32', question: 'Current medication use?', category: 'Medical' },
+  { id: 's33', question: 'Current stress level?', category: 'Lifestyle' },
+  { id: 's34', question: 'Eating habits and patterns?', category: 'Lifestyle' },
+  { id: 's35', question: 'How is the appetite?', category: 'Digestion' },
+  { id: 's36', question: 'Is the pain constant or intermittent?', category: 'Pain' },
+  { id: 's37', question: 'Pain character? (sharp, dull, stabbing)', category: 'Pain' },
+  { id: 's38', question: 'Pulse quality? (fast, slow, weak)', category: 'Diagnosis' },
+  { id: 's39', question: 'Sleep quality assessment?', category: 'Sleep' },
+  { id: 's40', question: 'Stool frequency and quality?', category: 'Digestion' },
+  { id: 's41', question: 'Tongue condition? (color, coating)', category: 'Diagnosis' },
+  { id: 's42', question: 'Urination frequency?', category: 'Urination' },
+  { id: 's43', question: 'Urine color assessment?', category: 'Urination' },
+  { id: 's44', question: 'What aggravates the pain?', category: 'Pain' },
+  { id: 's45', question: 'What is the energy level?', category: 'Energy' },
+  { id: 's46', question: 'What is the main symptom?', category: 'General' },
+  { id: 's47', question: 'What relieves the pain?', category: 'Pain' },
+  { id: 's48', question: 'What time of day is fatigue worse?', category: 'Energy' },
+  { id: 's49', question: 'When did symptoms begin?', category: 'General' },
+  { id: 's50', question: 'Where is the headache located?', category: 'Head' },
 ];
 
-// Diagnosis Questions (25+)
+// Diagnosis Questions (26) - English, alphabetically sorted
 const diagnosisQuestions = [
-  { id: 'd1', question: 'מהו דפוס האי-איזון העיקרי?', category: 'דפוס' },
-  { id: 'd2', question: 'האם יש חוסר או עודף?', category: 'דפוס' },
-  { id: 'd3', question: 'האם יש חום או קור?', category: 'דפוס' },
-  { id: 'd4', question: 'האם יש לחות או יובש?', category: 'דפוס' },
-  { id: 'd5', question: 'איזה איבר מעורב בעיקר?', category: 'איברים' },
-  { id: 'd6', question: 'מהו מצב הכבד?', category: 'איברים' },
-  { id: 'd7', question: 'מהו מצב הכליות?', category: 'איברים' },
-  { id: 'd8', question: 'מהו מצב הטחול?', category: 'איברים' },
-  { id: 'd9', question: 'מהו מצב הלב?', category: 'איברים' },
-  { id: 'd10', question: 'מהו מצב הריאות?', category: 'איברים' },
-  { id: 'd11', question: 'האם יש קיפאון צ\'י?', category: 'צ\'י/דם' },
-  { id: 'd12', question: 'האם יש חוסר צ\'י?', category: 'צ\'י/דם' },
-  { id: 'd13', question: 'האם יש קיפאון דם?', category: 'צ\'י/דם' },
-  { id: 'd14', question: 'האם יש חוסר דם?', category: 'צ\'י/דם' },
-  { id: 'd15', question: 'האם יש חוסר יין?', category: 'יין/יאנג' },
-  { id: 'd16', question: 'האם יש חוסר יאנג?', category: 'יין/יאנג' },
-  { id: 'd17', question: 'האם יש עודף יאנג?', category: 'יין/יאנג' },
-  { id: 'd18', question: 'האם יש רוח פתוגנית?', category: 'גורמים' },
-  { id: 'd19', question: 'האם יש קור פתוגני?', category: 'גורמים' },
-  { id: 'd20', question: 'האם יש חום פתוגני?', category: 'גורמים' },
-  { id: 'd21', question: 'האם יש לחות פתוגנית?', category: 'גורמים' },
-  { id: 'd22', question: 'האם יש ליחה?', category: 'גורמים' },
-  { id: 'd23', question: 'מהו עיקרון הטיפול?', category: 'טיפול' },
-  { id: 'd24', question: 'איזה מרידיאן מעורב?', category: 'מרידיאנים' },
-  { id: 'd25', question: 'מהי חומרת המצב?', category: 'הערכה' },
-  { id: 'd26', question: 'האם המצב חריף או כרוני?', category: 'הערכה' },
+  { id: 'd1', question: 'Any Blood deficiency present?', category: 'Qi/Blood' },
+  { id: 'd2', question: 'Any Blood stagnation?', category: 'Qi/Blood' },
+  { id: 'd3', question: 'Any Cold pathogen present?', category: 'Pathogens' },
+  { id: 'd4', question: 'Any Dampness pathogen?', category: 'Pathogens' },
+  { id: 'd5', question: 'Any Heat pathogen present?', category: 'Pathogens' },
+  { id: 'd6', question: 'Any Phlegm accumulation?', category: 'Pathogens' },
+  { id: 'd7', question: 'Any Qi deficiency present?', category: 'Qi/Blood' },
+  { id: 'd8', question: 'Any Qi stagnation?', category: 'Qi/Blood' },
+  { id: 'd9', question: 'Any Wind pathogen?', category: 'Pathogens' },
+  { id: 'd10', question: 'Any Yang deficiency?', category: 'Yin/Yang' },
+  { id: 'd11', question: 'Any Yang excess?', category: 'Yin/Yang' },
+  { id: 'd12', question: 'Any Yin deficiency?', category: 'Yin/Yang' },
+  { id: 'd13', question: 'Condition severity level?', category: 'Assessment' },
+  { id: 'd14', question: 'Deficiency or excess pattern?', category: 'Pattern' },
+  { id: 'd15', question: 'Heat or Cold pattern?', category: 'Pattern' },
+  { id: 'd16', question: 'Is condition acute or chronic?', category: 'Assessment' },
+  { id: 'd17', question: 'Moisture or Dryness pattern?', category: 'Pattern' },
+  { id: 'd18', question: 'What is Heart condition?', category: 'Organs' },
+  { id: 'd19', question: 'What is Kidney condition?', category: 'Organs' },
+  { id: 'd20', question: 'What is Liver condition?', category: 'Organs' },
+  { id: 'd21', question: 'What is Lung condition?', category: 'Organs' },
+  { id: 'd22', question: 'What is Spleen condition?', category: 'Organs' },
+  { id: 'd23', question: 'What is the main imbalance pattern?', category: 'Pattern' },
+  { id: 'd24', question: 'What is the treatment principle?', category: 'Treatment' },
+  { id: 'd25', question: 'Which meridian is involved?', category: 'Meridians' },
+  { id: 'd26', question: 'Which organ is primarily affected?', category: 'Organs' },
 ];
 
-// Treatment Questions (50)
+// Treatment Questions (50) - English, alphabetically sorted
 const treatmentQuestions = [
-  { id: 't1', question: 'מהו עיקרון הטיפול העיקרי?', category: 'עקרונות' },
-  { id: 't2', question: 'האם לחזק או לפזר?', category: 'עקרונות' },
-  { id: 't3', question: 'האם לחמם או לקרר?', category: 'עקרונות' },
-  { id: 't4', question: 'האם ללחלח או לייבש?', category: 'עקרונות' },
-  { id: 't5', question: 'איזו נוסחת עשבים מומלצת?', category: 'עשבים' },
-  { id: 't6', question: 'מהי המינון המומלץ?', category: 'עשבים' },
-  { id: 't7', question: 'כמה זמן לקחת את העשבים?', category: 'עשבים' },
-  { id: 't8', question: 'האם יש התוויות נגד?', category: 'עשבים' },
-  { id: 't9', question: 'אילו נקודות דיקור מומלצות?', category: 'דיקור' },
-  { id: 't10', question: 'באיזו טכניקת דיקור להשתמש?', category: 'דיקור' },
-  { id: 't11', question: 'כמה טיפולי דיקור נדרשים?', category: 'דיקור' },
-  { id: 't12', question: 'מהי תדירות הטיפולים?', category: 'דיקור' },
-  { id: 't13', question: 'האם להשתמש במוקסה?', category: 'טכניקות' },
-  { id: 't14', question: 'האם להשתמש בכוסות רוח?', category: 'טכניקות' },
-  { id: 't15', question: 'האם להשתמש בגואשה?', category: 'טכניקות' },
-  { id: 't16', question: 'האם להשתמש באלקטרו-דיקור?', category: 'טכניקות' },
-  { id: 't17', question: 'מהן המלצות התזונה?', category: 'תזונה' },
-  { id: 't18', question: 'אילו מזונות להימנע?', category: 'תזונה' },
-  { id: 't19', question: 'אילו מזונות להוסיף?', category: 'תזונה' },
-  { id: 't20', question: 'האם יש המלצות לתה או מרק?', category: 'תזונה' },
-  { id: 't21', question: 'מהן המלצות אורח החיים?', category: 'אורח חיים' },
-  { id: 't22', question: 'האם יש המלצות לפעילות גופנית?', category: 'אורח חיים' },
-  { id: 't23', question: 'האם יש המלצות לשינה?', category: 'אורח חיים' },
-  { id: 't24', question: 'האם יש המלצות לניהול סטרס?', category: 'אורח חיים' },
-  { id: 't25', question: 'מהן תרגילי צ\'י גונג מומלצים?', category: 'תרגול' },
-  { id: 't26', question: 'האם יש תרגילי נשימה מומלצים?', category: 'תרגול' },
-  { id: 't27', question: 'האם יש תרגילי מתיחה מומלצים?', category: 'תרגול' },
-  { id: 't28', question: 'האם יש המלצות לטאי צ\'י?', category: 'תרגול' },
-  { id: 't29', question: 'מהו משך הטיפול הצפוי?', category: 'תכנון' },
-  { id: 't30', question: 'מהם סימני שיפור צפויים?', category: 'תכנון' },
-  { id: 't31', question: 'מתי לבצע מעקב?', category: 'תכנון' },
-  { id: 't32', question: 'האם יש צורך בבדיקות נוספות?', category: 'תכנון' },
-  { id: 't33', question: 'מהן נקודות אוזן מומלצות?', category: 'אוזן' },
-  { id: 't34', question: 'האם להשתמש בזרעי אוזן?', category: 'אוזן' },
-  { id: 't35', question: 'מהן נקודות קרקפת מומלצות?', category: 'קרקפת' },
-  { id: 't36', question: 'האם יש המלצות לרפלקסולוגיה?', category: 'רפלקסולוגיה' },
-  { id: 't37', question: 'מהו טיפול עונתי מומלץ?', category: 'עונתי' },
-  { id: 't38', question: 'האם יש התייחסות לשעון הביולוגי?', category: 'עונתי' },
-  { id: 't39', question: 'מהי גישת 5 האלמנטים?', category: 'אלמנטים' },
-  { id: 't40', question: 'איזה אלמנט לחזק?', category: 'אלמנטים' },
-  { id: 't41', question: 'איזה אלמנט להרגיע?', category: 'אלמנטים' },
-  { id: 't42', question: 'האם יש טיפול רגשי נדרש?', category: 'רגשי' },
-  { id: 't43', question: 'מהן המלצות למדיטציה?', category: 'רגשי' },
-  { id: 't44', question: 'האם יש שימוש בשמנים אתריים?', category: 'משלים' },
-  { id: 't45', question: 'האם יש שימוש בקריסטלים?', category: 'משלים' },
-  { id: 't46', question: 'מהן אמצעי זהירות?', category: 'בטיחות' },
-  { id: 't47', question: 'מהן תגובות אפשריות?', category: 'בטיחות' },
-  { id: 't48', question: 'מתי להפנות לרופא?', category: 'בטיחות' },
-  { id: 't49', question: 'מהו הפרוגנוזיס?', category: 'תחזית' },
-  { id: 't50', question: 'האם יש טיפול מניעתי?', category: 'מניעה' },
+  { id: 't1', question: 'Any additional tests needed?', category: 'Planning' },
+  { id: 't2', question: 'Any breathing exercises recommended?', category: 'Practice' },
+  { id: 't3', question: 'Any circadian rhythm considerations?', category: 'Seasonal' },
+  { id: 't4', question: 'Any contraindications present?', category: 'Herbs' },
+  { id: 't5', question: 'Any crystal therapy use?', category: 'Complementary' },
+  { id: 't6', question: 'Any ear points recommended?', category: 'Ear' },
+  { id: 't7', question: 'Any ear seed application?', category: 'Ear' },
+  { id: 't8', question: 'Any emotional treatment needed?', category: 'Emotional' },
+  { id: 't9', question: 'Any essential oil use?', category: 'Complementary' },
+  { id: 't10', question: 'Any exercise recommendations?', category: 'Lifestyle' },
+  { id: 't11', question: 'Any foods to add?', category: 'Nutrition' },
+  { id: 't12', question: 'Any foods to avoid?', category: 'Nutrition' },
+  { id: 't13', question: 'Any meditation recommendations?', category: 'Emotional' },
+  { id: 't14', question: 'Any possible reactions?', category: 'Safety' },
+  { id: 't15', question: 'Any preventive treatment available?', category: 'Prevention' },
+  { id: 't16', question: 'Any Qi Gong exercises recommended?', category: 'Practice' },
+  { id: 't17', question: 'Any reflexology recommendations?', category: 'Reflexology' },
+  { id: 't18', question: 'Any safety precautions?', category: 'Safety' },
+  { id: 't19', question: 'Any scalp points recommended?', category: 'Scalp' },
+  { id: 't20', question: 'Any sleep recommendations?', category: 'Lifestyle' },
+  { id: 't21', question: 'Any stress management tips?', category: 'Lifestyle' },
+  { id: 't22', question: 'Any stretching exercises recommended?', category: 'Practice' },
+  { id: 't23', question: 'Any Tai Chi recommendations?', category: 'Practice' },
+  { id: 't24', question: 'Any tea or soup recommendations?', category: 'Nutrition' },
+  { id: 't25', question: 'Expected treatment duration?', category: 'Planning' },
+  { id: 't26', question: 'Five Element approach recommended?', category: 'Elements' },
+  { id: 't27', question: 'How many acupuncture sessions needed?', category: 'Acupuncture' },
+  { id: 't28', question: 'How long to take herbs?', category: 'Herbs' },
+  { id: 't29', question: 'Lifestyle recommendations?', category: 'Lifestyle' },
+  { id: 't30', question: 'Nutrition recommendations?', category: 'Nutrition' },
+  { id: 't31', question: 'Recommended herb dosage?', category: 'Herbs' },
+  { id: 't32', question: 'Recommended herbal formula?', category: 'Herbs' },
+  { id: 't33', question: 'Seasonal treatment recommended?', category: 'Seasonal' },
+  { id: 't34', question: 'Should cupping be used?', category: 'Techniques' },
+  { id: 't35', question: 'Should electro-acupuncture be used?', category: 'Techniques' },
+  { id: 't36', question: 'Should Gua Sha be used?', category: 'Techniques' },
+  { id: 't37', question: 'Should moxibustion be used?', category: 'Techniques' },
+  { id: 't38', question: 'Signs of expected improvement?', category: 'Planning' },
+  { id: 't39', question: 'Tonify or disperse approach?', category: 'Principles' },
+  { id: 't40', question: 'Treatment frequency recommended?', category: 'Acupuncture' },
+  { id: 't41', question: 'Warm or cool approach?', category: 'Principles' },
+  { id: 't42', question: 'What acupuncture points recommended?', category: 'Acupuncture' },
+  { id: 't43', question: 'What acupuncture technique to use?', category: 'Acupuncture' },
+  { id: 't44', question: 'What element to calm?', category: 'Elements' },
+  { id: 't45', question: 'What element to strengthen?', category: 'Elements' },
+  { id: 't46', question: 'What is the main treatment principle?', category: 'Principles' },
+  { id: 't47', question: 'What is the prognosis?', category: 'Prognosis' },
+  { id: 't48', question: 'When to follow up?', category: 'Planning' },
+  { id: 't49', question: 'When to refer to physician?', category: 'Safety' },
+  { id: 't50', question: 'Moisten or dry approach?', category: 'Principles' },
 ];
 
 const quickQuestions = [
@@ -276,6 +276,7 @@ export default function TcmBrain() {
   const [selectedAstroQuestion, setSelectedAstroQuestion] = useState('');
   const [activeNavSection, setActiveNavSection] = useState<QuickNavSection>('chat');
   const [showDetailedView, setShowDetailedView] = useState(false);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -608,44 +609,43 @@ export default function TcmBrain() {
       </Helmet>
 
       <div className="min-h-screen bg-background flex flex-col">
-        {/* Header */}
+        {/* Minimal Header */}
         <header className="bg-card border-b border-border sticky top-0 z-50">
-          <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Link to="/dashboard" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-                <ArrowRight className="h-4 w-4 rotate-180" />
-                <span className="text-sm">Back</span>
+          <div className="max-w-6xl mx-auto px-2 py-1.5 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Link to="/dashboard" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                <ArrowRight className="h-3 w-3 rotate-180" />
               </Link>
-              <div className="h-4 w-px bg-border" />
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-jade-light rounded-full flex items-center justify-center">
-                  <Brain className="h-4 w-4 text-jade" />
+              <div className="h-3 w-px bg-border" />
+              <div className="flex items-center gap-1.5">
+                <div className="w-6 h-6 bg-jade-light rounded-full flex items-center justify-center">
+                  <Brain className="h-3 w-3 text-jade" />
                 </div>
-                <span className="font-display text-lg">TCM Brain</span>
+                <span className="font-display text-sm">TCM Brain</span>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <Button
                 variant={showDetailedView ? "default" : "outline"}
                 size="sm"
                 onClick={() => setShowDetailedView(!showDetailedView)}
-                className="text-xs gap-1.5"
+                className="text-xs gap-1 h-7 px-2"
               >
                 {showDetailedView ? (
                   <>
-                    <ClipboardList className="h-3.5 w-3.5" />
-                    Main Queries
+                    <ClipboardList className="h-3 w-3" />
+                    Main
                   </>
                 ) : (
                   <>
-                    <Leaf className="h-3.5 w-3.5" />
-                    All Topics
+                    <Leaf className="h-3 w-3" />
+                    All
                   </>
                 )}
               </Button>
               <TierBadge />
-              <Button variant="ghost" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4" />
+              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handleLogout}>
+                <LogOut className="h-3.5 w-3.5" />
               </Button>
             </div>
           </div>
@@ -787,43 +787,75 @@ export default function TcmBrain() {
               {/* 3 Main Query Categories */}
               <div className="grid md:grid-cols-3 gap-4">
                 {mainQueryCategories.map((category) => {
-                  const categories = [...new Set(category.questions.map(q => q.category))];
+                  const categories = [...new Set(category.questions.map(q => q.category))].sort();
+                  const isExpanded = expandedCategory === category.id;
                   return (
-                    <Card key={category.id} className="bg-card border-border hover:border-jade/50 transition-colors">
+                    <Card key={category.id} className={`bg-card border-border hover:border-jade/50 transition-colors ${isExpanded ? 'md:col-span-3' : ''}`}>
                       <CardHeader className="pb-3">
-                        <div className="w-12 h-12 rounded-xl bg-jade-light flex items-center justify-center mb-3">
-                          <category.icon className="h-6 w-6 text-jade" />
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-jade-light flex items-center justify-center">
+                            <category.icon className="h-5 w-5 text-jade" />
+                          </div>
+                          <div>
+                            <CardTitle className="text-base">{category.title}</CardTitle>
+                            <p className="text-xs text-muted-foreground">{category.description}</p>
+                          </div>
                         </div>
-                        <CardTitle className="text-lg">{category.title}</CardTitle>
-                        <p className="text-sm text-muted-foreground">{category.description}</p>
                       </CardHeader>
-                      <CardContent className="space-y-3">
-                        {categories.slice(0, 3).map(cat => (
-                          <Select
-                            key={cat}
-                            onValueChange={(value) => handleQAQuestionSelect(value)}
-                          >
-                            <SelectTrigger className="text-left text-sm">
-                              <SelectValue placeholder={cat} />
-                            </SelectTrigger>
-                            <SelectContent className="bg-card border-border z-50 max-h-60">
-                              {category.questions
-                                .filter(q => q.category === cat)
-                                .map(q => (
-                                  <SelectItem key={q.id} value={q.question} className="text-left text-sm">
-                                    {q.question}
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
-                        ))}
+                      <CardContent className="space-y-2">
+                        {isExpanded ? (
+                          /* Expanded view - show all categories with questions */
+                          <div className="grid md:grid-cols-3 gap-3">
+                            {categories.map(cat => (
+                              <div key={cat} className="space-y-1">
+                                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{cat}</h4>
+                                <div className="space-y-1 max-h-48 overflow-y-auto">
+                                  {category.questions
+                                    .filter(q => q.category === cat)
+                                    .sort((a, b) => a.question.localeCompare(b.question))
+                                    .map(q => (
+                                      <button
+                                        key={q.id}
+                                        onClick={() => handleQAQuestionSelect(q.question)}
+                                        className="w-full text-left text-xs p-2 rounded hover:bg-jade-light/50 transition-colors"
+                                      >
+                                        {q.question}
+                                      </button>
+                                    ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          /* Collapsed view - show first 3 category dropdowns */
+                          categories.slice(0, 3).map(cat => (
+                            <Select
+                              key={cat}
+                              onValueChange={(value) => handleQAQuestionSelect(value)}
+                            >
+                              <SelectTrigger className="text-left text-sm h-8">
+                                <SelectValue placeholder={cat} />
+                              </SelectTrigger>
+                              <SelectContent className="bg-card border-border z-50 max-h-60">
+                                {category.questions
+                                  .filter(q => q.category === cat)
+                                  .sort((a, b) => a.question.localeCompare(b.question))
+                                  .map(q => (
+                                    <SelectItem key={q.id} value={q.question} className="text-left text-sm">
+                                      {q.question}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          ))
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full text-jade hover:text-jade-dark"
-                          onClick={() => setShowDetailedView(true)}
+                          className="w-full text-jade hover:text-jade-dark text-xs h-7"
+                          onClick={() => setExpandedCategory(isExpanded ? null : category.id)}
                         >
-                          View all {category.title.toLowerCase()} questions →
+                          {isExpanded ? '← Collapse' : `View all ${category.questions.length} questions →`}
                         </Button>
                       </CardContent>
                     </Card>
