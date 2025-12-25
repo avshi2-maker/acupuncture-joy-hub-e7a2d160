@@ -1,6 +1,7 @@
 import { Leaf, Facebook, Instagram, Youtube, Linkedin } from "lucide-react";
+import { forwardRef } from "react";
 
-const Footer = () => {
+const Footer = forwardRef<HTMLElement>((_, ref) => {
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
@@ -35,7 +36,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-foreground text-primary-foreground pt-16 pb-8">
+    <footer ref={ref} className="bg-foreground text-primary-foreground pt-16 pb-8">
       <div className="container mx-auto px-4">
         {/* Main Footer Content */}
         <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-12 mb-12">
@@ -132,6 +133,8 @@ const Footer = () => {
       </div>
     </footer>
   );
-};
+});
+
+Footer.displayName = "Footer";
 
 export default Footer;
