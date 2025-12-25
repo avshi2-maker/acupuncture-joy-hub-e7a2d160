@@ -498,6 +498,101 @@ export type Database = {
         }
         Relationships: []
       }
+      knowledge_chunks: {
+        Row: {
+          answer: string | null
+          chunk_index: number
+          content: string
+          content_type: string | null
+          created_at: string
+          document_id: string
+          id: string
+          metadata: Json | null
+          question: string | null
+        }
+        Insert: {
+          answer?: string | null
+          chunk_index: number
+          content: string
+          content_type?: string | null
+          created_at?: string
+          document_id: string
+          id?: string
+          metadata?: Json | null
+          question?: string | null
+        }
+        Update: {
+          answer?: string | null
+          chunk_index?: number
+          content?: string
+          content_type?: string | null
+          created_at?: string
+          document_id?: string
+          id?: string
+          metadata?: Json | null
+          question?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_chunks_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      knowledge_documents: {
+        Row: {
+          category: string | null
+          created_at: string
+          file_hash: string
+          file_name: string
+          file_size: number | null
+          id: string
+          indexed_at: string | null
+          language: string | null
+          mime_type: string | null
+          original_name: string
+          row_count: number | null
+          status: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          file_hash: string
+          file_name: string
+          file_size?: number | null
+          id?: string
+          indexed_at?: string | null
+          language?: string | null
+          mime_type?: string | null
+          original_name: string
+          row_count?: number | null
+          status?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          file_hash?: string
+          file_name?: string
+          file_size?: number | null
+          id?: string
+          indexed_at?: string | null
+          language?: string | null
+          mime_type?: string | null
+          original_name?: string
+          row_count?: number | null
+          status?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       page_feedback: {
         Row: {
           created_at: string
