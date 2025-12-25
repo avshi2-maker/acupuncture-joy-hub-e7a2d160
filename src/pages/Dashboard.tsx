@@ -178,6 +178,7 @@ export default function Dashboard() {
                 description={feature.description}
                 icon={feature.icon}
                 available={hasFeature(feature.feature)}
+                href={feature.href}
               />
             ))}
           </div>
