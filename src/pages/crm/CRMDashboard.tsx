@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Users, Clock, TrendingUp, Plus, ArrowRight } from 'lucide-react';
+import { Calendar, Users, Clock, TrendingUp, Plus, ArrowRight, MessageCircle } from 'lucide-react';
+import { WhatsAppReminderButton } from '@/components/crm/WhatsAppReminderButton';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
@@ -44,7 +45,7 @@ export default function CRMDashboard() {
       // Get today's appointments
       const { data: todayData, count: todayCount } = await supabase
         .from('appointments')
-        .select('*, patients(full_name)', { count: 'exact' })
+        .select('*, patients(full_name, phone)', { count: 'exact' })
         .gte('start_time', startOfDay)
         .lte('start_time', endOfDay)
         .order('start_time', { ascending: true });
@@ -176,6 +177,12 @@ export default function CRMDashboard() {
                           {format(new Date(appt.end_time), 'h:mm a')}
                         </p>
                       </div>
+                      <WhatsAppReminderButton
+                        patientName={appt.patients?.full_name || 'Patient'}
+                        patientPhone={appt.patients?.phone}
+                        appointmentDate={appt.start_time}
+                        appointmentTime={format(new Date(appt.start_time), 'HH:mm')}
+                      />
                       <span
                         className={`px-2 py-1 text-xs rounded-full ${
                           appt.status === 'completed'
