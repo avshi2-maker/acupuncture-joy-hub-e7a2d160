@@ -130,6 +130,44 @@ export type Database = {
         }
         Relationships: []
       }
+      appointment_confirmations: {
+        Row: {
+          appointment_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          responded_at: string | null
+          response: string | null
+          token: string
+        }
+        Insert: {
+          appointment_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          responded_at?: string | null
+          response?: string | null
+          token: string
+        }
+        Update: {
+          appointment_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          responded_at?: string | null
+          response?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_confirmations_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           clinic_id: string | null

@@ -905,6 +905,7 @@ export default function CRMCalendar() {
                     <WhatsAppReminderButton
                       patientName={editingAppt.patients?.full_name || 'Patient'}
                       patientPhone={editingAppt.patients?.phone}
+                      appointmentId={editingAppt.id}
                       appointmentDate={editingAppt.start_time}
                       appointmentTime={format(new Date(editingAppt.start_time), 'HH:mm')}
                       variant="outline"

@@ -180,6 +180,7 @@ export default function CRMDashboard() {
                       <WhatsAppReminderButton
                         patientName={appt.patients?.full_name || 'Patient'}
                         patientPhone={appt.patients?.phone}
+                        appointmentId={appt.id}
                         appointmentDate={appt.start_time}
                         appointmentTime={format(new Date(appt.start_time), 'HH:mm')}
                       />

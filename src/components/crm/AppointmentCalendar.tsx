@@ -323,6 +323,7 @@ export function AppointmentCalendar({ userId, patients }: AppointmentCalendarPro
                       <WhatsAppReminderButton
                         patientName={getPatientName(apt.patient_id) || 'Patient'}
                         patientPhone={getPatientPhone(apt.patient_id)}
+                        appointmentId={apt.id}
                         appointmentDate={apt.start_time}
                         appointmentTime={format(new Date(apt.start_time), 'HH:mm')}
                       />

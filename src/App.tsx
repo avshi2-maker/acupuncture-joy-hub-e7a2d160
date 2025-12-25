@@ -25,6 +25,7 @@ import CRMPatientDetail from "./pages/crm/CRMPatientDetail";
 import CRMPatientEdit from "./pages/crm/CRMPatientEdit";
 import CRMRooms from "./pages/crm/CRMRooms";
 import PatientConsentForm from "./pages/crm/PatientConsentForm";
+import AppointmentConfirm from "./pages/AppointmentConfirm";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -55,6 +56,7 @@ const App = () => (
                 <Route path="/crm/patients/:id/edit" element={<CRMPatientEdit />} />
                 <Route path="/crm/rooms" element={<CRMRooms />} />
                 <Route path="/crm/patients/:patientId/consent" element={<PatientConsentForm />} />
+                <Route path="/confirm" element={<AppointmentConfirm />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
