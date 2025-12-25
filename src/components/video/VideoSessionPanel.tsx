@@ -22,7 +22,10 @@ import {
   Users,
   RefreshCw,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  CalendarPlus,
+  Mic,
+  ClipboardList
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { saveSessionReport, printReport, LocalSessionReport } from '@/utils/localDataStorage';
@@ -30,7 +33,10 @@ import { AnxietyQADialog } from './AnxietyQADialog';
 import { QuickPatientDialog } from './QuickPatientDialog';
 import { QuickAppointmentDialog } from './QuickAppointmentDialog';
 import { ZoomInviteDialog } from './ZoomInviteDialog';
-import { TherapistSettingsDialog } from './TherapistSettingsDialog';
+import { TherapistSettingsDialog, getAudioAlertsEnabled } from './TherapistSettingsDialog';
+import { FollowUpPlanDialog } from './FollowUpPlanDialog';
+import { VoiceDictationDialog } from './VoiceDictationDialog';
+import { CalendarInviteDialog } from './CalendarInviteDialog';
 import { useSessionPersistence } from '@/hooks/useSessionPersistence';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -59,6 +65,10 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
   const [showQuickAppointment, setShowQuickAppointment] = useState(false);
   const [showZoomInvite, setShowZoomInvite] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showFollowUpPlan, setShowFollowUpPlan] = useState(false);
+  const [showVoiceDictation, setShowVoiceDictation] = useState(false);
+  const [showCalendarInvite, setShowCalendarInvite] = useState(false);
+  const [currentAppointmentId, setCurrentAppointmentId] = useState<string | null>(null);
   const warningShownRef = useRef(false);
 
   const {
@@ -69,6 +79,7 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
     patientName: selectedPatientName,
     patientPhone: selectedPatientPhone,
     anxietyConversation,
+    sessionStartTime,
     startSession,
     pauseSession,
     resumeSession,
@@ -82,6 +93,9 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
 
   // Audio alert function
   const playAlertSound = useCallback(() => {
+    // Check if audio alerts are enabled
+    if (!getAudioAlertsEnabled()) return;
+
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       
@@ -217,11 +231,44 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
 
   const handleRepeat = () => {
     resetSession();
+    setCurrentAppointmentId(null);
     toast.info('הפגישה אופסה');
   };
 
-  const handleEnd = () => {
+  const handleEnd = async () => {
     endSession();
+    
+    // Save video session to database if patient is selected
+    if (selectedPatientId && selectedPatientName && user && sessionStartTime) {
+      try {
+        await supabase.from('video_sessions').insert({
+          therapist_id: user.id,
+          patient_id: selectedPatientId,
+          started_at: new Date(sessionStartTime).toISOString(),
+          ended_at: new Date().toISOString(),
+          duration_seconds: sessionDuration,
+          notes: sessionNotes + (anxietyConversation.length > 0 
+            ? '\n\n--- שאלון חרדה ---\n' + anxietyConversation.join('\n') 
+            : ''),
+          anxiety_qa_responses: anxietyConversation.length > 0 ? anxietyConversation : null,
+        });
+      } catch (error) {
+        console.error('Error saving video session to DB:', error);
+      }
+
+      // Release calendar block if there was one
+      if (currentAppointmentId) {
+        try {
+          await supabase
+            .from('appointments')
+            .update({ status: 'completed' })
+            .eq('id', currentAppointmentId);
+          toast.success('הפגישה ביומן סומנה כהושלמה');
+        } catch (error) {
+          console.error('Error updating appointment:', error);
+        }
+      }
+    }
     
     // Save report locally
     if (selectedPatientId && selectedPatientName) {
@@ -236,7 +283,7 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
         moxa: false,
       });
       
-      toast.success('הפגישה נשמרה מקומית');
+      toast.success('הפגישה נשמרה');
       onSessionEnd?.(report);
     } else {
       toast.warning('לא נבחר מטופל - הדוח לא נשמר');
@@ -292,6 +339,22 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
       `הערות: ${sessionNotes}`
     );
     window.open(`https://wa.me/?text=${message}`, '_blank');
+  };
+
+  const handleCalendarInviteCreated = (appointmentId: string) => {
+    setCurrentAppointmentId(appointmentId);
+    toast.success('הפגישה נוספה ליומן - תשוחרר בסיום');
+  };
+
+  // Format session start time for display
+  const getSessionStartTimeDisplay = () => {
+    if (!sessionStartTime) return null;
+    return new Date(sessionStartTime).toLocaleString('he-IL', {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
   return (
@@ -400,6 +463,13 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
               {formatDuration(sessionDuration)}
             </p>
             
+            {/* Session start time stamp */}
+            {sessionStartTime && sessionStatus !== 'idle' && (
+              <p className="text-xs text-muted-foreground mt-1">
+                התחלה: {getSessionStartTimeDisplay()}
+              </p>
+            )}
+            
             {/* Active patient indicator */}
             {selectedPatientName && sessionStatus === 'running' && (
               <Badge variant="outline" className="mt-2">
@@ -440,11 +510,42 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowZoomInvite(true)}
+              onClick={() => setShowCalendarInvite(true)}
               className="gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+            >
+              <CalendarPlus className="h-4 w-4" />
+              הזמנה + יומן
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowZoomInvite(true)}
+              className="gap-2"
             >
               <VideoIcon className="h-4 w-4" />
               הזמנת Zoom
+            </Button>
+          </div>
+          
+          {/* Left side action buttons */}
+          <div className="absolute top-4 left-4 flex flex-col gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowFollowUpPlan(true)}
+              className="gap-2 bg-jade/10 hover:bg-jade/20 text-jade border-jade/30"
+            >
+              <ClipboardList className="h-4 w-4" />
+              תוכנית המשך
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowVoiceDictation(true)}
+              className="gap-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200"
+            >
+              <Mic className="h-4 w-4" />
+              הקלטה קולית
             </Button>
           </div>
         </CardContent>
@@ -464,6 +565,20 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Total session time info */}
+          {sessionStatus !== 'idle' && (
+            <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg text-sm">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">זמן כולל:</span>
+              <span className="font-mono font-medium">{formatDuration(sessionDuration)}</span>
+              {sessionStartTime && (
+                <span className="text-muted-foreground mr-auto">
+                  • התחלה: {getSessionStartTimeDisplay()}
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Control Buttons */}
           <div className="flex flex-wrap gap-2">
             {sessionStatus === 'idle' && (
@@ -567,6 +682,30 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
       <TherapistSettingsDialog
         open={showSettings}
         onOpenChange={setShowSettings}
+      />
+      
+      <FollowUpPlanDialog
+        open={showFollowUpPlan}
+        onOpenChange={setShowFollowUpPlan}
+        patientId={selectedPatientId || undefined}
+        patientName={selectedPatientName || undefined}
+        patientPhone={selectedPatientPhone || undefined}
+      />
+      
+      <VoiceDictationDialog
+        open={showVoiceDictation}
+        onOpenChange={setShowVoiceDictation}
+        patientId={selectedPatientId || undefined}
+        patientName={selectedPatientName || undefined}
+      />
+      
+      <CalendarInviteDialog
+        open={showCalendarInvite}
+        onOpenChange={setShowCalendarInvite}
+        patientId={selectedPatientId || undefined}
+        patientName={selectedPatientName || undefined}
+        patientPhone={selectedPatientPhone || undefined}
+        onAppointmentCreated={handleCalendarInviteCreated}
       />
     </div>
   );
