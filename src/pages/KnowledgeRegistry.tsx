@@ -284,44 +284,65 @@ ${report.legalDeclaration.declarationText}
 
   const importAllFiles = async () => {
     if (filesToImport.length === 0) return;
-    
+
+    // Large imports can exceed request limits; batch to keep requests small.
+    const MAX_FILES_PER_BATCH = 5;
+
     setImporting(true);
     setImportProgress(0);
-    
-    const documents = filesToImport.map(f => ({
+
+    const allDocs = filesToImport.map((f) => ({
       fileName: f.file.name,
       category: f.category,
       language: f.language,
-      content: f.parsed?.rows || [],
-      rows: f.parsed?.rows || []
+      // Send rows only; the backend will derive size/hash/chunks from rows.
+      rows: f.parsed?.rows || [],
     }));
-    
+
+    const batches: Array<typeof allDocs> = [];
+    for (let i = 0; i < allDocs.length; i += MAX_FILES_PER_BATCH) {
+      batches.push(allDocs.slice(i, i + MAX_FILES_PER_BATCH));
+    }
+
+    const aggregatedResults: any[] = [];
+
     try {
-      const { data, error } = await supabase.functions.invoke('import-knowledge', {
-        body: { documents }
-      });
-      
-      if (error) throw error;
-      
-      const results = data.results || [];
-      const successCount = results.filter((r: any) => r.success).length;
-      const failCount = results.filter((r: any) => !r.success).length;
-      
-      if (successCount > 0) {
-        toast.success(`Imported ${successCount} files successfully!`);
+      for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+        const batch = batches[batchIndex];
+
+        const { data, error } = await supabase.functions.invoke('import-knowledge', {
+          body: { documents: batch },
+        });
+
+        if (error) throw error;
+
+        const results = data?.results || [];
+        aggregatedResults.push(...results);
+
+        const pct = Math.round(((batchIndex + 1) / batches.length) * 100);
+        setImportProgress(pct);
       }
+
+      const successCount = aggregatedResults.filter((r: any) => r.success).length;
+      const failCount = aggregatedResults.filter((r: any) => !r.success).length;
+
+      if (successCount > 0) toast.success(`Imported ${successCount} files successfully!`);
       if (failCount > 0) {
-        const failedFiles = results.filter((r: any) => !r.success).map((r: any) => `${r.fileName}: ${r.error}`);
-        toast.error(`Failed to import ${failCount} files: ${failedFiles.join(', ')}`);
+        const failedFiles = aggregatedResults
+          .filter((r: any) => !r.success)
+          .slice(0, 5)
+          .map((r: any) => `${r.fileName}: ${r.error}`);
+        toast.error(
+          `Failed to import ${failCount} files${failedFiles.length ? ` (examples: ${failedFiles.join(' | ')})` : ''}`
+        );
       }
-      
+
       setFilesToImport([]);
       queryClient.invalidateQueries({ queryKey: ['knowledge-documents'] });
       queryClient.invalidateQueries({ queryKey: ['knowledge-chunks-stats'] });
-      
     } catch (error) {
       console.error('Import error:', error);
-      toast.error('Failed to import files');
+      toast.error('Import failed. If this happens again, try fewer files at once (e.g., 3–5).');
     } finally {
       setImporting(false);
       setImportProgress(100);

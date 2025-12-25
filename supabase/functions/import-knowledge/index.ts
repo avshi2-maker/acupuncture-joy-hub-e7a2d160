@@ -64,15 +64,17 @@ serve(async (req) => {
 
     for (const doc of documents) {
       try {
-        const { fileName, category, language, content, rows } = doc;
+        const { fileName, category, language, rows, content } = doc;
 
-        if (!fileName || !content || !rows) {
+        const effectiveRows = (Array.isArray(rows) ? rows : null) ?? (Array.isArray(content) ? content : null);
+
+        if (!fileName || !effectiveRows) {
           results.push({ fileName, success: false, error: 'Missing required fields' });
           continue;
         }
 
-        // Generate hash
-        const fileHash = await hashContent(JSON.stringify(content));
+        // Generate hash (based on rows only)
+        const fileHash = await hashContent(JSON.stringify(effectiveRows));
 
         // Check if already exists
         const { data: existing } = await supabaseClient
@@ -93,8 +95,8 @@ serve(async (req) => {
             file_name: fileName.replace(/[^a-zA-Z0-9._-]/g, '_'),
             original_name: fileName,
             file_hash: fileHash,
-            file_size: JSON.stringify(content).length,
-            row_count: rows.length,
+            file_size: JSON.stringify(effectiveRows).length,
+            row_count: effectiveRows.length,
             category: category || 'general',
             language: language || 'en',
             status: 'indexing',
@@ -110,7 +112,7 @@ serve(async (req) => {
         }
 
         // Create chunks from rows
-        const chunks = rows.map((row: any, index: number) => {
+        const chunks = effectiveRows.map((row: any, index: number) => {
           // Handle different row formats
           let question = '';
           let answer = '';
