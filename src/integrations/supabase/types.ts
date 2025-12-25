@@ -14,16 +14,142 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      access_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      access_passwords: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          is_used: boolean
+          password_hash: string
+          plain_password: string
+          therapist_registration_id: string | null
+          tier: Database["public"]["Enums"]["subscription_tier"]
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_used?: boolean
+          password_hash: string
+          plain_password: string
+          therapist_registration_id?: string | null
+          tier?: Database["public"]["Enums"]["subscription_tier"]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_used?: boolean
+          password_hash?: string
+          plain_password?: string
+          therapist_registration_id?: string | null
+          tier?: Database["public"]["Enums"]["subscription_tier"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_passwords_therapist_registration_id_fkey"
+            columns: ["therapist_registration_id"]
+            isOneToOne: false
+            referencedRelation: "therapist_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      therapist_registrations: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          phone: string
+          requested_tier: Database["public"]["Enums"]["subscription_tier"]
+          status: Database["public"]["Enums"]["registration_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          phone: string
+          requested_tier?: Database["public"]["Enums"]["subscription_tier"]
+          status?: Database["public"]["Enums"]["registration_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          phone?: string
+          requested_tier?: Database["public"]["Enums"]["subscription_tier"]
+          status?: Database["public"]["Enums"]["registration_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "therapist" | "patient"
+      registration_status: "pending" | "trial" | "active" | "expired"
+      subscription_tier: "trial" | "standard" | "premium"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +276,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "therapist", "patient"],
+      registration_status: ["pending", "trial", "active", "expired"],
+      subscription_tier: ["trial", "standard", "premium"],
+    },
   },
 } as const
