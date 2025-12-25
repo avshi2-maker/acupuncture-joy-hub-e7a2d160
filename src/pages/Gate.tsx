@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -22,6 +22,7 @@ type GateForm = z.infer<typeof gateSchema>;
 
 export default function Gate() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { setTier, setExpiresAt } = useTier();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -31,6 +32,18 @@ export default function Gate() {
       password: '',
     },
   });
+
+  const buildPostLoginRedirect = () => {
+    const params = new URLSearchParams(location.search);
+    const redirect = params.get('redirect') || '/dashboard';
+    const question = params.get('question');
+
+    // Build a safe same-origin URL and preserve hash/query.
+    const url = new URL(redirect, window.location.origin);
+    if (question) url.searchParams.set('question', question);
+
+    return `${url.pathname}${url.search}${url.hash}`;
+  };
 
   const onSubmit = async (data: GateForm) => {
     setIsLoading(true);
@@ -68,8 +81,8 @@ export default function Gate() {
         details: { tier: passwordData.tier },
       });
 
-      toast.success('ברוכים הבאים! מעביר לדשבורד...');
-      navigate('/dashboard');
+      toast.success('ברוכים הבאים!');
+      navigate(buildPostLoginRedirect(), { replace: true });
     } catch (error) {
       toast.error('שגיאה בכניסה. נסו שוב.');
     } finally {
