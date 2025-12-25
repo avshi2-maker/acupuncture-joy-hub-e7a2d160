@@ -1,9 +1,9 @@
 import { Mail, Phone, MapPin, Clock, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState, forwardRef } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
-const Contact = forwardRef<HTMLElement>((_, ref) => {
+const Contact = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -41,7 +41,7 @@ const Contact = forwardRef<HTMLElement>((_, ref) => {
   ];
 
   return (
-    <section ref={ref} id="contact" className="py-24 bg-card">
+    <section id="contact" className="py-24 bg-card">
       <div className="container mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-16">
           {/* Contact Info */}
@@ -158,8 +158,6 @@ const Contact = forwardRef<HTMLElement>((_, ref) => {
       </div>
     </section>
   );
-});
-
-Contact.displayName = "Contact";
+};
 
 export default Contact;
