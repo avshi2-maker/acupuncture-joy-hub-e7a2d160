@@ -420,10 +420,10 @@ export default function TcmBrain() {
   const renderPlaceholderTab = (icon: React.ElementType, title: string) => {
     const Icon = icon;
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-12" dir="rtl">
         <Icon className="h-12 w-12 text-jade mx-auto mb-4" />
-        <h3 className="font-display text-xl mb-2">{title}</h3>
-        <p className="text-muted-foreground">בקרוב! בינתיים, שאלו את ה-AI</p>
+        <h3 className="font-display text-xl mb-2 text-right">{title}</h3>
+        <p className="text-muted-foreground text-right">{'\u0628\u0642\u0631\u0648\u0628! בינתיים, שאלו את ה-AI'}</p>
       </div>
     );
   };
@@ -437,8 +437,8 @@ export default function TcmBrain() {
     const categories = [...new Set(questions.map(q => q.category))];
     
     return (
-      <div className="space-y-6 p-4">
-        <div className="text-center">
+      <div className="space-y-6 p-4" dir="rtl">
+        <div className="text-right">
           <h3 className="font-display text-xl mb-2">{title}</h3>
           <p className="text-muted-foreground text-sm">בחרו שאלה מהרשימה או כתבו שאלה משלכם</p>
         </div>
@@ -447,7 +447,7 @@ export default function TcmBrain() {
           {categories.map(category => (
             <Card key={category} className="bg-card">
               <CardHeader className="py-3">
-                <CardTitle className="text-sm font-medium text-jade">{category}</CardTitle>
+                <CardTitle className="text-sm font-medium text-jade text-right">{category}</CardTitle>
               </CardHeader>
               <CardContent className="py-2">
                 <Select
@@ -456,11 +456,12 @@ export default function TcmBrain() {
                     onSelect(value);
                     handleQAQuestionSelect(value);
                   }}
+                  dir="rtl"
                 >
-                  <SelectTrigger className="text-right">
+                  <SelectTrigger className="text-right" dir="rtl">
                     <SelectValue placeholder="בחרו שאלה..." />
                   </SelectTrigger>
-                  <SelectContent className="bg-card border-border z-50 max-h-60">
+                  <SelectContent className="bg-card border-border z-50 max-h-60" dir="rtl">
                     {questions
                       .filter(q => q.category === category)
                       .map(q => (
@@ -478,9 +479,9 @@ export default function TcmBrain() {
         {/* Custom Prompt Section */}
         <Card className="bg-jade-light/20 border-jade/30">
           <CardHeader className="py-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <FileText className="h-4 w-4" />
+            <CardTitle className="text-sm font-medium flex items-center justify-end gap-2 text-right">
               כתבו שאלה משלכם
+              <FileText className="h-4 w-4" />
             </CardTitle>
           </CardHeader>
           <CardContent className="py-2 space-y-3">
@@ -491,13 +492,13 @@ export default function TcmBrain() {
               className="min-h-[100px] text-right"
               dir="rtl"
             />
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-row-reverse">
               <Button
                 onClick={handleCustomPromptSubmit}
                 disabled={!customPrompt.trim() || isLoading}
                 className="flex-1"
               >
-                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4 ml-2" />}
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
                 שלח שאלה
               </Button>
               <Button
@@ -564,14 +565,14 @@ export default function TcmBrain() {
             {/* Chat Tab */}
             <TabsContent value="chat" className="flex-1 flex flex-col p-4 pt-2">
               <ScrollArea className="flex-1 pl-4" ref={scrollRef}>
-                <div className="space-y-4 pb-4">
+                <div className="space-y-4 pb-4" dir="rtl">
                   {messages.length === 0 && (
-                    <div className="text-center py-12">
+                    <div className="text-right py-12">
                       <div className="w-20 h-20 bg-jade-light rounded-full flex items-center justify-center mx-auto mb-6">
                         <Brain className="h-10 w-10 text-jade" />
                       </div>
-                      <h2 className="font-display text-2xl mb-2">ברוכים הבאים ל-TCM Brain</h2>
-                      <p className="text-muted-foreground mb-8">
+                      <h2 className="font-display text-2xl mb-2 text-center">ברוכים הבאים ל-TCM Brain</h2>
+                      <p className="text-muted-foreground mb-8 text-center">
                         שאלו כל שאלה ברפואה סינית - עשבים, נקודות דיקור, אבחון ועוד
                       </p>
                       
@@ -581,9 +582,10 @@ export default function TcmBrain() {
                             key={i}
                             onClick={() => handleQuickQuestion(q.text)}
                             className="p-4 bg-card border border-border rounded-lg text-right hover:border-jade hover:shadow-soft transition-all group"
+                            dir="rtl"
                           >
-                            <q.icon className="h-5 w-5 text-jade mb-2 group-hover:scale-110 transition-transform" />
-                            <p className="text-sm">{q.text}</p>
+                            <q.icon className="h-5 w-5 text-jade mb-2 group-hover:scale-110 transition-transform mr-auto" />
+                            <p className="text-sm text-right">{q.text}</p>
                           </button>
                         ))}
                       </div>
