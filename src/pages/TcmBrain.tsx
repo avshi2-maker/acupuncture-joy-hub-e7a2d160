@@ -73,6 +73,7 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tcm-chat`;
 // Feature tabs configuration (excluding symptoms/diagnosis/treatment which are on main page)
 const featureTabs = [
   { id: 'chat', icon: Sparkles, label: 'Ask AI' },
+  { id: 'symptom-checker', icon: Stethoscope, label: 'AI Symptom Checker', isLink: true, href: '/symptom-checker' },
   { id: 'bodymap', icon: User, label: 'Body Map' },
   { id: 'herbs', icon: Leaf, label: 'Herbs' },
   { id: 'points', icon: MapPin, label: 'Points' },
@@ -675,19 +676,35 @@ export default function TcmBrain() {
               <div className="px-4 pt-4 overflow-x-auto border-b border-border/30 pb-3">
                 <div className="flex gap-1 w-max min-w-full">
                   {featureTabs.map((tab) => (
-                    <Button
-                      key={tab.id}
-                      variant="ghost"
-                      size="sm"
-                      className="gap-1 text-xs px-2 whitespace-nowrap hover:bg-jade-light/50 hover:text-jade"
-                      onClick={() => {
-                        setShowDetailedView(true);
-                        setActiveFeatureTab(tab.id);
-                      }}
-                    >
-                      <tab.icon className="h-3 w-3" />
-                      {tab.label}
-                    </Button>
+                    tab.isLink ? (
+                      <Button
+                        key={tab.id}
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1 text-xs px-2 whitespace-nowrap bg-jade/10 text-jade hover:bg-jade/20 border border-jade/30"
+                        asChild
+                      >
+                        <Link to={tab.href}>
+                          <tab.icon className="h-3 w-3" />
+                          {tab.label}
+                          <ChevronRight className="h-3 w-3" />
+                        </Link>
+                      </Button>
+                    ) : (
+                      <Button
+                        key={tab.id}
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1 text-xs px-2 whitespace-nowrap hover:bg-jade-light/50 hover:text-jade"
+                        onClick={() => {
+                          setShowDetailedView(true);
+                          setActiveFeatureTab(tab.id);
+                        }}
+                      >
+                        <tab.icon className="h-3 w-3" />
+                        {tab.label}
+                      </Button>
+                    )
                   ))}
                 </div>
               </div>
