@@ -23,6 +23,7 @@ import {
 import { Link } from 'react-router-dom';
 import { VideoSessionPanel } from '@/components/video/VideoSessionPanel';
 import { SessionTimerWidget } from '@/components/crm/SessionTimerWidget';
+import { SessionTimerProvider } from '@/contexts/SessionTimerContext';
 
 interface FeatureCardProps {
   title: string;
@@ -139,7 +140,7 @@ export default function Dashboard() {
   const hasVideoAccess = hasFeature('video_sessions');
 
   return (
-    <>
+    <SessionTimerProvider>
       <Helmet>
         <title>דשבורד מטפל | TCM Clinic</title>
         <meta name="description" content="דשבורד ניהול למטפלים ברפואה סינית" />
@@ -265,6 +266,6 @@ export default function Dashboard() {
         {/* Session Timer Widget - Always visible */}
         <SessionTimerWidget position="bottom-right" />
       </div>
-    </>
+    </SessionTimerProvider>
   );
 }
