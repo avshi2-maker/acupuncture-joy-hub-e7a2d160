@@ -36,8 +36,11 @@ import {
   Edit,
   Trash2,
   MessageCircle,
+  Play,
+  Timer,
 } from 'lucide-react';
 import { WhatsAppReminderButton } from '@/components/crm/WhatsAppReminderButton';
+import { useSessionTimer } from '@/contexts/SessionTimerContext';
 
 interface Room {
   id: string;
@@ -79,6 +82,8 @@ const HOURS = Array.from({ length: 12 }, (_, i) => i + 8); // 8am to 7pm
 const SLOT_HEIGHT = 60; // pixels per hour
 
 export default function CRMCalendar() {
+  const { startTimer, status: timerStatus } = useSessionTimer();
+  
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'week'>('week');
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -93,6 +98,22 @@ export default function CRMCalendar() {
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [dragPreview, setDragPreview] = useState<{ roomId: string | null; day: Date; hour: number; minute: number } | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
+
+  // Start session with timer from appointment
+  const handleStartSession = (appt: Appointment) => {
+    const startTime = new Date(appt.start_time);
+    const endTime = new Date(appt.end_time);
+    const durationMinutes = differenceInMinutes(endTime, startTime);
+    
+    startTimer(durationMinutes, {
+      patientId: appt.patient_id || undefined,
+      patientName: appt.patients?.full_name || appt.title,
+      appointmentId: appt.id,
+      appointmentTitle: appt.title,
+    });
+    
+    setEditingAppt(null);
+  };
 
   // New appointment form state
   const [newAppt, setNewAppt] = useState({
@@ -900,40 +921,65 @@ export default function CRMCalendar() {
                   </div>
                 )}
                 
-                <div className="flex gap-2 pt-4">
-                  {editingAppt.patient_id && editingAppt.patients?.phone && (
-                    <WhatsAppReminderButton
-                      patientName={editingAppt.patients?.full_name || 'Patient'}
-                      patientPhone={editingAppt.patients?.phone}
-                      appointmentId={editingAppt.id}
-                      appointmentDate={editingAppt.start_time}
-                      appointmentTime={format(new Date(editingAppt.start_time), 'HH:mm')}
-                      variant="outline"
-                      size="default"
-                    />
-                  )}
-                  <Button 
-                    variant="outline" 
-                    className="flex-1"
-                    onClick={() => setEditingAppt(null)}
-                  >
-                    Close
-                  </Button>
-                  <Button 
-                    variant="destructive"
-                    onClick={() => handleDeleteAppointment(editingAppt.id)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </Button>
-                  {editingAppt.is_recurring && (
+                <div className="flex flex-col gap-3 pt-4">
+                  {/* Start Session Button - Prominent */}
+                  {timerStatus === 'idle' && (
                     <Button 
-                      variant="destructive"
-                      onClick={() => handleDeleteAppointment(editingAppt.id, true)}
+                      className="w-full bg-jade hover:bg-jade/90"
+                      onClick={() => handleStartSession(editingAppt)}
                     >
-                      Delete All
+                      <Play className="h-4 w-4 mr-2" />
+                      Start Session
+                      <Badge variant="secondary" className="ml-2 text-xs">
+                        <Timer className="h-3 w-3 mr-1" />
+                        {differenceInMinutes(new Date(editingAppt.end_time), new Date(editingAppt.start_time))} min
+                      </Badge>
                     </Button>
                   )}
+                  
+                  {timerStatus !== 'idle' && (
+                    <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-center">
+                      <p className="text-xs text-amber-700 dark:text-amber-300">
+                        Timer already running. Reset it first to start a new session.
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-2">
+                    {editingAppt.patient_id && editingAppt.patients?.phone && (
+                      <WhatsAppReminderButton
+                        patientName={editingAppt.patients?.full_name || 'Patient'}
+                        patientPhone={editingAppt.patients?.phone}
+                        appointmentId={editingAppt.id}
+                        appointmentDate={editingAppt.start_time}
+                        appointmentTime={format(new Date(editingAppt.start_time), 'HH:mm')}
+                        variant="outline"
+                        size="default"
+                      />
+                    )}
+                    <Button 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => setEditingAppt(null)}
+                    >
+                      Close
+                    </Button>
+                    <Button 
+                      variant="destructive"
+                      onClick={() => handleDeleteAppointment(editingAppt.id)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </Button>
+                    {editingAppt.is_recurring && (
+                      <Button 
+                        variant="destructive"
+                        onClick={() => handleDeleteAppointment(editingAppt.id, true)}
+                      >
+                        Delete All
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             )}

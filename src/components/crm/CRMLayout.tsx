@@ -3,6 +3,7 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/s
 import { CRMSidebar } from './CRMSidebar';
 import { CRMBreadcrumb } from './CRMBreadcrumb';
 import { SessionTimerWidget } from './SessionTimerWidget';
+import { SessionTimerProvider } from '@/contexts/SessionTimerContext';
 import { Building2, Menu } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar';
 
@@ -36,19 +37,21 @@ function MobileHeader() {
 
 export function CRMLayout({ children }: CRMLayoutProps) {
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full bg-background">
-        <CRMSidebar />
-        <SidebarInset className="flex-1 flex flex-col">
-          <MobileHeader />
-          <main className="flex-1 p-4 md:p-6 overflow-auto">
-            <CRMBreadcrumb />
-            {children}
-          </main>
-        </SidebarInset>
-        {/* Session Timer Widget - Always visible */}
-        <SessionTimerWidget position="bottom-right" />
-      </div>
-    </SidebarProvider>
+    <SessionTimerProvider>
+      <SidebarProvider defaultOpen={true}>
+        <div className="min-h-screen flex w-full bg-background">
+          <CRMSidebar />
+          <SidebarInset className="flex-1 flex flex-col">
+            <MobileHeader />
+            <main className="flex-1 p-4 md:p-6 overflow-auto">
+              <CRMBreadcrumb />
+              {children}
+            </main>
+          </SidebarInset>
+          {/* Session Timer Widget - Always visible */}
+          <SessionTimerWidget position="bottom-right" />
+        </div>
+      </SidebarProvider>
+    </SessionTimerProvider>
   );
 }
