@@ -393,9 +393,11 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
     return pointCoordinates.filter(p => p.image_name === selectedFigure);
   }, [selectedFigure]);
 
-  // Get point details from database
+  // Get point details from database (normalize codes for matching)
   const getPointDetails = (code: string): AcuPoint | undefined => {
-    return acuPoints.find(p => p.code === code);
+    // Normalize: remove hyphens/spaces and compare uppercase
+    const normalizedCode = code.replace(/[-\s]/g, '').toUpperCase();
+    return acuPoints.find(p => p.code.replace(/[-\s]/g, '').toUpperCase() === normalizedCode);
   };
 
   // Handle point click
