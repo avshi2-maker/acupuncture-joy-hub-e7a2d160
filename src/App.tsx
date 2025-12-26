@@ -34,6 +34,7 @@ import KnowledgeRegistry from "./pages/KnowledgeRegistry";
 import BaziCalculator from "./pages/BaziCalculator";
 import LegalReport from "./pages/LegalReport";
 import SymptomChecker from "./pages/SymptomChecker";
+import TreatmentPlanner from "./pages/TreatmentPlanner";
 import { FeedbackWidget } from "./components/feedback/FeedbackWidget";
 
 const queryClient = new QueryClient();
@@ -75,6 +76,7 @@ const App = () => (
                   <Route path="/bazi-calculator" element={<BaziCalculator />} />
                   <Route path="/legal-report" element={<LegalReport />} />
                   <Route path="/symptom-checker" element={<SymptomChecker />} />
+                  <Route path="/treatment-planner" element={<TreatmentPlanner />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 <FeedbackWidget />

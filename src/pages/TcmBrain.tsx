@@ -74,6 +74,7 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tcm-chat`;
 const featureTabs = [
   { id: 'chat', icon: Sparkles, label: 'Ask AI' },
   { id: 'symptom-checker', icon: Stethoscope, label: 'AI Symptom Checker', isLink: true, href: '/symptom-checker' },
+  { id: 'treatment-planner', icon: ClipboardList, label: 'AI Treatment Planner', isLink: true, href: '/treatment-planner' },
   { id: 'bodymap', icon: User, label: 'Body Map' },
   { id: 'herbs', icon: Leaf, label: 'Herbs' },
   { id: 'points', icon: MapPin, label: 'Points' },
