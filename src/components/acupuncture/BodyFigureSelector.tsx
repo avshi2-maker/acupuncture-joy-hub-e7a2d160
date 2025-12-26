@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, MapPin, Info, ZoomIn, ZoomOut, CheckSquare, Square, Sparkles, X, Trash2 } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { ArrowLeft, MapPin, Info, ZoomIn, ZoomOut, CheckSquare, Square, Sparkles, X, Trash2, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 // Import all body figure images
@@ -345,10 +346,26 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
   const [zoom, setZoom] = useState(1);
   const [acuPoints, setAcuPoints] = useState<AcuPoint[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showDisclaimer, setShowDisclaimer] = useState(true);
+  const [imageDimensions, setImageDimensions] = useState<{width: number, height: number}>({ width: 2800, height: 1400 });
+  const imageRef = useRef<HTMLImageElement>(null);
   
   // Multi-select mode
   const [multiSelectMode, setMultiSelectMode] = useState(false);
   const [selectedPoints, setSelectedPoints] = useState<string[]>([]);
+
+  // Get figures that have highlighted points
+  const relevantFigures = useMemo(() => {
+    if (highlightedPoints.length === 0) return [];
+    const figures = new Set<string>();
+    highlightedPoints.forEach(pointCode => {
+      const coord = getPointCoordinate(pointCode);
+      if (coord) {
+        figures.add(coord.image_name);
+      }
+    });
+    return Array.from(figures);
+  }, [highlightedPoints]);
 
   // Auto-select figure if highlighted points are provided
   useEffect(() => {
@@ -360,6 +377,12 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
       }
     }
   }, [highlightedPoints, selectedFigure]);
+
+  // Handle image load to get actual dimensions
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    setImageDimensions({ width: img.naturalWidth, height: img.naturalHeight });
+  };
 
   // Fetch acupuncture points from database
   useEffect(() => {
@@ -475,6 +498,27 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
   if (selectedFigure) {
     return (
       <div className="space-y-4">
+      {/* Disclaimer Alert */}
+        {showDisclaimer && highlightedPoints.length > 0 && (
+          <Alert className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <AlertTitle className="text-amber-800 dark:text-amber-400">AI Suggestion - Not Medical Advice</AlertTitle>
+            <AlertDescription className="text-amber-700 dark:text-amber-300 text-sm">
+              These acupuncture points are <strong>optional suggestions</strong> based on AI analysis. 
+              The final treatment decision must be made by a licensed therapist using their professional expertise, 
+              patient assessment, and clinical judgment.
+            </AlertDescription>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="mt-2 text-amber-700"
+              onClick={() => setShowDisclaimer(false)}
+            >
+              I understand
+            </Button>
+          </Alert>
+        )}
+
         {/* Header with back button and mode toggle */}
         <div className="flex items-center justify-between flex-wrap gap-2">
           <Button 
@@ -603,10 +647,12 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
                   }}
                 >
                   <img
+                    ref={imageRef}
                     src={imageMap[selectedFigure]}
                     alt={getFigureName(selectedFigure)}
                     className="max-w-none"
                     style={{ maxWidth: '100%', height: 'auto' }}
+                    onLoad={handleImageLoad}
                   />
                   
                   {/* Acupuncture point markers */}
@@ -614,22 +660,28 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
                     const isSelected = selectedPoint?.code === point.point_code;
                     const isHighlighted = highlightedPoints.includes(point.point_code);
                     const isMultiSelected = selectedPoints.includes(point.point_code);
-                    // Convert coordinates to percentages (assuming image is ~2800x1400)
-                    const xPercent = (point.x / 2800) * 100;
-                    const yPercent = (point.y / 1400) * 100;
+                    // Use percentage-based positioning
+                    // Original coordinates were for ~2800 width canvas, centered around x=1400
+                    // Normalize to 0-100% by shifting and scaling
+                    // x: range is roughly 1150-1550, center at 1350, map to 15-85%
+                    // y: range is roughly 350-1200, map relative to figure height
+                    const normalizedX = ((point.x - 1100) / 500) * 70 + 15; // Maps 1100-1600 to 15-85%
+                    const normalizedY = ((point.y - 300) / 800) * 70 + 15;  // Maps 300-1100 to 15-85%
+                    const xPercent = Math.min(90, Math.max(10, normalizedX));
+                    const yPercent = Math.min(90, Math.max(10, normalizedY));
                     
                     return (
                       <button
                         key={point.point_code}
                         onClick={() => handlePointClick(point)}
-                        className={`absolute w-6 h-6 -ml-3 -mt-3 rounded-full border-2 transition-all duration-200 flex items-center justify-center text-xs font-bold ${
+                        className={`absolute w-5 h-5 -ml-2.5 -mt-2.5 rounded-full border-2 transition-all duration-200 flex items-center justify-center text-[8px] font-bold ${
                           isMultiSelected
-                            ? 'bg-primary border-primary text-primary-foreground scale-125 ring-4 ring-primary/30'
+                            ? 'bg-primary border-primary text-primary-foreground scale-110 ring-2 ring-primary/30'
                             : isSelected 
-                            ? 'bg-primary border-primary text-primary-foreground scale-125 ring-4 ring-primary/30' 
+                            ? 'bg-primary border-primary text-primary-foreground scale-110 ring-2 ring-primary/30' 
                             : isHighlighted
-                            ? 'bg-red-500 border-red-600 text-white scale-125 ring-4 ring-red-500/50 animate-pulse shadow-lg'
-                            : 'bg-destructive/80 border-destructive text-destructive-foreground hover:scale-110 hover:bg-destructive'
+                            ? 'bg-red-500 border-red-600 text-white scale-110 ring-2 ring-red-500/50 animate-pulse shadow-lg'
+                            : 'bg-destructive/80 border-destructive text-destructive-foreground hover:scale-105 hover:bg-destructive'
                         }`}
                         style={{
                           left: `${xPercent}%`,
@@ -637,7 +689,7 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
                         }}
                         title={point.point_code}
                       >
-                        {isMultiSelected && <span className="text-[8px]">✓</span>}
+                        {isMultiSelected && <span className="text-[6px]">✓</span>}
                         <span className="sr-only">{point.point_code}</span>
                       </button>
                     );
@@ -839,14 +891,37 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
   // Figure selection grid
   return (
     <div className="space-y-6">
+      {/* Disclaimer Alert for AI suggestions */}
+      {showDisclaimer && highlightedPoints.length > 0 && (
+        <Alert className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
+          <AlertTriangle className="h-4 w-4 text-amber-600" />
+          <AlertTitle className="text-amber-800 dark:text-amber-400">AI Suggestion - Not Medical Advice</AlertTitle>
+          <AlertDescription className="text-amber-700 dark:text-amber-300 text-sm">
+            These acupuncture points are <strong>optional suggestions</strong> based on AI analysis. 
+            The final treatment decision must be made by a licensed therapist using their professional expertise, 
+            patient assessment, and clinical judgment.
+          </AlertDescription>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="mt-2 text-amber-700"
+            onClick={() => setShowDisclaimer(false)}
+          >
+            I understand
+          </Button>
+        </Alert>
+      )}
+
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold mb-2">Interactive Body Map</h2>
         <p className="text-muted-foreground">
-          Select a body part to explore acupuncture points
+          {highlightedPoints.length > 0 
+            ? 'Showing body parts with recommended points'
+            : 'Select a body part to explore acupuncture points'}
         </p>
         {highlightedPoints.length > 0 && (
           <p className="text-sm text-jade mt-2">
-            {highlightedPoints.length} points recommended • Select a body part to view
+            {highlightedPoints.length} points recommended across {relevantFigures.length} body part{relevantFigures.length !== 1 ? 's' : ''}
           </p>
         )}
       </div>
@@ -894,20 +969,60 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
         </Card>
       )}
 
-      {figureCategories.map((category) => {
-        const availableFigures = category.figures.filter(f => imageMap[f]);
-        if (availableFigures.length === 0) return null;
+      {/* Show only relevant figures when highlighted points exist, otherwise show all */}
+      {highlightedPoints.length > 0 ? (
+        // Filtered view - only show relevant body parts
+        <div>
+          <h3 className="text-lg font-semibold mb-3 text-primary">
+            Relevant Body Parts
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {relevantFigures.map((figure) => {
+              const pointCount = getPointCount(figure);
+              const highlightedCount = getFigureHighlightedCount(figure);
+              const selectedCount = getFigureSelectedCount(figure);
+              return (
+                <Card
+                  key={figure}
+                  className={`cursor-pointer transition-all overflow-hidden group ring-2 ring-jade hover:ring-jade/80`}
+                  onClick={() => setSelectedFigure(figure)}
+                >
+                  <div className="aspect-square relative bg-muted/30 overflow-hidden">
+                    <img
+                      src={imageMap[figure]}
+                      alt={getFigureName(figure)}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <Badge className="absolute top-2 right-2 bg-jade">
+                      {highlightedCount} recommended
+                    </Badge>
+                  </div>
+                  <CardContent className="p-3">
+                    <p className="text-sm font-medium text-center truncate">
+                      {getFigureName(figure)}
+                    </p>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        // Full view - show all categories
+        figureCategories.map((category) => {
+          const availableFigures = category.figures.filter(f => imageMap[f]);
+          if (availableFigures.length === 0) return null;
 
-        return (
-          <div key={category.name}>
-            <h3 className="text-lg font-semibold mb-3 text-primary">
-              {category.name}
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {availableFigures.map((figure) => {
-                const pointCount = getPointCount(figure);
-                const highlightedCount = getFigureHighlightedCount(figure);
-                const selectedCount = getFigureSelectedCount(figure);
+          return (
+            <div key={category.name}>
+              <h3 className="text-lg font-semibold mb-3 text-primary">
+                {category.name}
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {availableFigures.map((figure) => {
+                  const pointCount = getPointCount(figure);
+                  const highlightedCount = getFigureHighlightedCount(figure);
+                  const selectedCount = getFigureSelectedCount(figure);
                 return (
                   <Card
                     key={figure}
@@ -959,7 +1074,8 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
             </div>
           </div>
         );
-      })}
+      })
+      )}
     </div>
   );
 }
