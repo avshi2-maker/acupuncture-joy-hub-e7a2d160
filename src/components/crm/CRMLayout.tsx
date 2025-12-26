@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { CRMSidebar } from './CRMSidebar';
+import { CRMBreadcrumb } from './CRMBreadcrumb';
 import { Building2, Menu } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar';
 
@@ -40,6 +41,7 @@ export function CRMLayout({ children }: CRMLayoutProps) {
         <SidebarInset className="flex-1 flex flex-col">
           <MobileHeader />
           <main className="flex-1 p-4 md:p-6 overflow-auto">
+            <CRMBreadcrumb />
             {children}
           </main>
         </SidebarInset>
