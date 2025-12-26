@@ -131,9 +131,16 @@ export default function KnowledgeRegistry() {
 
   // Queue state
   const [queue, setQueue] = useState<QueueItem[]>([]);
+  const queueRef = useRef<QueueItem[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const isProcessingRef = useRef(false);
   const [isPaused, setIsPaused] = useState(false);
   const isPausedRef = useRef(false);
+
+  // Keep latest queue in a ref so async processing never uses stale state
+  useEffect(() => {
+    queueRef.current = queue;
+  }, [queue]);
 
   // Sync isPaused to ref for use in async loop
   useEffect(() => {
@@ -282,15 +289,16 @@ ${report.legalDeclaration.declarationText}
     }
   };
 
-  const updateQueueItem = (id: string, updates: Partial<QueueItem>) => {
-    setQueue(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
-  };
+  const updateQueueItem = useCallback((id: string, updates: Partial<QueueItem>) => {
+    setQueue(prev => prev.map(item => (item.id === id ? { ...item, ...updates } : item)));
+  }, []);
 
   const removeQueueItem = (id: string) => {
     setQueue(prev => prev.filter(item => item.id !== id));
   };
 
   const clearQueue = () => {
+    isProcessingRef.current = false;
     setQueue([]);
     setIsProcessing(false);
     setIsPaused(false);
@@ -300,62 +308,48 @@ ${report.legalDeclaration.declarationText}
     setQueue(prev => prev.map(item => item.status === 'error' ? { ...item, status: 'pending' as QueueItemStatus, error: undefined } : item));
   };
 
-  // Process queue one file at a time
+  // Process one queued file at a time (avoids stale-state infinite loops)
   const processQueue = useCallback(async () => {
-    if (isProcessing) return;
+    // Ref guard prevents double-start (e.g. auto effect + manual click) before state updates
+    if (isProcessingRef.current) return;
+    if (isPausedRef.current) return;
+
+    const pendingItem = queueRef.current.find(item => item.status === 'pending');
+    if (!pendingItem) return;
+
+    isProcessingRef.current = true;
     setIsProcessing(true);
-    setIsPaused(false);
+    updateQueueItem(pendingItem.id, { status: 'importing' });
 
-    while (true) {
-      // Check for pause
-      if (isPausedRef.current) {
-        break;
-      }
+    try {
+      const docPayload = {
+        fileName: pendingItem.file.name,
+        category: pendingItem.category,
+        language: pendingItem.language,
+        rows: pendingItem.parsed?.rows || [],
+      };
 
-      // Find next pending item
-      const pendingItem = queue.find(item => item.status === 'pending');
-      if (!pendingItem) break;
-
-      // Mark as importing
-      updateQueueItem(pendingItem.id, { status: 'importing' });
-
-      try {
-        const docPayload = {
-          fileName: pendingItem.file.name,
-          category: pendingItem.category,
-          language: pendingItem.language,
-          rows: pendingItem.parsed?.rows || [],
-        };
-
-        const { data, error } = await supabase.functions.invoke('import-knowledge', {
-          body: { documents: [docPayload] },
-        });
-
-        if (error) throw error;
-
-        const result = data?.results?.[0];
-        if (result?.success) {
-          updateQueueItem(pendingItem.id, { status: 'done', chunksCreated: result.chunksCreated });
-        } else {
-          updateQueueItem(pendingItem.id, { status: 'error', error: result?.error || 'Unknown error' });
-        }
-      } catch (err: any) {
-        updateQueueItem(pendingItem.id, { status: 'error', error: err.message || 'Import failed' });
-      }
-
-      // Refresh queue state for next iteration
-      await new Promise(resolve => setTimeout(resolve, 100));
-      // Re-check queue from state
-      setQueue(prev => {
-        // Just trigger a re-render; we'll pick up the next pending item on next loop
-        return prev;
+      const { data, error } = await supabase.functions.invoke('import-knowledge', {
+        body: { documents: [docPayload] },
       });
-    }
 
-    setIsProcessing(false);
-    queryClient.invalidateQueries({ queryKey: ['knowledge-documents'] });
-    queryClient.invalidateQueries({ queryKey: ['knowledge-chunks-stats'] });
-  }, [isProcessing, queue, queryClient]);
+      if (error) throw error;
+
+      const result = data?.results?.[0];
+      if (result?.success) {
+        updateQueueItem(pendingItem.id, { status: 'done', chunksCreated: result.chunksCreated });
+      } else {
+        updateQueueItem(pendingItem.id, { status: 'error', error: result?.error || 'Unknown error' });
+      }
+    } catch (err: any) {
+      updateQueueItem(pendingItem.id, { status: 'error', error: err?.message || 'Import failed' });
+    } finally {
+      isProcessingRef.current = false;
+      setIsProcessing(false);
+      queryClient.invalidateQueries({ queryKey: ['knowledge-documents'] });
+      queryClient.invalidateQueries({ queryKey: ['knowledge-chunks-stats'] });
+    }
+  }, [queryClient, updateQueueItem]);
 
   // Effect to keep processing when queue changes and not paused
   useEffect(() => {
