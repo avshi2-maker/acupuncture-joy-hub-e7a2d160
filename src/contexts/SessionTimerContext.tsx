@@ -41,17 +41,48 @@ const SessionTimerContext = createContext<SessionTimerContextType | null>(null);
 
 const WARNING_BEFORE_END = 5 * 60; // 5 minutes
 const DEFAULT_EXTENSION_PRESETS = [5, 10, 15, 20];
+const STORAGE_KEY = 'tcm-session-timer-settings';
+
+interface StoredSettings {
+  extensionPresets: number[];
+  soundEnabled: boolean;
+  selectedDuration: number;
+}
+
+const loadStoredSettings = (): Partial<StoredSettings> => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (err) {
+    console.error('Failed to load timer settings:', err);
+  }
+  return {};
+};
+
+const saveSettings = (settings: StoredSettings) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  } catch (err) {
+    console.error('Failed to save timer settings:', err);
+  }
+};
 
 export function SessionTimerProvider({ children }: { children: ReactNode }) {
+  const storedSettings = loadStoredSettings();
+  
   const [status, setStatus] = useState<TimerStatus>('idle');
-  const [selectedDuration, setSelectedDurationState] = useState<number>(40);
-  const [remainingSeconds, setRemainingSeconds] = useState<number>(40 * 60);
-  const [totalSeconds, setTotalSeconds] = useState<number>(40 * 60);
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [selectedDuration, setSelectedDurationState] = useState<number>(storedSettings.selectedDuration ?? 40);
+  const [remainingSeconds, setRemainingSeconds] = useState<number>((storedSettings.selectedDuration ?? 40) * 60);
+  const [totalSeconds, setTotalSeconds] = useState<number>((storedSettings.selectedDuration ?? 40) * 60);
+  const [soundEnabled, setSoundEnabledState] = useState(storedSettings.soundEnabled ?? true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
-  const [extensionPresets, setExtensionPresets] = useState<number[]>(DEFAULT_EXTENSION_PRESETS);
+  const [extensionPresets, setExtensionPresetsState] = useState<number[]>(
+    storedSettings.extensionPresets ?? DEFAULT_EXTENSION_PRESETS
+  );
   
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const warningShownRef = useRef(false);
@@ -224,7 +255,18 @@ export function SessionTimerProvider({ children }: { children: ReactNode }) {
       setTotalSeconds(minutes * 60);
       setRemainingSeconds(minutes * 60);
     }
-  }, [status]);
+    saveSettings({ extensionPresets, soundEnabled, selectedDuration: minutes });
+  }, [status, extensionPresets, soundEnabled]);
+
+  const setSoundEnabled = useCallback((enabled: boolean) => {
+    setSoundEnabledState(enabled);
+    saveSettings({ extensionPresets, soundEnabled: enabled, selectedDuration });
+  }, [extensionPresets, selectedDuration]);
+
+  const setExtensionPresets = useCallback((presets: number[]) => {
+    setExtensionPresetsState(presets);
+    saveSettings({ extensionPresets: presets, soundEnabled, selectedDuration });
+  }, [soundEnabled, selectedDuration]);
 
   const getProgress = useCallback(() => {
     return ((totalSeconds - remainingSeconds) / totalSeconds) * 100;
