@@ -19,6 +19,7 @@ interface SessionTimerContextType {
   isExpanded: boolean;
   sessionInfo: SessionInfo | null;
   currentTime: Date;
+  extensionPresets: number[];
   
   // Actions
   startTimer: (durationMinutes: number, sessionInfo?: SessionInfo) => void;
@@ -29,6 +30,7 @@ interface SessionTimerContextType {
   setSelectedDuration: (minutes: number) => void;
   setSoundEnabled: (enabled: boolean) => void;
   setIsExpanded: (expanded: boolean) => void;
+  setExtensionPresets: (presets: number[]) => void;
   
   // Derived
   getProgress: () => number;
@@ -38,6 +40,7 @@ interface SessionTimerContextType {
 const SessionTimerContext = createContext<SessionTimerContextType | null>(null);
 
 const WARNING_BEFORE_END = 5 * 60; // 5 minutes
+const DEFAULT_EXTENSION_PRESETS = [5, 10, 15, 20];
 
 export function SessionTimerProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<TimerStatus>('idle');
@@ -48,6 +51,7 @@ export function SessionTimerProvider({ children }: { children: ReactNode }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
+  const [extensionPresets, setExtensionPresets] = useState<number[]>(DEFAULT_EXTENSION_PRESETS);
   
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const warningShownRef = useRef(false);
@@ -242,6 +246,7 @@ export function SessionTimerProvider({ children }: { children: ReactNode }) {
       isExpanded,
       sessionInfo,
       currentTime,
+      extensionPresets,
       startTimer,
       pauseTimer,
       resumeTimer,
@@ -250,6 +255,7 @@ export function SessionTimerProvider({ children }: { children: ReactNode }) {
       setSelectedDuration,
       setSoundEnabled,
       setIsExpanded,
+      setExtensionPresets,
       getProgress,
       formatTime,
     }}>

@@ -53,6 +53,7 @@ export function SessionTimerWidget({
     isExpanded,
     sessionInfo,
     currentTime,
+    extensionPresets,
     startTimer,
     pauseTimer,
     resumeTimer,
@@ -298,23 +299,17 @@ export function SessionTimerWidget({
                 <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                   <Plus className="h-4 w-4" /> Need more time?
                 </p>
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={() => extendTimer(10)} 
-                    variant="outline" 
-                    size="sm"
-                    className="flex-1"
-                  >
-                    +10 min
-                  </Button>
-                  <Button 
-                    onClick={() => extendTimer(15)} 
-                    variant="outline" 
-                    size="sm"
-                    className="flex-1"
-                  >
-                    +15 min
-                  </Button>
+                <div className="flex gap-2 flex-wrap">
+                  {extensionPresets.map((minutes) => (
+                    <Button 
+                      key={minutes}
+                      onClick={() => extendTimer(minutes)} 
+                      variant="outline" 
+                      size="sm"
+                    >
+                      +{minutes} min
+                    </Button>
+                  ))}
                 </div>
               </div>
             )}
