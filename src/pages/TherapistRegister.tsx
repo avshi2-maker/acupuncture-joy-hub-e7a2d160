@@ -10,8 +10,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Leaf, ArrowLeft } from 'lucide-react';
+import { Leaf, ArrowLeft, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { WhatsAppWithTemplates, REGISTRATION_TEMPLATES } from '@/components/ui/WhatsAppTemplates';
 
 const registerSchema = z.object({
   idNumber: z.string().min(5, 'מספר ת.ז. חייב להכיל לפחות 5 ספרות').max(15, 'מספר ת.ז. ארוך מדי'),
@@ -184,6 +185,24 @@ export default function TherapistRegister() {
                   כניסה למערכת
                 </Link>
               </p>
+
+              {/* WhatsApp Help Section */}
+              <div className="mt-8 pt-6 border-t border-border">
+                <div className="text-center space-y-3">
+                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                    <MessageCircle className="h-4 w-4 text-[#25D366]" />
+                    <span>צריך/ה עזרה? דברו איתנו</span>
+                  </div>
+                  <WhatsAppWithTemplates
+                    phoneNumber="972505231042"
+                    templates={REGISTRATION_TEMPLATES}
+                    buttonTextHe="שאלות? כתבו לנו"
+                    variant="outline"
+                    size="default"
+                    showLabelsInHebrew={true}
+                  />
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
