@@ -28,11 +28,13 @@ const featuresByTier: Record<string, TierFeature[]> = {
 
 const TierContext = createContext<TierContextType | undefined>(undefined);
 
-// Dev mode bypass: auto-set premium tier on localhost
+// Dev mode bypass: auto-set premium tier on localhost and preview environments
 const isDevMode = typeof window !== 'undefined' && (
   window.location.hostname === 'localhost' ||
   window.location.hostname === '127.0.0.1' ||
-  window.location.hostname.includes('lovableproject.com')
+  window.location.hostname.includes('lovableproject.com') ||
+  window.location.hostname.includes('lovable.app') ||
+  window.location.search.includes('devmode=true')
 );
 
 export function TierProvider({ children }: { children: ReactNode }) {

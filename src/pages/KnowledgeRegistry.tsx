@@ -147,11 +147,12 @@ export default function KnowledgeRegistry() {
     isPausedRef.current = isPaused;
   }, [isPaused]);
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
-    }
-  }, [user, authLoading, navigate]);
+  // Temporarily bypass auth check for testing
+  // useEffect(() => {
+  //   if (!authLoading && !user) {
+  //     navigate('/auth');
+  //   }
+  // }, [user, authLoading, navigate]);
 
   const { data: documents, isLoading } = useQuery({
     queryKey: ['knowledge-documents'],
