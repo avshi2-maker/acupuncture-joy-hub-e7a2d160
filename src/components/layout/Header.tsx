@@ -93,6 +93,16 @@ const Header = () => {
         }`}
       >
         <nav className="container mx-auto px-4 py-6 flex flex-col gap-4">
+          <Button asChild variant="ghost" size="lg" className="w-full justify-start text-amber-600">
+            <Link to="/tcm-brain" onClick={() => setIsMobileMenuOpen(false)}>
+              TCM Brain
+            </Link>
+          </Button>
+          <Button asChild variant="ghost" size="lg" className="w-full justify-start text-amber-600">
+            <Link to="/knowledge-registry" onClick={() => setIsMobileMenuOpen(false)}>
+              Knowledge Registry
+            </Link>
+          </Button>
           <Button asChild variant="hero" size="lg" className="w-full">
             <Link to="/gate" onClick={() => setIsMobileMenuOpen(false)}>
               {t("therapistLogin")}
