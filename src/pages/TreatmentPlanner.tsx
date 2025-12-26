@@ -126,11 +126,11 @@ export default function TreatmentPlanner() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/tcm-brain')}
+            onClick={() => navigate('/dashboard')}
             className="mb-6"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to TCM Brain
+            Back to Dashboard
           </Button>
 
           {/* Header */}

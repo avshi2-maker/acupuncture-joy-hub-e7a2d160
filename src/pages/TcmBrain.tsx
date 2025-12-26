@@ -621,8 +621,9 @@ export default function TcmBrain() {
         <header className="bg-card border-b border-border sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-2 py-1.5 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Link to="/dashboard" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+              <Link to="/dashboard" className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-xs">
                 <ArrowRight className="h-3 w-3 rotate-180" />
+                <span className="hidden sm:inline">Back to Dashboard</span>
               </Link>
               <div className="h-3 w-px bg-border" />
               <div className="flex items-center gap-1.5">

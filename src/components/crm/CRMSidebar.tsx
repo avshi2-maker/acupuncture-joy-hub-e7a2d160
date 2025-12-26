@@ -26,8 +26,9 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  ArrowLeft,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { TierBadge } from '@/components/layout/TierBadge';
 
 const mainNavItems = [
@@ -68,34 +69,46 @@ export function CRMSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r border-border/50">
       <SidebarHeader className="border-b border-border/30 p-4">
-        <div className="flex items-center justify-between">
-          {!isCollapsed && (
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-jade flex items-center justify-center">
-                <Building2 className="h-4 w-4 text-white" />
+        <div className="flex flex-col gap-2">
+          {/* Back to Dashboard Button */}
+          <Link
+            to="/dashboard"
+            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
+            onClick={handleNavClick}
+          >
+            <ArrowLeft className="h-3 w-3" />
+            {(!isCollapsed || isMobile) && <span>Back to Dashboard</span>}
+          </Link>
+          
+          <div className="flex items-center justify-between">
+            {!isCollapsed && (
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-jade flex items-center justify-center">
+                  <Building2 className="h-4 w-4 text-white" />
+                </div>
+                <span className="font-display font-semibold text-lg">TCM Clinic</span>
               </div>
-              <span className="font-display font-semibold text-lg">TCM Clinic</span>
-            </div>
-          )}
-          {isMobile ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => setOpenMobile(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={toggleSidebar}
-            >
-              {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-            </Button>
-          )}
+            )}
+            {isMobile ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setOpenMobile(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={toggleSidebar}
+              >
+                {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              </Button>
+            )}
+          </div>
         </div>
       </SidebarHeader>
 
