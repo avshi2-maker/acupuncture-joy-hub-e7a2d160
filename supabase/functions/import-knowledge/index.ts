@@ -58,6 +58,17 @@ serve(async (req) => {
       });
     }
 
+    // Keep each request small to avoid timeouts/crashes.
+    // The UI batches requests, but we also enforce a hard limit server-side.
+    if (documents.length > 2) {
+      return new Response(JSON.stringify({
+        error: 'Too many documents in one request. Please send max 2 documents per import.'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     console.log(`Processing ${documents.length} documents`);
 
     const results = [];

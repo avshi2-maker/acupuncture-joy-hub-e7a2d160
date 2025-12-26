@@ -295,7 +295,8 @@ ${report.legalDeclaration.declarationText}
     if (filesToImport.length === 0) return;
 
     // Large imports can exceed request limits; batch to keep requests small.
-    const MAX_FILES_PER_BATCH = 5;
+    // Per request: index 2 files at a time to avoid crashes/timeouts.
+    const MAX_FILES_PER_BATCH = 2;
 
     setImporting(true);
     setImportProgress(0);
@@ -351,7 +352,7 @@ ${report.legalDeclaration.declarationText}
       queryClient.invalidateQueries({ queryKey: ['knowledge-chunks-stats'] });
     } catch (error) {
       console.error('Import error:', error);
-      toast.error('Import failed. If this happens again, try fewer files at once (e.g., 3–5).');
+      toast.error('Import failed. Please try again — it now indexes 2 files per batch.');
     } finally {
       setImporting(false);
       setImportProgress(100);
