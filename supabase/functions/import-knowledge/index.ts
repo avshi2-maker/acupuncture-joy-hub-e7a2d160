@@ -90,12 +90,19 @@ serve(async (req) => {
         // Check if already exists
         const { data: existing } = await supabaseClient
           .from('knowledge_documents')
-          .select('id')
+          .select('id, original_name, created_at, indexed_at, status, row_count')
           .eq('file_hash', fileHash)
           .maybeSingle();
 
         if (existing) {
-          results.push({ fileName, success: false, error: 'Document already indexed' });
+          // Treat as success so the UI can show a clear, non-blocking status.
+          results.push({
+            fileName,
+            success: true,
+            alreadyIndexed: true,
+            fileHash,
+            existingDocument: existing,
+          });
           continue;
         }
 

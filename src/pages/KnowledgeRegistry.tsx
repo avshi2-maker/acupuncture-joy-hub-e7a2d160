@@ -129,6 +129,15 @@ interface QueueItem {
   status: QueueItemStatus;
   error?: string;
   chunksCreated?: number;
+  alreadyIndexed?: boolean;
+  existingDocument?: {
+    id: string;
+    original_name: string;
+    created_at: string;
+    indexed_at: string | null;
+    status: string;
+    row_count: number | null;
+  };
 }
 
 export default function KnowledgeRegistry() {
@@ -372,7 +381,17 @@ ${report.legalDeclaration.declarationText}
 
       const result = data?.results?.[0];
       if (result?.success) {
-        updateQueueItem(pendingItem.id, { status: 'done', chunksCreated: result.chunksCreated });
+        const alreadyIndexed = Boolean(result?.alreadyIndexed);
+        updateQueueItem(pendingItem.id, {
+          status: 'done',
+          chunksCreated: result.chunksCreated,
+          alreadyIndexed,
+          existingDocument: result.existingDocument,
+        });
+
+        if (alreadyIndexed) {
+          toast.info(`Already indexed: ${result.existingDocument?.original_name || pendingItem.file.name}`);
+        }
       } else {
         updateQueueItem(pendingItem.id, { status: 'error', error: result?.error || 'Unknown error' });
       }
@@ -481,7 +500,18 @@ ${report.legalDeclaration.declarationText}
   const getQueueStatusBadge = (item: QueueItem) => {
     switch (item.status) {
       case 'done':
-        return <Badge className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" /> Done ({item.chunksCreated} chunks)</Badge>;
+        if (item.alreadyIndexed) {
+          return (
+            <Badge variant="secondary">
+              <CheckCircle className="w-3 h-3 mr-1" /> Already indexed
+            </Badge>
+          );
+        }
+        return (
+          <Badge className="bg-green-500">
+            <CheckCircle className="w-3 h-3 mr-1" /> Done ({item.chunksCreated} chunks)
+          </Badge>
+        );
       case 'importing':
         return <Badge className="bg-blue-500 animate-pulse"><Upload className="w-3 h-3 mr-1" /> Importing...</Badge>;
       case 'error':
