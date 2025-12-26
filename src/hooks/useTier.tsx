@@ -28,13 +28,28 @@ const featuresByTier: Record<string, TierFeature[]> = {
 
 const TierContext = createContext<TierContextType | undefined>(undefined);
 
+// Dev mode bypass: auto-set premium tier on localhost
+const isDevMode = typeof window !== 'undefined' && (
+  window.location.hostname === 'localhost' ||
+  window.location.hostname === '127.0.0.1' ||
+  window.location.hostname.includes('lovableproject.com')
+);
+
 export function TierProvider({ children }: { children: ReactNode }) {
   const [tier, setTierState] = useState<SubscriptionTier>(() => {
+    // In dev mode, default to premium for easy testing
+    if (isDevMode) {
+      return 'premium';
+    }
     const stored = localStorage.getItem('therapist_tier');
     return (stored as SubscriptionTier) || null;
   });
   
   const [expiresAt, setExpiresAtState] = useState<Date | null>(() => {
+    // In dev mode, set expiry far in the future
+    if (isDevMode) {
+      return new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 year from now
+    }
     const stored = localStorage.getItem('therapist_expires_at');
     return stored ? new Date(stored) : null;
   });
