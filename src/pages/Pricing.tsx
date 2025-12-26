@@ -1,9 +1,40 @@
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { TierCard } from '@/components/pricing/TierCard';
-import { ArrowLeft, Leaf } from 'lucide-react';
+import { ArrowLeft, Leaf, HelpCircle, Sparkles, CreditCard, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { WhatsAppCTA } from '@/components/ui/WhatsAppCTA';
+import { WhatsAppWithTemplates } from '@/components/ui/WhatsAppTemplates';
+
+const PRICING_TEMPLATES = [
+  {
+    id: 'pricing',
+    label: 'Pricing Questions',
+    labelHe: 'שאלות על מחירים',
+    message: 'שלום! יש לי שאלות לגבי המחירים והתוכניות',
+    icon: <CreditCard className="h-4 w-4" />,
+  },
+  {
+    id: 'features',
+    label: 'Features Info',
+    labelHe: 'מידע על פיצ׳רים',
+    message: 'שלום! אשמח לשמוע יותר על הפיצ׳רים של כל תוכנית',
+    icon: <Sparkles className="h-4 w-4" />,
+  },
+  {
+    id: 'help-choose',
+    label: 'Help Me Choose',
+    labelHe: 'עזרה בבחירה',
+    message: 'שלום! אשמח לעזרה בבחירת התוכנית המתאימה לי',
+    icon: <HelpCircle className="h-4 w-4" />,
+  },
+  {
+    id: 'trial',
+    label: 'Trial Questions',
+    labelHe: 'שאלות על הניסיון',
+    message: 'שלום! יש לי שאלות לגבי תקופת הניסיון החינמית',
+    icon: <MessageCircle className="h-4 w-4" />,
+  },
+];
 
 const tiers = [
   {
@@ -109,13 +140,14 @@ export default function Pricing() {
             <p className="text-sm text-muted-foreground">
               לשאלות נוספות, צרו קשר עם ד״ר רוני ספיר בוואטסאפ
             </p>
-            <WhatsAppCTA 
-              variant="button"
+            <WhatsAppWithTemplates
               phoneNumber="972505231042"
-              message="שלום! יש לי שאלות לגבי התוכניות והמחירים"
-            >
-              שאלות? דברו איתנו
-            </WhatsAppCTA>
+              templates={PRICING_TEMPLATES}
+              buttonTextHe="שאלות? דברו איתנו"
+              variant="default"
+              size="lg"
+              showLabelsInHebrew={true}
+            />
           </div>
         </div>
       </div>

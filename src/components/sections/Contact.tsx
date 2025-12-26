@@ -3,6 +3,38 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { WhatsAppWithTemplates } from "@/components/ui/WhatsAppTemplates";
+
+const CONTACT_TEMPLATES = [
+  {
+    id: 'booking',
+    label: 'Book Appointment',
+    labelHe: 'קביעת תור',
+    message: 'שלום! אשמח לקבוע תור לטיפול',
+    icon: <Clock className="h-4 w-4" />,
+  },
+  {
+    id: 'question',
+    label: 'General Question',
+    labelHe: 'שאלה כללית',
+    message: 'שלום! יש לי שאלה לגבי הטיפולים שלכם',
+    icon: <MessageCircle className="h-4 w-4" />,
+  },
+  {
+    id: 'directions',
+    label: 'Get Directions',
+    labelHe: 'הוראות הגעה',
+    message: 'שלום! אשמח לקבל הוראות הגעה למרפאה',
+    icon: <MapPin className="h-4 w-4" />,
+  },
+  {
+    id: 'callback',
+    label: 'Request Callback',
+    labelHe: 'בקשת חזרה',
+    message: 'שלום! אשמח שתחזרו אליי בהקדם',
+    icon: <Mail className="h-4 w-4" />,
+  },
+];
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -102,16 +134,16 @@ const Contact = () => {
               WhatsApp Only
             </h3>
             <p className="font-body text-sm text-muted-foreground">054-4634923</p>
-            <p className="font-body text-sm text-amber-600 font-medium">Messages only - No calls</p>
-            <a
-              href={whatsappLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors"
-            >
-              <MessageCircle className="w-4 h-4" />
-              Send Message
-            </a>
+            <p className="font-body text-sm text-amber-600 font-medium mb-3">Messages only - No calls</p>
+            <WhatsAppWithTemplates
+              phoneNumber="972544634923"
+              templates={CONTACT_TEMPLATES}
+              buttonTextHe="שלחו הודעה"
+              buttonText="Send Message"
+              variant="default"
+              size="sm"
+              showLabelsInHebrew={false}
+            />
           </div>
 
           {/* Email Card */}
@@ -171,18 +203,18 @@ const Contact = () => {
                 <MapPin className="w-12 h-12 text-jade mx-auto mb-4" />
                 <p className="font-body text-muted-foreground mb-2">Clinic Location</p>
                 <p className="font-display text-lg font-semibold text-foreground">{clinicAddress}</p>
-                <p className="font-body text-sm text-muted-foreground mt-2">
+                <p className="font-body text-sm text-muted-foreground mt-2 mb-4">
                   Contact us via WhatsApp for exact directions
                 </p>
-                <a
-                  href={whatsappLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-jade text-white rounded-lg text-sm font-medium hover:bg-jade/90 transition-colors"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  Get Directions
-                </a>
+                <WhatsAppWithTemplates
+                  phoneNumber="972544634923"
+                  templates={CONTACT_TEMPLATES}
+                  buttonTextHe="קבלו הוראות הגעה"
+                  buttonText="Get Directions"
+                  variant="default"
+                  size="default"
+                  showLabelsInHebrew={false}
+                />
               </div>
             </div>
           </div>
