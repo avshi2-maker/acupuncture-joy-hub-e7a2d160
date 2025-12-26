@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -8,11 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { FileText, Download, CheckCircle, Clock, AlertCircle, Shield, Database, FileCheck, Upload, Trash2 } from 'lucide-react';
+import { FileText, Download, CheckCircle, Clock, AlertCircle, Shield, Database, FileCheck, Upload, Trash2, Pause, Play, RotateCcw, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
 // Simple CSV parser
@@ -20,10 +19,7 @@ function parseCSV(text: string): { headers: string[]; rows: Record<string, strin
   const lines = text.split(/\r?\n/).filter(line => line.trim());
   if (lines.length === 0) return { headers: [], rows: [] };
   
-  // Parse header
   const headers = parseCSVLine(lines[0]);
-  
-  // Parse rows
   const rows: Record<string, string>[] = [];
   for (let i = 1; i < lines.length; i++) {
     const values = parseCSVLine(lines[i]);
@@ -46,7 +42,6 @@ function parseCSVLine(line: string): string[] {
   
   for (let i = 0; i < line.length; i++) {
     const char = line[i];
-    
     if (char === '"') {
       if (inQuotes && line[i + 1] === '"') {
         current += '"';
@@ -62,7 +57,6 @@ function parseCSVLine(line: string): string[] {
     }
   }
   result.push(current.trim());
-  
   return result;
 }
 
@@ -114,11 +108,17 @@ const CATEGORIES = [
   'other'
 ];
 
-interface FileToImport {
+type QueueItemStatus = 'pending' | 'importing' | 'done' | 'error';
+
+interface QueueItem {
+  id: string;
   file: File;
   category: string;
   language: string;
   parsed?: { headers: string[]; rows: Record<string, string>[] };
+  status: QueueItemStatus;
+  error?: string;
+  chunksCreated?: number;
 }
 
 export default function KnowledgeRegistry() {
@@ -127,12 +127,19 @@ export default function KnowledgeRegistry() {
   const queryClient = useQueryClient();
   const [generatingReport, setGeneratingReport] = useState(false);
   const [report, setReport] = useState<LegalReport | null>(null);
-  const [filesToImport, setFilesToImport] = useState<FileToImport[]>([]);
-  const [importing, setImporting] = useState(false);
-  const [importProgress, setImportProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Redirect to login if not authenticated
+  // Queue state
+  const [queue, setQueue] = useState<QueueItem[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const isPausedRef = useRef(false);
+
+  // Sync isPaused to ref for use in async loop
+  useEffect(() => {
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
+
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/auth');
@@ -146,7 +153,6 @@ export default function KnowledgeRegistry() {
         .from('knowledge_documents')
         .select('*')
         .order('created_at', { ascending: false });
-      
       if (error) throw error;
       return data as KnowledgeDocument[];
     },
@@ -158,7 +164,6 @@ export default function KnowledgeRegistry() {
       const { count, error } = await supabase
         .from('knowledge_chunks')
         .select('*', { count: 'exact', head: true });
-      
       if (error) throw error;
       return { totalChunks: count || 0 };
     },
@@ -168,7 +173,6 @@ export default function KnowledgeRegistry() {
     setGeneratingReport(true);
     try {
       const { data, error } = await supabase.functions.invoke('generate-legal-report');
-      
       if (error) throw error;
       setReport(data);
       toast.success('Legal report generated successfully');
@@ -182,7 +186,6 @@ export default function KnowledgeRegistry() {
 
   const downloadReport = () => {
     if (!report) return;
-    
     const reportText = `
 ${report.reportTitle}
 ${'='.repeat(50)}
@@ -208,7 +211,6 @@ LEGAL DECLARATION
 -----------------
 ${report.legalDeclaration.declarationText}
     `;
-
     const blob = new Blob([reportText], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -220,23 +222,23 @@ ${report.legalDeclaration.declarationText}
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const newFiles: FileToImport[] = [];
-    
+    const newItems: QueueItem[] = [];
+
     for (const file of files) {
       if (!file.name.endsWith('.csv')) {
         toast.error(`${file.name} is not a CSV file`);
         continue;
       }
-      
+
       const text = await file.text();
       const parsed = parseCSV(text);
-      
+
       if (parsed.rows.length === 0) {
         toast.error(`${file.name} has no data rows`);
         continue;
       }
-      
-      // Auto-detect category from filename
+
+      // Auto-detect category
       let category = 'other';
       const lowerName = file.name.toLowerCase();
       if (lowerName.includes('anxiety') || lowerName.includes('mental') || lowerName.includes('nervousness')) {
@@ -258,105 +260,124 @@ ${report.legalDeclaration.declarationText}
       } else if (lowerName.includes('digest') || lowerName.includes('stomach') || lowerName.includes('ibs')) {
         category = 'digestive';
       }
-      
-      // Auto-detect language
+
       let language = 'en';
       if (lowerName.includes('hebrew') || lowerName.includes('_he')) {
         language = 'he';
       }
-      
-      newFiles.push({
+
+      newItems.push({
+        id: crypto.randomUUID(),
         file,
         category,
         language,
-        parsed
+        parsed,
+        status: 'pending',
       });
     }
-    
-    setFilesToImport(prev => [...prev, ...newFiles]);
+
+    setQueue(prev => [...prev, ...newItems]);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
-  const updateFileSettings = (index: number, field: 'category' | 'language', value: string) => {
-    setFilesToImport(prev => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], [field]: value };
-      return updated;
-    });
+  const updateQueueItem = (id: string, updates: Partial<QueueItem>) => {
+    setQueue(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
   };
 
-  const removeFile = (index: number) => {
-    setFilesToImport(prev => prev.filter((_, i) => i !== index));
+  const removeQueueItem = (id: string) => {
+    setQueue(prev => prev.filter(item => item.id !== id));
   };
 
-  const importAllFiles = async () => {
-    if (filesToImport.length === 0) return;
+  const clearQueue = () => {
+    setQueue([]);
+    setIsProcessing(false);
+    setIsPaused(false);
+  };
 
-    // Large imports can exceed request limits; batch to keep requests small.
-    // Per request: index 2 files at a time to avoid crashes/timeouts.
-    const MAX_FILES_PER_BATCH = 2;
+  const retryFailed = () => {
+    setQueue(prev => prev.map(item => item.status === 'error' ? { ...item, status: 'pending' as QueueItemStatus, error: undefined } : item));
+  };
 
-    setImporting(true);
-    setImportProgress(0);
+  // Process queue one file at a time
+  const processQueue = useCallback(async () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+    setIsPaused(false);
 
-    const allDocs = filesToImport.map((f) => ({
-      fileName: f.file.name,
-      category: f.category,
-      language: f.language,
-      // Send rows only; the backend will derive size/hash/chunks from rows.
-      rows: f.parsed?.rows || [],
-    }));
+    while (true) {
+      // Check for pause
+      if (isPausedRef.current) {
+        break;
+      }
 
-    const batches: Array<typeof allDocs> = [];
-    for (let i = 0; i < allDocs.length; i += MAX_FILES_PER_BATCH) {
-      batches.push(allDocs.slice(i, i + MAX_FILES_PER_BATCH));
-    }
+      // Find next pending item
+      const pendingItem = queue.find(item => item.status === 'pending');
+      if (!pendingItem) break;
 
-    const aggregatedResults: any[] = [];
+      // Mark as importing
+      updateQueueItem(pendingItem.id, { status: 'importing' });
 
-    try {
-      for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
-        const batch = batches[batchIndex];
+      try {
+        const docPayload = {
+          fileName: pendingItem.file.name,
+          category: pendingItem.category,
+          language: pendingItem.language,
+          rows: pendingItem.parsed?.rows || [],
+        };
 
         const { data, error } = await supabase.functions.invoke('import-knowledge', {
-          body: { documents: batch },
+          body: { documents: [docPayload] },
         });
 
         if (error) throw error;
 
-        const results = data?.results || [];
-        aggregatedResults.push(...results);
-
-        const pct = Math.round(((batchIndex + 1) / batches.length) * 100);
-        setImportProgress(pct);
+        const result = data?.results?.[0];
+        if (result?.success) {
+          updateQueueItem(pendingItem.id, { status: 'done', chunksCreated: result.chunksCreated });
+        } else {
+          updateQueueItem(pendingItem.id, { status: 'error', error: result?.error || 'Unknown error' });
+        }
+      } catch (err: any) {
+        updateQueueItem(pendingItem.id, { status: 'error', error: err.message || 'Import failed' });
       }
 
-      const successCount = aggregatedResults.filter((r: any) => r.success).length;
-      const failCount = aggregatedResults.filter((r: any) => !r.success).length;
-
-      if (successCount > 0) toast.success(`Imported ${successCount} files successfully!`);
-      if (failCount > 0) {
-        const failedFiles = aggregatedResults
-          .filter((r: any) => !r.success)
-          .slice(0, 5)
-          .map((r: any) => `${r.fileName}: ${r.error}`);
-        toast.error(
-          `Failed to import ${failCount} files${failedFiles.length ? ` (examples: ${failedFiles.join(' | ')})` : ''}`
-        );
-      }
-
-      setFilesToImport([]);
-      queryClient.invalidateQueries({ queryKey: ['knowledge-documents'] });
-      queryClient.invalidateQueries({ queryKey: ['knowledge-chunks-stats'] });
-    } catch (error) {
-      console.error('Import error:', error);
-      toast.error('Import failed. Please try again — it now indexes 2 files per batch.');
-    } finally {
-      setImporting(false);
-      setImportProgress(100);
+      // Refresh queue state for next iteration
+      await new Promise(resolve => setTimeout(resolve, 100));
+      // Re-check queue from state
+      setQueue(prev => {
+        // Just trigger a re-render; we'll pick up the next pending item on next loop
+        return prev;
+      });
     }
+
+    setIsProcessing(false);
+    queryClient.invalidateQueries({ queryKey: ['knowledge-documents'] });
+    queryClient.invalidateQueries({ queryKey: ['knowledge-chunks-stats'] });
+  }, [isProcessing, queue, queryClient]);
+
+  // Effect to keep processing when queue changes and not paused
+  useEffect(() => {
+    if (!isProcessing && !isPaused && queue.some(item => item.status === 'pending')) {
+      processQueue();
+    }
+  }, [queue, isProcessing, isPaused, processQueue]);
+
+  const togglePause = () => {
+    if (isPaused) {
+      // Resume
+      setIsPaused(false);
+    } else {
+      // Pause
+      setIsPaused(true);
+    }
+  };
+
+  const startImport = () => {
+    if (queue.length === 0) return;
+    setIsPaused(false);
+    processQueue();
   };
 
   const getStatusBadge = (status: string) => {
@@ -372,8 +393,26 @@ ${report.legalDeclaration.declarationText}
     }
   };
 
+  const getQueueStatusBadge = (item: QueueItem) => {
+    switch (item.status) {
+      case 'done':
+        return <Badge className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" /> Done ({item.chunksCreated} chunks)</Badge>;
+      case 'importing':
+        return <Badge className="bg-blue-500 animate-pulse"><Upload className="w-3 h-3 mr-1" /> Importing...</Badge>;
+      case 'error':
+        return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" /> {item.error?.slice(0, 30)}</Badge>;
+      default:
+        return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" /> Pending</Badge>;
+    }
+  };
+
   const indexedCount = documents?.filter(d => d.status === 'indexed').length || 0;
   const totalDocs = documents?.length || 0;
+  const queueDone = queue.filter(q => q.status === 'done').length;
+  const queueTotal = queue.length;
+  const queueProgress = queueTotal > 0 ? Math.round((queueDone / queueTotal) * 100) : 0;
+  const hasPending = queue.some(q => q.status === 'pending');
+  const hasErrors = queue.some(q => q.status === 'error');
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-7xl">
@@ -397,7 +436,6 @@ ${report.legalDeclaration.declarationText}
             <div className="text-3xl font-bold">{totalDocs}</div>
           </CardContent>
         </Card>
-        
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Indexed</CardTitle>
@@ -406,7 +444,6 @@ ${report.legalDeclaration.declarationText}
             <div className="text-3xl font-bold text-green-600">{indexedCount}</div>
           </CardContent>
         </Card>
-        
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Knowledge Entries</CardTitle>
@@ -415,7 +452,6 @@ ${report.legalDeclaration.declarationText}
             <div className="text-3xl font-bold">{chunkStats?.totalChunks || 0}</div>
           </CardContent>
         </Card>
-        
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Data Sources</CardTitle>
@@ -426,15 +462,15 @@ ${report.legalDeclaration.declarationText}
         </Card>
       </div>
 
-      {/* File Upload Section */}
+      {/* Import Queue Section */}
       <Card className="mb-8 border-dashed border-2">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Upload className="w-5 h-5" />
-            Import Knowledge Files
+            Import Queue
           </CardTitle>
           <CardDescription>
-            Upload CSV files to add to the knowledge base. Supports Q&A format with various column names.
+            Add CSV files to the queue. Files are imported one at a time with pause/resume support.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -449,61 +485,86 @@ ${report.legalDeclaration.declarationText}
                 className="cursor-pointer"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Select multiple CSV files. Columns like Question/Answer, patient_question/clinic_answer will be auto-detected.
+                Select multiple CSV files. They will be queued and processed one by one.
               </p>
             </div>
 
-            {filesToImport.length > 0 && (
+            {queue.length > 0 && (
               <div className="space-y-3">
-                <h4 className="font-medium">Files to Import ({filesToImport.length})</h4>
-                {filesToImport.map((file, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 bg-muted rounded-lg">
-                    <FileText className="w-5 h-5 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{file.file.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {file.parsed?.rows.length || 0} rows
-                      </p>
-                    </div>
-                    <Select value={file.category} onValueChange={(v) => updateFileSettings(index, 'category', v)}>
-                      <SelectTrigger className="w-36">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CATEGORIES.map(cat => (
-                          <SelectItem key={cat} value={cat}>
-                            {cat.replace(/_/g, ' ')}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Select value={file.language} onValueChange={(v) => updateFileSettings(index, 'language', v)}>
-                      <SelectTrigger className="w-20">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="en">EN</SelectItem>
-                        <SelectItem value="he">HE</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button variant="ghost" size="icon" onClick={() => removeFile(index)}>
-                      <Trash2 className="w-4 h-4 text-destructive" />
+                {/* Queue Controls */}
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="font-medium">Queue: {queueDone}/{queueTotal} files</span>
+                  <Progress value={queueProgress} className="w-48" />
+                  <div className="flex gap-2 ml-auto">
+                    {!isProcessing && hasPending && (
+                      <Button onClick={startImport} size="sm" className="gap-1">
+                        <Play className="w-4 h-4" /> Start
+                      </Button>
+                    )}
+                    {isProcessing && (
+                      <Button onClick={togglePause} size="sm" variant={isPaused ? 'default' : 'secondary'} className="gap-1">
+                        {isPaused ? <><Play className="w-4 h-4" /> Resume</> : <><Pause className="w-4 h-4" /> Pause</>}
+                      </Button>
+                    )}
+                    {hasErrors && (
+                      <Button onClick={retryFailed} size="sm" variant="outline" className="gap-1">
+                        <RotateCcw className="w-4 h-4" /> Retry Failed
+                      </Button>
+                    )}
+                    <Button onClick={clearQueue} size="sm" variant="ghost" className="gap-1">
+                      <Trash2 className="w-4 h-4" /> Clear
                     </Button>
                   </div>
-                ))}
-                
-                {importing && (
-                  <Progress value={importProgress} className="w-full" />
-                )}
-                
-                <div className="flex gap-2">
-                  <Button onClick={importAllFiles} disabled={importing} className="flex items-center gap-2">
-                    <Upload className="w-4 h-4" />
-                    {importing ? 'Importing...' : `Import ${filesToImport.length} Files`}
-                  </Button>
-                  <Button variant="outline" onClick={() => setFilesToImport([])} disabled={importing}>
-                    Clear All
-                  </Button>
+                </div>
+
+                {/* Queue Items */}
+                <div className="max-h-80 overflow-y-auto space-y-2">
+                  {queue.map((item) => (
+                    <div key={item.id} className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                      <FileText className="w-5 h-5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{item.file.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {item.parsed?.rows.length || 0} rows
+                        </p>
+                      </div>
+                      <Select
+                        value={item.category}
+                        onValueChange={(v) => updateQueueItem(item.id, { category: v })}
+                        disabled={item.status !== 'pending'}
+                      >
+                        <SelectTrigger className="w-36">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CATEGORIES.map(cat => (
+                            <SelectItem key={cat} value={cat}>
+                              {cat.replace(/_/g, ' ')}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select
+                        value={item.language}
+                        onValueChange={(v) => updateQueueItem(item.id, { language: v })}
+                        disabled={item.status !== 'pending'}
+                      >
+                        <SelectTrigger className="w-20">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="en">EN</SelectItem>
+                          <SelectItem value="he">HE</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {getQueueStatusBadge(item)}
+                      {item.status === 'pending' && (
+                        <Button variant="ghost" size="icon" onClick={() => removeQueueItem(item.id)}>
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -524,15 +585,15 @@ ${report.legalDeclaration.declarationText}
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
-            <Button 
-              onClick={generateReport} 
+            <Button
+              onClick={generateReport}
               disabled={generatingReport}
               className="flex items-center gap-2"
             >
               <FileCheck className="w-4 h-4" />
               {generatingReport ? 'Generating...' : 'Generate Legal Report'}
             </Button>
-            
+
             {report && (
               <Button variant="outline" onClick={downloadReport} className="flex items-center gap-2">
                 <Download className="w-4 h-4" />
