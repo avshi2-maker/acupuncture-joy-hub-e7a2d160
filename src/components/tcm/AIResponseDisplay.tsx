@@ -52,7 +52,69 @@ interface HerbInfo {
   indications: string[] | null;
 }
 
+function extractBulletsFromSection(text: string, sectionNames: string[]): string[] {
+  const lines = text.split(/\r?\n/);
+  const out: string[] = [];
+
+  const isHeadingLine = (line: string) => {
+    const trimmed = line.trim();
+    if (!trimmed) return false;
+    // Markdown headings or "Title:" style lines
+    if (/^#{1,4}\s+/.test(trimmed)) return true;
+    if (/^[A-Z][A-Za-z\s/&]{2,30}:\s*$/.test(trimmed)) return true;
+    return false;
+  };
+
+  const normalizedNames = sectionNames.map((s) => s.toLowerCase());
+  let inSection = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i] ?? '';
+    const line = raw.trim();
+
+    // Start section
+    const lower = line.toLowerCase();
+    const sectionHit = normalizedNames.some((name) => {
+      // Allow "## Nutrition" or "Nutrition:" etc.
+      return lower === name || lower.startsWith(`${name}:`) || lower.startsWith(`${name} -`) || lower.includes(` ${name}`) || lower.startsWith(`# ${name}`) || lower.startsWith(`## ${name}`);
+    });
+
+    if (sectionHit) {
+      inSection = true;
+      // If inline content after colon, capture it
+      const inline = line.split(':').slice(1).join(':').trim();
+      if (inline) out.push(inline);
+      continue;
+    }
+
+    // Stop when next heading begins
+    if (inSection && isHeadingLine(line)) {
+      inSection = false;
+    }
+
+    if (!inSection) continue;
+
+    const bulletMatch = line.match(/^(?:[-*•]|\d+\.)\s+(.*)$/);
+    if (bulletMatch?.[1]) out.push(bulletMatch[1].trim());
+  }
+
+  return out;
+}
+
 function parseHerbs(text: string): string[] {
+  const fromSection = extractBulletsFromSection(text, ['Herbs', 'Herbal', 'Chinese Herbs', 'Herbal Formula', 'Formula']);
+
+  const parsed = fromSection
+    .map((line) => {
+      // "Huang Qi (黄芪) — ..." -> "Huang Qi"
+      const m = line.match(/^([A-Z][a-z]+(?:\s[A-Z][a-z]+){0,2})\b/);
+      return m?.[1]?.trim();
+    })
+    .filter(Boolean) as string[];
+
+  if (parsed.length > 0) return [...new Set(parsed)].slice(0, 12);
+
+  // Fallback: known common herbs (legacy)
   const pattern =
     /\b(Huang Qi|Ren Shen|Bai Zhu|Fu Ling|Dang Gui|Bai Shao|Chuan Xiong|Chai Hu|Sheng Jiang|Da Zao|Gan Cao|Ban Xia|Chen Pi|Zhi Shi|Hou Po|Ge Gen|Ju Hua|Bo He|Shi Gao|Zhi Mu|Huang Qin|Huang Lian|Huang Bai|Long Dan Cao|Jin Yin Hua|Lian Qiao|Pu Gong Ying|Sheng Di Huang|Xuan Shen|Mu Dan Pi|Di Gu Pi|Qing Hao|Da Huang|Mang Xiao|Huo Ma Ren|Rou Gui|Fu Zi|Gan Jiang|Wu Zhu Yu)\b/g;
   const matches = text.match(pattern) ?? [];
@@ -60,13 +122,28 @@ function parseHerbs(text: string): string[] {
 }
 
 function parseNutrition(text: string): string[] {
-  const pattern =
-    /(?:diet|nutrition|foods? to (?:eat|avoid)|avoid|include|consume|warm foods?|cold foods?|cooling foods?|warming foods?)\b[^.\n]*[.\n]?/gi;
-  const matches = text.match(pattern) ?? [];
-  return [...new Set(matches.map((m) => m.trim()).filter((m) => m.length >= 10 && m.length <= 140))].slice(0, 8);
+  const fromSection = extractBulletsFromSection(text, ['Nutrition', 'Diet', 'Dietary', 'Foods']);
+
+  const foodKeywords = /\b(food|foods|diet|eat|avoid|include|drink|tea|soup|broth|warm|warming|cold|cooling|spicy|sweet|dairy|gluten|alcohol|coffee|sugar|ginger|rice|congee|vegetable|fruit|meat|fish)\b/i;
+
+  const cleaned = (fromSection.length ? fromSection : [])
+    .map((m) => m.replace(/\s+/g, ' ').trim())
+    .filter((m) => m.length >= 8 && m.length <= 180)
+    .filter((m) => foodKeywords.test(m))
+    .filter((m) => !/\btongue\b/i.test(m));
+
+  return [...new Set(cleaned)].slice(0, 10);
 }
 
 function parseLifestyle(text: string): string[] {
+  const fromSection = extractBulletsFromSection(text, ['Lifestyle', 'Sleep', 'Exercise', 'Stress', 'Routine']);
+  const cleaned = fromSection
+    .map((m) => m.replace(/\s+/g, ' ').trim())
+    .filter((m) => m.length >= 8 && m.length <= 180);
+
+  if (cleaned.length > 0) return [...new Set(cleaned)].slice(0, 10);
+
+  // Fallback regex
   const pattern =
     /(?:lifestyle|exercise|sleep|stress|relax|meditation|breathing|walk|rest|routine)\b[^.\n]*[.\n]?/gi;
   const matches = text.match(pattern) ?? [];
@@ -423,12 +500,14 @@ export function AIResponseDisplay({
 
           <div className="flex items-center gap-2">
             {/* Brief Summary Toggle */}
-            {content && !isLoading && (
+            {content && (
               <Button
                 variant={showBrief ? "default" : "outline"}
                 size="sm"
                 onClick={() => setShowBrief(!showBrief)}
+                disabled={isLoading}
                 className="gap-1.5 text-xs"
+                aria-disabled={isLoading}
               >
                 <FileText className="h-3 w-3" />
                 Brief
