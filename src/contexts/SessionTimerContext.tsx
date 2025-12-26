@@ -25,6 +25,7 @@ interface SessionTimerContextType {
   pauseTimer: () => void;
   resumeTimer: () => void;
   resetTimer: () => void;
+  extendTimer: (minutes: number) => void;
   setSelectedDuration: (minutes: number) => void;
   setSoundEnabled: (enabled: boolean) => void;
   setIsExpanded: (expanded: boolean) => void;
@@ -190,6 +191,29 @@ export function SessionTimerProvider({ children }: { children: ReactNode }) {
     setStatus('idle');
   }, [selectedDuration]);
 
+  const extendTimer = useCallback((minutes: number) => {
+    const additionalSeconds = minutes * 60;
+    setRemainingSeconds(prev => prev + additionalSeconds);
+    setTotalSeconds(prev => prev + additionalSeconds);
+    
+    // Reset warning/end flags if we're extending past those thresholds
+    if (remainingSeconds + additionalSeconds > WARNING_BEFORE_END) {
+      warningShownRef.current = false;
+    }
+    endAlertShownRef.current = false;
+    
+    // Resume timer if it was ended
+    if (status === 'ended') {
+      setStatus('running');
+    } else if (status === 'warning' && remainingSeconds + additionalSeconds > WARNING_BEFORE_END) {
+      setStatus('running');
+    }
+    
+    toast.success(`Timer extended by ${minutes} minutes`, {
+      description: `New remaining time: ${Math.ceil((remainingSeconds + additionalSeconds) / 60)} min`,
+    });
+  }, [remainingSeconds, status]);
+
   const setSelectedDuration = useCallback((minutes: number) => {
     setSelectedDurationState(minutes);
     if (status === 'idle') {
@@ -222,6 +246,7 @@ export function SessionTimerProvider({ children }: { children: ReactNode }) {
       pauseTimer,
       resumeTimer,
       resetTimer,
+      extendTimer,
       setSelectedDuration,
       setSoundEnabled,
       setIsExpanded,

@@ -20,7 +20,8 @@ import {
   Timer,
   AlertTriangle,
   CheckCircle2,
-  User
+  User,
+  Plus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSessionTimer } from '@/contexts/SessionTimerContext';
@@ -56,6 +57,7 @@ export function SessionTimerWidget({
     pauseTimer,
     resumeTimer,
     resetTimer,
+    extendTimer,
     setSelectedDuration,
     setSoundEnabled,
     setIsExpanded,
@@ -289,6 +291,33 @@ export function SessionTimerWidget({
                 {soundEnabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
               </Button>
             </div>
+
+            {/* Extend timer options - show when warning or ended */}
+            {(status === 'warning' || status === 'ended') && (
+              <div className="p-3 rounded-lg bg-muted/50 border space-y-2">
+                <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <Plus className="h-4 w-4" /> Need more time?
+                </p>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => extendTimer(10)} 
+                    variant="outline" 
+                    size="sm"
+                    className="flex-1"
+                  >
+                    +10 min
+                  </Button>
+                  <Button 
+                    onClick={() => extendTimer(15)} 
+                    variant="outline" 
+                    size="sm"
+                    className="flex-1"
+                  >
+                    +15 min
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {/* End session message */}
             {status === 'ended' && (
