@@ -108,6 +108,16 @@ const CATEGORIES = [
   'other'
 ];
 
+const BUILTIN_ASSETS = [
+  {
+    id: 'tongue-diagnosis',
+    label: 'tongue-diagnosis.csv',
+    path: '/knowledge-assets/tongue-diagnosis.csv',
+    defaultCategory: 'tcm_theory',
+    defaultLanguage: 'en',
+  },
+] as const;
+
 type QueueItemStatus = 'pending' | 'importing' | 'done' | 'error';
 
 interface QueueItem {
@@ -129,6 +139,12 @@ export default function KnowledgeRegistry() {
   const [report, setReport] = useState<LegalReport | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Built-in asset import (one file at a time)
+  const [builtInAssetId, setBuiltInAssetId] = useState<(typeof BUILTIN_ASSETS)[number]['id']>('tongue-diagnosis');
+  const [builtInCategory, setBuiltInCategory] = useState<string>(BUILTIN_ASSETS[0].defaultCategory);
+  const [builtInLanguage, setBuiltInLanguage] = useState<string>(BUILTIN_ASSETS[0].defaultLanguage);
+  const [isImportingBuiltIn, setIsImportingBuiltIn] = useState(false);
+
   // Queue state
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const queueRef = useRef<QueueItem[]>([]);
@@ -147,12 +163,11 @@ export default function KnowledgeRegistry() {
     isPausedRef.current = isPaused;
   }, [isPaused]);
 
-  // Temporarily bypass auth check for testing
-  // useEffect(() => {
-  //   if (!authLoading && !user) {
-  //     navigate('/auth');
-  //   }
-  // }, [user, authLoading, navigate]);
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
 
   const { data: documents, isLoading } = useQuery({
     queryKey: ['knowledge-documents'],
@@ -230,61 +245,80 @@ ${report.legalDeclaration.declarationText}
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const newItems: QueueItem[] = [];
+    if (files.length === 0) return;
 
-    for (const file of files) {
-      if (!file.name.endsWith('.csv')) {
-        toast.error(`${file.name} is not a CSV file`);
-        continue;
-      }
-
-      const text = await file.text();
-      const parsed = parseCSV(text);
-
-      if (parsed.rows.length === 0) {
-        toast.error(`${file.name} has no data rows`);
-        continue;
-      }
-
-      // Auto-detect category
-      let category = 'other';
-      const lowerName = file.name.toLowerCase();
-      if (lowerName.includes('anxiety') || lowerName.includes('mental') || lowerName.includes('nervousness')) {
-        category = 'anxiety_mental';
-      } else if (lowerName.includes('wellness') || lowerName.includes('sport')) {
-        category = 'wellness_sport';
-      } else if (lowerName.includes('tcm')) {
-        category = 'tcm_theory';
-      } else if (lowerName.includes('therapist')) {
-        category = 'therapist_training';
-      } else if (lowerName.includes('general') || lowerName.includes('health')) {
-        category = 'general_health';
-      } else if (lowerName.includes('pain') || lowerName.includes('ortho')) {
-        category = 'pain_ortho';
-      } else if (lowerName.includes('women') || lowerName.includes('pregnan') || lowerName.includes('fertility')) {
-        category = 'womens_health';
-      } else if (lowerName.includes('pediatric') || lowerName.includes('child')) {
-        category = 'pediatrics';
-      } else if (lowerName.includes('digest') || lowerName.includes('stomach') || lowerName.includes('ibs')) {
-        category = 'digestive';
-      }
-
-      let language = 'en';
-      if (lowerName.includes('hebrew') || lowerName.includes('_he')) {
-        language = 'he';
-      }
-
-      newItems.push({
-        id: crypto.randomUUID(),
-        file,
-        category,
-        language,
-        parsed,
-        status: 'pending',
-      });
+    if (files.length > 1) {
+      toast.error('Please import 1 CSV file at a time.');
     }
 
-    setQueue(prev => [...prev, ...newItems]);
+    const file = files[0];
+
+    if (isProcessingRef.current) {
+      toast.error('An import is already running. Please wait for it to finish.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    if (!file.name.endsWith('.csv')) {
+      toast.error(`${file.name} is not a CSV file`);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    const text = await file.text();
+    const parsed = parseCSV(text);
+
+    if (parsed.rows.length === 0) {
+      toast.error(`${file.name} has no data rows`);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    // Auto-detect category
+    let category = 'other';
+    const lowerName = file.name.toLowerCase();
+    if (lowerName.includes('anxiety') || lowerName.includes('mental') || lowerName.includes('nervousness')) {
+      category = 'anxiety_mental';
+    } else if (lowerName.includes('wellness') || lowerName.includes('sport')) {
+      category = 'wellness_sport';
+    } else if (lowerName.includes('tcm')) {
+      category = 'tcm_theory';
+    } else if (lowerName.includes('therapist')) {
+      category = 'therapist_training';
+    } else if (lowerName.includes('general') || lowerName.includes('health')) {
+      category = 'general_health';
+    } else if (lowerName.includes('pain') || lowerName.includes('ortho')) {
+      category = 'pain_ortho';
+    } else if (lowerName.includes('women') || lowerName.includes('pregnan') || lowerName.includes('fertility')) {
+      category = 'womens_health';
+    } else if (lowerName.includes('pediatric') || lowerName.includes('child')) {
+      category = 'pediatrics';
+    } else if (lowerName.includes('digest') || lowerName.includes('stomach') || lowerName.includes('ibs')) {
+      category = 'digestive';
+    }
+
+    let language = 'en';
+    if (lowerName.includes('hebrew') || lowerName.includes('_he')) {
+      language = 'he';
+    }
+
+    const newItem: QueueItem = {
+      id: crypto.randomUUID(),
+      file,
+      category,
+      language,
+      parsed,
+      status: 'pending',
+    };
+
+    // Enforce one-at-a-time: replace the queue with this single file
+    isProcessingRef.current = false;
+    setIsProcessing(false);
+    isPausedRef.current = false;
+    setIsPaused(false);
+    queueRef.current = [newItem];
+    setQueue([newItem]);
+
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -351,6 +385,62 @@ ${report.legalDeclaration.declarationText}
       queryClient.invalidateQueries({ queryKey: ['knowledge-chunks-stats'] });
     }
   }, [queryClient, updateQueueItem]);
+
+  const importBuiltInAsset = useCallback(async () => {
+    if (authLoading) return;
+    if (!user) {
+      toast.error('Please sign in to import knowledge.');
+      navigate('/auth');
+      return;
+    }
+
+    const asset = BUILTIN_ASSETS.find(a => a.id === builtInAssetId);
+    if (!asset) {
+      toast.error('Unknown built-in file');
+      return;
+    }
+
+    setIsImportingBuiltIn(true);
+    try {
+      const res = await fetch(asset.path, { cache: 'no-cache' });
+      if (!res.ok) {
+        throw new Error(`Failed to load ${asset.label}`);
+      }
+
+      const text = await res.text();
+      const parsed = parseCSV(text);
+      if (parsed.rows.length === 0) {
+        throw new Error('CSV has no data rows');
+      }
+
+      const file = new File([text], asset.label, { type: 'text/csv' });
+      const item: QueueItem = {
+        id: crypto.randomUUID(),
+        file,
+        category: builtInCategory || asset.defaultCategory,
+        language: builtInLanguage || asset.defaultLanguage,
+        parsed,
+        status: 'pending',
+      };
+
+      // Enforce one-at-a-time: replace the queue with this single file and start immediately
+      isProcessingRef.current = false;
+      setIsProcessing(false);
+      isPausedRef.current = false;
+      setIsPaused(false);
+      queueRef.current = [item];
+      setQueue([item]);
+
+      // Run immediately (queueRef is already updated)
+      setTimeout(() => processQueue(), 0);
+      toast.success(`Import started: ${asset.label}`);
+    } catch (err: any) {
+      console.error('Built-in import error:', err);
+      toast.error(err?.message || 'Failed to import built-in file');
+    } finally {
+      setIsImportingBuiltIn(false);
+    }
+  }, [authLoading, user, navigate, builtInAssetId, builtInCategory, builtInLanguage, processQueue]);
 
   // Effect to keep processing when queue changes and not paused
   useEffect(() => {
@@ -470,17 +560,93 @@ ${report.legalDeclaration.declarationText}
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
+            <div className="rounded-lg border bg-muted/30 p-4">
+              <p className="text-sm font-medium mb-3">Built-in knowledge files (import 1 at a time)</p>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-4 md:items-end">
+                <div className="md:col-span-2">
+                  <Select
+                    value={builtInAssetId}
+                    onValueChange={(v) => {
+                      const asset = BUILTIN_ASSETS.find(a => a.id === v);
+                      setBuiltInAssetId(v as (typeof BUILTIN_ASSETS)[number]['id']);
+                      if (asset) {
+                        setBuiltInCategory(asset.defaultCategory);
+                        setBuiltInLanguage(asset.defaultLanguage);
+                      }
+                    }}
+                    disabled={isProcessing || isImportingBuiltIn}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a built-in file" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {BUILTIN_ASSETS.map((a) => (
+                        <SelectItem key={a.id} value={a.id}>
+                          {a.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Select
+                    value={builtInCategory}
+                    onValueChange={setBuiltInCategory}
+                    disabled={isProcessing || isImportingBuiltIn}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map(cat => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat.replace(/_/g, ' ')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Select
+                    value={builtInLanguage}
+                    onValueChange={setBuiltInLanguage}
+                    disabled={isProcessing || isImportingBuiltIn}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="en">EN</SelectItem>
+                      <SelectItem value="he">HE</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="mt-3 flex justify-end">
+                <Button
+                  onClick={importBuiltInAsset}
+                  disabled={isProcessing || isImportingBuiltIn}
+                  className="gap-1"
+                >
+                  <Upload className="w-4 h-4" />
+                  {isImportingBuiltIn ? 'Importing…' : 'Import now'}
+                </Button>
+              </div>
+            </div>
+
             <div>
               <Input
                 ref={fileInputRef}
                 type="file"
                 accept=".csv"
-                multiple
                 onChange={handleFileSelect}
                 className="cursor-pointer"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Select multiple CSV files. They will be queued and processed one by one.
+                Select 1 CSV file. It will be queued and processed immediately.
               </p>
             </div>
 
