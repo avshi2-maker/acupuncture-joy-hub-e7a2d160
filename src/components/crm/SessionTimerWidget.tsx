@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
 import { 
   Select, 
   SelectContent, 
@@ -21,7 +23,10 @@ import {
   AlertTriangle,
   CheckCircle2,
   User,
-  Plus
+  Plus,
+  Settings,
+  X,
+  Check
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSessionTimer } from '@/contexts/SessionTimerContext';
@@ -44,6 +49,9 @@ export function SessionTimerWidget({
   className,
   position = 'bottom-right' 
 }: SessionTimerWidgetProps) {
+  const [showSettings, setShowSettings] = useState(false);
+  const [newPreset, setNewPreset] = useState('');
+  
   const {
     status,
     remainingSeconds,
@@ -62,6 +70,7 @@ export function SessionTimerWidget({
     setSelectedDuration,
     setSoundEnabled,
     setIsExpanded,
+    setExtensionPresets,
     getProgress,
     formatTime,
   } = useSessionTimer();
@@ -102,6 +111,21 @@ export function SessionTimerWidget({
 
   const handleStart = () => {
     startTimer(selectedDuration);
+  };
+
+  const handleAddPreset = () => {
+    const value = parseInt(newPreset);
+    if (value > 0 && value <= 60 && !extensionPresets.includes(value)) {
+      const updated = [...extensionPresets, value].sort((a, b) => a - b);
+      setExtensionPresets(updated);
+      setNewPreset('');
+    }
+  };
+
+  const handleRemovePreset = (preset: number) => {
+    if (extensionPresets.length > 1) {
+      setExtensionPresets(extensionPresets.filter(p => p !== preset));
+    }
   };
 
   return (
@@ -291,7 +315,79 @@ export function SessionTimerWidget({
               >
                 {soundEnabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
               </Button>
+
+              {/* Settings toggle */}
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => setShowSettings(!showSettings)}
+                className={cn(showSettings && "bg-muted")}
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
             </div>
+
+            {/* Settings Panel */}
+            {showSettings && (
+              <div className="p-3 rounded-lg bg-muted/50 border space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium flex items-center gap-2">
+                    <Settings className="h-4 w-4" /> Timer Settings
+                  </p>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-6 w-6"
+                    onClick={() => setShowSettings(false)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-xs text-muted-foreground">Extension Presets (minutes)</label>
+                  <div className="flex flex-wrap gap-1">
+                    {extensionPresets.map((preset) => (
+                      <Badge 
+                        key={preset} 
+                        variant="secondary" 
+                        className="flex items-center gap-1 pr-1"
+                      >
+                        {preset} min
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-4 w-4 hover:bg-destructive/20 rounded-full"
+                          onClick={() => handleRemovePreset(preset)}
+                          disabled={extensionPresets.length <= 1}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </Badge>
+                    ))}
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      placeholder="Add preset (1-60)"
+                      value={newPreset}
+                      onChange={(e) => setNewPreset(e.target.value)}
+                      className="h-8 text-sm"
+                      min={1}
+                      max={60}
+                    />
+                    <Button 
+                      size="sm" 
+                      onClick={handleAddPreset}
+                      disabled={!newPreset || parseInt(newPreset) <= 0 || parseInt(newPreset) > 60}
+                    >
+                      <Check className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Extend timer options - show when warning or ended */}
             {(status === 'warning' || status === 'ended') && (
