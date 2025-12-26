@@ -1,5 +1,6 @@
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { WhatsAppCTA } from "@/components/ui/WhatsAppCTA";
 import heroBg from "@/assets/hero-meridian-bg.png";
 
 const Hero = () => {
@@ -47,10 +48,14 @@ const Hero = () => {
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up delay-300">
-            <Button variant="hero" size="xl" className="group">
+            <WhatsAppCTA 
+              variant="button"
+              phoneNumber="972544634923"
+              message="שלום! אשמח לקבוע תור לייעוץ ראשוני"
+              className="text-lg px-8 py-4"
+            >
               Book Your Session
-              <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-            </Button>
+            </WhatsAppCTA>
             <Button variant="heroOutline" size="xl">
               Explore Treatments
             </Button>

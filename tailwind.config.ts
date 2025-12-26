@@ -124,6 +124,10 @@ export default {
           "10%, 30%, 50%, 70%, 90%": { transform: "translateX(-2px)" },
           "20%, 40%, 60%, 80%": { transform: "translateX(2px)" },
         },
+        "wiggle": {
+          "0%, 100%": { transform: "rotate(-3deg)" },
+          "50%": { transform: "rotate(3deg)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -137,6 +141,7 @@ export default {
         "bounce-subtle": "bounce-subtle 2s ease-in-out infinite",
         "ping-slow": "ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite",
         "shake": "shake 0.5s ease-in-out",
+        "wiggle": "wiggle 0.3s ease-in-out infinite",
       },
     },
   },

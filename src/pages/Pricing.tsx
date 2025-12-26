@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { TierCard } from '@/components/pricing/TierCard';
 import { ArrowLeft, Leaf } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { WhatsAppCTA } from '@/components/ui/WhatsAppCTA';
 
 const tiers = [
   {
@@ -104,17 +105,18 @@ export default function Pricing() {
             ))}
           </div>
 
-          <p className="text-center text-sm text-muted-foreground mt-12">
-            לשאלות נוספות, צרו קשר עם ד״ר רוני ספיר בוואטסאפ:{' '}
-            <a 
-              href="https://wa.me/972505231042" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-jade hover:underline"
+          <div className="text-center mt-12 space-y-4">
+            <p className="text-sm text-muted-foreground">
+              לשאלות נוספות, צרו קשר עם ד״ר רוני ספיר בוואטסאפ
+            </p>
+            <WhatsAppCTA 
+              variant="button"
+              phoneNumber="972505231042"
+              message="שלום! יש לי שאלות לגבי התוכניות והמחירים"
             >
-              050-5231042
-            </a>
-          </p>
+              שאלות? דברו איתנו
+            </WhatsAppCTA>
+          </div>
         </div>
       </div>
     </>

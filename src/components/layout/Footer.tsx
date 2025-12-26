@@ -1,4 +1,5 @@
 import { Leaf, Facebook, Instagram, Youtube, Linkedin, Mail } from "lucide-react";
+import { WhatsAppCTA } from "@/components/ui/WhatsAppCTA";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -51,6 +52,18 @@ const Footer = () => {
               Bringing 5,000 years of Traditional Chinese Medicine wisdom to 
               the modern world. Your journey to optimal health starts here.
             </p>
+            
+            {/* WhatsApp CTA */}
+            <div className="mb-6">
+              <WhatsAppCTA 
+                variant="button"
+                phoneNumber="972544634923"
+                message="שלום! אשמח לקבוע תור או לשמוע עוד על הטיפולים"
+              >
+                Chat with Us
+              </WhatsAppCTA>
+            </div>
+            
             {/* Social Links */}
             <div className="flex gap-4">
               {socialLinks.map((social) => (
