@@ -117,24 +117,39 @@ serve(async (req) => {
           let question = '';
           let answer = '';
           let content = '';
+          let contentType = 'text';
 
-          if (row.Question && row.Answer) {
+          // TCM-CAF Format (asset_type, question, answer, category, tags)
+          if (row.asset_type && row.question && row.answer) {
+            question = row.question;
+            answer = row.answer;
+            const tags = row.tags || '';
+            const assetType = row.asset_type;
+            content = `[TCM-CAF Asset: ${assetType}]\nCategory: ${row.category || assetType}\nTags: ${tags}\nQ: ${question}\nA: ${answer}`;
+            contentType = 'qa';
+          }
+          // Standard Q&A formats
+          else if (row.Question && row.Answer) {
             question = row.Question;
             answer = row.Answer;
             content = `Q: ${row.Question}\nA: ${row.Answer}`;
+            contentType = 'qa';
           } else if (row.patient_question && row.clinic_answer) {
             question = row.patient_question;
             answer = row.clinic_answer;
             content = `Q: ${row.patient_question}\nA: ${row.clinic_answer}`;
+            contentType = 'qa';
           } else if (row.Question_Therapist && row.Answer_Therapist) {
             question = row.Question_Therapist;
             answer = row.Answer_Therapist;
             content = `Q: ${row.Question_Therapist}\nA: ${row.Answer_Therapist}`;
+            contentType = 'qa';
           } else if (row.Clinical_Description) {
             content = row.Clinical_Description;
             if (row['Clinical Q&A – Question'] && row['Clinical Q&A – Answer']) {
               question = row['Clinical Q&A – Question'];
               answer = row['Clinical Q&A – Answer'];
+              contentType = 'qa';
             }
           } else if (row.Question_Hebrew || row.Question_English) {
             // TCM Professional Training Syllabus format - bilingual Q&A
@@ -146,7 +161,7 @@ serve(async (req) => {
             const treatment = row.Treatment_Principle || row['Treatment\\_Principle'] || '';
             const qHe = row.Question_Hebrew || row['Question\\_Hebrew'] || '';
             const qEn = row.Question_English || row['Question\\_English'] || '';
-            const category = row.Category || '';
+            const categoryVal = row.Category || '';
             const bodySystem = row.Body_System || row['Body\\_System'] || '';
             
             // Create bilingual question
@@ -159,13 +174,14 @@ serve(async (req) => {
               `Acupuncture Points: ${points}\n` +
               `Treatment Principle: ${treatment}`;
             
-            content = `Category: ${category}\n` +
+            content = `Category: ${categoryVal}\n` +
               `Name: ${nameEn}${nameHe ? ` (${nameHe})` : ''}${pinyin ? ` - ${pinyin}` : ''}\n` +
               `Clinical Description: ${clinical}\n` +
               `Acupuncture Points: ${points}\n` +
               `Treatment Principle: ${treatment}\n` +
               `Body System: ${bodySystem}\n` +
               `Q: ${question}\nA: ${answer}`;
+            contentType = 'qa';
           } else if (row.Stage && row.Question) {
             // Patient Q&A format (Acupuncture_Patient_QA_Updated.xlsx)
             const stage = row.Stage || '';
@@ -176,6 +192,7 @@ serve(async (req) => {
             question = questionText;
             answer = `Stage: ${stage}\nNotes: ${notes}\nTreatment Suggestions: ${treatmentSuggestions}`;
             content = `Patient Q&A - ${stage}\nQ: ${questionText}\nNotes: ${notes}\nTreatment: ${treatmentSuggestions}`;
+            contentType = 'qa';
           } else {
             // Generic: join all values
             content = Object.values(row).filter(Boolean).join(' | ');
@@ -185,7 +202,7 @@ serve(async (req) => {
             document_id: newDoc.id,
             chunk_index: index + 1,
             content: content.substring(0, 10000), // Limit content size
-            content_type: question ? 'qa' : 'text',
+            content_type: contentType,
             question: question?.substring(0, 2000) || null,
             answer: answer?.substring(0, 5000) || null,
             metadata: row,
