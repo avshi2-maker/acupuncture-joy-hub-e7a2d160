@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Brain, FileText, ClipboardList, Pill, ArrowLeft, Sparkles } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Brain, FileText, ClipboardList, Pill, ArrowLeft, Sparkles, Search } from 'lucide-react';
 
 // Symptom Analysis Questions (50)
 const symptomQuestions = [
@@ -189,15 +191,27 @@ const queryBoxes = [
 export default function TcmBrainPreview() {
   const navigate = useNavigate();
   const [selectedQuestions, setSelectedQuestions] = useState<Record<string, string>>({});
+  const [searchFilters, setSearchFilters] = useState<Record<string, string>>({});
+  const [openPopovers, setOpenPopovers] = useState<Record<string, boolean>>({});
 
   const handleQuestionSelect = (boxId: string, question: string) => {
     setSelectedQuestions(prev => ({ ...prev, [boxId]: question }));
+    setOpenPopovers(prev => ({ ...prev, [boxId]: false }));
   };
 
   const handleSendToAI = (question: string) => {
     // Navigate to TCM Brain with the question as a URL parameter
     const encodedQuestion = encodeURIComponent(question);
     navigate(`/gate?redirect=/tcm-brain&question=${encodedQuestion}`);
+  };
+
+  const getFilteredQuestions = (questions: typeof symptomQuestions, boxId: string) => {
+    const filter = searchFilters[boxId]?.toLowerCase() || '';
+    if (!filter) return questions;
+    return questions.filter(q => 
+      q.question.toLowerCase().includes(filter) || 
+      q.category.toLowerCase().includes(filter)
+    );
   };
 
   return (
@@ -243,34 +257,65 @@ export default function TcmBrainPreview() {
                   <p className="text-sm text-muted-foreground">{box.description}</p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* Category Dropdowns */}
-                  <div className="space-y-3 max-h-[280px] overflow-y-auto pr-2">
-                    {categories.map(category => (
-                      <div key={category}>
-                        <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                          {category}
-                        </label>
-                        <Select
-                          value={selectedQuestion}
-                          onValueChange={(value) => handleQuestionSelect(box.id, value)}
+                  {/* Search Popup Button */}
+                  <Popover 
+                    open={openPopovers[box.id] || false} 
+                    onOpenChange={(open) => setOpenPopovers(prev => ({ ...prev, [box.id]: open }))}
+                  >
+                    <PopoverTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start gap-2 bg-background/50 border-border/50 text-right"
+                        dir="rtl"
+                      >
+                        <Search className="h-4 w-4" />
+                        {selectedQuestion || 'בחרו שאלה...'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-0" align="start" dir="rtl">
+                      <div className="p-3 border-b border-border">
+                        <Input
+                          placeholder="חפש לפי אות ראשונה או מילה..."
+                          value={searchFilters[box.id] || ''}
+                          onChange={(e) => setSearchFilters(prev => ({ ...prev, [box.id]: e.target.value }))}
+                          className="text-right"
                           dir="rtl"
-                        >
-                          <SelectTrigger className="text-right bg-background/50 border-border/50" dir="rtl">
-                            <SelectValue placeholder="בחרו שאלה..." />
-                          </SelectTrigger>
-                          <SelectContent className="bg-card border-border z-50 max-h-60" dir="rtl">
-                            {box.questions
-                              .filter(q => q.category === category)
-                              .map(q => (
-                                <SelectItem key={q.id} value={q.question} className="text-right">
-                                  {q.question}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
+                        />
                       </div>
-                    ))}
-                  </div>
+                      <ScrollArea className="h-64">
+                        <div className="p-2">
+                          {categories.map(category => {
+                            const filteredQuestions = getFilteredQuestions(box.questions, box.id)
+                              .filter(q => q.category === category);
+                            if (filteredQuestions.length === 0) return null;
+                            return (
+                              <div key={category} className="mb-3">
+                                <div className="text-xs font-semibold text-muted-foreground px-2 py-1 bg-muted/50 rounded mb-1">
+                                  {category}
+                                </div>
+                                {filteredQuestions.map(q => (
+                                  <button
+                                    key={q.id}
+                                    onClick={() => handleQuestionSelect(box.id, q.question)}
+                                    className={`w-full text-right px-2 py-1.5 rounded text-sm hover:bg-muted transition-colors ${
+                                      selectedQuestion === q.question ? 'bg-primary/10 text-primary' : ''
+                                    }`}
+                                  >
+                                    {q.question}
+                                  </button>
+                                ))}
+                              </div>
+                            );
+                          })}
+                          {getFilteredQuestions(box.questions, box.id).length === 0 && (
+                            <p className="text-center text-muted-foreground text-sm py-4">
+                              לא נמצאו תוצאות
+                            </p>
+                          )}
+                        </div>
+                      </ScrollArea>
+                    </PopoverContent>
+                  </Popover>
 
                   {/* Selected Question Display & Send Button */}
                   {selectedQuestion && (
