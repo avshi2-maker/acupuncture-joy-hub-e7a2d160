@@ -73,6 +73,7 @@ const App = () => (
                   <Route path="/install" element={<InstallApp />} />
                   <Route path="/admin/feedback" element={<AdminFeedback />} />
                   <Route path="/admin/knowledge" element={<KnowledgeRegistry />} />
+                  <Route path="/knowledge-registry" element={<KnowledgeRegistry />} />
                   <Route path="/bazi-calculator" element={<BaziCalculator />} />
                   <Route path="/legal-report" element={<LegalReport />} />
                   <Route path="/symptom-checker" element={<SymptomChecker />} />
