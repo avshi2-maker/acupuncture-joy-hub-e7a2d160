@@ -17,7 +17,8 @@ import {
   Leaf,
   LogOut,
   PanelLeftClose,
-  PanelLeft
+  PanelLeft,
+  Database
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { VideoSessionPanel } from '@/components/video/VideoSessionPanel';
@@ -28,11 +29,12 @@ interface FeatureCardProps {
   icon: React.ReactNode;
   available: boolean;
   href?: string;
+  highlighted?: boolean;
 }
 
-function FeatureCard({ title, description, icon, available, href }: FeatureCardProps) {
+function FeatureCard({ title, description, icon, available, href, highlighted }: FeatureCardProps) {
   const content = (
-    <Card className={`transition-all duration-300 h-full ${available ? 'hover:shadow-elevated cursor-pointer' : 'opacity-60'}`}>
+    <Card className={`transition-all duration-300 h-full ${available ? 'hover:shadow-elevated cursor-pointer' : 'opacity-60'} ${highlighted ? 'ring-2 ring-jade border-jade' : ''}`}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${available ? 'bg-jade-light' : 'bg-muted'}`}>
@@ -83,6 +85,15 @@ export default function Dashboard() {
   };
 
   const features = [
+    {
+      id: 'knowledge_registry',
+      title: 'Knowledge Registry',
+      description: 'העלאת וניהול קבצי ידע CSV',
+      icon: <Database className="h-6 w-6 text-jade" />,
+      feature: 'tcm_brain' as const,
+      href: '/knowledge-registry',
+      alwaysAvailable: true,
+    },
     {
       id: 'tcm_brain',
       title: 'TCM Brain',
@@ -200,8 +211,9 @@ export default function Dashboard() {
                   title={feature.title}
                   description={feature.description}
                   icon={feature.icon}
-                  available={hasFeature(feature.feature)}
+                  available={'alwaysAvailable' in feature ? true : hasFeature(feature.feature)}
                   href={feature.href}
+                  highlighted={'alwaysAvailable' in feature}
                 />
               ))}
               
