@@ -26,7 +26,8 @@ import {
   Plus,
   Settings,
   X,
-  Check
+  Check,
+  RotateCw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSessionTimer } from '@/contexts/SessionTimerContext';
@@ -71,6 +72,7 @@ export function SessionTimerWidget({
     setSoundEnabled,
     setIsExpanded,
     setExtensionPresets,
+    resetSettingsToDefaults,
     getProgress,
     formatTime,
   } = useSessionTimer();
@@ -385,6 +387,15 @@ export function SessionTimerWidget({
                       <Check className="h-4 w-4" />
                     </Button>
                   </div>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full"
+                    onClick={resetSettingsToDefaults}
+                  >
+                    <RotateCw className="h-3 w-3 mr-2" /> Reset to Defaults
+                  </Button>
                 </div>
               </div>
             )}

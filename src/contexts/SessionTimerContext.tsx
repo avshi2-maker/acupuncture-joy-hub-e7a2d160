@@ -31,6 +31,7 @@ interface SessionTimerContextType {
   setSoundEnabled: (enabled: boolean) => void;
   setIsExpanded: (expanded: boolean) => void;
   setExtensionPresets: (presets: number[]) => void;
+  resetSettingsToDefaults: () => void;
   
   // Derived
   getProgress: () => number;
@@ -268,6 +269,22 @@ export function SessionTimerProvider({ children }: { children: ReactNode }) {
     saveSettings({ extensionPresets: presets, soundEnabled, selectedDuration });
   }, [soundEnabled, selectedDuration]);
 
+  const resetSettingsToDefaults = useCallback(() => {
+    setExtensionPresetsState(DEFAULT_EXTENSION_PRESETS);
+    setSoundEnabledState(true);
+    setSelectedDurationState(40);
+    if (status === 'idle') {
+      setTotalSeconds(40 * 60);
+      setRemainingSeconds(40 * 60);
+    }
+    saveSettings({ 
+      extensionPresets: DEFAULT_EXTENSION_PRESETS, 
+      soundEnabled: true, 
+      selectedDuration: 40 
+    });
+    toast.success('Settings reset to defaults');
+  }, [status]);
+
   const getProgress = useCallback(() => {
     return ((totalSeconds - remainingSeconds) / totalSeconds) * 100;
   }, [totalSeconds, remainingSeconds]);
@@ -298,6 +315,7 @@ export function SessionTimerProvider({ children }: { children: ReactNode }) {
       setSoundEnabled,
       setIsExpanded,
       setExtensionPresets,
+      resetSettingsToDefaults,
       getProgress,
       formatTime,
     }}>
