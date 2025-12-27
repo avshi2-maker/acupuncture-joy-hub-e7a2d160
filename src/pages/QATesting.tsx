@@ -23,6 +23,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Play,
   Pause,
@@ -45,6 +46,9 @@ import {
   ClipboardCheck,
   Timer,
   Shield,
+  Mail,
+  Send,
+  Loader2,
 } from 'lucide-react';
 
 const statusConfig: Record<TestStatus, { label: string; labelHe: string; icon: React.ReactNode; color: string }> = {
@@ -100,6 +104,9 @@ export default function QATesting() {
   const [followUpNotes, setFollowUpNotes] = useState('');
   const [followUpDueDate, setFollowUpDueDate] = useState('');
   const [showResetDialog, setShowResetDialog] = useState(false);
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
+  const [recipientEmail, setRecipientEmail] = useState('avshi2@gmail.com');
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>('all');
 
   if (isLoading) {
@@ -154,7 +161,51 @@ export default function QATesting() {
     toast.success('QA Session reset');
   };
 
-  const filteredModules = session?.modules.filter(m => 
+  const handleSendEmailReport = async () => {
+    if (!session || !recipientEmail.trim()) {
+      toast.error('נא להזין כתובת אימייל');
+      return;
+    }
+
+    setIsSendingEmail(true);
+    try {
+      const reportData = {
+        testerName: session.testerName,
+        recipientEmail: recipientEmail.trim(),
+        startedAt: session.startedAt,
+        endedAt: session.endedAt || new Date().toISOString(),
+        modules: session.modules.map(m => ({
+          moduleName: m.moduleName,
+          moduleNameHe: m.moduleNameHe,
+          status: m.status,
+          comments: m.comments.map(c => ({
+            text: c.text,
+            type: c.type,
+            author: c.author,
+          })),
+          followUpRequired: m.followUpRequired,
+          followUpNotes: m.followUpNotes,
+        })),
+        summary: progress,
+      };
+
+      const { data, error } = await supabase.functions.invoke('send-qa-report', {
+        body: reportData,
+      });
+
+      if (error) throw error;
+
+      toast.success('דו״ח QA נשלח בהצלחה!');
+      setShowEmailDialog(false);
+    } catch (error: any) {
+      console.error('Error sending email:', error);
+      toast.error('שגיאה בשליחת הדו״ח: ' + error.message);
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
+  const filteredModules = session?.modules.filter(m =>
     activeCategory === 'all' || m.category === activeCategory
   ) || [];
 
@@ -262,6 +313,63 @@ export default function QATesting() {
                   <CheckCircle2 className="h-4 w-4" />
                   End Session
                 </Button>
+
+                {/* Email Report Dialog */}
+                <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-1 border-jade text-jade hover:bg-jade/10">
+                      <Mail className="h-4 w-4" />
+                      Send Report
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>📧 שליחת דו״ח QA באימייל</DialogTitle>
+                      <DialogDescription>
+                        הדו״ח יכלול סיכום של כל הבדיקות, הערות ומודולים שנכשלו
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="email">כתובת אימייל</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="example@email.com"
+                          value={recipientEmail}
+                          onChange={(e) => setRecipientEmail(e.target.value)}
+                          dir="ltr"
+                        />
+                      </div>
+                      <div className="bg-muted/50 p-3 rounded-lg text-sm space-y-1">
+                        <p><strong>סיכום הדו״ח:</strong></p>
+                        <p>• בודק: {session.testerName}</p>
+                        <p>• התקדמות: {progress.percentage}%</p>
+                        <p>• עברו: {progress.passed} | נכשלו: {progress.failed} | חסומים: {progress.blocked}</p>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setShowEmailDialog(false)}>ביטול</Button>
+                      <Button 
+                        onClick={handleSendEmailReport} 
+                        disabled={isSendingEmail}
+                        className="gap-2"
+                      >
+                        {isSendingEmail ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            שולח...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="h-4 w-4" />
+                            שלח דו״ח
+                          </>
+                        )}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
 
                 <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
                   <DialogTrigger asChild>
