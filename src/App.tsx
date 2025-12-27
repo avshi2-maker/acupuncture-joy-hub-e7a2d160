@@ -36,6 +36,7 @@ import LegalReport from "./pages/LegalReport";
 import SymptomChecker from "./pages/SymptomChecker";
 import TreatmentPlanner from "./pages/TreatmentPlanner";
 import QATesting from "./pages/QATesting";
+import EncyclopediaLanding from "./pages/EncyclopediaLanding";
 
 const queryClient = new QueryClient();
 
@@ -79,6 +80,7 @@ const App = () => (
                   <Route path="/symptom-checker" element={<SymptomChecker />} />
                   <Route path="/treatment-planner" element={<TreatmentPlanner />} />
                   <Route path="/qa-testing" element={<QATesting />} />
+                  <Route path="/encyclopedia" element={<EncyclopediaLanding />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 
