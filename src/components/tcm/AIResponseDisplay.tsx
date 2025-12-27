@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { parsePointReferences } from '@/components/acupuncture/BodyFigureSelector';
 import { supabase } from '@/integrations/supabase/client';
-import { HebrewTTSButton } from './HebrewTTSButton';
+import { TTSButton } from '@/components/audio/TTSButton';
 
 interface AIResponseDisplayProps {
   isLoading: boolean;
@@ -730,11 +730,14 @@ export function AIResponseDisplay({
 
             {/* Hebrew TTS Button */}
             {content && !isLoading && (
-              <HebrewTTSButton
+              <TTSButton
                 text={content}
+                title="AI Response"
                 size="sm"
                 variant="outline"
                 className="gap-1.5 text-xs"
+                showLabel
+                label="Listen"
               />
             )}
 

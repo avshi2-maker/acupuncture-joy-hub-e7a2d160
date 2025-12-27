@@ -5,6 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ClipboardList, FileText, Database, Sparkles, Leaf, User, History, Download, Copy } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
+import { TTSButton } from '@/components/audio/TTSButton';
 
 interface Source {
   fileName: string;
@@ -70,6 +71,14 @@ export function TreatmentPlanResult({ treatmentPlan, sources, metadata, patientN
             <Sparkles className="h-4 w-4 text-gold" />
           </CardTitle>
           <div className="flex gap-2">
+            <TTSButton 
+              text={treatmentPlan} 
+              title="Treatment Plan" 
+              size="sm" 
+              variant="outline"
+              showLabel
+              label="Listen"
+            />
             <Button variant="outline" size="sm" onClick={handleCopy}>
               <Copy className="h-4 w-4 mr-1" />
               Copy

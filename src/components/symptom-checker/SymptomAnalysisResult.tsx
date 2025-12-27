@@ -4,6 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Brain, FileText, Database, Sparkles } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { TTSButton } from '@/components/audio/TTSButton';
 
 interface Source {
   fileName: string;
@@ -30,12 +31,20 @@ export function SymptomAnalysisResult({ analysis, sources, metadata }: SymptomAn
     <div className="space-y-4">
       {/* Analysis Card */}
       <Card className="border-jade/20">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Brain className="h-5 w-5 text-jade" />
             AI Pattern Analysis
             <Sparkles className="h-4 w-4 text-gold" />
           </CardTitle>
+          <TTSButton 
+            text={analysis} 
+            title="Symptom Analysis" 
+            size="sm" 
+            variant="outline"
+            showLabel
+            label="Listen"
+          />
         </CardHeader>
         <CardContent>
           <ScrollArea className="max-h-[500px] pr-4">

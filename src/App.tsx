@@ -7,6 +7,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
 import { TierProvider } from "@/hooks/useTier";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { AudioPlayerProvider } from "@/components/audio/FloatingAudioPlayer";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import TherapistRegister from "./pages/TherapistRegister";
@@ -48,48 +49,49 @@ const App = () => (
       <LanguageProvider>
         <AuthProvider>
           <TierProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/therapist-register" element={<TherapistRegister />} />
-                  <Route path="/pricing" element={<Pricing />} />
-                  <Route path="/payment-instructions" element={<PaymentInstructions />} />
-                  <Route path="/gate" element={<Gate />} />
-                  <Route path="/admin" element={<Admin />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/tcm-brain" element={<TcmBrain />} />
-                  <Route path="/crm" element={<CRMDashboard />} />
-                  <Route path="/crm/dashboard" element={<CRMDashboard />} />
-                  <Route path="/crm/calendar" element={<CRMCalendar />} />
-                  <Route path="/crm/patients" element={<CRMPatients />} />
-                  <Route path="/crm/patients/new" element={<CRMPatientNew />} />
-                  <Route path="/crm/patients/:id" element={<CRMPatientDetail />} />
-                  <Route path="/crm/patients/:id/edit" element={<CRMPatientEdit />} />
-                  <Route path="/crm/rooms" element={<CRMRooms />} />
-                  <Route path="/crm/patients/:patientId/consent" element={<PatientConsentForm />} />
-                  <Route path="/confirm" element={<AppointmentConfirm />} />
-                  <Route path="/therapist-profile" element={<TherapistProfile />} />
-                  <Route path="/install" element={<InstallApp />} />
-                  <Route path="/admin/feedback" element={<AdminFeedback />} />
-                  <Route path="/admin/knowledge" element={<KnowledgeRegistry />} />
-                  <Route path="/knowledge-registry" element={<KnowledgeRegistry />} />
-                  <Route path="/bazi-calculator" element={<BaziCalculator />} />
-                  <Route path="/legal-report" element={<LegalReport />} />
-                  <Route path="/symptom-checker" element={<SymptomChecker />} />
-                  <Route path="/treatment-planner" element={<TreatmentPlanner />} />
-                  <Route path="/qa-testing" element={<QATesting />} />
-                  <Route path="/encyclopedia" element={<EncyclopediaLanding />} />
-                  <Route path="/developers" element={<Developers />} />
-                  <Route path="/scenarios" element={<ScenariosDashboard />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-                
-              </BrowserRouter>
-            </TooltipProvider>
+            <AudioPlayerProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/therapist-register" element={<TherapistRegister />} />
+                    <Route path="/pricing" element={<Pricing />} />
+                    <Route path="/payment-instructions" element={<PaymentInstructions />} />
+                    <Route path="/gate" element={<Gate />} />
+                    <Route path="/admin" element={<Admin />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/tcm-brain" element={<TcmBrain />} />
+                    <Route path="/crm" element={<CRMDashboard />} />
+                    <Route path="/crm/dashboard" element={<CRMDashboard />} />
+                    <Route path="/crm/calendar" element={<CRMCalendar />} />
+                    <Route path="/crm/patients" element={<CRMPatients />} />
+                    <Route path="/crm/patients/new" element={<CRMPatientNew />} />
+                    <Route path="/crm/patients/:id" element={<CRMPatientDetail />} />
+                    <Route path="/crm/patients/:id/edit" element={<CRMPatientEdit />} />
+                    <Route path="/crm/rooms" element={<CRMRooms />} />
+                    <Route path="/crm/patients/:patientId/consent" element={<PatientConsentForm />} />
+                    <Route path="/confirm" element={<AppointmentConfirm />} />
+                    <Route path="/therapist-profile" element={<TherapistProfile />} />
+                    <Route path="/install" element={<InstallApp />} />
+                    <Route path="/admin/feedback" element={<AdminFeedback />} />
+                    <Route path="/admin/knowledge" element={<KnowledgeRegistry />} />
+                    <Route path="/knowledge-registry" element={<KnowledgeRegistry />} />
+                    <Route path="/bazi-calculator" element={<BaziCalculator />} />
+                    <Route path="/legal-report" element={<LegalReport />} />
+                    <Route path="/symptom-checker" element={<SymptomChecker />} />
+                    <Route path="/treatment-planner" element={<TreatmentPlanner />} />
+                    <Route path="/qa-testing" element={<QATesting />} />
+                    <Route path="/encyclopedia" element={<EncyclopediaLanding />} />
+                    <Route path="/developers" element={<Developers />} />
+                    <Route path="/scenarios" element={<ScenariosDashboard />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </BrowserRouter>
+              </TooltipProvider>
+            </AudioPlayerProvider>
           </TierProvider>
         </AuthProvider>
       </LanguageProvider>
