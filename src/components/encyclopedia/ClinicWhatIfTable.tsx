@@ -10,6 +10,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 
 // Fixed costs - these are known and true
 const FIXED_COSTS = {
@@ -160,8 +161,8 @@ export function ClinicWhatIfTable() {
       user_id: userId,
       name: scenarioName,
       scenario_type: 'clinic',
-      configuration: inputs as unknown as Record<string, unknown>,
-      calculations: calculations as unknown as Record<string, unknown>
+      configuration: JSON.parse(JSON.stringify(inputs)) as Json,
+      calculations: JSON.parse(JSON.stringify(calculations)) as Json
     }]);
 
     if (error) {
