@@ -1,5 +1,6 @@
 import { Leaf, Facebook, Instagram, Youtube, Linkedin, Mail } from "lucide-react";
 import { WhatsAppCTA } from "@/components/ui/WhatsAppCTA";
+import { Disclaimer } from "./Disclaimer";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -36,7 +37,11 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-foreground text-primary-foreground pt-16 pb-8">
+    <>
+      {/* Disclaimer */}
+      <Disclaimer />
+      
+      <footer className="bg-foreground text-primary-foreground pt-16 pb-8">
       <div className="container mx-auto px-4">
         {/* Main Footer Content */}
         <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-12 mb-12">
@@ -146,12 +151,16 @@ const Footer = () => {
               © {currentYear} Dr Roni Sapir - Complementary Medicine Clinic. All rights reserved.
             </p>
             <p className="font-body text-sm text-primary-foreground/50">
-              Licensed Acupuncture & Traditional Chinese Medicine Practice
+              Alternative & Complementary Wellness Practice
             </p>
           </div>
+          <p className="font-body text-xs text-primary-foreground/40 text-center mt-4">
+            This is a complementary/alternative wellness practice. Services are not medical care and are not a substitute for diagnosis or treatment by a licensed physician.
+          </p>
         </div>
       </div>
     </footer>
+    </>
   );
 };
 
