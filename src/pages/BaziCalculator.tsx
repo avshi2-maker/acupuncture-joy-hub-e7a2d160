@@ -24,7 +24,8 @@ import {
   Mountain,
   Wind,
   MapPin,
-  LogOut
+  LogOut,
+  Lock
 } from 'lucide-react';
 import {
   calculateBaZi,
@@ -65,6 +66,12 @@ const chineseHours = [
   { value: '22', emoji: '🐖', key: 'pigHour' },
 ];
 
+// Sample demo data for preview mode
+const getSampleBaziResult = () => {
+  const sampleDate = new Date(1990, 0, 15);
+  return calculateBaZi(sampleDate, 12, 0);
+};
+
 export default function BaziCalculator() {
   const navigate = useNavigate();
   const { t, dir, language } = useLanguage();
@@ -78,13 +85,19 @@ export default function BaziCalculator() {
 
   const isRTL = dir === 'rtl';
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
+  const isPreviewMode = !tier;
 
-  // Redirect to gate if no tier (not authorized)
+  // Show sample result in preview mode
   useEffect(() => {
-    if (!tier) {
-      navigate('/gate?redirect=/bazi-calculator');
+    if (isPreviewMode) {
+      const sampleResult = getSampleBaziResult();
+      const sampleStrengths = calculateElementStrengths(sampleResult);
+      const sampleRecs = getAcupunctureRecommendations(sampleResult, sampleStrengths);
+      setResult(sampleResult);
+      setStrengths(sampleStrengths);
+      setRecommendations(sampleRecs);
     }
-  }, [tier, navigate]);
+  }, [isPreviewMode]);
 
   const translateElement = (element: string): string => {
     const elementMap: Record<string, string> = {
@@ -184,31 +197,74 @@ export default function BaziCalculator() {
         <header className="border-b border-border/50 bg-card/30 backdrop-blur-sm sticky top-0 z-10">
           <div className="container flex items-center justify-between gap-4 py-4">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="gap-2">
+              <Button variant="ghost" size="sm" onClick={() => navigate(tier ? '/dashboard' : '/')} className="gap-2">
                 <BackArrow className="h-4 w-4" />
-                <span className="hidden sm:inline">{t('backToDashboard')}</span>
+                <span className="hidden sm:inline">{tier ? t('backToDashboard') : t('home') || 'Home'}</span>
               </Button>
               <div className="flex items-center gap-2">
                 <Compass className="h-6 w-6 text-primary" />
                 <h1 className="text-xl font-display font-semibold">{t('baziCalculator')}</h1>
+                {isPreviewMode && (
+                  <Badge variant="secondary" className="gap-1">
+                    <Lock className="h-3 w-3" />
+                    Preview
+                  </Badge>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-2">
               <LanguageSwitcher />
-              <Button 
-                variant="destructive" 
-                size="sm" 
-                onClick={() => window.location.href = '/'}
-                className="gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">{t('endSession')}</span>
-              </Button>
+              {tier && (
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  onClick={() => window.location.href = '/'}
+                  className="gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t('endSession')}</span>
+                </Button>
+              )}
             </div>
           </div>
         </header>
 
-        <main className="container py-8 space-y-8">
+        {/* Preview Mode Overlay */}
+        {isPreviewMode && (
+          <div className="fixed inset-0 z-50 pointer-events-none">
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-8 pointer-events-auto">
+              <Card className="max-w-2xl mx-auto bg-card/95 backdrop-blur-lg border-primary/30 shadow-2xl">
+                <CardContent className="pt-6 text-center space-y-4">
+                  <div className="mx-auto w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center">
+                    <Lock className="h-8 w-8 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-display font-semibold mb-2">
+                      🔮 {t('baziCalculator')}
+                    </h3>
+                    <p className="text-muted-foreground mb-2">
+                      לצפייה במחשבון בא-זי יש להירשם כמטפל
+                    </p>
+                    <p className="text-muted-foreground text-sm">
+                      To use the full BaZi Calculator, please register as a therapist
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+                    <Button size="lg" onClick={() => navigate('/gate')}>
+                      הרשמה / Register
+                    </Button>
+                    <Button size="lg" variant="outline" onClick={() => navigate('/')}>
+                      חזרה לדף הבית / Back Home
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        <main className={`container py-8 space-y-8 ${isPreviewMode ? 'blur-sm pointer-events-none select-none' : ''}`}>
           {/* Input Section */}
           <Card className="bg-card/50 border-border/50">
             <CardHeader>
