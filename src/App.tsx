@@ -35,7 +35,7 @@ import BaziCalculator from "./pages/BaziCalculator";
 import LegalReport from "./pages/LegalReport";
 import SymptomChecker from "./pages/SymptomChecker";
 import TreatmentPlanner from "./pages/TreatmentPlanner";
-
+import QATesting from "./pages/QATesting";
 
 const queryClient = new QueryClient();
 
@@ -78,6 +78,7 @@ const App = () => (
                   <Route path="/legal-report" element={<LegalReport />} />
                   <Route path="/symptom-checker" element={<SymptomChecker />} />
                   <Route path="/treatment-planner" element={<TreatmentPlanner />} />
+                  <Route path="/qa-testing" element={<QATesting />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 
