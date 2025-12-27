@@ -32,7 +32,7 @@ const Hero = () => {
                 className="w-80 h-auto rounded-xl shadow-2xl border border-gold/30 shadow-gold/20"
               />
               <p className="text-center text-primary-foreground/80 mt-3 text-sm font-medium">
-                ✨ Click to try BaZi Calculator
+                ✨ לחץ לנסות מחשבון בא-זי / Click to try
               </p>
             </a>
           </div>
