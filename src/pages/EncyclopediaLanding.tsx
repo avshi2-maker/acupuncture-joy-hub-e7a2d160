@@ -169,9 +169,9 @@ export default function EncyclopediaLanding() {
   return (
     <>
       <Helmet>
-        <title>TCM Digital Encyclopedia | Dr. Roni Sapir | 30 Years of Expertise</title>
-        <meta name="description" content="Access 30 years of Traditional Chinese Medicine knowledge. AI-powered encyclopedia with 5,000+ documents, herbal formulas, and clinical case studies." />
-        <meta name="keywords" content="TCM, Traditional Chinese Medicine, Acupuncture, Herbal Medicine, Encyclopedia, Dr. Roni Sapir" />
+        <title>CM Digital Encyclopedia | Dr. Roni Sapir | 30 Years of Expertise</title>
+        <meta name="description" content="Access 30 years of Chinese Medicine knowledge. AI-powered encyclopedia with 5,000+ documents, herbal formulas, and clinical case studies." />
+        <meta name="keywords" content="CM, Chinese Medicine, Acupuncture, Herbal Medicine, Encyclopedia, Dr. Roni Sapir" />
       </Helmet>
 
       {/* Hero Section */}
@@ -190,15 +190,15 @@ export default function EncyclopediaLanding() {
         <div className="relative z-10 max-w-6xl mx-auto px-4 py-20 text-center">
           <Badge className="mb-6 bg-jade/20 text-jade border-jade/30 px-4 py-2">
             <Sparkles className="h-4 w-4 mr-2" />
-            30 Years of TCM Expertise
+            30 Years of CM Expertise
           </Badge>
           
           <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-gold via-jade to-jade-light bg-clip-text text-transparent">
-            TCM Digital Encyclopedia
+            CM Digital Encyclopedia
           </h1>
           
           <p className="text-xl md:text-2xl text-foreground/80 mb-8 max-w-3xl mx-auto">
-            The world's most comprehensive Traditional Chinese Medicine knowledge base, 
+            The world's most comprehensive Chinese Medicine knowledge base, 
             powered by AI and curated by <strong className="text-gold">Professor Dr. Roni Sapir</strong>
           </p>
 
