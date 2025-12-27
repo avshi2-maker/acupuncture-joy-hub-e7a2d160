@@ -22,19 +22,21 @@ const TherapistTeaser = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentVideo, setCurrentVideo] = useState(0);
   const [showDialog, setShowDialog] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true); // Start muted for autoplay compatibility
   const [progress, setProgress] = useState(0);
   const [videoError, setVideoError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isVideoReady, setIsVideoReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const navigate = useNavigate();
 
+  // Load video when component mounts or video source changes
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
     const handleTimeUpdate = () => {
-      if (video.duration && !isNaN(video.duration)) {
+      if (video.duration && !isNaN(video.duration) && video.duration > 0) {
         const totalDuration = videos.length * video.duration;
         const currentProgress = (currentVideo * video.duration + video.currentTime) / totalDuration;
         setProgress(currentProgress * 100);
@@ -54,20 +56,48 @@ const TherapistTeaser = () => {
     };
 
     const handleError = (e: Event) => {
-      console.error('Video error:', e, video.error);
-      setVideoError(`Video failed to load: ${video.error?.message || 'Unknown error'}`);
+      const mediaError = video.error;
+      let errorMessage = 'Video failed to load';
+      
+      if (mediaError) {
+        switch (mediaError.code) {
+          case MediaError.MEDIA_ERR_ABORTED:
+            errorMessage = 'Video loading was aborted';
+            break;
+          case MediaError.MEDIA_ERR_NETWORK:
+            errorMessage = 'Network error while loading video';
+            break;
+          case MediaError.MEDIA_ERR_DECODE:
+            errorMessage = 'Video format not supported';
+            break;
+          case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+            errorMessage = 'Video source not found or not supported';
+            break;
+        }
+      }
+      
+      console.error('Video error:', errorMessage, mediaError);
+      setVideoError(errorMessage);
       setIsLoading(false);
+      setIsVideoReady(false);
     };
 
     const handleCanPlay = () => {
       console.log('Video can play:', videos[currentVideo]);
       setIsLoading(false);
       setVideoError(null);
+      setIsVideoReady(true);
     };
 
     const handleLoadStart = () => {
       console.log('Video loading:', videos[currentVideo]);
       setIsLoading(true);
+      setIsVideoReady(false);
+    };
+
+    const handleLoadedData = () => {
+      console.log('Video data loaded:', videos[currentVideo]);
+      setIsVideoReady(true);
     };
 
     video.addEventListener('timeupdate', handleTimeUpdate);
@@ -75,6 +105,7 @@ const TherapistTeaser = () => {
     video.addEventListener('error', handleError);
     video.addEventListener('canplay', handleCanPlay);
     video.addEventListener('loadstart', handleLoadStart);
+    video.addEventListener('loadeddata', handleLoadedData);
 
     return () => {
       video.removeEventListener('timeupdate', handleTimeUpdate);
@@ -82,28 +113,64 @@ const TherapistTeaser = () => {
       video.removeEventListener('error', handleError);
       video.removeEventListener('canplay', handleCanPlay);
       video.removeEventListener('loadstart', handleLoadStart);
+      video.removeEventListener('loadeddata', handleLoadedData);
     };
   }, [currentVideo]);
 
+  // When video index changes, reload and play if already playing
   useEffect(() => {
-    if (isPlaying && videoRef.current) {
-      videoRef.current.play().catch(err => {
-        console.error('Play failed:', err);
-        setVideoError('Failed to play video. Please try again.');
-      });
+    const video = videoRef.current;
+    if (!video) return;
+
+    // Reload video source
+    video.load();
+
+    if (isPlaying) {
+      const playVideo = async () => {
+        try {
+          await video.play();
+        } catch (err) {
+          console.error('Auto-play on video change failed:', err);
+          // Try again muted (browser autoplay policy)
+          video.muted = true;
+          setIsMuted(true);
+          try {
+            await video.play();
+          } catch (err2) {
+            console.error('Muted play also failed:', err2);
+            setVideoError('Could not play video. Please try again.');
+          }
+        }
+      };
+      playVideo();
     }
-  }, [currentVideo, isPlaying]);
+  }, [currentVideo]);
 
   const handlePlay = async () => {
+    const video = videoRef.current;
+    if (!video) return;
+
     setVideoError(null);
-    setIsPlaying(true);
     setCurrentVideo(0);
-    if (videoRef.current) {
+    
+    // Load the video first
+    video.load();
+    
+    try {
+      // Try to play - browsers may block unmuted autoplay
+      await video.play();
+      setIsPlaying(true);
+    } catch (err) {
+      console.log('Initial play blocked, trying muted:', err);
+      // If blocked, try muted (most browsers allow muted autoplay)
+      video.muted = true;
+      setIsMuted(true);
       try {
-        await videoRef.current.play();
-      } catch (err) {
-        console.error('Play failed:', err);
-        setVideoError('Failed to play video. Please try again.');
+        await video.play();
+        setIsPlaying(true);
+      } catch (err2) {
+        console.error('Even muted play failed:', err2);
+        setVideoError('Could not play video. Please click to try again.');
       }
     }
   };
@@ -165,7 +232,12 @@ const TherapistTeaser = () => {
               muted={isMuted}
               playsInline
               preload="auto"
-            />
+              crossOrigin="anonymous"
+              onLoadedMetadata={() => console.log('Video metadata loaded:', videos[currentVideo])}
+            >
+              <source src={videos[currentVideo]} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
 
             {/* Loading State */}
             {isLoading && (
