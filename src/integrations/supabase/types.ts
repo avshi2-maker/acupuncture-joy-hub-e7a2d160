@@ -810,6 +810,7 @@ export type Database = {
       }
       roi_scenarios: {
         Row: {
+          archived: boolean | null
           calculations: Json
           configuration: Json
           created_at: string
@@ -822,6 +823,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          archived?: boolean | null
           calculations: Json
           configuration: Json
           created_at?: string
@@ -834,6 +836,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          archived?: boolean | null
           calculations?: Json
           configuration?: Json
           created_at?: string
