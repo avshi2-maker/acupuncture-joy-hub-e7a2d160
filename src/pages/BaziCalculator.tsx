@@ -8,11 +8,14 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { 
   Compass, 
   Calendar, 
   Clock, 
   ArrowLeft, 
+  ArrowRight,
   Sparkles,
   Droplets,
   Flame,
@@ -45,14 +48,44 @@ const elementColors: Record<string, string> = {
   Water: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
 };
 
+const chineseHours = [
+  { value: '0', emoji: '🐀', key: 'ratHour' },
+  { value: '2', emoji: '🐂', key: 'oxHour' },
+  { value: '4', emoji: '🐅', key: 'tigerHour' },
+  { value: '6', emoji: '🐇', key: 'rabbitHour' },
+  { value: '8', emoji: '🐉', key: 'dragonHour' },
+  { value: '10', emoji: '🐍', key: 'snakeHour' },
+  { value: '12', emoji: '🐴', key: 'horseHour' },
+  { value: '14', emoji: '🐐', key: 'goatHour' },
+  { value: '16', emoji: '🐵', key: 'monkeyHour' },
+  { value: '18', emoji: '🐓', key: 'roosterHour' },
+  { value: '20', emoji: '🐕', key: 'dogHour' },
+  { value: '22', emoji: '🐖', key: 'pigHour' },
+];
+
 export default function BaziCalculator() {
   const navigate = useNavigate();
+  const { t, dir, language } = useLanguage();
   const [birthDate, setBirthDate] = useState('');
   const [birthHour, setBirthHour] = useState('12');
   const [birthMinute, setBirthMinute] = useState('0');
   const [result, setResult] = useState<ReturnType<typeof calculateBaZi> | null>(null);
   const [strengths, setStrengths] = useState<Record<string, number> | null>(null);
   const [recommendations, setRecommendations] = useState<ReturnType<typeof getAcupunctureRecommendations> | null>(null);
+
+  const isRTL = dir === 'rtl';
+  const BackArrow = isRTL ? ArrowRight : ArrowLeft;
+
+  const translateElement = (element: string): string => {
+    const elementMap: Record<string, string> = {
+      Wood: t('wood'),
+      Fire: t('fire'),
+      Earth: t('earth'),
+      Metal: t('metal'),
+      Water: t('water'),
+    };
+    return elementMap[element] || element;
+  };
 
   const handleCalculate = () => {
     if (!birthDate) return;
@@ -90,7 +123,7 @@ export default function BaziCalculator() {
           <div className="text-xs text-muted-foreground">{stem.pinyin}</div>
           <Badge className={`mt-1 ${elementColors[stem.element]}`}>
             {elementIcons[stem.element]}
-            <span className="ml-1">{stem.element} {stem.polarity}</span>
+            <span className="mx-1">{translateElement(stem.element)} {stem.polarity}</span>
           </Badge>
           <div className="text-xs text-muted-foreground mt-1">{stem.meridian}</div>
         </div>
@@ -103,20 +136,20 @@ export default function BaziCalculator() {
           <div className="text-xs text-muted-foreground">{branch.pinyin} ({branch.english})</div>
           <Badge className={`mt-1 ${elementColors[branch.element]}`}>
             {elementIcons[branch.element]}
-            <span className="ml-1">{branch.element}</span>
+            <span className="mx-1">{translateElement(branch.element)}</span>
           </Badge>
           <div className="text-xs text-muted-foreground mt-1">{branch.meridian}</div>
         </div>
         
         {/* Hidden Stems */}
         <div className="text-center">
-          <div className="text-xs text-muted-foreground mb-1">Hidden Stems</div>
+          <div className="text-xs text-muted-foreground mb-1">{t('hiddenStems')}</div>
           <div className="flex justify-center gap-1 flex-wrap">
             {branch.hiddenStems.map((hs, i) => {
-              const stem = heavenlyStems.find(s => s.chinese === hs);
-              return stem ? (
-                <Badge key={i} variant="outline" className={`text-xs ${elementColors[stem.element]}`}>
-                  {hs} {stem.pinyin}
+              const foundStem = heavenlyStems.find(s => s.chinese === hs);
+              return foundStem ? (
+                <Badge key={i} variant="outline" className={`text-xs ${elementColors[foundStem.element]}`}>
+                  {hs} {foundStem.pinyin}
                 </Badge>
               ) : null;
             })}
@@ -131,22 +164,26 @@ export default function BaziCalculator() {
   return (
     <>
       <Helmet>
-        <title>BaZi Calculator | Four Pillars of Destiny</title>
-        <meta name="description" content="Calculate your BaZi (Four Pillars of Destiny) chart with acupuncture point recommendations based on Chinese metaphysics." />
+        <title>{t('baziCalculator')} | {t('fourPillarsOfDestiny')}</title>
+        <meta name="description" content={t('baziDescription')} />
+        <html lang={language} dir={dir} />
       </Helmet>
       
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background" dir={dir}>
         {/* Header */}
         <header className="border-b border-border/50 bg-card/30 backdrop-blur-sm sticky top-0 z-10">
-          <div className="container flex items-center gap-4 py-4">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Back to Dashboard</span>
-            </Button>
-            <div className="flex items-center gap-2">
-              <Compass className="h-6 w-6 text-primary" />
-              <h1 className="text-xl font-display font-semibold">BaZi Calculator</h1>
+          <div className="container flex items-center justify-between gap-4 py-4">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="gap-2">
+                <BackArrow className="h-4 w-4" />
+                <span className="hidden sm:inline">{t('backToDashboard')}</span>
+              </Button>
+              <div className="flex items-center gap-2">
+                <Compass className="h-6 w-6 text-primary" />
+                <h1 className="text-xl font-display font-semibold">{t('baziCalculator')}</h1>
+              </div>
             </div>
+            <LanguageSwitcher />
           </div>
         </header>
 
@@ -156,14 +193,14 @@ export default function BaziCalculator() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-primary" />
-                Birth Information
+                {t('birthInformation')}
               </CardTitle>
-              <CardDescription>Enter the birth date and time to calculate the Four Pillars</CardDescription>
+              <CardDescription>{t('enterBirthDetails')}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-6 md:grid-cols-4">
-                <div className="md:col-span-2 space-y-2">
-                  <Label htmlFor="birthDate">Birth Date</Label>
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="birthDate">{t('birthDate')}</Label>
                   <Input
                     id="birthDate"
                     type="date"
@@ -173,28 +210,26 @@ export default function BaziCalculator() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="birthHour">Hour (0-23)</Label>
-                  <Input
-                    id="birthHour"
-                    type="number"
-                    min="0"
-                    max="23"
-                    value={birthHour}
-                    onChange={(e) => setBirthHour(e.target.value)}
-                    className="bg-background"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="birthMinute">Minute</Label>
-                  <Input
-                    id="birthMinute"
-                    type="number"
-                    min="0"
-                    max="59"
-                    value={birthMinute}
-                    onChange={(e) => setBirthMinute(e.target.value)}
-                    className="bg-background"
-                  />
+                  <Label>{t('birthHour')}</Label>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                    {chineseHours.map((hour) => (
+                      <button
+                        key={hour.value}
+                        type="button"
+                        onClick={() => setBirthHour(hour.value)}
+                        className={`p-2 rounded-lg border-2 text-center transition-all hover:scale-105 ${
+                          birthHour === hour.value 
+                            ? 'border-primary bg-primary/20 text-primary' 
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                      >
+                        <div className="text-2xl">{hour.emoji}</div>
+                        <div className="text-xs mt-1 text-muted-foreground">
+                          {hour.value}:00
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
               <Button 
@@ -202,8 +237,8 @@ export default function BaziCalculator() {
                 className="mt-6 w-full md:w-auto"
                 disabled={!birthDate}
               >
-                <Sparkles className="h-4 w-4 mr-2" />
-                Calculate BaZi Chart
+                <Sparkles className="h-4 w-4 mx-2" />
+                {t('calculateBaziChart')}
               </Button>
             </CardContent>
           </Card>
@@ -214,13 +249,13 @@ export default function BaziCalculator() {
               <div>
                 <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <Clock className="h-5 w-5 text-primary" />
-                  Four Pillars (四柱)
+                  {t('fourPillars')} (四柱)
                 </h2>
                 <div className="grid gap-4 md:grid-cols-4">
-                  <PillarCard title="Hour Pillar (时柱)" stem={result.hour.stem} branch={result.hour.branch} />
-                  <PillarCard title="Day Pillar (日柱)" stem={result.day.stem} branch={result.day.branch} />
-                  <PillarCard title="Month Pillar (月柱)" stem={result.month.stem} branch={result.month.branch} />
-                  <PillarCard title="Year Pillar (年柱)" stem={result.year.stem} branch={result.year.branch} />
+                  <PillarCard title={`${t('hourPillar')} (时柱)`} stem={result.hour.stem} branch={result.hour.branch} />
+                  <PillarCard title={`${t('dayPillar')} (日柱)`} stem={result.day.stem} branch={result.day.branch} />
+                  <PillarCard title={`${t('monthPillar')} (月柱)`} stem={result.month.stem} branch={result.month.branch} />
+                  <PillarCard title={`${t('yearPillar')} (年柱)`} stem={result.year.stem} branch={result.year.branch} />
                 </div>
               </div>
 
@@ -229,12 +264,12 @@ export default function BaziCalculator() {
                 <Card className="bg-card/50 border-border/50">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      Five Element Analysis
+                      {t('fiveElementAnalysis')}
                     </CardTitle>
                     <CardDescription>
-                      Day Master: {result.day.stem.chinese} {result.day.stem.pinyin} ({result.day.stem.english})
+                      {t('dayMaster')}: {result.day.stem.chinese} {result.day.stem.pinyin} ({result.day.stem.english})
                       {recommendations && (
-                        <Badge className="ml-2" variant="outline">
+                        <Badge className="mx-2" variant="outline">
                           {recommendations.balance.status}
                         </Badge>
                       )}
@@ -246,9 +281,9 @@ export default function BaziCalculator() {
                         <div className="flex justify-between text-sm">
                           <span className="flex items-center gap-2">
                             {elementIcons[element]}
-                            {element}
+                            {translateElement(element)}
                             {element === result.day.stem.element && (
-                              <Badge variant="outline" className="text-xs">Day Master</Badge>
+                              <Badge variant="outline" className="text-xs">{t('dayMaster')}</Badge>
                             )}
                           </span>
                           <span className="text-muted-foreground">{strength.toFixed(1)}</span>
@@ -282,9 +317,9 @@ export default function BaziCalculator() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <MapPin className="h-5 w-5 text-primary" />
-                      Acupuncture Recommendations
+                      {t('acupunctureRecommendations')}
                     </CardTitle>
-                    <CardDescription>Points based on BaZi analysis and Zi Wu Liu Zhu timing</CardDescription>
+                    <CardDescription>{t('pointsBasedOnBazi')}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ScrollArea className="h-[200px]">
