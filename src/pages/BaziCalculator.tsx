@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { useTier } from '@/hooks/useTier';
 import { 
   Compass, 
   Calendar, 
@@ -67,6 +68,7 @@ const chineseHours = [
 export default function BaziCalculator() {
   const navigate = useNavigate();
   const { t, dir, language } = useLanguage();
+  const { tier } = useTier();
   const [birthDate, setBirthDate] = useState('');
   const [birthHour, setBirthHour] = useState('12');
   const [birthMinute, setBirthMinute] = useState('0');
@@ -76,6 +78,13 @@ export default function BaziCalculator() {
 
   const isRTL = dir === 'rtl';
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
+
+  // Redirect to gate if no tier (not authorized)
+  useEffect(() => {
+    if (!tier) {
+      navigate('/gate?redirect=/bazi-calculator');
+    }
+  }, [tier, navigate]);
 
   const translateElement = (element: string): string => {
     const elementMap: Record<string, string> = {

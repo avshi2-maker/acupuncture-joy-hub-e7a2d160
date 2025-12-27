@@ -1,8 +1,32 @@
-import { Sparkles } from "lucide-react";
+import { useState } from "react";
+import { Sparkles, Lock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import heroBg from "@/assets/hero-meridian-bg.png";
 import baziWheel from "@/assets/bazi-wheel.jpg";
+import { useTier } from "@/hooks/useTier";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 const Hero = () => {
+  const navigate = useNavigate();
+  const { tier } = useTier();
+  const [showRegisterDialog, setShowRegisterDialog] = useState(false);
+
+  const handleBaziClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (tier) {
+      navigate('/bazi-calculator');
+    } else {
+      setShowRegisterDialog(true);
+    }
+  };
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
@@ -25,7 +49,10 @@ const Hero = () => {
         <div className="flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16">
           {/* Bazi Wheel Image - Left Side */}
           <div className="hidden lg:block flex-shrink-0 animate-fade-in-up">
-            <a href="/bazi-calculator" className="block animate-float cursor-pointer transition-transform hover:scale-105">
+            <button 
+              onClick={handleBaziClick} 
+              className="block animate-float cursor-pointer transition-transform hover:scale-105 text-left"
+            >
               <img
                 src={baziWheel}
                 alt="BaZi Chinese Astrology Wheel - Click to try the calculator"
@@ -34,7 +61,7 @@ const Hero = () => {
               <p className="text-center text-primary-foreground/80 mt-3 text-sm font-medium">
                 ✨ לחץ לנסות מחשבון בא-זי / Click to try
               </p>
-            </a>
+            </button>
           </div>
 
           {/* Text Content - Center/Right */}
@@ -64,6 +91,46 @@ const Hero = () => {
           </div>
         </div>
       </div>
+
+      {/* Registration Required Dialog */}
+      <Dialog open={showRegisterDialog} onOpenChange={setShowRegisterDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader className="text-center">
+            <div className="mx-auto w-16 h-16 bg-gold/20 rounded-full flex items-center justify-center mb-4">
+              <Lock className="h-8 w-8 text-gold" />
+            </div>
+            <DialogTitle className="text-xl font-display">
+              🔮 BaZi Calculator Access
+            </DialogTitle>
+            <DialogDescription className="text-base mt-2">
+              <span className="block mb-2">
+                לצפייה במחשבון בא-זי יש להירשם כמטפל
+              </span>
+              <span className="block text-muted-foreground">
+                To view the BaZi Calculator, you must register as a therapist
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 mt-4">
+            <Button 
+              onClick={() => {
+                setShowRegisterDialog(false);
+                navigate('/gate');
+              }}
+              className="w-full"
+            >
+              הרשמה / Register
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowRegisterDialog(false)}
+              className="w-full"
+            >
+              סגור / Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };
