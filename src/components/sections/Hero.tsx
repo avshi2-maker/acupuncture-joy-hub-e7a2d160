@@ -46,21 +46,6 @@ const Hero = () => {
             personalized care to help you achieve optimal health and vitality.
           </p>
 
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up delay-300">
-            <WhatsAppCTA 
-              variant="button"
-              phoneNumber="972544634923"
-              message="שלום! אשמח לקבוע תור לייעוץ ראשוני"
-              className="text-lg px-8 py-4"
-            >
-              Book Your Session
-            </WhatsAppCTA>
-            <Button variant="heroOutline" size="xl">
-              Explore Treatments
-            </Button>
-          </div>
-
         </div>
       </div>
     </section>

@@ -5,7 +5,6 @@ import TcmBrainPreview from "@/components/sections/TcmBrainPreview";
 import Contact from "@/components/sections/Contact";
 import Footer from "@/components/layout/Footer";
 import InstallBanner from "@/components/pwa/InstallBanner";
-import { WhatsAppCTA } from "@/components/ui/WhatsAppCTA";
 
 const Index = () => {
   return (
@@ -27,13 +26,6 @@ const Index = () => {
         </main>
         <Footer />
         <InstallBanner />
-        
-        {/* Floating WhatsApp CTA */}
-        <WhatsAppCTA 
-          variant="floating" 
-          phoneNumber="972544634923"
-          message="שלום! אשמח לשמוע עוד על הטיפולים שלכם"
-        />
       </div>
     </>
   );
