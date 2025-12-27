@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { WhatsAppCTA } from "@/components/ui/WhatsAppCTA";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -41,9 +42,9 @@ const Header = () => {
             <Leaf className={`w-6 h-6 transition-colors duration-300 ${isScrolled || !isHomePage ? 'text-jade' : 'text-primary-foreground'}`} />
           </div>
           <div className={`font-display tracking-wide transition-colors duration-300 ${isScrolled || !isHomePage ? 'text-foreground' : 'text-primary-foreground'} hidden sm:flex flex-col leading-tight`}>
-            <span className="text-sm lg:text-base font-bold">Dr Roni Sapir</span>
-            <span className="text-xs lg:text-sm font-semibold opacity-90">Complementary Medicine</span>
-            <span className="text-[10px] lg:text-xs font-normal opacity-70 italic">Healing Through Balance with AI</span>
+            <span className="text-lg lg:text-xl font-bold">Dr Roni Sapir</span>
+            <span className="text-sm lg:text-base font-semibold opacity-90">Complementary Medicine - Acupuncture Clinic</span>
+            <span className="text-xs lg:text-sm font-normal opacity-70 italic">Healing Through Balance with AI</span>
           </div>
         </Link>
 
@@ -63,10 +64,17 @@ const Header = () => {
           </div>
         )}
 
-        {/* Desktop Navigation - Only Therapist Login */}
-        <nav className="hidden lg:flex items-center gap-6">
+        {/* Desktop Navigation - WhatsApp + Therapist Login */}
+        <nav className="hidden lg:flex items-center gap-4">
           {/* Language Switcher */}
           <LanguageSwitcher isScrolled={isScrolled || !isHomePage} />
+          
+          {/* WhatsApp Button */}
+          <WhatsAppCTA 
+            variant="minimal"
+            phoneNumber="972544634923"
+            message="שלום! אשמח לשמוע עוד על הטיפולים שלכם"
+          />
           
           <Button asChild variant={isScrolled || !isHomePage ? "hero" : "heroOutline"} size="lg">
             <Link to="/gate">{t("therapistLogin")}</Link>

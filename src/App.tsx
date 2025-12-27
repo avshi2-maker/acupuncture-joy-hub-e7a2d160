@@ -35,7 +35,7 @@ import BaziCalculator from "./pages/BaziCalculator";
 import LegalReport from "./pages/LegalReport";
 import SymptomChecker from "./pages/SymptomChecker";
 import TreatmentPlanner from "./pages/TreatmentPlanner";
-import { FeedbackWidget } from "./components/feedback/FeedbackWidget";
+
 
 const queryClient = new QueryClient();
 
@@ -80,7 +80,7 @@ const App = () => (
                   <Route path="/treatment-planner" element={<TreatmentPlanner />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-                <FeedbackWidget />
+                
               </BrowserRouter>
             </TooltipProvider>
           </TierProvider>
