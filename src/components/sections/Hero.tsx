@@ -25,13 +25,16 @@ const Hero = () => {
         <div className="flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16">
           {/* Bazi Wheel Image - Left Side */}
           <div className="hidden lg:block flex-shrink-0 animate-fade-in-up">
-            <div className="animate-float">
+            <a href="/bazi-calculator" className="block animate-float cursor-pointer transition-transform hover:scale-105">
               <img
                 src={baziWheel}
-                alt="BaZi Chinese Astrology Wheel"
+                alt="BaZi Chinese Astrology Wheel - Click to try the calculator"
                 className="w-80 h-auto rounded-xl shadow-2xl border border-gold/30 shadow-gold/20"
               />
-            </div>
+              <p className="text-center text-primary-foreground/80 mt-3 text-sm font-medium">
+                ✨ Click to try BaZi Calculator
+              </p>
+            </a>
           </div>
 
           {/* Text Content - Center/Right */}
