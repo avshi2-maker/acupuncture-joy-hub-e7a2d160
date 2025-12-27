@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
@@ -21,11 +22,21 @@ import {
   ArrowRight,
   Sparkles,
   Lock,
-  Database
+  Database,
+  Info,
+  Building2,
+  MapPin
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import heroBackground from '@/assets/encyclopedia-hero-bg.jpg';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 // Encyclopedia Pricing Tiers
 const encyclopediaTiers = [
@@ -161,6 +172,7 @@ const featureHighlights = [
 
 export default function EncyclopediaLanding() {
   const navigate = useNavigate();
+  const [showCostBreakdown, setShowCostBreakdown] = useState(false);
 
   const handleSelectPlan = (tierId: string) => {
     // In the future, this will integrate with Stripe
@@ -431,17 +443,25 @@ export default function EncyclopediaLanding() {
 
           {/* Cost Breakdown */}
           <div className="grid md:grid-cols-3 gap-6">
-            <Card className="bg-jade/5 border-jade/20">
+            <Card 
+              className="bg-jade/5 border-jade/20 cursor-pointer hover:border-jade/50 hover:shadow-lg transition-all duration-300"
+              onClick={() => setShowCostBreakdown(true)}
+            >
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Database className="h-5 w-5 text-jade" />
                   AI Cost per Query
+                  <Info className="h-4 w-4 text-muted-foreground ml-auto" />
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-jade">~$0.002</div>
                 <p className="text-sm text-muted-foreground mt-2">
                   Average cost per AI-powered search query using optimized RAG
+                </p>
+                <p className="text-xs text-jade mt-2 flex items-center gap-1">
+                  <Info className="h-3 w-3" />
+                  Click for detailed breakdown
                 </p>
               </CardContent>
             </Card>
@@ -478,6 +498,281 @@ export default function EncyclopediaLanding() {
           </div>
         </div>
       </section>
+
+      {/* Clinic CRM Section - For Therapists */}
+      <section className="py-20 bg-gradient-to-br from-gold/10 via-background to-jade/10">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-16">
+            <Badge className="mb-4 bg-gold/20 text-gold border-gold/30">
+              <Building2 className="h-4 w-4 mr-2" />
+              Clinic Management System
+            </Badge>
+            <h2 className="font-display text-3xl md:text-5xl font-bold mb-4">
+              For TCM Therapists & Clinics
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Complete practice management with AI-powered patient care
+            </p>
+          </div>
+
+          {/* Clinic Tiers */}
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            {/* Trial */}
+            <Card className="border-border hover:border-jade/50 transition-all">
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <Stethoscope className="h-5 w-5 text-jade" />
+                  Trial
+                </CardTitle>
+                <CardDescription>Try the system free</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-jade mb-4">Free</div>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-jade" /> 14 days full access
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-jade" /> Up to 5 patients
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-jade" /> Basic CRM features
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Standard - Israel Focus */}
+            <Card className="border-gold/50 bg-gold/5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-gold text-primary-foreground text-xs px-3 py-1 rounded-bl-lg">
+                Popular in Israel
+              </div>
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-gold" />
+                  Standard
+                </CardTitle>
+                <CardDescription>For individual practitioners</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-gold mb-1">₪149<span className="text-lg font-normal text-muted-foreground">/month</span></div>
+                <div className="text-sm text-muted-foreground mb-4">(~$40/month)</div>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-gold" /> Unlimited patients
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-gold" /> Full CRM + Calendar
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-gold" /> WhatsApp integration
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-gold" /> CM Brain AI (500 queries)
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-gold" /> Hebrew + English
+                  </li>
+                </ul>
+                <div className="mt-4 pt-4 border-t border-gold/20">
+                  <p className="text-xs text-muted-foreground">
+                    <strong>Israel Market:</strong> ~2,500 licensed TCM practitioners
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Premium - Global */}
+            <Card className="border-crimson/50 bg-crimson/5">
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <Globe className="h-5 w-5 text-crimson" />
+                  Premium
+                </CardTitle>
+                <CardDescription>For clinics & global practitioners</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-crimson mb-1">$99<span className="text-lg font-normal text-muted-foreground">/month</span></div>
+                <ul className="space-y-2 text-sm mt-4">
+                  <li className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-crimson" /> Everything in Standard
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-crimson" /> Multi-room management
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-crimson" /> Zoom integration
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-crimson" /> CM Brain AI (Unlimited)
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-crimson" /> Priority support 24/7
+                  </li>
+                </ul>
+                <div className="mt-4 pt-4 border-t border-crimson/20">
+                  <p className="text-xs text-muted-foreground">
+                    <strong>Global Market:</strong> 450,000+ TCM practitioners worldwide
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Clinic ROI Table */}
+          <div className="overflow-x-auto mb-8">
+            <h3 className="text-2xl font-bold mb-6 text-center">Clinic CRM ROI Projection</h3>
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-muted/50">
+                  <th className="border border-border p-4 text-left">Market</th>
+                  <th className="border border-border p-4 text-left">Potential Users</th>
+                  <th className="border border-border p-4 text-left">Avg. Price</th>
+                  <th className="border border-border p-4 text-left">5% Adoption</th>
+                  <th className="border border-border p-4 text-left">Monthly Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="hover:bg-muted/30 transition-colors">
+                  <td className="border border-border p-4 flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-gold" />
+                    <span className="font-medium">Israel</span>
+                  </td>
+                  <td className="border border-border p-4">~2,500</td>
+                  <td className="border border-border p-4">₪149 ($40)</td>
+                  <td className="border border-border p-4">125 users</td>
+                  <td className="border border-border p-4">
+                    <span className="text-gold font-bold">$5,000/mo</span>
+                  </td>
+                </tr>
+                <tr className="hover:bg-muted/30 transition-colors">
+                  <td className="border border-border p-4 flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-crimson" />
+                    <span className="font-medium">Global (1%)</span>
+                  </td>
+                  <td className="border border-border p-4">~450,000</td>
+                  <td className="border border-border p-4">$70 avg</td>
+                  <td className="border border-border p-4">4,500 users</td>
+                  <td className="border border-border p-4">
+                    <span className="text-crimson font-bold">$315,000/mo</span>
+                  </td>
+                </tr>
+                <tr className="bg-jade/5 hover:bg-jade/10 transition-colors">
+                  <td className="border border-border p-4 flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-jade" />
+                    <span className="font-bold">Combined</span>
+                  </td>
+                  <td className="border border-border p-4"></td>
+                  <td className="border border-border p-4"></td>
+                  <td className="border border-border p-4">4,625 users</td>
+                  <td className="border border-border p-4">
+                    <span className="text-jade font-bold text-lg">$320,000/mo</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p className="text-center text-sm text-muted-foreground">
+            * AI costs for Clinic CRM are included in subscription pricing. 
+            Average ~20 AI queries per patient/month at $0.002 = ~$0.04 per patient.
+          </p>
+        </div>
+      </section>
+
+      {/* Cost Breakdown Dialog */}
+      <Dialog open={showCostBreakdown} onOpenChange={setShowCostBreakdown}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-2xl">
+              <Database className="h-6 w-6 text-jade" />
+              AI Cost Breakdown: $0.002 per Query
+            </DialogTitle>
+            <DialogDescription>
+              Detailed breakdown of what's included in the per-query cost
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 mt-4">
+            {/* RAG Cost */}
+            <div className="bg-jade/5 border border-jade/20 rounded-lg p-4">
+              <h4 className="font-bold text-jade flex items-center gap-2 mb-3">
+                <Database className="h-5 w-5" />
+                RAG Processing (Local Knowledge Base)
+              </h4>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Vector embedding lookup:</p>
+                  <p className="font-medium">~$0.0001</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Context retrieval:</p>
+                  <p className="font-medium">~$0.0002</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">LLM response generation:</p>
+                  <p className="font-medium">~$0.0015</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Infrastructure overhead:</p>
+                  <p className="font-medium">~$0.0002</p>
+                </div>
+              </div>
+              <div className="mt-3 pt-3 border-t border-jade/20 flex justify-between">
+                <span className="font-bold">RAG Total:</span>
+                <span className="font-bold text-jade">$0.002</span>
+              </div>
+            </div>
+
+            {/* External AI Note */}
+            <div className="bg-gold/5 border border-gold/20 rounded-lg p-4">
+              <h4 className="font-bold text-gold flex items-center gap-2 mb-3">
+                <Brain className="h-5 w-5" />
+                External ChatGPT/Claude Traffic
+              </h4>
+              <p className="text-sm text-muted-foreground mb-3">
+                The $0.002 cost is for <strong>RAG-only queries</strong> that stay within Dr. Sapir's knowledge base. 
+                If complex queries require external AI models:
+              </p>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground">GPT-4 (if needed):</p>
+                  <p className="font-medium text-gold">+$0.03-0.06</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Claude (if needed):</p>
+                  <p className="font-medium text-gold">+$0.02-0.04</p>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-3">
+                Note: 95%+ of queries are handled by RAG alone. External AI is rarely needed.
+              </p>
+            </div>
+
+            {/* Total ROI */}
+            <div className="bg-gradient-to-r from-jade/10 to-gold/10 border border-border rounded-lg p-4">
+              <h4 className="font-bold flex items-center gap-2 mb-3">
+                <TrendingUp className="h-5 w-5 text-jade" />
+                Cost vs Revenue (Per User)
+              </h4>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <p className="text-sm text-muted-foreground">Monthly Cost (115 queries)</p>
+                  <p className="font-bold text-lg text-crimson">$0.23</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Monthly Revenue</p>
+                  <p className="font-bold text-lg text-gold">$25.00</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Profit Margin</p>
+                  <p className="font-bold text-lg text-jade">99.1%</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* User Segments */}
       <section className="py-20 bg-muted/30">
