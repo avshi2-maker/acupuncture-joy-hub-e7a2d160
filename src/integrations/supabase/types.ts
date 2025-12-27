@@ -808,6 +808,39 @@ export type Database = {
           },
         ]
       }
+      roi_scenarios: {
+        Row: {
+          calculations: Json
+          configuration: Json
+          created_at: string
+          id: string
+          name: string
+          scenario_type: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          calculations: Json
+          configuration: Json
+          created_at?: string
+          id?: string
+          name: string
+          scenario_type: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          calculations?: Json
+          configuration?: Json
+          created_at?: string
+          id?: string
+          name?: string
+          scenario_type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       rooms: {
         Row: {
           capacity: number | null
