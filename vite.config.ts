@@ -42,6 +42,9 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       workbox: {
+        clientsClaim: true,
+        skipWaiting: true,
+        cleanupOutdatedCaches: true,
         globPatterns: ["**/*.{js,css,html,ico,svg,woff,woff2}"],
         globIgnores: ["**/body-figures/**", "**/assets/body-figures/**"],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
