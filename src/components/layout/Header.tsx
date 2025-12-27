@@ -101,22 +101,6 @@ const Header = () => {
         }`}
       >
         <nav className="container mx-auto px-4 py-6 flex flex-col gap-4">
-          {/* Dev Mode Links - Only show in dev mode */}
-          {isDevMode && (
-            <>
-              <Button asChild variant="ghost" size="lg" className="w-full justify-start text-amber-600">
-                <Link to="/tcm-brain" onClick={() => setIsMobileMenuOpen(false)}>
-                  TCM Brain
-                </Link>
-              </Button>
-              <Button asChild variant="ghost" size="lg" className="w-full justify-start text-amber-600">
-                <Link to="/knowledge-registry" onClick={() => setIsMobileMenuOpen(false)}>
-                  Knowledge Registry
-                </Link>
-              </Button>
-            </>
-          )}
-          
           {/* WhatsApp Button */}
           <WhatsAppCTA 
             variant="minimal"
