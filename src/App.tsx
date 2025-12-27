@@ -7,7 +7,6 @@ import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
 import { TierProvider } from "@/hooks/useTier";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import { AudioPlayerProvider } from "@/components/audio/FloatingAudioPlayer";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import TherapistRegister from "./pages/TherapistRegister";
@@ -49,7 +48,6 @@ const App = () => (
       <LanguageProvider>
         <AuthProvider>
           <TierProvider>
-            <AudioPlayerProvider>
               <TooltipProvider>
                 <Toaster />
                 <Sonner />
@@ -91,7 +89,6 @@ const App = () => (
                   </Routes>
                 </BrowserRouter>
               </TooltipProvider>
-            </AudioPlayerProvider>
           </TierProvider>
         </AuthProvider>
       </LanguageProvider>
