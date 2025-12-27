@@ -56,19 +56,22 @@ const DEFAULT_MODULES: Omit<ModuleTest, 'status' | 'comments' | 'testedBy' | 'te
   
   // Tools
   { id: 'tcm-brain', moduleName: 'TCM Brain', moduleNameHe: 'מוח TCM', path: '/tcm-brain', category: 'tools', priority: 'high' },
+  { id: 'tcm-brain-rag', moduleName: 'TCM Brain RAG Chat', moduleNameHe: 'צאט RAG - מוח TCM', path: '/tcm-brain', category: 'tools', priority: 'high' },
   { id: 'bazi-calculator', moduleName: 'BaZi Calculator', moduleNameHe: 'מחשבון באזי', path: '/bazi-calculator', category: 'tools', priority: 'medium' },
   { id: 'symptom-checker', moduleName: 'Symptom Checker', moduleNameHe: 'בודק סימפטומים', path: '/symptom-checker', category: 'tools', priority: 'high' },
   { id: 'treatment-planner', moduleName: 'Treatment Planner', moduleNameHe: 'תכנון טיפול', path: '/treatment-planner', category: 'tools', priority: 'high' },
   
-  // Admin
+  // Admin & Knowledge
   { id: 'admin', moduleName: 'Admin Panel', moduleNameHe: 'ניהול', path: '/admin', category: 'admin', priority: 'high' },
   { id: 'admin-feedback', moduleName: 'Feedback Management', moduleNameHe: 'ניהול משוב', path: '/admin/feedback', category: 'admin', priority: 'medium' },
-  { id: 'knowledge-registry', moduleName: 'Knowledge Registry', moduleNameHe: 'רישום ידע', path: '/knowledge-registry', category: 'admin', priority: 'medium' },
+  { id: 'knowledge-registry', moduleName: 'Knowledge Registry', moduleNameHe: 'רישום ידע', path: '/knowledge-registry', category: 'admin', priority: 'high' },
+  { id: 'rag-knowledge-status', moduleName: 'RAG Knowledge Status', moduleNameHe: 'סטטוס מאגר ידע RAG', path: '/knowledge-registry', category: 'admin', priority: 'high' },
   { id: 'legal-report', moduleName: 'Legal Report', moduleNameHe: 'דו"ח משפטי', path: '/legal-report', category: 'admin', priority: 'low' },
   
   // Auth & Misc
   { id: 'therapist-register', moduleName: 'Therapist Registration', moduleNameHe: 'הרשמת מטפל', path: '/therapist-register', category: 'auth', priority: 'high' },
   { id: 'install-app', moduleName: 'Install App (PWA)', moduleNameHe: 'התקנת אפליקציה', path: '/install', category: 'core', priority: 'low' },
+  { id: 'qa-testing', moduleName: 'QA Testing', moduleNameHe: 'בדיקות QA', path: '/qa-testing', category: 'admin', priority: 'medium' },
 ];
 
 const STORAGE_KEY = 'qa_testing_session';
