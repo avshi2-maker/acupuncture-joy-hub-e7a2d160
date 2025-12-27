@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import heroBackground from '@/assets/encyclopedia-hero-bg.jpg';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 // Encyclopedia Pricing Tiers
 const encyclopediaTiers = [
@@ -185,6 +186,11 @@ export default function EncyclopediaLanding() {
       >
         {/* Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/50 to-background" />
+        
+        {/* Language Switcher */}
+        <div className="absolute top-4 right-4 z-20">
+          <LanguageSwitcher variant="outline" />
+        </div>
         
         {/* Content */}
         <div className="relative z-10 max-w-6xl mx-auto px-4 py-20 text-center">
