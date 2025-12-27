@@ -555,8 +555,8 @@ export default function EncyclopediaLanding() {
                 <CardDescription>For individual practitioners</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-gold mb-1">₪149<span className="text-lg font-normal text-muted-foreground">/month</span></div>
-                <div className="text-sm text-muted-foreground mb-4">(~$40/month)</div>
+                <div className="text-3xl font-bold text-gold mb-1">₪40<span className="text-lg font-normal text-muted-foreground">/month</span></div>
+                <div className="text-sm text-muted-foreground mb-4">(~$11/month)</div>
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-gold" /> Unlimited patients
@@ -592,7 +592,7 @@ export default function EncyclopediaLanding() {
                 <CardDescription>For clinics & global practitioners</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-crimson mb-1">$99<span className="text-lg font-normal text-muted-foreground">/month</span></div>
+                <div className="text-3xl font-bold text-crimson mb-1">$50<span className="text-lg font-normal text-muted-foreground">/month</span></div>
                 <ul className="space-y-2 text-sm mt-4">
                   <li className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-crimson" /> Everything in Standard
@@ -639,10 +639,10 @@ export default function EncyclopediaLanding() {
                     <span className="font-medium">Israel</span>
                   </td>
                   <td className="border border-border p-4">~2,500</td>
-                  <td className="border border-border p-4">₪149 ($40)</td>
+                  <td className="border border-border p-4">₪40 ($11)</td>
                   <td className="border border-border p-4">125 users</td>
                   <td className="border border-border p-4">
-                    <span className="text-gold font-bold">$5,000/mo</span>
+                    <span className="text-gold font-bold">$1,375/mo</span>
                   </td>
                 </tr>
                 <tr className="hover:bg-muted/30 transition-colors">
@@ -651,10 +651,10 @@ export default function EncyclopediaLanding() {
                     <span className="font-medium">Global (1%)</span>
                   </td>
                   <td className="border border-border p-4">~450,000</td>
-                  <td className="border border-border p-4">$70 avg</td>
+                  <td className="border border-border p-4">$30 avg</td>
                   <td className="border border-border p-4">4,500 users</td>
                   <td className="border border-border p-4">
-                    <span className="text-crimson font-bold">$315,000/mo</span>
+                    <span className="text-crimson font-bold">$135,000/mo</span>
                   </td>
                 </tr>
                 <tr className="bg-jade/5 hover:bg-jade/10 transition-colors">
@@ -666,7 +666,7 @@ export default function EncyclopediaLanding() {
                   <td className="border border-border p-4"></td>
                   <td className="border border-border p-4">4,625 users</td>
                   <td className="border border-border p-4">
-                    <span className="text-jade font-bold text-lg">$320,000/mo</span>
+                    <span className="text-jade font-bold text-lg">$136,375/mo</span>
                   </td>
                 </tr>
               </tbody>
