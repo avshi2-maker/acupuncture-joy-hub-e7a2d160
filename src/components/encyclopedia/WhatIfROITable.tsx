@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Users, TrendingUp, Calculator, DollarSign, Edit3, Download, Share2, Save, FolderOpen, GitCompare, Trash2, Copy, Pencil, FileText } from 'lucide-react';
+import { Users, TrendingUp, Calculator, DollarSign, Edit3, Download, Share2, Save, FolderOpen, GitCompare, Trash2, Copy, Pencil, FileText, Tag, FileDown, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import jsPDF from 'jspdf';
@@ -36,6 +36,8 @@ const TIER_PRICING = {
   researcher: { price: 50, avgQueries: 230 },
 };
 
+const AVAILABLE_TAGS = ['optimistic', 'conservative', 'baseline', 'q1', 'q2', 'q3', 'q4', '2025', '2026', 'growth', 'test'];
+
 interface TierInputs {
   student: number;
   practitioner: number;
@@ -46,6 +48,7 @@ interface SavedScenario {
   id: string;
   name: string;
   notes: string | null;
+  tags: string[];
   configuration: TierInputs;
   calculations: any;
   created_at: string;
@@ -60,6 +63,7 @@ export function WhatIfROITable() {
   const [savedScenarios, setSavedScenarios] = useState<SavedScenario[]>([]);
   const [scenarioName, setScenarioName] = useState('');
   const [scenarioNotes, setScenarioNotes] = useState('');
+  const [scenarioTags, setScenarioTags] = useState<string[]>([]);
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
   const [isLoadDialogOpen, setIsLoadDialogOpen] = useState(false);
   const [isCompareMode, setIsCompareMode] = useState(false);
@@ -68,6 +72,8 @@ export function WhatIfROITable() {
   const [editingScenario, setEditingScenario] = useState<SavedScenario | null>(null);
   const [editName, setEditName] = useState('');
   const [editNotes, setEditNotes] = useState('');
+  const [editTags, setEditTags] = useState<string[]>([]);
+  const [filterTag, setFilterTag] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -92,6 +98,7 @@ export function WhatIfROITable() {
         id: s.id,
         name: s.name,
         notes: s.notes || null,
+        tags: (s as any).tags || [],
         configuration: s.configuration as unknown as TierInputs,
         calculations: s.calculations,
         created_at: s.created_at
@@ -159,6 +166,7 @@ export function WhatIfROITable() {
       user_id: userId,
       name: scenarioName,
       notes: scenarioNotes || null,
+      tags: scenarioTags,
       scenario_type: 'encyclopedia',
       configuration: JSON.parse(JSON.stringify(subscribers)) as Json,
       calculations: JSON.parse(JSON.stringify(calculations)) as Json
@@ -171,6 +179,7 @@ export function WhatIfROITable() {
       toast.success('Scenario saved to cloud!');
       setScenarioName('');
       setScenarioNotes('');
+      setScenarioTags([]);
       setIsSaveDialogOpen(false);
       loadScenarios();
     }
@@ -181,7 +190,7 @@ export function WhatIfROITable() {
     
     const { error } = await supabase
       .from('roi_scenarios')
-      .update({ name: editName, notes: editNotes || null })
+      .update({ name: editName, notes: editNotes || null, tags: editTags })
       .eq('id', editingScenario.id);
 
     if (!error) {
@@ -195,6 +204,90 @@ export function WhatIfROITable() {
     setEditingScenario(scenario);
     setEditName(scenario.name);
     setEditNotes(scenario.notes || '');
+    setEditTags(scenario.tags || []);
+  };
+
+  const toggleTag = (tag: string, tagList: string[], setTagList: (tags: string[]) => void) => {
+    if (tagList.includes(tag)) {
+      setTagList(tagList.filter(t => t !== tag));
+    } else {
+      setTagList([...tagList, tag]);
+    }
+  };
+
+  const filteredScenarios = useMemo(() => {
+    if (!filterTag) return savedScenarios;
+    return savedScenarios.filter(s => s.tags?.includes(filterTag));
+  }, [savedScenarios, filterTag]);
+
+  const exportAllToPDF = () => {
+    if (savedScenarios.length === 0) {
+      toast.error('No scenarios to export');
+      return;
+    }
+
+    const doc = new jsPDF();
+    const date = new Date().toLocaleDateString();
+    
+    doc.setFontSize(20);
+    doc.text('TCM Encyclopedia ROI Scenarios Report', 14, 20);
+    doc.setFontSize(10);
+    doc.text(`Generated: ${date}`, 14, 28);
+    doc.text(`Total Scenarios: ${savedScenarios.length}`, 14, 35);
+    
+    let yPos = 50;
+    
+    savedScenarios.forEach((scenario, index) => {
+      if (yPos > 250) {
+        doc.addPage();
+        yPos = 20;
+      }
+      
+      doc.setFontSize(14);
+      doc.text(`${index + 1}. ${scenario.name}`, 14, yPos);
+      yPos += 7;
+      
+      doc.setFontSize(9);
+      doc.text(`Created: ${new Date(scenario.created_at).toLocaleDateString()}`, 20, yPos);
+      yPos += 5;
+      
+      if (scenario.tags?.length > 0) {
+        doc.text(`Tags: ${scenario.tags.join(', ')}`, 20, yPos);
+        yPos += 5;
+      }
+      
+      if (scenario.notes) {
+        doc.text(`Notes: ${scenario.notes.slice(0, 80)}${scenario.notes.length > 80 ? '...' : ''}`, 20, yPos);
+        yPos += 5;
+      }
+      
+      const config = scenario.configuration;
+      const calc = scenario.calculations;
+      doc.text(`Subscribers: Student=${config.student}, Practitioner=${config.practitioner}, Researcher=${config.researcher}`, 20, yPos);
+      yPos += 5;
+      doc.text(`Revenue: $${calc.totalRevenue?.toLocaleString() || 0}/mo | Profit: $${calc.netProfit?.toLocaleString() || 0}/mo | Margin: ${calc.profitMargin || 0}%`, 20, yPos);
+      yPos += 12;
+    });
+    
+    // Summary table
+    doc.addPage();
+    doc.setFontSize(14);
+    doc.text('Scenarios Comparison Summary', 14, 20);
+    
+    autoTable(doc, {
+      startY: 30,
+      head: [['Scenario', 'Total Subs', 'Revenue/mo', 'Profit/mo', 'Margin']],
+      body: savedScenarios.map(s => [
+        s.name.slice(0, 25),
+        (s.configuration.student + s.configuration.practitioner + s.configuration.researcher).toString(),
+        `$${s.calculations.totalRevenue?.toLocaleString() || 0}`,
+        `$${s.calculations.netProfit?.toLocaleString() || 0}`,
+        `${s.calculations.profitMargin || 0}%`
+      ]),
+    });
+    
+    doc.save(`Encyclopedia-All-Scenarios-${date.replace(/\//g, '-')}.pdf`);
+    toast.success(`Exported ${savedScenarios.length} scenarios to PDF!`);
   };
 
   const loadScenario = (scenario: SavedScenario) => {
@@ -374,6 +467,21 @@ Generated by TCM Brain - ${new Date().toLocaleDateString()}`;
                     rows={3}
                   />
                 </div>
+                <div>
+                  <Label>Tags (optional)</Label>
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {AVAILABLE_TAGS.map(tag => (
+                      <Badge 
+                        key={tag}
+                        variant={scenarioTags.includes(tag) ? "default" : "outline"}
+                        className="cursor-pointer text-xs"
+                        onClick={() => toggleTag(tag, scenarioTags, setScenarioTags)}
+                      >
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
                 <Button onClick={saveScenario} className="w-full">
                   <Save className="h-4 w-4 mr-2" />
                   Save to Cloud
@@ -393,15 +501,43 @@ Generated by TCM Brain - ${new Date().toLocaleDateString()}`;
               <DialogHeader>
                 <DialogTitle>Load Saved Scenario</DialogTitle>
               </DialogHeader>
-              <div className="space-y-2 py-4 max-h-[60vh] overflow-y-auto">
-                {savedScenarios.length === 0 ? (
+              <div className="space-y-4 py-4">
+                {/* Tag filter */}
+                <div className="flex flex-wrap gap-1 items-center">
+                  <span className="text-sm text-muted-foreground mr-2">Filter:</span>
+                  <Badge 
+                    variant={filterTag === null ? "default" : "outline"}
+                    className="cursor-pointer text-xs"
+                    onClick={() => setFilterTag(null)}
+                  >
+                    All
+                  </Badge>
+                  {AVAILABLE_TAGS.filter(tag => savedScenarios.some(s => s.tags?.includes(tag))).map(tag => (
+                    <Badge 
+                      key={tag}
+                      variant={filterTag === tag ? "default" : "outline"}
+                      className="cursor-pointer text-xs"
+                      onClick={() => setFilterTag(tag)}
+                    >
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+                
+                <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+                {filteredScenarios.length === 0 ? (
                   <p className="text-muted-foreground text-center py-8">No saved scenarios yet</p>
                 ) : (
-                  savedScenarios.map(scenario => (
+                  filteredScenarios.map(scenario => (
                     <div key={scenario.id} className="p-3 border rounded-lg hover:bg-muted/50">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <p className="font-medium">{scenario.name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium">{scenario.name}</p>
+                            {scenario.tags?.map(tag => (
+                              <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
+                            ))}
+                          </div>
                           <p className="text-xs text-muted-foreground">
                             {new Date(scenario.created_at).toLocaleDateString()} • 
                             {scenario.configuration.student + scenario.configuration.practitioner + scenario.configuration.researcher} subscribers
@@ -429,6 +565,7 @@ Generated by TCM Brain - ${new Date().toLocaleDateString()}`;
                     </div>
                   ))
                 )}
+                </div>
               </div>
             </DialogContent>
           </Dialog>
@@ -451,6 +588,12 @@ Generated by TCM Brain - ${new Date().toLocaleDateString()}`;
             <Download className="h-4 w-4" />
             PDF
           </Button>
+          
+          <Button variant="outline" size="sm" onClick={exportAllToPDF} className="gap-1" disabled={savedScenarios.length === 0}>
+            <FileDown className="h-4 w-4" />
+            Export All
+          </Button>
+          
           <Button variant="outline" size="sm" onClick={shareScenario} className="gap-1">
             <Share2 className="h-4 w-4" />
             Share
@@ -482,6 +625,21 @@ Generated by TCM Brain - ${new Date().toLocaleDateString()}`;
                 placeholder="Document your assumptions..."
                 rows={4}
               />
+            </div>
+            <div>
+              <Label>Tags</Label>
+              <div className="flex flex-wrap gap-1 mt-2">
+                {AVAILABLE_TAGS.map(tag => (
+                  <Badge 
+                    key={tag}
+                    variant={editTags.includes(tag) ? "default" : "outline"}
+                    className="cursor-pointer text-xs"
+                    onClick={() => toggleTag(tag, editTags, setEditTags)}
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
             </div>
             <Button onClick={updateScenario} className="w-full">
               <Save className="h-4 w-4 mr-2" />
