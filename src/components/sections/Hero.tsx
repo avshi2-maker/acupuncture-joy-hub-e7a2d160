@@ -47,8 +47,8 @@ const Hero = () => {
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 pt-20">
         <div className="flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16">
-          {/* Bazi Wheel Image - Left Side */}
-          <div className="hidden lg:block flex-shrink-0 animate-fade-in-up">
+          {/* Bazi Wheel Image - Left Side (visible on all screens) */}
+          <div className="flex-shrink-0 animate-fade-in-up order-2 lg:order-1">
             <button 
               onClick={handleBaziClick} 
               className="block animate-float cursor-pointer transition-transform hover:scale-105 text-left"
@@ -56,7 +56,7 @@ const Hero = () => {
               <img
                 src={baziWheel}
                 alt="BaZi Chinese Astrology Wheel - Click to try the calculator"
-                className="w-80 h-auto rounded-xl shadow-2xl border border-gold/30 shadow-gold/20"
+                className="w-48 sm:w-64 lg:w-80 h-auto rounded-xl shadow-2xl border border-gold/30 shadow-gold/20"
               />
               <p className="text-center text-primary-foreground/80 mt-3 text-sm font-medium">
                 ✨ לחץ לנסות מחשבון בא-זי / Click to try
@@ -65,7 +65,14 @@ const Hero = () => {
           </div>
 
           {/* Text Content - Center/Right */}
-          <div className="max-w-2xl text-center lg:text-left">
+          <div className="max-w-2xl text-center lg:text-left order-1 lg:order-2">
+            {/* Clinic Name on Mobile */}
+            <div className="sm:hidden text-center mb-6 animate-fade-in-up">
+              <h2 className="text-xl font-bold text-primary-foreground">Dr Roni Sapir</h2>
+              <p className="text-sm text-primary-foreground/90">Complementary Medicine - Acupuncture Clinic</p>
+              <p className="text-xs text-primary-foreground/70 italic">Healing Through Balance with AI</p>
+            </div>
+
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-foreground/10 backdrop-blur-sm rounded-full border border-primary-foreground/20 mb-8 animate-fade-in-up">
               <Sparkles className="w-4 h-4 text-gold" />
@@ -75,14 +82,14 @@ const Hero = () => {
             </div>
 
             {/* Heading */}
-            <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-semibold text-primary-foreground leading-tight mb-6 animate-fade-in-up delay-100">
+            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold text-primary-foreground leading-tight mb-6 animate-fade-in-up delay-100">
               Restore Balance.
               <br />
               <span className="text-gold">Renew Life.</span>
             </h1>
 
             {/* Subheading */}
-            <p className="font-body text-lg md:text-xl text-primary-foreground/90 max-w-2xl mx-auto lg:mx-0 mb-10 leading-relaxed animate-fade-in-up delay-200">
+            <p className="font-body text-base sm:text-lg md:text-xl text-primary-foreground/90 max-w-2xl mx-auto lg:mx-0 mb-10 leading-relaxed animate-fade-in-up delay-200">
               Experience the transformative power of Traditional Chinese Medicine. 
               Our certified practitioners combine 5,000 years of wisdom with 
               personalized care to help you achieve optimal health and vitality.
