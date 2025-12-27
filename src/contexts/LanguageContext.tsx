@@ -70,6 +70,7 @@ export const translations: Translations = {
   fourPillarsOfDestiny: { en: "Four Pillars of Destiny", he: "ארבעת עמודי הגורל", ru: "Четыре столпа судьбы" },
   baziDescription: { en: "Calculate your BaZi (Four Pillars of Destiny) chart with acupuncture point recommendations based on Chinese metaphysics.", he: "חשב את תרשים הבא-זי שלך (ארבעת עמודי הגורל) עם המלצות לנקודות דיקור בהתבסס על מטאפיזיקה סינית.", ru: "Рассчитайте свою карту БаЦзы с рекомендациями по акупунктурным точкам." },
   backToDashboard: { en: "Back to Dashboard", he: "חזרה ללוח הבקרה", ru: "Назад к панели" },
+  endSession: { en: "End Session", he: "סיום", ru: "Завершить" },
   birthInformation: { en: "Birth Information", he: "פרטי לידה", ru: "Информация о рождении" },
   enterBirthDetails: { en: "Enter the birth date and time to calculate the Four Pillars", he: "הזן את תאריך ושעת הלידה לחישוב ארבעת העמודים", ru: "Введите дату и время рождения" },
   birthDate: { en: "Birth Date", he: "תאריך לידה", ru: "Дата рождения" },

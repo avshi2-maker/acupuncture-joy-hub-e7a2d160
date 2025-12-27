@@ -22,7 +22,8 @@ import {
   TreeDeciduous,
   Mountain,
   Wind,
-  MapPin
+  MapPin,
+  LogOut
 } from 'lucide-react';
 import {
   calculateBaZi,
@@ -183,7 +184,18 @@ export default function BaziCalculator() {
                 <h1 className="text-xl font-display font-semibold">{t('baziCalculator')}</h1>
               </div>
             </div>
-            <LanguageSwitcher />
+            <div className="flex items-center gap-2">
+              <LanguageSwitcher />
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                onClick={() => window.location.href = '/'}
+                className="gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">{t('endSession')}</span>
+              </Button>
+            </div>
           </div>
         </header>
 
