@@ -24,6 +24,8 @@ const TherapistTeaser = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [videoError, setVideoError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const navigate = useNavigate();
 
@@ -32,12 +34,15 @@ const TherapistTeaser = () => {
     if (!video) return;
 
     const handleTimeUpdate = () => {
-      const totalDuration = videos.length * video.duration;
-      const currentProgress = (currentVideo * video.duration + video.currentTime) / totalDuration;
-      setProgress(currentProgress * 100);
+      if (video.duration && !isNaN(video.duration)) {
+        const totalDuration = videos.length * video.duration;
+        const currentProgress = (currentVideo * video.duration + video.currentTime) / totalDuration;
+        setProgress(currentProgress * 100);
+      }
     };
 
     const handleEnded = () => {
+      console.log('Video ended, current:', currentVideo);
       if (currentVideo < videos.length - 1) {
         setCurrentVideo(prev => prev + 1);
       } else {
@@ -48,26 +53,58 @@ const TherapistTeaser = () => {
       }
     };
 
+    const handleError = (e: Event) => {
+      console.error('Video error:', e, video.error);
+      setVideoError(`Video failed to load: ${video.error?.message || 'Unknown error'}`);
+      setIsLoading(false);
+    };
+
+    const handleCanPlay = () => {
+      console.log('Video can play:', videos[currentVideo]);
+      setIsLoading(false);
+      setVideoError(null);
+    };
+
+    const handleLoadStart = () => {
+      console.log('Video loading:', videos[currentVideo]);
+      setIsLoading(true);
+    };
+
     video.addEventListener('timeupdate', handleTimeUpdate);
     video.addEventListener('ended', handleEnded);
+    video.addEventListener('error', handleError);
+    video.addEventListener('canplay', handleCanPlay);
+    video.addEventListener('loadstart', handleLoadStart);
 
     return () => {
       video.removeEventListener('timeupdate', handleTimeUpdate);
       video.removeEventListener('ended', handleEnded);
+      video.removeEventListener('error', handleError);
+      video.removeEventListener('canplay', handleCanPlay);
+      video.removeEventListener('loadstart', handleLoadStart);
     };
   }, [currentVideo]);
 
   useEffect(() => {
     if (isPlaying && videoRef.current) {
-      videoRef.current.play();
+      videoRef.current.play().catch(err => {
+        console.error('Play failed:', err);
+        setVideoError('Failed to play video. Please try again.');
+      });
     }
   }, [currentVideo, isPlaying]);
 
-  const handlePlay = () => {
+  const handlePlay = async () => {
+    setVideoError(null);
     setIsPlaying(true);
     setCurrentVideo(0);
     if (videoRef.current) {
-      videoRef.current.play();
+      try {
+        await videoRef.current.play();
+      } catch (err) {
+        console.error('Play failed:', err);
+        setVideoError('Failed to play video. Please try again.');
+      }
     }
   };
 
@@ -127,8 +164,25 @@ const TherapistTeaser = () => {
               className="w-full h-full object-cover"
               muted={isMuted}
               playsInline
-              preload="metadata"
+              preload="auto"
             />
+
+            {/* Loading State */}
+            {isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+
+            {/* Error State */}
+            {videoError && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-white p-4">
+                <p className="text-red-400 mb-4 text-center">{videoError}</p>
+                <Button variant="outline" onClick={() => { setVideoError(null); setCurrentVideo(0); }}>
+                  Try Again
+                </Button>
+              </div>
+            )}
 
             {/* Play Overlay (shown when not playing) */}
             {!isPlaying && (
