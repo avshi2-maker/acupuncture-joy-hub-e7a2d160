@@ -1,8 +1,11 @@
-import { Sparkles, BookOpen } from "lucide-react";
+import { Sparkles, BookOpen, Volume2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { TTSButton } from "@/components/audio/TTSButton";
 import heroBg from "@/assets/hero-meridian-bg.png";
 import baziWheel from "@/assets/bazi-wheel.jpg";
+
+const welcomeTextHebrew = `ברוכים הבאים לקליניקה לרפואה סינית מסורתית של דר רוני ספיר. אנחנו משלבים חמשת אלפים שנות חוכמה עתיקה עם טיפול מותאם אישית כדי לעזור לכם להגיע לבריאות ולחיוניות מיטביים. שחזרו את האיזון, חדשו את החיים.`;
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -65,6 +68,13 @@ const Hero = () => {
               <span className="text-primary-foreground text-sm font-medium tracking-wide">
                 Ancient Wisdom, Modern Healing
               </span>
+              <TTSButton
+                text={welcomeTextHebrew}
+                title="Welcome Message"
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-primary-foreground hover:text-gold hover:bg-primary-foreground/10"
+              />
             </div>
 
             {/* Heading */}
