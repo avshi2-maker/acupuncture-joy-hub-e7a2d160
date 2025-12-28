@@ -461,17 +461,17 @@ export default function VideoSession() {
               </div>
             </Link>
 
-            {/* Clock - fixed center */}
+            {/* Clock - circular with full background */}
             <div className="absolute left-1/2 -translate-x-1/2">
-              <div className="relative h-14 w-14 rounded-2xl bg-background border border-border shadow-sm flex items-center justify-center overflow-hidden">
+              <div className="relative h-20 w-20 rounded-full shadow-lg overflow-hidden">
                 <img
                   src={clockImg}
                   alt="Session clock"
-                  className="h-11 w-11 object-contain"
+                  className="absolute inset-0 h-full w-full object-cover"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-sm font-semibold text-foreground font-mono bg-background/70 px-1.5 py-0.5 rounded">
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                  <span className="text-lg font-bold text-white font-mono drop-shadow-lg">
                     {currentTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
@@ -810,21 +810,34 @@ export default function VideoSession() {
                         ))
                       )}
                     </div>
-                    {/* Input Area */}
-                    <div className="flex gap-2">
-                      <Textarea
-                        value={anxietyInput}
-                        onChange={(e) => setAnxietyInput(e.target.value)}
-                        placeholder="שאל שאלה על חרדה..."
-                        rows={2}
-                        className="flex-1 text-sm"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            handleAnxietyQuestion();
-                          }
-                        }}
-                      />
+                    {/* Input Area with Mic */}
+                    <div className="flex gap-2 items-end">
+                      <div className="flex-1 relative">
+                        <Textarea
+                          value={anxietyInput}
+                          onChange={(e) => setAnxietyInput(e.target.value)}
+                          placeholder="שאל שאלה על חרדה..."
+                          rows={2}
+                          className="text-sm pr-10"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleAnxietyQuestion();
+                            }
+                          }}
+                        />
+                        <button 
+                          onClick={() => setShowVoiceDictation(true)}
+                          className="absolute bottom-2 right-2 p-1 rounded-full hover:bg-rose-100 transition-colors"
+                          title="Voice input"
+                        >
+                          <img 
+                            src={animatedMicGif} 
+                            alt="Voice input" 
+                            className="h-6 w-6 object-contain"
+                          />
+                        </button>
+                      </div>
                       <Button 
                         onClick={handleAnxietyQuestion} 
                         disabled={aiQueryLoading || !anxietyInput.trim()}
@@ -1037,7 +1050,7 @@ export default function VideoSession() {
           </div>
         </main>
 
-        <SessionTimerWidget position="bottom-right" />
+        {/* Session timer widget removed - using header clock instead */}
       </div>
 
       {/* Dialogs */}
