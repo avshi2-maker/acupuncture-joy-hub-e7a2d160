@@ -92,8 +92,9 @@ export function SessionReportDialog({
     try {
       const textToRead = isEditing ? editedSummary : summary;
       
+      // Use OpenAI TTS via text-to-speech edge function
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/text-to-speech`,
         {
           method: 'POST',
           headers: {
@@ -103,13 +104,15 @@ export function SessionReportDialog({
           },
           body: JSON.stringify({
             text: textToRead,
-            voice: 'Daniel', // Male voice
+            voice: 'onyx', // Deep male voice, good for Hebrew
+            language: 'he',
           }),
         }
       );
 
       if (!response.ok) {
-        throw new Error('Failed to generate audio');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to generate audio');
       }
 
       const data = await response.json();
