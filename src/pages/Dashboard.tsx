@@ -21,6 +21,7 @@ import {
 import { Link } from 'react-router-dom';
 import calendarBg from '@/assets/calendar-bg.png';
 import deskBg from '@/assets/desk-bg.png';
+import brainBg from '@/assets/brain-bg.png';
 
 interface FeatureCardProps {
   title: string;
@@ -150,14 +151,27 @@ export default function Dashboard() {
     },
   ];
 
-  // Row 3: Knowledge Registry
-  const row3Feature = {
-    id: 'knowledge_registry',
-    title: 'Knowledge Registry',
-    description: 'העלאת וניהול קבצי ידע CSV',
-    icon: <Database className="h-6 w-6 text-jade" />,
-    href: '/knowledge-registry',
-  };
+  // Row 3: TCM Brain + Knowledge Registry
+  const row3Features = [
+    {
+      id: 'tcm_brain_2',
+      title: 'TCM Brain',
+      description: 'מאגר ידע מקיף ברפואה סינית',
+      icon: <Brain className="h-6 w-6 text-white" />,
+      feature: 'tcm_brain' as const,
+      href: '/tcm-brain',
+      backgroundImage: brainBg,
+    },
+    {
+      id: 'knowledge_registry',
+      title: 'Knowledge Registry',
+      description: 'העלאת וניהול קבצי ידע CSV',
+      icon: <Database className="h-6 w-6 text-white" />,
+      href: '/knowledge-registry',
+      alwaysAvailable: true,
+      backgroundImage: brainBg,
+    },
+  ];
 
   if (!tier) return null;
 
@@ -238,16 +252,19 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Row 3: Knowledge Registry */}
+        {/* Row 3: TCM Brain + Knowledge Registry */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <FeatureCard
-            key={row3Feature.id}
-            title={row3Feature.title}
-            description={row3Feature.description}
-            icon={row3Feature.icon}
-            available={true}
-            href={row3Feature.href}
-          />
+          {row3Features.map((feature) => (
+            <FeatureCard
+              key={feature.id}
+              title={feature.title}
+              description={feature.description}
+              icon={feature.icon}
+              available={'alwaysAvailable' in feature ? true : hasFeature(feature.feature)}
+              href={feature.href}
+              backgroundImage={feature.backgroundImage}
+            />
+          ))}
         </div>
 
         {/* Upgrade CTA for non-premium */}
