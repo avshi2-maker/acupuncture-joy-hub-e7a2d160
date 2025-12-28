@@ -44,6 +44,7 @@ import ScenariosDashboard from "./pages/ScenariosDashboard";
 import TherapistDisclaimer from "./pages/TherapistDisclaimer";
 import AdminDisclaimers from "./pages/AdminDisclaimers";
 import CMBrainQuestions from "./pages/CMBrainQuestions";
+import PointCoordinateEditor from "./pages/PointCoordinateEditor";
 
 const queryClient = new QueryClient();
 
@@ -95,6 +96,7 @@ const App = () => (
                       <Route path="/developers" element={<Developers />} />
                       <Route path="/scenarios" element={<ScenariosDashboard />} />
                       <Route path="/cm-brain-questions" element={<CMBrainQuestions />} />
+                      <Route path="/point-editor" element={<PointCoordinateEditor />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </BrowserRouter>
