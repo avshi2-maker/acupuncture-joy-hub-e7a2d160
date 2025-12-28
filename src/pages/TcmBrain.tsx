@@ -59,7 +59,11 @@ import {
   BookmarkCheck,
   Sun,
   MoonStar,
-  Monitor
+  Monitor,
+  Play,
+  Pause,
+  RotateCcw,
+  Timer
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Link } from 'react-router-dom';
@@ -299,12 +303,32 @@ export default function TcmBrain() {
   const [activeFeatureTab, setActiveFeatureTab] = useState<string>('chat');
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [sessionSeconds, setSessionSeconds] = useState(0);
+  const [isSessionRunning, setIsSessionRunning] = useState(true);
+  const [sessionStartTime] = useState(new Date());
   
   // Update clock every second
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+  
+  // Session timer
+  useEffect(() => {
+    if (!isSessionRunning) return;
+    const timer = setInterval(() => setSessionSeconds(s => s + 1), 1000);
+    return () => clearInterval(timer);
+  }, [isSessionRunning]);
+  
+  const formatSessionTime = (seconds: number) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    if (hrs > 0) {
+      return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const [disclaimerStatus, setDisclaimerStatus] = useState<DisclaimerStatus>(() => {
     try {
@@ -803,6 +827,38 @@ export default function TcmBrain() {
                   </div>
                 </div>
               </div>
+              
+              {/* Session Timer */}
+              <div className="hidden sm:flex items-center gap-1 ml-2 px-2 py-1 rounded-lg bg-jade/10 border border-jade/20">
+                <Timer className="h-3 w-3 text-jade" />
+                <span className="text-xs font-mono font-medium text-jade">
+                  {formatSessionTime(sessionSeconds)}
+                </span>
+                <div className="flex items-center gap-0.5 ml-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 w-5 p-0"
+                    onClick={() => setIsSessionRunning(!isSessionRunning)}
+                    title={isSessionRunning ? 'Pause timer' : 'Resume timer'}
+                  >
+                    {isSessionRunning ? (
+                      <Pause className="h-3 w-3 text-amber-500" />
+                    ) : (
+                      <Play className="h-3 w-3 text-jade" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 w-5 p-0"
+                    onClick={() => setSessionSeconds(0)}
+                    title="Reset timer"
+                  >
+                    <RotateCcw className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                  </Button>
+                </div>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               {/* Theme Toggle with System Option */}
@@ -1274,21 +1330,34 @@ export default function TcmBrain() {
                   <div className="flex justify-center">
                     <button
                       onClick={() => setShowInlineChat(!showInlineChat)}
-                      className="group relative flex items-center gap-3 px-8 py-4 rounded-2xl 
-                                 bg-gradient-to-r from-jade-600 via-jade-500 to-jade-600
-                                 hover:from-jade-500 hover:via-jade-400 hover:to-jade-500
-                                 text-white font-semibold text-lg shadow-lg hover:shadow-xl
-                                 transition-all duration-300 hover:scale-105
-                                 border border-jade-400/30 overflow-hidden"
+                      className="group relative flex items-center gap-2.5 px-5 py-2.5 rounded-xl 
+                                 bg-gradient-to-r from-jade via-jade-600 to-jade
+                                 hover:from-jade-600 hover:via-jade-500 hover:to-jade-600
+                                 text-white font-medium text-sm shadow-md hover:shadow-lg
+                                 transition-all duration-300 hover:scale-[1.02]
+                                 border border-jade-400/40 overflow-hidden"
                     >
-                      {/* Animated background pattern */}
-                      <div className="absolute inset-0 opacity-20">
-                        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgY3g9IjIwIiBjeT0iMjAiIHI9IjIiIGZpbGw9IndoaXRlIiBmaWxsLW9wYWNpdHk9IjAuMyIvPjwvZz48L3N2Zz4=')] animate-pulse" />
+                      {/* Decorative circuit pattern on right side */}
+                      <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-30">
+                        <div className="absolute inset-0 bg-gradient-to-l from-jade-400/50 to-transparent" />
+                        <svg className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 text-jade-300/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                          <circle cx="12" cy="12" r="3" />
+                          <line x1="12" y1="1" x2="12" y2="5" />
+                          <line x1="12" y1="19" x2="12" y2="23" />
+                          <line x1="1" y1="12" x2="5" y2="12" />
+                          <line x1="19" y1="12" x2="23" y2="12" />
+                          <line x1="4.22" y1="4.22" x2="7.05" y2="7.05" />
+                          <line x1="16.95" y1="16.95" x2="19.78" y2="19.78" />
+                          <line x1="4.22" y1="19.78" x2="7.05" y2="16.95" />
+                          <line x1="16.95" y1="7.05" x2="19.78" y2="4.22" />
+                        </svg>
                       </div>
                       
-                      <Brain className="h-6 w-6 relative z-10" />
-                      <span className="relative z-10">{showInlineChat ? 'Close Chat' : 'Ask AI / RAG'}</span>
-                      <Sparkles className="h-5 w-5 relative z-10 text-gold-light group-hover:animate-bounce" />
+                      <Brain className="h-5 w-5 relative z-10" />
+                      <span className="relative z-10 font-semibold tracking-wide">
+                        {showInlineChat ? 'Close Chat' : 'Ask AI / RAG'}
+                      </span>
+                      <Sparkles className="h-4 w-4 relative z-10 text-gold-light group-hover:animate-pulse ml-0.5" />
                     </button>
                   </div>
                   
