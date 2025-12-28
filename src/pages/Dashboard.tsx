@@ -19,6 +19,8 @@ import {
   Database
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import calendarBg from '@/assets/calendar-bg.png';
+import deskBg from '@/assets/desk-bg.png';
 
 interface FeatureCardProps {
   title: string;
@@ -27,22 +29,30 @@ interface FeatureCardProps {
   available: boolean;
   href?: string;
   highlighted?: boolean;
+  backgroundImage?: string;
 }
 
-function FeatureCard({ title, description, icon, available, href, highlighted }: FeatureCardProps) {
+function FeatureCard({ title, description, icon, available, href, highlighted, backgroundImage }: FeatureCardProps) {
   const content = (
-    <Card className={`transition-all duration-300 h-full ${available ? 'hover:shadow-elevated cursor-pointer' : 'opacity-60'} ${highlighted ? 'ring-2 ring-jade border-jade' : ''}`}>
+    <Card 
+      className={`transition-all duration-300 h-full relative overflow-hidden ${available ? 'hover:shadow-elevated cursor-pointer' : 'opacity-60'} ${highlighted ? 'ring-2 ring-jade border-jade' : ''}`}
+      style={backgroundImage ? { 
+        backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(${backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      } : {}}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${available ? 'bg-jade-light' : 'bg-muted'}`}>
+          <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${backgroundImage ? 'bg-white/20 backdrop-blur-sm' : available ? 'bg-jade-light' : 'bg-muted'}`}>
             {icon}
           </div>
-          {!available && <Lock className="h-5 w-5 text-muted-foreground" />}
+          {!available && <Lock className={`h-5 w-5 ${backgroundImage ? 'text-white/70' : 'text-muted-foreground'}`} />}
         </div>
       </CardHeader>
       <CardContent>
-        <CardTitle className="text-lg mb-1">{title}</CardTitle>
-        <CardDescription className="text-sm">
+        <CardTitle className={`text-lg mb-1 ${backgroundImage ? 'text-white' : ''}`}>{title}</CardTitle>
+        <CardDescription className={`text-sm ${backgroundImage ? 'text-white/80' : ''}`}>
           {available ? description : 'שדרגו לתוכנית גבוהה יותר'}
         </CardDescription>
       </CardContent>
@@ -80,63 +90,74 @@ export default function Dashboard() {
     navigate('/');
   };
 
-  const features = [
-    {
-      id: 'video_sessions',
-      title: 'פגישות וידאו',
-      description: 'טיפולים מרחוק בוידאו עם שאלוני תמיכה',
-      icon: <Video className={`h-6 w-6 ${hasFeature('video_sessions') ? 'text-jade' : 'text-muted-foreground'}`} />,
-      feature: 'video_sessions' as const,
-      href: '/video-session',
-      highlighted: true,
-    },
-    {
-      id: 'knowledge_registry',
-      title: 'Knowledge Registry',
-      description: 'העלאת וניהול קבצי ידע CSV',
-      icon: <Database className="h-6 w-6 text-jade" />,
-      feature: 'tcm_brain' as const,
-      href: '/knowledge-registry',
-      alwaysAvailable: true,
-    },
-    {
-      id: 'tcm_brain',
-      title: 'TCM Brain',
-      description: 'מאגר ידע מקיף ברפואה סינית',
-      icon: <Brain className={`h-6 w-6 ${hasFeature('tcm_brain') ? 'text-jade' : 'text-muted-foreground'}`} />,
-      feature: 'tcm_brain' as const,
-      href: '/tcm-brain',
-    },
+  // Row 1: Calendar, Patient Management, Reminders
+  const row1Features = [
     {
       id: 'calendar',
       title: 'יומן תורים',
       description: 'ניהול תורים וזמינות',
-      icon: <Calendar className={`h-6 w-6 ${hasFeature('calendar') ? 'text-jade' : 'text-muted-foreground'}`} />,
+      icon: <Calendar className="h-6 w-6 text-white" />,
       feature: 'calendar' as const,
+      backgroundImage: calendarBg,
     },
     {
       id: 'crm',
       title: 'ניהול מטופלים',
       description: 'CRM מותאם למטפלים',
-      icon: <Users className={`h-6 w-6 ${hasFeature('crm') ? 'text-jade' : 'text-muted-foreground'}`} />,
+      icon: <Users className="h-6 w-6 text-white" />,
       feature: 'crm' as const,
       href: '/crm',
+      backgroundImage: calendarBg,
+    },
+    {
+      id: 'email_reminders',
+      title: 'תזכורות',
+      description: 'שליחת תזכורות Email / WhatsApp',
+      icon: <MessageSquare className="h-6 w-6 text-white" />,
+      feature: 'email_reminders' as const,
+      backgroundImage: calendarBg,
+    },
+  ];
+
+  // Row 2: Video Session, TCM Brain, Body Map
+  const row2Features = [
+    {
+      id: 'video_sessions',
+      title: 'פגישת וידאו',
+      description: 'טיפולים מרחוק בוידאו עם שאלוני תמיכה',
+      icon: <Video className="h-6 w-6 text-white" />,
+      feature: 'video_sessions' as const,
+      href: '/video-session',
+      highlighted: true,
+      backgroundImage: deskBg,
+    },
+    {
+      id: 'tcm_brain',
+      title: 'TCM Brain',
+      description: 'מאגר ידע מקיף ברפואה סינית',
+      icon: <Brain className="h-6 w-6 text-white" />,
+      feature: 'tcm_brain' as const,
+      href: '/tcm-brain',
+      backgroundImage: deskBg,
     },
     {
       id: 'body_map',
       title: 'מפת גוף',
       description: 'מפה אינטראקטיבית לאבחון',
-      icon: <MapPin className={`h-6 w-6 ${hasFeature('body_map') ? 'text-jade' : 'text-muted-foreground'}`} />,
+      icon: <MapPin className="h-6 w-6 text-white" />,
       feature: 'body_map' as const,
-    },
-    {
-      id: 'email_reminders',
-      title: 'תזכורות Email / WhatsApp',
-      description: 'שליחת תזכורות אוטומטיות',
-      icon: <MessageSquare className={`h-6 w-6 ${hasFeature('email_reminders') ? 'text-jade' : 'text-muted-foreground'}`} />,
-      feature: 'email_reminders' as const,
+      backgroundImage: deskBg,
     },
   ];
+
+  // Row 3: Knowledge Registry
+  const row3Feature = {
+    id: 'knowledge_registry',
+    title: 'Knowledge Registry',
+    description: 'העלאת וניהול קבצי ידע CSV',
+    icon: <Database className="h-6 w-6 text-jade" />,
+    href: '/knowledge-registry',
+  };
 
   if (!tier) return null;
 
@@ -186,19 +207,47 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* Features Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {features.map((feature) => (
+        {/* Row 1: Calendar, Patient Management, Reminders */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+          {row1Features.map((feature) => (
             <FeatureCard
               key={feature.id}
               title={feature.title}
               description={feature.description}
               icon={feature.icon}
-              available={'alwaysAvailable' in feature ? true : hasFeature(feature.feature)}
+              available={hasFeature(feature.feature)}
               href={feature.href}
-              highlighted={feature.highlighted}
+              backgroundImage={feature.backgroundImage}
             />
           ))}
+        </div>
+
+        {/* Row 2: Video Session, TCM Brain, Body Map */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+          {row2Features.map((feature) => (
+            <FeatureCard
+              key={feature.id}
+              title={feature.title}
+              description={feature.description}
+              icon={feature.icon}
+              available={hasFeature(feature.feature)}
+              href={feature.href}
+              highlighted={feature.highlighted}
+              backgroundImage={feature.backgroundImage}
+            />
+          ))}
+        </div>
+
+        {/* Row 3: Knowledge Registry */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <FeatureCard
+            key={row3Feature.id}
+            title={row3Feature.title}
+            description={row3Feature.description}
+            icon={row3Feature.icon}
+            available={true}
+            href={row3Feature.href}
+          />
         </div>
 
         {/* Upgrade CTA for non-premium */}
