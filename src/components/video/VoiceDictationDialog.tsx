@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Square, Save, Play, Pause, Trash2, Loader2 } from 'lucide-react';
+import { Square, Save, Play, Pause, Trash2, Loader2, BarChart3, Activity, Circle } from 'lucide-react';
 import { AnimatedMic } from '@/components/ui/AnimatedMic';
 import { AudioLevelMeter } from '@/components/ui/AudioLevelMeter';
 import { toast } from 'sonner';
@@ -46,6 +46,7 @@ export function VoiceDictationDialog({
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
+  const [visualizationVariant, setVisualizationVariant] = useState<'bars' | 'wave' | 'circle'>('bars');
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -247,12 +248,49 @@ export function VoiceDictationDialog({
               <div className="flex flex-col items-center gap-4 w-full">
                 <AnimatedMic size="xl" isRecording={true} />
                 
+                {/* Visualization Toggle */}
+                <div className="flex items-center gap-1 p-1 bg-muted rounded-lg">
+                  <button
+                    onClick={() => setVisualizationVariant('bars')}
+                    className={`p-2 rounded-md transition-all ${
+                      visualizationVariant === 'bars' 
+                        ? 'bg-jade text-white shadow-sm' 
+                        : 'hover:bg-muted-foreground/10 text-muted-foreground'
+                    }`}
+                    title="Bars"
+                  >
+                    <BarChart3 className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setVisualizationVariant('wave')}
+                    className={`p-2 rounded-md transition-all ${
+                      visualizationVariant === 'wave' 
+                        ? 'bg-jade text-white shadow-sm' 
+                        : 'hover:bg-muted-foreground/10 text-muted-foreground'
+                    }`}
+                    title="Wave"
+                  >
+                    <Activity className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setVisualizationVariant('circle')}
+                    className={`p-2 rounded-md transition-all ${
+                      visualizationVariant === 'circle' 
+                        ? 'bg-jade text-white shadow-sm' 
+                        : 'hover:bg-muted-foreground/10 text-muted-foreground'
+                    }`}
+                    title="Circle"
+                  >
+                    <Circle className="h-4 w-4" />
+                  </button>
+                </div>
+                
                 {/* Real-time Audio Level Meter */}
-                <div className="w-full">
+                <div className="w-full flex justify-center">
                   <AudioLevelMeter 
                     stream={mediaStream} 
                     isRecording={isRecording} 
-                    variant="bars"
+                    variant={visualizationVariant}
                     barCount={16}
                   />
                 </div>
