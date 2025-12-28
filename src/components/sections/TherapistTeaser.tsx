@@ -1,14 +1,23 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Play, Pause, SkipForward, Volume2, VolumeX, Users, Brain, Calendar, TrendingUp, CheckCircle } from "lucide-react";
+import { Play, Pause, SkipForward, Volume2, VolumeX, Users, Brain, Calendar, TrendingUp, CheckCircle, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 const videos = [
   "/videos/promo-1.mp4",
   "/videos/promo-2.mp4",
   "/videos/promo-3.mp4",
   "/videos/promo-4.mp4",
+];
+
+// Hebrew descriptions for each video - will be narrated by ElevenLabs TTS
+const videoDescriptions = [
+  "ברוכים הבאים למערכת ניהול הקליניקה המתקדמת ביותר לרפואה סינית. המערכת שלנו מאפשרת לכם לנהל את המטופלים, התורים והטיפולים במקום אחד.",
+  "מוח ה-TCM המופעל על ידי בינה מלאכותית מספק תשובות מקצועיות לכל שאלה ברפואה סינית. בעזרת מאגר הידע העשיר שלנו, תקבלו המלצות טיפוליות מדויקות.",
+  "ניהול יומן תורים חכם שמסנכרן עם זום ומזכיר למטופלים על התורים שלהם בוואטסאפ. חסכו זמן ומנעו ביטולים מיותרים.",
+  "עקבו אחר ההחזר על ההשקעה שלכם עם אנליטיקה מתקדמת. צפו בצמיחה של הקליניקה והבינו אילו טיפולים הכי רווחיים."
 ];
 
 const features = [
@@ -27,8 +36,86 @@ const TherapistTeaser = () => {
   const [videoError, setVideoError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
+  const [isNarrating, setIsNarrating] = useState(false);
+  const [narrationEnabled, setNarrationEnabled] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const navigate = useNavigate();
+  const { toast } = useToast();
+
+  // Play Hebrew narration for current video
+  const playNarration = async (videoIndex: number) => {
+    if (!narrationEnabled) return;
+    
+    // Stop any existing narration
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+
+    const description = videoDescriptions[videoIndex];
+    if (!description) return;
+
+    setIsNarrating(true);
+    
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ 
+            text: description,
+            voice: 'Sarah'
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        console.error('Narration failed:', response.status);
+        setIsNarrating(false);
+        return;
+      }
+
+      const data = await response.json();
+      
+      if (data.audioContent) {
+        const audioUrl = `data:audio/mpeg;base64,${data.audioContent}`;
+        const audio = new Audio(audioUrl);
+        audioRef.current = audio;
+        
+        audio.onended = () => {
+          setIsNarrating(false);
+          audioRef.current = null;
+        };
+        
+        audio.onerror = () => {
+          console.error('Narration audio error');
+          setIsNarrating(false);
+          audioRef.current = null;
+        };
+        
+        await audio.play();
+      }
+    } catch (error) {
+      console.error('Narration error:', error);
+      setIsNarrating(false);
+    }
+  };
+
+  // Stop narration when component unmounts or video stops
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   // Load video when component mounts or video source changes
   useEffect(() => {
@@ -129,6 +216,8 @@ const TherapistTeaser = () => {
       const playVideo = async () => {
         try {
           await video.play();
+          // Play Hebrew narration for this video
+          playNarration(currentVideo);
         } catch (err) {
           console.error('Auto-play on video change failed:', err);
           // Try again muted (browser autoplay policy)
@@ -136,6 +225,8 @@ const TherapistTeaser = () => {
           setIsMuted(true);
           try {
             await video.play();
+            // Play Hebrew narration for this video
+            playNarration(currentVideo);
           } catch (err2) {
             console.error('Muted play also failed:', err2);
             setVideoError('Could not play video. Please try again.');
@@ -160,6 +251,8 @@ const TherapistTeaser = () => {
       // Try to play - browsers may block unmuted autoplay
       await video.play();
       setIsPlaying(true);
+      // Start Hebrew narration for the first video
+      playNarration(0);
     } catch (err) {
       console.log('Initial play blocked, trying muted:', err);
       // If blocked, try muted (most browsers allow muted autoplay)
@@ -168,6 +261,8 @@ const TherapistTeaser = () => {
       try {
         await video.play();
         setIsPlaying(true);
+        // Start Hebrew narration for the first video
+        playNarration(0);
       } catch (err2) {
         console.error('Even muted play failed:', err2);
         setVideoError('Could not play video. Please click to try again.');
@@ -179,14 +274,29 @@ const TherapistTeaser = () => {
     if (videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();
+        // Stop narration when pausing
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current = null;
+          setIsNarrating(false);
+        }
       } else {
         videoRef.current.play();
+        // Resume narration when playing again
+        playNarration(currentVideo);
       }
       setIsPlaying(!isPlaying);
     }
   };
 
   const handleSkip = () => {
+    // Stop current narration before skipping
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+      setIsNarrating(false);
+    }
+    
     if (currentVideo < videos.length - 1) {
       setCurrentVideo(prev => prev + 1);
     } else {
@@ -200,6 +310,20 @@ const TherapistTeaser = () => {
     if (videoRef.current) {
       videoRef.current.muted = !isMuted;
       setIsMuted(!isMuted);
+    }
+  };
+
+  const toggleNarration = () => {
+    if (narrationEnabled && audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+      setIsNarrating(false);
+    }
+    setNarrationEnabled(!narrationEnabled);
+    
+    // If enabling narration and video is playing, start narration
+    if (!narrationEnabled && isPlaying) {
+      playNarration(currentVideo);
     }
   };
 
@@ -296,9 +420,29 @@ const TherapistTeaser = () => {
                   <button
                     onClick={toggleMute}
                     className="text-white hover:text-primary transition-colors"
+                    title="Video audio"
                   >
                     {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
                   </button>
+                  
+                  {/* Hebrew Narration Toggle */}
+                  <button
+                    onClick={toggleNarration}
+                    className={`flex items-center gap-1 px-2 py-1 rounded text-sm transition-colors ${
+                      narrationEnabled 
+                        ? 'bg-primary/80 text-white' 
+                        : 'bg-white/20 text-white/60'
+                    }`}
+                    title={narrationEnabled ? "Hebrew narration ON" : "Hebrew narration OFF"}
+                  >
+                    {isNarrating ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Volume2 className="w-4 h-4" />
+                    )}
+                    <span>עברית</span>
+                  </button>
+                  
                   <span className="text-white text-sm ml-auto">
                     Part {currentVideo + 1} of {videos.length}
                   </span>
