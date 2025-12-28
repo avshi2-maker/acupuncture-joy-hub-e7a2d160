@@ -233,12 +233,17 @@ const TherapistTeaser = () => {
       setIsVideoReady(true);
     };
 
+    const handlePlayEvent = () => setIsPlaying(true);
+    const handlePauseEvent = () => setIsPlaying(false);
+
     video.addEventListener('timeupdate', handleTimeUpdate);
     video.addEventListener('ended', handleEnded);
     video.addEventListener('error', handleError);
     video.addEventListener('canplay', handleCanPlay);
     video.addEventListener('loadstart', handleLoadStart);
     video.addEventListener('loadeddata', handleLoadedData);
+    video.addEventListener('play', handlePlayEvent);
+    video.addEventListener('pause', handlePauseEvent);
 
     return () => {
       video.removeEventListener('timeupdate', handleTimeUpdate);
@@ -247,6 +252,8 @@ const TherapistTeaser = () => {
       video.removeEventListener('canplay', handleCanPlay);
       video.removeEventListener('loadstart', handleLoadStart);
       video.removeEventListener('loadeddata', handleLoadedData);
+      video.removeEventListener('play', handlePlayEvent);
+      video.removeEventListener('pause', handlePauseEvent);
     };
   }, [currentVideo]);
 
@@ -311,21 +318,22 @@ const TherapistTeaser = () => {
   };
 
   const handlePause = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current = null;
-          setIsNarrating(false);
-        }
-      } else {
-        videoRef.current.play();
-        if (userConsentedNarration && narrationEnabled) {
-          playNarration(currentVideo);
-        }
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (!video.paused) {
+      video.pause();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+        setIsNarrating(false);
       }
-      setIsPlaying(!isPlaying);
+      return;
+    }
+
+    video.play();
+    if (userConsentedNarration && narrationEnabled) {
+      playNarration(currentVideo);
     }
   };
 
@@ -352,7 +360,7 @@ const TherapistTeaser = () => {
     }
   };
 
-  const toggleNarration = () => {
+  const toggleNarration = async () => {
     // If currently narrating, stop
     if (audioRef.current) {
       audioRef.current.pause();
@@ -365,6 +373,23 @@ const TherapistTeaser = () => {
     // Enable and mark consent, then start
     setUserConsentedNarration(true);
     setNarrationEnabled(true);
+
+    // Ensure the video is playing (user gesture) so browser allows audio playback
+    const video = videoRef.current;
+    if (video && video.paused) {
+      try {
+        await video.play();
+      } catch (err) {
+        video.muted = true;
+        setIsMuted(true);
+        try {
+          await video.play();
+        } catch {
+          // Ignore: narration will still try to play and show toast if blocked
+        }
+      }
+    }
+
     playNarration(currentVideo);
   };
 
