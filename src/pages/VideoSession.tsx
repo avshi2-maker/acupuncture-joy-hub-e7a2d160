@@ -378,18 +378,18 @@ export default function VideoSession() {
           </div>
         </header>
 
-        {/* Main Content */}
-        <main className="p-4 max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content - 2 Column Layout */}
+        <main className="p-4 h-[calc(100vh-73px)]">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-full">
             
-            {/* Left Column - Video Screen */}
-            <div className="lg:col-span-2 space-y-4">
-              {/* Video Area */}
-              <Card className="bg-muted/30 min-h-[400px]">
-                <CardContent className="p-0 h-full flex items-center justify-center min-h-[400px]">
+            {/* Left Column - Video Screen (3/4 width) */}
+            <div className="lg:col-span-3 flex flex-col gap-4">
+              {/* Video Area - Full height */}
+              <Card className="bg-muted/30 flex-1 min-h-[500px]">
+                <CardContent className="p-0 h-full flex items-center justify-center">
                   <div className="w-full h-full bg-gradient-to-br from-jade/10 to-jade/5 rounded-lg flex flex-col items-center justify-center p-8">
-                    <Video className="h-20 w-20 text-jade/40 mb-4" />
-                    <p className="text-muted-foreground text-xl">אזור וידאו</p>
+                    <Video className="h-24 w-24 text-jade/40 mb-4" />
+                    <p className="text-muted-foreground text-2xl">אזור וידאו</p>
                     <p className="text-sm text-muted-foreground mt-1">Zoom / Google Meet</p>
                     
                     {sessionStatus !== 'idle' && (
@@ -402,7 +402,7 @@ export default function VideoSession() {
                       </Badge>
                     )}
                     
-                    <p className="text-4xl font-mono mt-6 text-jade font-bold">
+                    <p className="text-5xl font-mono mt-6 text-jade font-bold">
                       {formatDuration(sessionDuration)}
                     </p>
                     
@@ -421,103 +421,38 @@ export default function VideoSession() {
                 </CardContent>
               </Card>
 
-              {/* Session Controls */}
+              {/* Session Notes - Below Video */}
               <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Video className="h-5 w-5 text-jade" />
-                    בקרת פגישה
-                    {selectedPatientName && (
-                      <Badge variant="outline" className="mr-auto">{selectedPatientName}</Badge>
-                    )}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex flex-wrap gap-3">
-                    {sessionStatus === 'idle' && (
-                      <Button onClick={handleStart} size="lg" className="bg-jade hover:bg-jade/90 gap-2">
-                        <Play className="h-5 w-5" />
-                        התחל פגישה
-                      </Button>
-                    )}
-                    {sessionStatus === 'running' && (
-                      <Button onClick={handlePause} size="lg" variant="secondary" className="gap-2">
-                        <Pause className="h-5 w-5" />
-                        השהה
-                      </Button>
-                    )}
-                    {sessionStatus === 'paused' && (
-                      <Button onClick={handleResume} size="lg" className="bg-jade hover:bg-jade/90 gap-2">
-                        <Play className="h-5 w-5" />
-                        המשך
-                      </Button>
-                    )}
-                    {(sessionStatus === 'running' || sessionStatus === 'paused') && (
-                      <>
-                        <Button onClick={handleRepeat} size="lg" variant="outline" className="gap-2">
-                          <RotateCcw className="h-5 w-5" />
-                          התחל מחדש
-                        </Button>
-                        <Button onClick={handleEnd} size="lg" variant="destructive" className="gap-2">
-                          <Square className="h-5 w-5" />
-                          סיים ושמור
-                        </Button>
-                      </>
-                    )}
-                    {sessionStatus === 'ended' && (
-                      <Button onClick={handleRepeat} size="lg" className="bg-jade hover:bg-jade/90 gap-2">
-                        <RotateCcw className="h-5 w-5" />
-                        פגישה חדשה
-                      </Button>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">הערות פגישה:</label>
-                    <Textarea
-                      value={sessionNotes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder="רשום הערות במהלך הפגישה..."
-                      rows={4}
-                    />
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 pt-2 border-t">
-                    <Button onClick={handlePrint} variant="outline" className="gap-2">
-                      <Printer className="h-4 w-4" />
-                      הדפס דוח
-                    </Button>
-                    <Button onClick={handleSendEmail} variant="outline" className="gap-2">
-                      <Mail className="h-4 w-4" />
-                      שלח באימייל
-                    </Button>
-                    <Button onClick={handleSendWhatsApp} variant="outline" className="gap-2">
-                      <MessageCircle className="h-4 w-4" />
-                      שלח בוואטסאפ
-                    </Button>
-                  </div>
+                <CardContent className="p-4">
+                  <label className="text-sm font-medium mb-2 block">הערות פגישה:</label>
+                  <Textarea
+                    value={sessionNotes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="רשום הערות במהלך הפגישה..."
+                    rows={3}
+                  />
                 </CardContent>
               </Card>
             </div>
 
-            {/* Right Column - Tools */}
-            <div className="space-y-4">
+            {/* Right Sidebar - All Tools & Controls (1/4 width) */}
+            <div className="lg:col-span-1 flex flex-col gap-3 overflow-y-auto max-h-[calc(100vh-105px)]">
               {/* Patient Selection */}
               <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
+                <CardHeader className="pb-2 pt-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
                     <Users className="h-4 w-4" />
                     בחירת מטופל
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center gap-2">
+                <CardContent className="space-y-2 pb-3">
+                  <div className="flex items-center gap-1">
                     <Select
                       value={selectedPatientId || 'none'}
                       onValueChange={handlePatientSelect}
                       disabled={loadingPatients}
                     >
-                      <SelectTrigger className="flex-1 bg-background">
+                      <SelectTrigger className="flex-1 bg-background h-8 text-sm">
                         <SelectValue placeholder={loadingPatients ? "טוען..." : "בחר מטופל"} />
                       </SelectTrigger>
                       <SelectContent className="bg-popover border shadow-lg z-50">
@@ -529,37 +464,101 @@ export default function VideoSession() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <Button variant="outline" size="icon" onClick={handleRefreshPatients} disabled={refreshingPatients}>
-                      <RefreshCw className={`h-4 w-4 ${refreshingPatients ? 'animate-spin' : ''}`} />
+                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleRefreshPatients} disabled={refreshingPatients}>
+                      <RefreshCw className={`h-3 w-3 ${refreshingPatients ? 'animate-spin' : ''}`} />
                     </Button>
-                    <Button variant="outline" size="icon" onClick={() => setShowSettings(true)}>
-                      <Settings className="h-4 w-4" />
+                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setShowSettings(true)}>
+                      <Settings className="h-3 w-3" />
                     </Button>
                   </div>
-                  <Button variant="outline" className="w-full gap-2" onClick={() => setShowQuickPatient(true)}>
-                    <UserPlus className="h-4 w-4" />
+                  <Button variant="outline" size="sm" className="w-full gap-1 h-8 text-xs" onClick={() => setShowQuickPatient(true)}>
+                    <UserPlus className="h-3 w-3" />
                     הוסף מטופל חדש
                   </Button>
+                </CardContent>
+              </Card>
+
+              {/* Session Controls */}
+              <Card className="border-jade/30">
+                <CardHeader className="pb-2 pt-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Video className="h-4 w-4 text-jade" />
+                    בקרת פגישה
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 pb-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    {sessionStatus === 'idle' && (
+                      <Button onClick={handleStart} size="sm" className="bg-jade hover:bg-jade/90 gap-1 col-span-2 h-9">
+                        <Play className="h-4 w-4" />
+                        התחל פגישה
+                      </Button>
+                    )}
+                    {sessionStatus === 'running' && (
+                      <Button onClick={handlePause} size="sm" variant="secondary" className="gap-1 h-9">
+                        <Pause className="h-4 w-4" />
+                        השהה
+                      </Button>
+                    )}
+                    {sessionStatus === 'paused' && (
+                      <Button onClick={handleResume} size="sm" className="bg-jade hover:bg-jade/90 gap-1 h-9">
+                        <Play className="h-4 w-4" />
+                        המשך
+                      </Button>
+                    )}
+                    {(sessionStatus === 'running' || sessionStatus === 'paused') && (
+                      <>
+                        <Button onClick={handleRepeat} size="sm" variant="outline" className="gap-1 h-9">
+                          <RotateCcw className="h-4 w-4" />
+                          מחדש
+                        </Button>
+                        <Button onClick={handleEnd} size="sm" variant="destructive" className="gap-1 col-span-2 h-9">
+                          <Square className="h-4 w-4" />
+                          סיים ושמור
+                        </Button>
+                      </>
+                    )}
+                    {sessionStatus === 'ended' && (
+                      <Button onClick={handleRepeat} size="sm" className="bg-jade hover:bg-jade/90 gap-1 col-span-2 h-9">
+                        <RotateCcw className="h-4 w-4" />
+                        פגישה חדשה
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="flex gap-1 pt-1">
+                    <Button onClick={handlePrint} variant="outline" size="sm" className="flex-1 gap-1 h-7 text-xs">
+                      <Printer className="h-3 w-3" />
+                      הדפס
+                    </Button>
+                    <Button onClick={handleSendEmail} variant="outline" size="sm" className="flex-1 gap-1 h-7 text-xs">
+                      <Mail className="h-3 w-3" />
+                      אימייל
+                    </Button>
+                    <Button onClick={handleSendWhatsApp} variant="outline" size="sm" className="flex-1 gap-1 h-7 text-xs">
+                      <MessageCircle className="h-3 w-3" />
+                      וואטס
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
 
               {/* Zoom Timer */}
               {sessionStatus !== 'idle' && sessionStatus !== 'ended' && (
                 <Card className={`${isZoomExpired ? 'border-destructive bg-destructive/5' : isZoomWarning ? 'border-amber-500 bg-amber-50' : 'border-blue-200 bg-blue-50'}`}>
-                  <CardContent className="p-4">
+                  <CardContent className="p-3">
                     <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        {isZoomExpired ? <AlertTriangle className="h-4 w-4 text-destructive" /> : <Clock className={`h-4 w-4 ${isZoomWarning ? 'text-amber-600' : 'text-blue-600'}`} />}
-                        <span className={`text-sm font-medium ${isZoomExpired ? 'text-destructive' : isZoomWarning ? 'text-amber-700' : 'text-blue-700'}`}>
-                          {isZoomExpired ? 'זמן Zoom חינם הסתיים!' : `נותרו ${getZoomTimeRemaining()}`}
+                      <div className="flex items-center gap-1">
+                        {isZoomExpired ? <AlertTriangle className="h-3 w-3 text-destructive" /> : <Clock className={`h-3 w-3 ${isZoomWarning ? 'text-amber-600' : 'text-blue-600'}`} />}
+                        <span className={`text-xs font-medium ${isZoomExpired ? 'text-destructive' : isZoomWarning ? 'text-amber-700' : 'text-blue-700'}`}>
+                          {isZoomExpired ? 'Zoom הסתיים!' : `נותרו ${getZoomTimeRemaining()}`}
                         </span>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={handleExtendZoomTimer} className="h-7 px-2 text-xs">
-                        <RotateCcw className="h-3 w-3 mr-1" />
-                        אפס
+                      <Button variant="ghost" size="sm" onClick={handleExtendZoomTimer} className="h-6 px-2 text-xs">
+                        <RotateCcw className="h-3 w-3" />
                       </Button>
                     </div>
-                    <Progress value={getZoomProgress()} className={`h-2 ${isZoomExpired ? '[&>div]:bg-destructive' : isZoomWarning ? '[&>div]:bg-amber-500' : '[&>div]:bg-blue-500'}`} />
+                    <Progress value={getZoomProgress()} className={`h-1.5 ${isZoomExpired ? '[&>div]:bg-destructive' : isZoomWarning ? '[&>div]:bg-amber-500' : '[&>div]:bg-blue-500'}`} />
                   </CardContent>
                 </Card>
               )}
@@ -567,13 +566,13 @@ export default function VideoSession() {
               {/* Calendar Block */}
               {currentAppointmentId && (
                 <Card className="border-green-200 bg-green-50">
-                  <CardContent className="p-4">
+                  <CardContent className="p-3">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-green-600" />
-                        <span className="text-sm font-medium text-green-700">חסום ביומן</span>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3 text-green-600" />
+                        <span className="text-xs font-medium text-green-700">חסום ביומן</span>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={handleCancelCalendarBlock} disabled={isCancellingBlock} className="h-7 px-2 text-xs text-red-600">
+                      <Button variant="ghost" size="sm" onClick={handleCancelCalendarBlock} disabled={isCancellingBlock} className="h-6 px-2 text-xs text-red-600">
                         {isCancellingBlock ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
                       </Button>
                     </div>
@@ -583,36 +582,36 @@ export default function VideoSession() {
 
               {/* Quick Actions */}
               <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">כלים מהירים</CardTitle>
+                <CardHeader className="pb-2 pt-3">
+                  <CardTitle className="text-sm">כלים מהירים</CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" onClick={() => setShowFollowUpPlan(true)} className="gap-2 bg-jade/10 hover:bg-jade/20 text-jade border-jade/30">
-                    <ClipboardList className="h-4 w-4" />
+                <CardContent className="grid grid-cols-2 gap-1.5 pb-3">
+                  <Button variant="outline" size="sm" onClick={() => setShowFollowUpPlan(true)} className="gap-1 bg-jade/10 hover:bg-jade/20 text-jade border-jade/30 h-8 text-xs">
+                    <ClipboardList className="h-3 w-3" />
                     תוכנית המשך
                   </Button>
-                  <Button variant="secondary" onClick={() => setShowAnxietyQA(true)} className="gap-2">
-                    <Sparkles className="h-4 w-4" />
+                  <Button variant="secondary" size="sm" onClick={() => setShowAnxietyQA(true)} className="gap-1 h-8 text-xs">
+                    <Sparkles className="h-3 w-3" />
                     שאלון חרדה
                   </Button>
-                  <Button variant="outline" onClick={() => setShowVoiceDictation(true)} className="gap-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200">
-                    <AnimatedMic size="md" />
+                  <Button variant="outline" size="sm" onClick={() => setShowVoiceDictation(true)} className="gap-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200 h-8 text-xs">
+                    <AnimatedMic size="sm" />
                     הקלטה קולית
                   </Button>
-                  <Button variant="outline" onClick={() => setShowQuickAppointment(true)} className="gap-2">
-                    <Calendar className="h-4 w-4" />
+                  <Button variant="outline" size="sm" onClick={() => setShowQuickAppointment(true)} className="gap-1 h-8 text-xs">
+                    <Calendar className="h-3 w-3" />
                     קביעת תור
                   </Button>
-                  <Button variant="outline" onClick={() => setShowCalendarInvite(true)} className="gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200">
-                    <CalendarPlus className="h-4 w-4" />
+                  <Button variant="outline" size="sm" onClick={() => setShowCalendarInvite(true)} className="gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 h-8 text-xs">
+                    <CalendarPlus className="h-3 w-3" />
                     הזמנה + יומן
                   </Button>
-                  <Button variant="outline" onClick={() => setShowZoomInvite(true)} className="gap-2">
-                    <VideoIcon className="h-4 w-4" />
+                  <Button variant="outline" size="sm" onClick={() => setShowZoomInvite(true)} className="gap-1 h-8 text-xs">
+                    <VideoIcon className="h-3 w-3" />
                     הזמנת Zoom
                   </Button>
-                  <Button variant="outline" onClick={() => setShowSessionReport(true)} disabled={!selectedPatientId || !sessionNotes} className="gap-2 col-span-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200">
-                    <Sparkles className="h-4 w-4" />
+                  <Button variant="outline" size="sm" onClick={() => setShowSessionReport(true)} disabled={!selectedPatientId || !sessionNotes} className="gap-1 col-span-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 h-8 text-xs">
+                    <Sparkles className="h-3 w-3" />
                     דו"ח AI + MP3
                   </Button>
                 </CardContent>
