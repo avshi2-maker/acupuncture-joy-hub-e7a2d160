@@ -450,7 +450,7 @@ export default function VideoSession() {
       <div className="min-h-screen bg-background flex flex-col" dir="rtl">
         {/* Header */}
         <header className="bg-card border-b border-border sticky top-0 z-50">
-          <div className="max-w-full mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="max-w-full mx-auto px-4 py-4 relative flex items-center justify-between">
             <Link to="/" className="flex items-center gap-4 hover:opacity-90 transition-opacity">
               <div className="w-10 h-10 bg-jade-light rounded-full flex items-center justify-center">
                 <Leaf className="h-5 w-5 text-jade" />
@@ -460,6 +460,24 @@ export default function VideoSession() {
                 <p className="text-sm text-muted-foreground">פגישת וידאו</p>
               </div>
             </Link>
+
+            {/* Clock - fixed center */}
+            <div className="absolute left-1/2 -translate-x-1/2">
+              <div className="relative h-14 w-14 rounded-2xl bg-background border border-border shadow-sm flex items-center justify-center overflow-hidden">
+                <img
+                  src={clockImg}
+                  alt="Session clock"
+                  className="h-11 w-11 object-contain"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-sm font-semibold text-foreground font-mono bg-background/70 px-1.5 py-0.5 rounded">
+                    {currentTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             <div className="flex items-center gap-3">
               <LanguageSwitcher variant="outline" isScrolled={true} />
               <Button asChild variant="outline" size="sm">
@@ -475,21 +493,6 @@ export default function VideoSession() {
 
         {/* CAF Asset Boxes - All connected to RAG */}
         <div className="px-4 pt-4 pb-2">
-          {/* Clock Display - Centered at Top */}
-          <div className="flex justify-center mb-4">
-            <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 border-2 border-amber-300 shadow-lg flex items-center justify-center overflow-hidden">
-              <img 
-                src={clockImg} 
-                alt="Clock" 
-                className="w-16 h-16 object-contain rounded-xl"
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-lg font-bold text-amber-800 drop-shadow-md font-mono bg-amber-50/80 px-2 py-0.5 rounded">
-                  {currentTime.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </div>
-            </div>
-          </div>
           <div className="flex flex-wrap gap-2">
             {/* Herbs */}
             <Button 
