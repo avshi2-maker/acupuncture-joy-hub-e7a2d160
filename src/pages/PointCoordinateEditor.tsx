@@ -236,6 +236,7 @@ export default function PointCoordinateEditor() {
   const [gridSpacing, setGridSpacing] = useState(10); // Grid lines every 10%
   const [showPoints, setShowPoints] = useState(true);
   const [draggingPoint, setDraggingPoint] = useState<string | null>(null);
+  const [dragPosition, setDragPosition] = useState<{ x: number; y: number } | null>(null);
   const [selectedPoint, setSelectedPoint] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -268,9 +269,9 @@ export default function PointCoordinateEditor() {
     }
   };
 
-  // Update point coordinates
+  // Update point coordinates (committed values)
   const updatePointCoordinates = useCallback((pointCode: string, x: number, y: number) => {
-    setCoordinates(prev => prev.map(p => 
+    setCoordinates(prev => prev.map(p =>
       p.point_code === pointCode && p.image_name === selectedFigure
         ? { ...p, x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 }
         : p
@@ -278,22 +279,25 @@ export default function PointCoordinateEditor() {
     setHasChanges(true);
   }, [selectedFigure]);
 
+  // Throttle ref for mouse move
+  const lastMoveTime = useRef(0);
+
   // Handle mouse down on point
   const handlePointMouseDown = (e: React.MouseEvent, pointCode: string) => {
     e.preventDefault();
     e.stopPropagation();
+
+    const current = coordinates.find(p => p.image_name === selectedFigure && p.point_code === pointCode);
+
     setDraggingPoint(pointCode);
     setSelectedPoint(pointCode);
+    setDragPosition({ x: current?.x ?? 50, y: current?.y ?? 50 });
   };
 
-  // Throttle ref for mouse move
-  const lastMoveTime = useRef(0);
-
-  // Handle mouse move for dragging - throttled
+  // Handle mouse move for dragging - throttled (updates ONLY the drag preview)
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!draggingPoint || !imageRef.current) return;
-    
-    // Throttle to ~60fps
+
     const now = Date.now();
     if (now - lastMoveTime.current < 16) return;
     lastMoveTime.current = now;
@@ -302,17 +306,37 @@ export default function PointCoordinateEditor() {
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
 
-    // Clamp to 0-100
     const clampedX = Math.max(0, Math.min(100, x));
     const clampedY = Math.max(0, Math.min(100, y));
 
-    updatePointCoordinates(draggingPoint, clampedX, clampedY);
-  }, [draggingPoint, updatePointCoordinates]);
+    setDragPosition({
+      x: Math.round(clampedX * 10) / 10,
+      y: Math.round(clampedY * 10) / 10,
+    });
+  }, [draggingPoint]);
 
-  // Handle mouse up
+  // Handle mouse up (commit drag preview -> saved coordinates)
   const handleMouseUp = useCallback(() => {
+    if (draggingPoint && dragPosition) {
+      updatePointCoordinates(draggingPoint, dragPosition.x, dragPosition.y);
+    }
     setDraggingPoint(null);
-  }, []);
+    setDragPosition(null);
+  }, [dragPosition, draggingPoint, updatePointCoordinates]);
+
+  // Ensure drag always releases even if mouseup happens outside the editor
+  useEffect(() => {
+    if (!draggingPoint) return;
+
+    const onWindowMouseUp = () => handleMouseUp();
+    window.addEventListener('mouseup', onWindowMouseUp);
+    window.addEventListener('blur', onWindowMouseUp);
+
+    return () => {
+      window.removeEventListener('mouseup', onWindowMouseUp);
+      window.removeEventListener('blur', onWindowMouseUp);
+    };
+  }, [draggingPoint, handleMouseUp]);
 
   // Save coordinates to localStorage
   const handleSave = () => {
