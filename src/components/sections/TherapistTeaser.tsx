@@ -42,11 +42,11 @@ const timedSubtitles: { start: number; end: number; text: string }[][] = [
     { start: 4, end: 8, text: "תזכורות אוטומטיות בוואטסאפ למטופלים" },
     { start: 8, end: 13, text: "חסכו זמן ומנעו ביטולים מיותרים" },
   ],
-  // Video 4 - Analytics
+  // Video 4 - About Knowledge Base
   [
-    { start: 0, end: 4, text: "אנליטיקה מתקדמת להחזר על השקעה" },
-    { start: 4, end: 8, text: "צפו בצמיחה של הקליניקה בזמן אמת" },
-    { start: 8, end: 13, text: "גלו אילו טיפולים הכי רווחיים" },
+    { start: 0, end: 6, text: "כל המידע בקליניקה מבוסס על מאמרים וספרים שכתב ד״ר רוני ספיר" },
+    { start: 6, end: 10, text: "רפואה משלימה עם ניסיון בדיקור וטיפול מקצועי" },
+    { start: 10, end: 15, text: "במאות לקוחות לאורך השנים" },
   ],
 ];
 
@@ -481,10 +481,10 @@ const TherapistTeaser = () => {
 
             {/* Hebrew Subtitles Overlay - Time-synced */}
             {isPlaying && showSubtitles && currentSubtitle && (
-              <div className="absolute bottom-16 left-0 right-0 flex justify-center px-4 pointer-events-none">
+              <div className="absolute bottom-16 left-0 right-0 flex justify-center px-2 sm:px-4 pointer-events-none">
                 <div 
-                  className="bg-lime-200 text-gray-900 px-6 py-3 rounded-lg text-center max-w-3xl font-subtitle font-light shadow-lg"
-                  style={{ fontSize: `${subtitleSize}px` }}
+                  className="bg-lime-200/90 text-gray-900 px-3 sm:px-6 py-2 sm:py-3 rounded-lg text-center max-w-[90%] sm:max-w-3xl font-subtitle font-light shadow-lg"
+                  style={{ fontSize: `${Math.max(12, subtitleSize * 0.85)}px` }}
                   dir="rtl"
                 >
                   {currentSubtitle}
