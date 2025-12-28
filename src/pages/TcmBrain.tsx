@@ -259,6 +259,8 @@ const mainQueryCategories = [
   },
 ];
 
+const DISCLAIMER_STORAGE_KEY = 'tcm_therapist_disclaimer_signed';
+
 export default function TcmBrain() {
   const navigate = useNavigate();
   const { tier, hasFeature } = useTier();
@@ -296,6 +298,35 @@ export default function TcmBrain() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
   const aiResponseRef = useRef<HTMLDivElement>(null);
+
+  // Check if therapist has signed disclaimer
+  useEffect(() => {
+    const checkDisclaimer = () => {
+      const signed = localStorage.getItem(DISCLAIMER_STORAGE_KEY);
+      if (!signed) {
+        navigate('/therapist-disclaimer');
+        return;
+      }
+      
+      try {
+        const signedData = JSON.parse(signed);
+        const signedDate = new Date(signedData.signedAt);
+        const oneYearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+        
+        if (signedDate < oneYearAgo) {
+          // Disclaimer expired, need to re-sign
+          localStorage.removeItem(DISCLAIMER_STORAGE_KEY);
+          navigate('/therapist-disclaimer');
+        }
+      } catch {
+        // Invalid data, redirect to sign
+        localStorage.removeItem(DISCLAIMER_STORAGE_KEY);
+        navigate('/therapist-disclaimer');
+      }
+    };
+    
+    checkDisclaimer();
+  }, [navigate]);
 
   // Ensure we scroll to the AI response panel as soon as loading starts
   useEffect(() => {
