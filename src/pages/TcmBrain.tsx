@@ -382,7 +382,10 @@ export default function TcmBrain() {
         timestamp: new Date().toISOString()
       })),
       totalQuestions: questionsAsked.length,
-      totalResponses: messages.filter(m => m.role === 'assistant').length
+      totalResponses: messages.filter(m => m.role === 'assistant').length,
+      patientName: selectedPatient?.name,
+      patientEmail: selectedPatient?.email,
+      patientPhone: selectedPatient?.phone
     };
     
     // Save to localStorage
@@ -481,6 +484,33 @@ export default function TcmBrain() {
   const [showDetailedView, setShowDetailedView] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [showInlineChat, setShowInlineChat] = useState(false);
+  
+  // Patient selection for session linking
+  const [patients, setPatients] = useState<Array<{ id: string; full_name: string; email?: string; phone?: string }>>([]);
+  const [selectedPatient, setSelectedPatient] = useState<{ id: string; name: string; email?: string; phone?: string } | null>(null);
+  const [loadingPatients, setLoadingPatients] = useState(false);
+  
+  // Fetch patients from CRM
+  useEffect(() => {
+    const fetchPatients = async () => {
+      if (!session?.user?.id) return;
+      setLoadingPatients(true);
+      try {
+        const { data, error } = await supabase
+          .from('patients')
+          .select('id, full_name, email, phone')
+          .eq('therapist_id', session.user.id)
+          .order('full_name');
+        if (error) throw error;
+        setPatients(data || []);
+      } catch (e) {
+        console.error('Failed to load patients:', e);
+      } finally {
+        setLoadingPatients(false);
+      }
+    };
+    fetchPatients();
+  }, [session?.user?.id]);
   
   // Search and filter states for main categories
   const [categorySearches, setCategorySearches] = useState<Record<string, string>>({
@@ -1046,6 +1076,63 @@ export default function TcmBrain() {
                 )}
               </div>
               
+              {/* Patient Selection Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-7 gap-1.5 text-xs hidden sm:flex max-w-[150px]"
+                    title="Link session to patient"
+                  >
+                    <User className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">
+                      {selectedPatient ? selectedPatient.name : 'No Patient'}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56 bg-card border-border z-50 max-h-64 overflow-y-auto">
+                  <DropdownMenuItem 
+                    onClick={() => setSelectedPatient(null)}
+                    className="gap-2 cursor-pointer"
+                  >
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span>No Patient (Anonymous)</span>
+                  </DropdownMenuItem>
+                  {loadingPatients ? (
+                    <DropdownMenuItem disabled className="gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Loading patients...</span>
+                    </DropdownMenuItem>
+                  ) : patients.length === 0 ? (
+                    <DropdownMenuItem disabled className="gap-2 text-muted-foreground">
+                      <span>No patients in CRM</span>
+                    </DropdownMenuItem>
+                  ) : (
+                    patients.map(p => (
+                      <DropdownMenuItem 
+                        key={p.id}
+                        onClick={() => setSelectedPatient({ 
+                          id: p.id, 
+                          name: p.full_name, 
+                          email: p.email || undefined, 
+                          phone: p.phone || undefined 
+                        })}
+                        className="gap-2 cursor-pointer"
+                      >
+                        <User className="h-4 w-4" />
+                        <div className="flex flex-col min-w-0">
+                          <span className="truncate">{p.full_name}</span>
+                          {p.phone && (
+                            <span className="text-xs text-muted-foreground truncate">{p.phone}</span>
+                          )}
+                        </div>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
               {/* Session History Button */}
               <SessionHistoryDialog 
                 trigger={
@@ -1260,6 +1347,19 @@ export default function TcmBrain() {
                       >
                         {/* Decorative corner accent */}
                         <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-jade/10 to-transparent rounded-bl-full" />
+                        
+                        {/* Close/Back button when expanded */}
+                        {isExpanded && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="absolute top-3 right-3 h-8 gap-1.5 text-xs bg-background/80 hover:bg-background z-10"
+                            onClick={() => setExpandedCategory(null)}
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                            Back to All Categories
+                          </Button>
+                        )}
                         
                         <CardHeader className="pb-4 relative">
                           <div className="flex items-center gap-4">
