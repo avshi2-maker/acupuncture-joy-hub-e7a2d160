@@ -613,7 +613,31 @@ const TherapistTeaser = () => {
             {videoError && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-white p-4">
                 <p className="text-red-400 mb-4 text-center">{videoError}</p>
-                <Button variant="outline" onClick={() => { setVideoError(null); setCurrentVideo(0); }}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => { 
+                    setVideoError(null);
+                    setIsLoading(true);
+                    const video = videoRef.current;
+                    if (video) {
+                      video.load();
+                      video.play().then(() => {
+                        setIsPlaying(true);
+                        setIsLoading(false);
+                      }).catch(() => {
+                        video.muted = true;
+                        setIsMuted(true);
+                        video.play().then(() => {
+                          setIsPlaying(true);
+                          setIsLoading(false);
+                        }).catch(() => {
+                          setVideoError('Could not play video. Please refresh the page.');
+                          setIsLoading(false);
+                        });
+                      });
+                    }
+                  }}
+                >
                   Try Again
                 </Button>
               </div>
