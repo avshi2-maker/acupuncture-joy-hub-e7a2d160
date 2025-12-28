@@ -21,12 +21,33 @@ const videoDescriptions = [
   "עקבו אחר ההחזר על ההשקעה שלכם עם אנליטיקה מתקדמת. צפו בצמיחה של הקליניקה והבינו אילו טיפולים הכי רווחיים."
 ];
 
-// Hebrew subtitles for each video (shorter version for display)
-const videoSubtitles = [
-  "ברוכים הבאים למערכת ניהול הקליניקה המתקדמת ביותר לרפואה סינית",
-  "מוח TCM מופעל בינה מלאכותית - תשובות מקצועיות לכל שאלה",
-  "יומן תורים חכם עם סנכרון זום ותזכורות וואטסאפ",
-  "אנליטיקה מתקדמת - עקבו אחר הצמיחה וההחזר על ההשקעה"
+// Time-synced Hebrew subtitles for each video
+// Each video has an array of { start, end, text } objects (seconds)
+const timedSubtitles: { start: number; end: number; text: string }[][] = [
+  // Video 1 - Welcome / Overview
+  [
+    { start: 0, end: 4, text: "ברוכים הבאים למערכת ניהול הקליניקה" },
+    { start: 4, end: 8, text: "המתקדמת ביותר לרפואה סינית" },
+    { start: 8, end: 13, text: "נהלו מטופלים, תורים וטיפולים במקום אחד" },
+  ],
+  // Video 2 - TCM Brain AI
+  [
+    { start: 0, end: 4, text: "מוח TCM מופעל בינה מלאכותית" },
+    { start: 4, end: 8, text: "תשובות מקצועיות לכל שאלה ברפואה סינית" },
+    { start: 8, end: 13, text: "המלצות טיפוליות מדויקות ממאגר ידע עשיר" },
+  ],
+  // Video 3 - Calendar & Reminders
+  [
+    { start: 0, end: 4, text: "יומן תורים חכם עם סנכרון זום" },
+    { start: 4, end: 8, text: "תזכורות אוטומטיות בוואטסאפ למטופלים" },
+    { start: 8, end: 13, text: "חסכו זמן ומנעו ביטולים מיותרים" },
+  ],
+  // Video 4 - Analytics
+  [
+    { start: 0, end: 4, text: "אנליטיקה מתקדמת להחזר על השקעה" },
+    { start: 4, end: 8, text: "צפו בצמיחה של הקליניקה בזמן אמת" },
+    { start: 8, end: 13, text: "גלו אילו טיפולים הכי רווחיים" },
+  ],
 ];
 
 const features = [
@@ -51,6 +72,9 @@ const TherapistTeaser = () => {
   const [narrationVolume, setNarrationVolume] = useState(80); // 0-100
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [showSubtitles, setShowSubtitles] = useState(true);
+  const [currentSubtitle, setCurrentSubtitle] = useState<string>("");
+  const [videoVolume, setVideoVolume] = useState(100); // For ducking
+  const originalVolumeRef = useRef(100); // Store original volume before ducking
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const navigate = useNavigate();
@@ -78,11 +102,16 @@ const TherapistTeaser = () => {
 
     setIsNarrating(true);
     
-    // Keep video muted while narration plays so the voice is audible
+    // Audio ducking: lower video volume during narration instead of muting
     const video = videoRef.current;
-    if (video && !video.muted) {
-      video.muted = true;
-      setIsMuted(true);
+    if (video) {
+      originalVolumeRef.current = video.volume * 100;
+      video.volume = 0.15; // Duck to 15% volume
+      setVideoVolume(15);
+      if (video.muted) {
+        video.muted = false;
+        setIsMuted(false);
+      }
     }
     
     try {
@@ -126,12 +155,22 @@ const TherapistTeaser = () => {
         audio.onended = () => {
           setIsNarrating(false);
           audioRef.current = null;
+          // Restore video volume after narration ends
+          if (videoRef.current) {
+            videoRef.current.volume = originalVolumeRef.current / 100;
+            setVideoVolume(originalVolumeRef.current);
+          }
         };
         
         audio.onerror = () => {
           console.error('Narration audio error');
           setIsNarrating(false);
           audioRef.current = null;
+          // Restore video volume on error
+          if (videoRef.current) {
+            videoRef.current.volume = originalVolumeRef.current / 100;
+            setVideoVolume(originalVolumeRef.current);
+          }
         };
         
         try {
@@ -173,6 +212,12 @@ const TherapistTeaser = () => {
         const totalDuration = videos.length * video.duration;
         const currentProgress = (currentVideo * video.duration + video.currentTime) / totalDuration;
         setProgress(currentProgress * 100);
+
+        // Update time-synced subtitles
+        const subs = timedSubtitles[currentVideo] || [];
+        const currentTime = video.currentTime;
+        const activeSub = subs.find(s => currentTime >= s.start && currentTime < s.end);
+        setCurrentSubtitle(activeSub?.text || "");
       }
     };
 
@@ -433,11 +478,11 @@ const TherapistTeaser = () => {
               Your browser does not support the video tag.
             </video>
 
-            {/* Hebrew Subtitles Overlay */}
-            {isPlaying && showSubtitles && (
+            {/* Hebrew Subtitles Overlay - Time-synced */}
+            {isPlaying && showSubtitles && currentSubtitle && (
               <div className="absolute bottom-16 left-0 right-0 flex justify-center px-4 pointer-events-none">
                 <div className="bg-black/70 text-white text-lg md:text-xl px-6 py-3 rounded-lg text-center max-w-3xl" dir="rtl">
-                  {videoSubtitles[currentVideo]}
+                  {currentSubtitle}
                 </div>
               </div>
             )}
