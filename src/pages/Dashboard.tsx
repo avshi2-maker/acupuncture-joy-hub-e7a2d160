@@ -22,6 +22,7 @@ import { Link } from 'react-router-dom';
 import calendarBg from '@/assets/calendar-bg.png';
 import deskBg from '@/assets/desk-bg.png';
 import brainBg from '@/assets/brain-bg.png';
+import knowledgeBg from '@/assets/knowledge-bg.png';
 
 interface FeatureCardProps {
   title: string;
@@ -156,16 +157,34 @@ export default function Dashboard() {
     },
   ];
 
-  // Row 3: Knowledge Registry
+  // Row 3: Knowledge Registry + 2 more for balance
   const row3Features = [
     {
       id: 'knowledge_registry',
       title: 'Knowledge Registry',
       description: 'העלאת וניהול קבצי ידע CSV',
-      icon: <Database className="h-6 w-6 text-white" />,
+      icon: <Database className="h-6 w-6 text-jade" />,
       href: '/knowledge-registry',
       alwaysAvailable: true,
-      backgroundImage: brainBg,
+      backgroundImage: knowledgeBg,
+    },
+    {
+      id: 'symptom_checker',
+      title: 'בודק סימפטומים',
+      description: 'ניתוח סימפטומים וזיהוי דפוסים',
+      icon: <Brain className="h-6 w-6 text-jade" />,
+      href: '/symptom-checker',
+      alwaysAvailable: true,
+      backgroundImage: knowledgeBg,
+    },
+    {
+      id: 'treatment_planner',
+      title: 'מתכנן טיפולים',
+      description: 'תכנון ומעקב אחר טיפולים',
+      icon: <Calendar className="h-6 w-6 text-jade" />,
+      href: '/treatment-planner',
+      alwaysAvailable: true,
+      backgroundImage: knowledgeBg,
     },
   ];
 
@@ -180,18 +199,18 @@ export default function Dashboard() {
 
       <div className="min-h-screen bg-background" dir="rtl">
       {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-50">
+      <header className="bg-card border-b border-border sticky top-0 z-50 opacity-0 animate-fade-in" style={{ animationFillMode: 'forwards' }}>
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-4 hover:opacity-90 transition-opacity" aria-label="דף הבית">
-            <div className="w-10 h-10 bg-jade-light rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 bg-jade-light rounded-full flex items-center justify-center animate-scale-in" style={{ animationDelay: '100ms', animationFillMode: 'forwards' }}>
               <Leaf className="h-5 w-5 text-jade" />
             </div>
-            <div>
+            <div className="opacity-0 animate-fade-in" style={{ animationDelay: '150ms', animationFillMode: 'forwards' }}>
               <h1 className="font-display text-xl">TCM Clinic</h1>
               <p className="text-sm text-muted-foreground">דשבורד מטפל</p>
             </div>
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 opacity-0 animate-fade-in" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
             <Button asChild variant="outline" size="sm">
               <Link to="/#tcm-brain-preview">דף הבית</Link>
             </Button>
@@ -207,8 +226,8 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h2 className="font-display text-3xl mb-2">שלום וברוכים הבאים!</h2>
-          <p className="text-muted-foreground">
+          <h2 className="font-display text-3xl mb-2 opacity-0 animate-fade-in" style={{ animationDelay: '250ms', animationFillMode: 'forwards' }}>שלום וברוכים הבאים!</h2>
+          <p className="text-muted-foreground opacity-0 animate-fade-in" style={{ animationDelay: '350ms', animationFillMode: 'forwards' }}>
             {tier === 'trial' && daysRemaining !== null && (
               <>נותרו לכם {daysRemaining} ימי ניסיון. <Link to="/pricing" className="text-jade hover:underline">שדרגו עכשיו</Link></>
             )}
