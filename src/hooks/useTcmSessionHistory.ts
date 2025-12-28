@@ -1,6 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import jsPDF from 'jspdf';
 
+export interface VoiceNoteData {
+  id: string;
+  transcription: string;
+  duration: number;
+  timestamp: string;
+}
+
 export interface TcmSession {
   id: string;
   startTime: string;
@@ -18,6 +25,8 @@ export interface TcmSession {
   patientName?: string;
   patientEmail?: string;
   patientPhone?: string;
+  voiceNotes?: VoiceNoteData[];
+  templateUsed?: string;
 }
 
 const STORAGE_KEY = 'tcm_session_history';
@@ -126,6 +135,43 @@ export function useTcmSessionHistory() {
     });
 
     yPos += 5;
+
+    // Voice Notes Section
+    if (session.voiceNotes && session.voiceNotes.length > 0) {
+      if (yPos > 250) {
+        doc.addPage();
+        yPos = 20;
+      }
+      
+      doc.setFontSize(14);
+      doc.setTextColor(0, 128, 96);
+      doc.text('Voice Notes', margin, yPos);
+      yPos += 10;
+
+      doc.setFontSize(10);
+      doc.setTextColor(60, 60, 60);
+      session.voiceNotes.forEach((note, i) => {
+        if (yPos > 260) {
+          doc.addPage();
+          yPos = 20;
+        }
+        
+        const mins = Math.floor(note.duration / 60);
+        const secs = note.duration % 60;
+        const durationStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Note ${i + 1} (${durationStr}):`, margin, yPos);
+        yPos += 5;
+        
+        doc.setFont('helvetica', 'normal');
+        const lines = doc.splitTextToSize(note.transcription, pageWidth - margin * 2);
+        doc.text(lines, margin + 5, yPos);
+        yPos += lines.length * 5 + 8;
+      });
+      
+      yPos += 5;
+    }
     
     // Conversation History
     if (session.conversationHistory.length > 0) {

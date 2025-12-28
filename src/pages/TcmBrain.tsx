@@ -72,8 +72,10 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Link } from 'react-router-dom';
 import { useTheme } from 'next-themes';
-import { useTcmSessionHistory, TcmSession } from '@/hooks/useTcmSessionHistory';
+import { useTcmSessionHistory, TcmSession, VoiceNoteData } from '@/hooks/useTcmSessionHistory';
 import { SessionHistoryDialog } from '@/components/tcm/SessionHistoryDialog';
+import { VoiceNoteRecorder, VoiceNote } from '@/components/tcm/VoiceNoteRecorder';
+import { SessionTemplates, SessionTemplate } from '@/components/tcm/SessionTemplates';
 
 import {
   herbsQuestions,
@@ -314,6 +316,8 @@ export default function TcmBrain() {
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const [sessionStatus, setSessionStatus] = useState<'idle' | 'running' | 'paused' | 'ended'>('idle');
   const [questionsAsked, setQuestionsAsked] = useState<string[]>([]);
+  const [voiceNotes, setVoiceNotes] = useState<VoiceNote[]>([]);
+  const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
   
   // Session history hook
   const { saveSession, exportSessionAsPDF, openGmailWithSession, openWhatsAppWithSession } = useTcmSessionHistory();
@@ -349,6 +353,8 @@ export default function TcmBrain() {
     setSessionStatus('running');
     setQuestionsAsked([]);
     setMessages([]);
+    setVoiceNotes([]);
+    setActiveTemplate(null);
     toast.success('Session started');
   };
   
@@ -368,6 +374,14 @@ export default function TcmBrain() {
     setIsSessionRunning(false);
     setSessionStatus('ended');
     
+    // Convert VoiceNotes to VoiceNoteData for storage (exclude audio blobs)
+    const voiceNoteData: VoiceNoteData[] = voiceNotes.map(vn => ({
+      id: vn.id,
+      transcription: vn.transcription,
+      duration: vn.duration,
+      timestamp: vn.timestamp
+    }));
+    
     // Prepare session report for localStorage
     const sessionData: TcmSession = {
       id: `TCM-${Date.now()}`,
@@ -385,7 +399,9 @@ export default function TcmBrain() {
       totalResponses: messages.filter(m => m.role === 'assistant').length,
       patientName: selectedPatient?.name,
       patientEmail: selectedPatient?.email,
-      patientPhone: selectedPatient?.phone
+      patientPhone: selectedPatient?.phone,
+      voiceNotes: voiceNoteData,
+      templateUsed: activeTemplate || undefined
     };
     
     // Save to localStorage
@@ -401,7 +417,26 @@ export default function TcmBrain() {
       setSessionStatus('idle');
       setSessionSeconds(0);
       setSessionStartTime(null);
+      setVoiceNotes([]);
+      setActiveTemplate(null);
     }, 2000);
+  };
+  
+  // Voice note handlers
+  const handleAddVoiceNote = (note: VoiceNote) => {
+    setVoiceNotes(prev => [...prev, note]);
+  };
+  
+  const handleDeleteVoiceNote = (id: string) => {
+    setVoiceNotes(prev => prev.filter(n => n.id !== id));
+  };
+  
+  // Template handler
+  const handleApplyTemplate = (template: SessionTemplate) => {
+    setActiveTemplate(template.name);
+    // Add template questions to questionsAsked
+    setQuestionsAsked(prev => [...new Set([...prev, ...template.questions])]);
+    toast.success(`Template "${template.name}" applied - ${template.questions.length} questions loaded`);
   };
   
   // Quick share current session
@@ -1133,6 +1168,22 @@ export default function TcmBrain() {
                 </DropdownMenuContent>
               </DropdownMenu>
               
+              {/* Session Templates Button */}
+              <SessionTemplates 
+                onApplyTemplate={handleApplyTemplate}
+                trigger={
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-7 px-2 gap-1.5 text-xs hidden sm:flex"
+                    title="Session templates"
+                  >
+                    <FileText className="h-3.5 w-3.5" />
+                    <span className="hidden md:inline">Templates</span>
+                  </Button>
+                }
+              />
+              
               {/* Session History Button */}
               <SessionHistoryDialog 
                 trigger={
@@ -1149,6 +1200,26 @@ export default function TcmBrain() {
               />
             </div>
             <div className="flex items-center gap-2">
+              {/* Voice Notes - Only show when session is running */}
+              {(sessionStatus === 'running' || sessionStatus === 'paused') && (
+                <div className="hidden md:block">
+                  <VoiceNoteRecorder
+                    voiceNotes={voiceNotes}
+                    onAddNote={handleAddVoiceNote}
+                    onDeleteNote={handleDeleteVoiceNote}
+                    disabled={sessionStatus === 'paused'}
+                  />
+                </div>
+              )}
+              
+              {/* Active Template Badge */}
+              {activeTemplate && (
+                <Badge variant="secondary" className="text-xs gap-1 hidden sm:flex">
+                  <FileText className="h-3 w-3" />
+                  {activeTemplate}
+                </Badge>
+              )}
+              
               {/* Theme Toggle with System Option */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
