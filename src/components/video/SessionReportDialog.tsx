@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   FileText, 
   Headphones, 
@@ -16,11 +17,21 @@ import {
   Download,
   Check,
   RefreshCw,
-  Edit2
+  Edit2,
+  Mic
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import jsPDF from 'jspdf';
+
+const TTS_VOICES = [
+  { id: 'onyx', name: 'Onyx', description: 'קול גברי עמוק' },
+  { id: 'alloy', name: 'Alloy', description: 'קול ניטרלי' },
+  { id: 'echo', name: 'Echo', description: 'קול גברי' },
+  { id: 'fable', name: 'Fable', description: 'קול בריטי' },
+  { id: 'nova', name: 'Nova', description: 'קול נשי' },
+  { id: 'shimmer', name: 'Shimmer', description: 'קול נשי רך' },
+];
 
 interface SessionReportDialogProps {
   open: boolean;
@@ -49,6 +60,7 @@ export function SessionReportDialog({
   const [editedSummary, setEditedSummary] = useState('');
   const [pdfGenerated, setPdfGenerated] = useState(false);
   const [audioGenerated, setAudioGenerated] = useState(false);
+  const [selectedVoice, setSelectedVoice] = useState('onyx');
 
   const generateSummary = useCallback(async () => {
     setIsGenerating(true);
@@ -104,7 +116,7 @@ export function SessionReportDialog({
           },
           body: JSON.stringify({
             text: textToRead,
-            voice: 'onyx', // Deep male voice, good for Hebrew
+            voice: selectedVoice,
             language: 'he',
           }),
         }
@@ -132,7 +144,7 @@ export function SessionReportDialog({
     } finally {
       setIsGeneratingAudio(false);
     }
-  }, [summary, editedSummary, isEditing]);
+  }, [summary, editedSummary, isEditing, selectedVoice]);
 
   const generatePDF = useCallback(() => {
     if (!summary) return;
@@ -373,6 +385,25 @@ export function SessionReportDialog({
                       <span className="font-medium text-sm">קובץ MP3</span>
                       {audioGenerated && <Check className="h-4 w-4 text-jade ml-auto" />}
                     </div>
+                    
+                    {/* Voice Selector */}
+                    <div className="flex items-center gap-2">
+                      <Mic className="h-3 w-3 text-muted-foreground" />
+                      <Select value={selectedVoice} onValueChange={setSelectedVoice}>
+                        <SelectTrigger className="h-8 text-xs flex-1">
+                          <SelectValue placeholder="בחר קול" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border shadow-lg z-50">
+                          {TTS_VOICES.map((voice) => (
+                            <SelectItem key={voice.id} value={voice.id} className="text-xs">
+                              <span className="font-medium">{voice.name}</span>
+                              <span className="text-muted-foreground mr-2">- {voice.description}</span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
                     {!audioGenerated ? (
                       <Button
                         variant="secondary"
