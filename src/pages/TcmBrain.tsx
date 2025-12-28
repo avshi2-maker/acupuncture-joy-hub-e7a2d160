@@ -361,11 +361,7 @@ export default function TcmBrain() {
     });
   }, [isLoading]);
 
-  useEffect(() => {
-    if (!tier) {
-      navigate('/gate');
-    }
-  }, [tier, navigate]);
+  // Page is now publicly accessible - no tier gate redirect
 
   useEffect(() => {
     if (scrollRef.current) {
