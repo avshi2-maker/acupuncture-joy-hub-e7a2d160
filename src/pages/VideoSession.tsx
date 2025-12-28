@@ -68,6 +68,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import aiGeneratorBg from '@/assets/ai-generator-bg.png';
 import animatedMicGif from '@/assets/mic-animated.gif';
+import clockImg from '@/assets/clock.png';
 
 interface Patient {
   id: string;
@@ -109,6 +110,9 @@ export default function VideoSession() {
   // Anxiety Q&A inline state
   const [inlineAnxietyMessages, setInlineAnxietyMessages] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
   const [anxietyInput, setAnxietyInput] = useState('');
+  
+  // Current time for clock display
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   const {
     status: sessionStatus,
@@ -131,6 +135,14 @@ export default function VideoSession() {
   } = useSessionPersistence();
 
   // Check access
+  // Clock update effect
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     if (!tier) {
       navigate('/gate');
@@ -463,6 +475,21 @@ export default function VideoSession() {
 
         {/* CAF Asset Boxes - All connected to RAG */}
         <div className="px-4 pt-4 pb-2">
+          {/* Clock Display - Centered at Top */}
+          <div className="flex justify-center mb-4">
+            <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 border-2 border-amber-300 shadow-lg flex items-center justify-center overflow-hidden">
+              <img 
+                src={clockImg} 
+                alt="Clock" 
+                className="w-16 h-16 object-contain rounded-xl"
+              />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-lg font-bold text-amber-800 drop-shadow-md font-mono bg-amber-50/80 px-2 py-0.5 rounded">
+                  {currentTime.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+            </div>
+          </div>
           <div className="flex flex-wrap gap-2">
             {/* Herbs */}
             <Button 
