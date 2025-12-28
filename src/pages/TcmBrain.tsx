@@ -63,7 +63,9 @@ import {
   Play,
   Pause,
   RotateCcw,
-  Timer
+  Timer,
+  Square,
+  Download
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Link } from 'react-router-dom';
@@ -304,8 +306,10 @@ export default function TcmBrain() {
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [sessionSeconds, setSessionSeconds] = useState(0);
-  const [isSessionRunning, setIsSessionRunning] = useState(true);
-  const [sessionStartTime] = useState(new Date());
+  const [isSessionRunning, setIsSessionRunning] = useState(false); // Start paused, user clicks Start
+  const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
+  const [sessionStatus, setSessionStatus] = useState<'idle' | 'running' | 'paused' | 'ended'>('idle');
+  const [questionsAsked, setQuestionsAsked] = useState<string[]>([]);
   
   // Update clock every second
   useEffect(() => {
@@ -328,6 +332,71 @@ export default function TcmBrain() {
       return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+  
+  // Session control functions
+  const startSession = () => {
+    setSessionStartTime(new Date());
+    setSessionSeconds(0);
+    setIsSessionRunning(true);
+    setSessionStatus('running');
+    setQuestionsAsked([]);
+    setMessages([]);
+    toast.success('Session started');
+  };
+  
+  const pauseSession = () => {
+    setIsSessionRunning(false);
+    setSessionStatus('paused');
+    toast.info('Session paused');
+  };
+  
+  const continueSession = () => {
+    setIsSessionRunning(true);
+    setSessionStatus('running');
+    toast.success('Session resumed');
+  };
+  
+  const endSession = () => {
+    setIsSessionRunning(false);
+    setSessionStatus('ended');
+    
+    // Prepare session report
+    const sessionReport = {
+      sessionId: `TCM-${Date.now()}`,
+      startTime: sessionStartTime?.toISOString() || new Date().toISOString(),
+      endTime: new Date().toISOString(),
+      duration: formatSessionTime(sessionSeconds),
+      durationSeconds: sessionSeconds,
+      questionsAsked: questionsAsked,
+      conversationHistory: messages.map(m => ({
+        role: m.role,
+        content: m.content,
+        timestamp: new Date().toISOString()
+      })),
+      totalQuestions: questionsAsked.length,
+      totalResponses: messages.filter(m => m.role === 'assistant').length
+    };
+    
+    // Download as JSON file
+    const blob = new Blob([JSON.stringify(sessionReport, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tcm-session-${new Date().toISOString().split('T')[0]}-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast.success('Session ended & report saved to your device');
+    
+    // Reset for new session
+    setTimeout(() => {
+      setSessionStatus('idle');
+      setSessionSeconds(0);
+      setSessionStartTime(null);
+    }, 2000);
   };
 
   const [disclaimerStatus, setDisclaimerStatus] = useState<DisclaimerStatus>(() => {
@@ -481,6 +550,7 @@ export default function TcmBrain() {
   const streamChat = async (userMessage: string) => {
     const userMsg: Message = { role: 'user', content: userMessage };
     setMessages(prev => [...prev, userMsg]);
+    setQuestionsAsked(prev => [...prev, userMessage]); // Track questions for session report
     setIsLoading(true);
     setLoadingStartTime(Date.now());
     setCurrentQuery(userMessage);
@@ -828,35 +898,78 @@ export default function TcmBrain() {
                 </div>
               </div>
               
-              {/* Session Timer */}
-              <div className="hidden sm:flex items-center gap-1 ml-2 px-2 py-1 rounded-lg bg-jade/10 border border-jade/20">
-                <Timer className="h-3 w-3 text-jade" />
-                <span className="text-xs font-mono font-medium text-jade">
+              {/* Session Timer with Controls */}
+              <div className="hidden sm:flex items-center gap-1.5 ml-2 px-2.5 py-1.5 rounded-lg bg-jade/10 border border-jade/20">
+                <Timer className={`h-3 w-3 ${sessionStatus === 'running' ? 'text-jade animate-pulse' : 'text-muted-foreground'}`} />
+                <span className={`text-xs font-mono font-medium ${sessionStatus === 'running' ? 'text-jade' : 'text-muted-foreground'}`}>
                   {formatSessionTime(sessionSeconds)}
                 </span>
-                <div className="flex items-center gap-0.5 ml-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-5 w-5 p-0"
-                    onClick={() => setIsSessionRunning(!isSessionRunning)}
-                    title={isSessionRunning ? 'Pause timer' : 'Resume timer'}
-                  >
-                    {isSessionRunning ? (
+                
+                {/* Session status badge */}
+                {sessionStatus !== 'idle' && (
+                  <Badge variant="outline" className={`text-[10px] px-1 py-0 h-4 ${
+                    sessionStatus === 'running' ? 'border-jade text-jade bg-jade/10' :
+                    sessionStatus === 'paused' ? 'border-amber-500 text-amber-500 bg-amber-500/10' :
+                    'border-muted-foreground text-muted-foreground'
+                  }`}>
+                    {sessionStatus === 'running' ? 'Live' : sessionStatus === 'paused' ? 'Paused' : 'Ended'}
+                  </Badge>
+                )}
+                
+                <div className="flex items-center gap-0.5 ml-1 border-l border-border/50 pl-1.5">
+                  {/* Start / Continue / Pause */}
+                  {sessionStatus === 'idle' ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-5 px-1.5 text-[10px] gap-0.5 text-jade hover:bg-jade/10"
+                      onClick={startSession}
+                      title="Start session"
+                    >
+                      <Play className="h-3 w-3" />
+                      Start
+                    </Button>
+                  ) : sessionStatus === 'running' ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-5 w-5 p-0"
+                      onClick={pauseSession}
+                      title="Pause session"
+                    >
                       <Pause className="h-3 w-3 text-amber-500" />
-                    ) : (
+                    </Button>
+                  ) : sessionStatus === 'paused' ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-5 w-5 p-0"
+                      onClick={continueSession}
+                      title="Continue session"
+                    >
                       <Play className="h-3 w-3 text-jade" />
-                    )}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-5 w-5 p-0"
-                    onClick={() => setSessionSeconds(0)}
-                    title="Reset timer"
-                  >
-                    <RotateCcw className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                  </Button>
+                    </Button>
+                  ) : null}
+                  
+                  {/* End Session (only when running or paused) */}
+                  {(sessionStatus === 'running' || sessionStatus === 'paused') && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-5 w-5 p-0"
+                      onClick={endSession}
+                      title="End session & save report"
+                    >
+                      <Square className="h-3 w-3 text-red-500 fill-red-500" />
+                    </Button>
+                  )}
+                  
+                  {/* Questions count */}
+                  {questionsAsked.length > 0 && (
+                    <span className="text-[10px] text-muted-foreground ml-1">
+                      {questionsAsked.length}Q
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
