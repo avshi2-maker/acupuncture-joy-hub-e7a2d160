@@ -589,17 +589,11 @@ export default function VideoSession() {
               className="gap-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 border-blue-300"
             >
               <Brain className="h-4 w-4" />
-              150 שאלות CM
+              CM Brain
+              <span className="ms-1 text-[11px] opacity-80">(150)</span>
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => navigate('/tcm-brain')}
-              className="gap-1.5 bg-jade/20 hover:bg-jade/30 text-jade-dark border-jade/40"
-            >
-              <Brain className="h-4 w-4" />
-              CM Brain מלא
-            </Button>
+            {/* CM Brain full experience requires signed disclaimer; in-session we use the 150 questions page to avoid interruptions */}
+            {/* (Button removed to prevent redirect to therapist disclaimer during a live session) */}
             <Button 
               variant="outline" 
               size="sm" 
