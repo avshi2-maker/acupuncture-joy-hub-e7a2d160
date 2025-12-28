@@ -80,15 +80,25 @@ const TherapistTeaser = () => {
   const [videoProgressPercent, setVideoProgressPercent] = useState(0); // 0-100 progress for current video
   const originalVolumeRef = useRef(100); // Store original volume before ducking
   const isTransitioningRef = useRef(false);
+  const currentVideoRef = useRef(0);
+  const isPlayingRef = useRef(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Keep a ref so media event listeners can read latest transition state
+  // Keep refs so media event listeners can read latest state
   useEffect(() => {
     isTransitioningRef.current = isTransitioning;
   }, [isTransitioning]);
+
+  useEffect(() => {
+    currentVideoRef.current = currentVideo;
+  }, [currentVideo]);
+
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
 
   // Update audio volume when slider changes
   useEffect(() => {
@@ -212,15 +222,16 @@ const TherapistTeaser = () => {
     };
   }, []);
 
-  // Load video when component mounts or video source changes
+  // Attach video event listeners once (avoid re-registering on every video change)
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
     const handleTimeUpdate = () => {
+      const cv = currentVideoRef.current;
       if (video.duration && !isNaN(video.duration) && video.duration > 0) {
         const totalDuration = videos.length * video.duration;
-        const currentProgress = (currentVideo * video.duration + video.currentTime) / totalDuration;
+        const currentProgress = (cv * video.duration + video.currentTime) / totalDuration;
         setProgress(currentProgress * 100);
 
         // Update video progress percentage for the dot indicator
@@ -228,9 +239,9 @@ const TherapistTeaser = () => {
         setVideoProgressPercent(videoPercent);
 
         // Update time-synced subtitles
-        const subs = timedSubtitles[currentVideo] || [];
+        const subs = timedSubtitles[cv] || [];
         const currentTime = video.currentTime;
-        const activeSub = subs.find(s => currentTime >= s.start && currentTime < s.end);
+        const activeSub = subs.find((s) => currentTime >= s.start && currentTime < s.end);
         setCurrentSubtitle(activeSub?.text || "");
       }
     };
@@ -255,10 +266,10 @@ const TherapistTeaser = () => {
       }, 150);
     };
 
-    const handleError = (e: Event) => {
+    const handleError = () => {
       const mediaError = video.error;
       let errorMessage = 'Video failed to load';
-      
+
       if (mediaError) {
         switch (mediaError.code) {
           case MediaError.MEDIA_ERR_ABORTED:
@@ -275,28 +286,26 @@ const TherapistTeaser = () => {
             break;
         }
       }
-      
+
       console.error('Video error:', errorMessage, mediaError);
       setVideoError(errorMessage);
       setIsLoading(false);
       setIsVideoReady(false);
+      setIsPlaying(false);
     };
 
     const handleCanPlay = () => {
-      console.log('Video can play:', videos[currentVideo]);
       setIsLoading(false);
       setVideoError(null);
       setIsVideoReady(true);
     };
 
     const handleLoadStart = () => {
-      console.log('Video loading:', videos[currentVideo]);
       setIsLoading(true);
       setIsVideoReady(false);
     };
 
     const handleLoadedData = () => {
-      console.log('Video data loaded:', videos[currentVideo]);
       setIsVideoReady(true);
     };
 
@@ -315,7 +324,7 @@ const TherapistTeaser = () => {
       video.removeEventListener('loadstart', handleLoadStart);
       video.removeEventListener('loadeddata', handleLoadedData);
     };
-  }, [currentVideo]);
+  }, []);
 
   // When video index changes, reload and play if already playing
   useEffect(() => {
