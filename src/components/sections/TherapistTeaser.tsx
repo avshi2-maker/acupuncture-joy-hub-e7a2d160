@@ -77,6 +77,7 @@ const TherapistTeaser = () => {
   const [videoVolume, setVideoVolume] = useState(100); // For ducking
   const [isTransitioning, setIsTransitioning] = useState(false); // For crossfade transitions
   const [videoOpacity, setVideoOpacity] = useState(1); // Control video fade
+  const [videoProgressPercent, setVideoProgressPercent] = useState(0); // 0-100 progress for current video
   const originalVolumeRef = useRef(100); // Store original volume before ducking
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -215,6 +216,10 @@ const TherapistTeaser = () => {
         const totalDuration = videos.length * video.duration;
         const currentProgress = (currentVideo * video.duration + video.currentTime) / totalDuration;
         setProgress(currentProgress * 100);
+
+        // Update video progress percentage for the dot indicator
+        const videoPercent = (video.currentTime / video.duration) * 100;
+        setVideoProgressPercent(videoPercent);
 
         // Update time-synced subtitles
         const subs = timedSubtitles[currentVideo] || [];
@@ -514,27 +519,31 @@ const TherapistTeaser = () => {
                       }
                       setIsTransitioning(true);
                       setVideoOpacity(0);
+                      setVideoProgressPercent(0);
                       setTimeout(() => setCurrentVideo(index), 150);
                     }}
-                    className={`relative transition-all duration-300 ${
+                    className={`relative transition-all duration-300 overflow-hidden ${
                       index === currentVideo 
-                        ? 'w-8 h-3 rounded-full' 
+                        ? 'w-10 h-3 rounded-full' 
                         : 'w-3 h-3 rounded-full hover:scale-110'
                     }`}
                   >
-                    {/* Background */}
+                    {/* Background track */}
                     <span 
                       className={`absolute inset-0 rounded-full transition-all duration-300 ${
                         index === currentVideo 
-                          ? 'bg-primary shadow-lg shadow-primary/50' 
+                          ? 'bg-white/30' 
                           : index < currentVideo 
-                            ? 'bg-primary/60' 
+                            ? 'bg-primary' 
                             : 'bg-white/40 hover:bg-white/60'
                       }`}
                     />
-                    {/* Pulse animation for current */}
+                    {/* Progress fill for current video */}
                     {index === currentVideo && (
-                      <span className="absolute inset-0 rounded-full bg-primary/40 animate-ping" />
+                      <span 
+                        className="absolute inset-y-0 left-0 rounded-full bg-primary shadow-lg shadow-primary/50 transition-all duration-100"
+                        style={{ width: `${videoProgressPercent}%` }}
+                      />
                     )}
                   </button>
                 ))}
