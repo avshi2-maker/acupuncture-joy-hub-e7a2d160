@@ -78,6 +78,9 @@ function formatDateTime(isoString: string | null): string {
   return format(new Date(isoString), 'dd/MM/yyyy HH:mm', { locale: he });
 }
 
+// Production URL for testing real website
+const PRODUCTION_URL = 'https://ronisapirwellness.com';
+
 export default function QATesting() {
   const navigate = useNavigate();
   const {
@@ -486,11 +489,11 @@ export default function QATesting() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => window.open(module.path, '_blank')}
+                              onClick={() => window.open(`${PRODUCTION_URL}${module.path}`, '_blank')}
                               className="gap-1"
                             >
                               <ExternalLink className="h-3 w-3" />
-                              Open Page
+                              Open on Live Site
                             </Button>
                             <Button
                               variant="outline"
@@ -612,10 +615,10 @@ export default function QATesting() {
                     <Button
                       variant="outline"
                       className="w-full gap-2"
-                      onClick={() => window.open(selectedModule.path, '_blank')}
+                      onClick={() => window.open(`${PRODUCTION_URL}${selectedModule.path}`, '_blank')}
                     >
                       <ExternalLink className="h-4 w-4" />
-                      Open {selectedModule.path}
+                      Open on Live Site {selectedModule.path}
                     </Button>
 
                     <Separator />
