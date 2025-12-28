@@ -79,10 +79,16 @@ const TherapistTeaser = () => {
   const [videoOpacity, setVideoOpacity] = useState(1); // Control video fade
   const [videoProgressPercent, setVideoProgressPercent] = useState(0); // 0-100 progress for current video
   const originalVolumeRef = useRef(100); // Store original volume before ducking
+  const isTransitioningRef = useRef(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Keep a ref so media event listeners can read latest transition state
+  useEffect(() => {
+    isTransitioningRef.current = isTransitioning;
+  }, [isTransitioning]);
 
   // Update audio volume when slider changes
   useEffect(() => {
@@ -230,22 +236,23 @@ const TherapistTeaser = () => {
     };
 
     const handleEnded = () => {
-      console.log('Video ended, current:', currentVideo, 'total:', videos.length);
-      // Use functional update to get the actual current video value
-      setCurrentVideo(prevVideo => {
-        console.log('handleEnded: prevVideo =', prevVideo);
-        if (prevVideo < videos.length - 1) {
-          // Start crossfade transition
-          setIsTransitioning(true);
-          setVideoOpacity(0);
-          return prevVideo + 1;
-        } else {
+      // Fade out briefly to avoid harsh cuts, then advance
+      setIsTransitioning(true);
+      setVideoOpacity(0);
+      setVideoProgressPercent(0);
+
+      setTimeout(() => {
+        setCurrentVideo((prevVideo) => {
+          if (prevVideo < videos.length - 1) {
+            return prevVideo + 1;
+          }
+
           setIsPlaying(false);
           setShowDialog(true);
           setProgress(0);
           return 0;
-        }
-      });
+        });
+      }, 150);
     };
 
     const handleError = (e: Event) => {
@@ -293,17 +300,12 @@ const TherapistTeaser = () => {
       setIsVideoReady(true);
     };
 
-    const handlePlayEvent = () => setIsPlaying(true);
-    const handlePauseEvent = () => setIsPlaying(false);
-
     video.addEventListener('timeupdate', handleTimeUpdate);
     video.addEventListener('ended', handleEnded);
     video.addEventListener('error', handleError);
     video.addEventListener('canplay', handleCanPlay);
     video.addEventListener('loadstart', handleLoadStart);
     video.addEventListener('loadeddata', handleLoadedData);
-    video.addEventListener('play', handlePlayEvent);
-    video.addEventListener('pause', handlePauseEvent);
 
     return () => {
       video.removeEventListener('timeupdate', handleTimeUpdate);
@@ -312,8 +314,6 @@ const TherapistTeaser = () => {
       video.removeEventListener('canplay', handleCanPlay);
       video.removeEventListener('loadstart', handleLoadStart);
       video.removeEventListener('loadeddata', handleLoadedData);
-      video.removeEventListener('play', handlePlayEvent);
-      video.removeEventListener('pause', handlePauseEvent);
     };
   }, [currentVideo]);
 
@@ -324,6 +324,7 @@ const TherapistTeaser = () => {
 
     // Reload video source
     video.load();
+    setVideoProgressPercent(0);
 
     if (isPlaying) {
       const playVideo = async () => {
@@ -332,7 +333,7 @@ const TherapistTeaser = () => {
           // Fade in new video
           setVideoOpacity(1);
           setTimeout(() => setIsTransitioning(false), 200);
-          
+
           // Auto-narration for subsequent videos if user consented
           if (userConsentedNarration && narrationEnabled) {
             playNarration(currentVideo);
@@ -352,6 +353,7 @@ const TherapistTeaser = () => {
             console.error('Muted play also failed:', err2);
             setVideoError('Could not play video. Please try again.');
             setIsTransitioning(false);
+            setIsPlaying(false);
           }
         }
       };
@@ -368,14 +370,20 @@ const TherapistTeaser = () => {
     if (!video) return;
 
     setVideoError(null);
-    setCurrentVideo(0);
-    video.load();
-    
+
+    // Don't reset to video #1 when resuming
+    if (video.readyState < 2) {
+      video.load();
+    }
+
+    setVideoOpacity(1);
+    setIsTransitioning(false);
+
     try {
       await video.play();
       setIsPlaying(true);
     } catch (err) {
-      console.log('Initial play blocked, trying muted:', err);
+      console.log('Play blocked, trying muted:', err);
       video.muted = true;
       setIsMuted(true);
       try {
@@ -388,12 +396,13 @@ const TherapistTeaser = () => {
     }
   };
 
-  const handlePause = () => {
+  const handlePause = async () => {
     const video = videoRef.current;
     if (!video) return;
 
     if (!video.paused) {
       video.pause();
+      setIsPlaying(false);
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
@@ -402,9 +411,15 @@ const TherapistTeaser = () => {
       return;
     }
 
-    video.play();
-    if (userConsentedNarration && narrationEnabled) {
-      playNarration(currentVideo);
+    try {
+      await video.play();
+      setIsPlaying(true);
+      if (userConsentedNarration && narrationEnabled) {
+        playNarration(currentVideo);
+      }
+    } catch {
+      // If browser blocks resume, keep UI paused
+      setIsPlaying(false);
     }
   };
 
