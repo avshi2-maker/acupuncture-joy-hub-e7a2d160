@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
@@ -111,6 +112,10 @@ export default function QATesting() {
   const [recipientEmail, setRecipientEmail] = useState('avshi2@gmail.com');
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [useProductionUrl, setUseProductionUrl] = useState(true);
+
+  // Get the base URL based on toggle
+  const getBaseUrl = () => useProductionUrl ? PRODUCTION_URL : '';
 
   if (isLoading) {
     return (
@@ -291,6 +296,17 @@ export default function QATesting() {
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
+                {/* Production/Dev Toggle */}
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-lg">
+                  <span className={`text-xs ${!useProductionUrl ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>Dev</span>
+                  <Switch
+                    checked={useProductionUrl}
+                    onCheckedChange={setUseProductionUrl}
+                    className="data-[state=checked]:bg-jade"
+                  />
+                  <span className={`text-xs ${useProductionUrl ? 'font-semibold text-jade' : 'text-muted-foreground'}`}>Production</span>
+                </div>
+
                 <Badge variant="outline" className="gap-1">
                   <User className="h-3 w-3" />
                   {session.testerName}
@@ -489,11 +505,11 @@ export default function QATesting() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => window.open(`${PRODUCTION_URL}${module.path}`, '_blank')}
-                              className="gap-1"
+                              onClick={() => window.open(`${getBaseUrl()}${module.path}`, '_blank')}
+                              className={`gap-1 ${useProductionUrl ? 'border-jade text-jade' : 'border-blue-500 text-blue-500'}`}
                             >
                               <ExternalLink className="h-3 w-3" />
-                              Open on Live Site
+                              {useProductionUrl ? 'Open Production' : 'Open Dev'}
                             </Button>
                             <Button
                               variant="outline"
@@ -614,11 +630,11 @@ export default function QATesting() {
                     {/* Open Page Button */}
                     <Button
                       variant="outline"
-                      className="w-full gap-2"
-                      onClick={() => window.open(`${PRODUCTION_URL}${selectedModule.path}`, '_blank')}
+                      className={`w-full gap-2 ${useProductionUrl ? 'border-jade text-jade hover:bg-jade/10' : 'border-blue-500 text-blue-500 hover:bg-blue-500/10'}`}
+                      onClick={() => window.open(`${getBaseUrl()}${selectedModule.path}`, '_blank')}
                     >
                       <ExternalLink className="h-4 w-4" />
-                      Open on Live Site {selectedModule.path}
+                      {useProductionUrl ? '🌐 Open Production' : '🔧 Open Dev'} {selectedModule.path}
                     </Button>
 
                     <Separator />
