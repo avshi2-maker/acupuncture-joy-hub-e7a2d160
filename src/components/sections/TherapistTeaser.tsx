@@ -61,7 +61,7 @@ const TherapistTeaser = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentVideo, setCurrentVideo] = useState(0);
   const [showDialog, setShowDialog] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
   const [videoError, setVideoError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -225,22 +225,22 @@ const TherapistTeaser = () => {
     };
 
     const handleEnded = () => {
-      console.log('Video ended, current:', currentVideo);
-      if (currentVideo < videos.length - 1) {
-        // Start crossfade transition
-        setIsTransitioning(true);
-        setVideoOpacity(0);
-        
-        // Brief delay for fade-out, then switch video
-        setTimeout(() => {
-          setCurrentVideo(prev => prev + 1);
-        }, 150); // Minimal overlap - just enough for smooth transition
-      } else {
-        setIsPlaying(false);
-        setShowDialog(true);
-        setCurrentVideo(0);
-        setProgress(0);
-      }
+      console.log('Video ended, current:', currentVideo, 'total:', videos.length);
+      // Use functional update to get the actual current video value
+      setCurrentVideo(prevVideo => {
+        console.log('handleEnded: prevVideo =', prevVideo);
+        if (prevVideo < videos.length - 1) {
+          // Start crossfade transition
+          setIsTransitioning(true);
+          setVideoOpacity(0);
+          return prevVideo + 1;
+        } else {
+          setIsPlaying(false);
+          setShowDialog(true);
+          setProgress(0);
+          return 0;
+        }
+      });
     };
 
     const handleError = (e: Event) => {
