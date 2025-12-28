@@ -55,9 +55,12 @@ import {
   Filter,
   X,
   Bookmark,
-  BookmarkCheck
+  BookmarkCheck,
+  Sun,
+  MoonStar
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTheme } from 'next-themes';
 
 import {
   herbsQuestions,
@@ -280,6 +283,7 @@ export default function TcmBrain() {
   const navigate = useNavigate();
   const { tier, hasFeature } = useTier();
   const { session } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -290,6 +294,7 @@ export default function TcmBrain() {
   const [loadingStartTime, setLoadingStartTime] = useState<number | null>(null);
   const [currentQuery, setCurrentQuery] = useState<string>('');
   const [activeFeatureTab, setActiveFeatureTab] = useState<string>('chat');
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
   const [disclaimerStatus, setDisclaimerStatus] = useState<DisclaimerStatus>(() => {
     try {
@@ -699,6 +704,8 @@ export default function TcmBrain() {
             <Textarea
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
+              onFocus={() => setIsInputFocused(true)}
+              onBlur={() => setIsInputFocused(false)}
               placeholder="Type your question here..."
               className="min-h-[100px] text-left"
             />
@@ -733,12 +740,19 @@ export default function TcmBrain() {
       </Helmet>
 
       <div className="min-h-screen bg-background flex flex-col relative">
-        {/* Background Image with 75% transparency overlay */}
+        {/* Background Image with 75% transparency overlay + blur on input focus */}
         <div 
-          className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat"
+          className={`fixed inset-0 z-0 bg-cover bg-center bg-no-repeat transition-all duration-300 ${
+            isInputFocused ? 'blur-sm scale-105' : ''
+          }`}
           style={{ backgroundImage: `url(${acupunctureRoomBg})` }}
         />
-        <div className="fixed inset-0 z-0 bg-background/75" />
+        <div className={`fixed inset-0 z-0 transition-all duration-300 ${
+          isInputFocused 
+            ? 'bg-background/85' 
+            : theme === 'dark' ? 'bg-background/80' : 'bg-background/75'
+        }`} />
+        
         {/* Minimal Header */}
         <header className="bg-card/90 backdrop-blur-sm border-b border-border sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-2 py-1.5 flex items-center justify-between">
@@ -764,6 +778,20 @@ export default function TcmBrain() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {/* Dark Mode Toggle */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {theme === 'dark' ? (
+                  <Sun className="h-3.5 w-3.5 text-amber-400" />
+                ) : (
+                  <MoonStar className="h-3.5 w-3.5" />
+                )}
+              </Button>
               <Button
                 variant={showDetailedView ? "default" : "outline"}
                 size="sm"
@@ -1235,6 +1263,8 @@ export default function TcmBrain() {
                               ref={chatInputRef}
                               value={input}
                               onChange={(e) => setInput(e.target.value)}
+                              onFocus={() => setIsInputFocused(true)}
+                              onBlur={() => setIsInputFocused(false)}
                               placeholder="Ask any TCM question..."
                               disabled={isLoading}
                               autoFocus
@@ -1394,6 +1424,8 @@ export default function TcmBrain() {
                       ref={chatInputRef}
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
+                      onFocus={() => setIsInputFocused(true)}
+                      onBlur={() => setIsInputFocused(false)}
                       placeholder="Ask a TCM question..."
                       disabled={isLoading}
                       className="text-left pr-12 h-12 rounded-xl border-border/80 focus:border-jade transition-colors"
