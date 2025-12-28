@@ -17,6 +17,7 @@ import { ChatMessage, ChatTypingIndicator } from '@/components/chat/ChatMessage'
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { AnimatedMic } from '@/components/ui/AnimatedMic';
 import { 
   Brain, 
   Send, 
@@ -51,7 +52,9 @@ import {
   AlertTriangle,
   Search,
   Filter,
-  X
+  X,
+  Bookmark,
+  BookmarkCheck
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -338,10 +341,39 @@ export default function TcmBrain() {
     treatment: 'all'
   });
   
+  // Bookmarked questions - stored in localStorage
+  const [bookmarkedQuestions, setBookmarkedQuestions] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('tcm_bookmarked_questions');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  
   const scrollRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
   const aiResponseRef = useRef<HTMLDivElement>(null);
+  
+  // Save bookmarks to localStorage
+  useEffect(() => {
+    localStorage.setItem('tcm_bookmarked_questions', JSON.stringify(bookmarkedQuestions));
+  }, [bookmarkedQuestions]);
+  
+  const toggleBookmark = (question: string) => {
+    setBookmarkedQuestions(prev => {
+      if (prev.includes(question)) {
+        toast.success('Bookmark removed');
+        return prev.filter(q => q !== question);
+      } else {
+        toast.success('Question bookmarked!');
+        return [...prev, question];
+      }
+    });
+  };
+  
+  const isBookmarked = (question: string) => bookmarkedQuestions.includes(question);
 
   // Check if therapist has signed disclaimer (inline banner, no redirect)
   useEffect(() => {
@@ -683,7 +715,7 @@ export default function TcmBrain() {
                 onClick={toggleRecording}
                 className={isRecording ? 'bg-red-500/10 border-red-500 text-red-500' : ''}
               >
-                {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                {isRecording ? <MicOff className="h-4 w-4" /> : <AnimatedMic size="sm" isRecording={false} />}
               </Button>
             </div>
           </CardContent>
@@ -808,6 +840,50 @@ export default function TcmBrain() {
             {!showDetailedView ? (
               /* Main Queries View - First Page (No Quick Questions) */
               <div className="flex-1 p-4 space-y-4">
+
+                {/* Bookmarked Questions Section */}
+                {bookmarkedQuestions.length > 0 && (
+                  <Card className="bg-gradient-to-r from-gold/10 via-card to-jade/10 border-2 border-gold/30">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <BookmarkCheck className="h-5 w-5 text-gold" />
+                        Your Bookmarked Questions
+                        <Badge variant="secondary" className="ml-2 bg-gold/20 text-gold-dark">
+                          {bookmarkedQuestions.length}
+                        </Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="flex flex-wrap gap-2">
+                        {bookmarkedQuestions.map((question, idx) => (
+                          <div 
+                            key={idx} 
+                            className="group flex items-center gap-1 bg-card rounded-lg border border-border/60 shadow-sm hover:shadow-md transition-all"
+                          >
+                            <button
+                              onClick={() => handleQAQuestionSelect(question)}
+                              className="px-3 py-2 text-xs hover:text-jade transition-colors flex items-center gap-2"
+                            >
+                              <Send className="h-3 w-3 opacity-0 group-hover:opacity-100 text-jade" />
+                              <span className="max-w-[200px] truncate">{question}</span>
+                            </button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 mr-1 opacity-50 hover:opacity-100 hover:text-destructive"
+                              onClick={() => toggleBookmark(question)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-3">
+                        Click a bookmark to send it to AI • Click ✕ to remove
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* 3 Main Query Categories - Enhanced Design with Search & Filters */}
                 <div className="grid md:grid-cols-3 gap-6">
@@ -971,19 +1047,35 @@ export default function TcmBrain() {
                                           {catQuestions
                                             .sort((a, b) => a.question.localeCompare(b.question))
                                             .map(q => (
-                                              <button
-                                                key={q.id}
-                                                onClick={() => handleQAQuestionSelect(q.question)}
-                                                className="w-full text-left text-xs p-2.5 rounded-lg 
-                                                         bg-card hover:bg-jade/15 hover:pl-5 
-                                                         transition-all duration-200 group 
-                                                         flex items-center gap-2 
-                                                         border border-border/50 hover:border-jade/40
-                                                         shadow-sm hover:shadow-md"
-                                              >
-                                                <Send className="h-3 w-3 opacity-0 group-hover:opacity-100 text-jade transition-opacity shrink-0" />
-                                                <span className="flex-1">{q.question}</span>
-                                              </button>
+                                              <div key={q.id} className="flex items-center gap-1">
+                                                <button
+                                                  onClick={() => handleQAQuestionSelect(q.question)}
+                                                  className="flex-1 text-left text-xs p-2.5 rounded-lg 
+                                                           bg-card hover:bg-jade/15 hover:pl-5 
+                                                           transition-all duration-200 group 
+                                                           flex items-center gap-2 
+                                                           border border-border/50 hover:border-jade/40
+                                                           shadow-sm hover:shadow-md"
+                                                >
+                                                  <Send className="h-3 w-3 opacity-0 group-hover:opacity-100 text-jade transition-opacity shrink-0" />
+                                                  <span className="flex-1">{q.question}</span>
+                                                </button>
+                                                <Button
+                                                  variant="ghost"
+                                                  size="icon"
+                                                  className="h-8 w-8 shrink-0"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    toggleBookmark(q.question);
+                                                  }}
+                                                >
+                                                  {isBookmarked(q.question) ? (
+                                                    <BookmarkCheck className="h-4 w-4 text-jade" />
+                                                  ) : (
+                                                    <Bookmark className="h-4 w-4 text-muted-foreground hover:text-jade" />
+                                                  )}
+                                                </Button>
+                                              </div>
                                             ))}
                                         </div>
                                       </div>
@@ -1000,20 +1092,36 @@ export default function TcmBrain() {
                                       filteredQuestions
                                         .sort((a, b) => a.question.localeCompare(b.question))
                                         .map(q => (
-                                          <button
-                                            key={q.id}
-                                            onClick={() => handleQAQuestionSelect(q.question)}
-                                            className="w-full text-left text-xs p-2.5 rounded-lg 
-                                                     bg-card hover:bg-jade/15 hover:pl-5 
-                                                     transition-all duration-200 group 
-                                                     flex items-center gap-2 
-                                                     border border-border/50 hover:border-jade/40
-                                                     shadow-sm hover:shadow-md"
-                                          >
-                                            <Send className="h-3 w-3 opacity-0 group-hover:opacity-100 text-jade transition-opacity shrink-0" />
-                                            <span className="flex-1">{q.question}</span>
-                                            <Badge variant="outline" className="text-[10px] shrink-0">{q.category}</Badge>
-                                          </button>
+                                          <div key={q.id} className="flex items-center gap-1">
+                                            <button
+                                              onClick={() => handleQAQuestionSelect(q.question)}
+                                              className="flex-1 text-left text-xs p-2.5 rounded-lg 
+                                                       bg-card hover:bg-jade/15 hover:pl-5 
+                                                       transition-all duration-200 group 
+                                                       flex items-center gap-2 
+                                                       border border-border/50 hover:border-jade/40
+                                                       shadow-sm hover:shadow-md"
+                                            >
+                                              <Send className="h-3 w-3 opacity-0 group-hover:opacity-100 text-jade transition-opacity shrink-0" />
+                                              <span className="flex-1">{q.question}</span>
+                                              <Badge variant="outline" className="text-[10px] shrink-0">{q.category}</Badge>
+                                            </button>
+                                            <Button
+                                              variant="ghost"
+                                              size="icon"
+                                              className="h-8 w-8 shrink-0"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleBookmark(q.question);
+                                              }}
+                                            >
+                                              {isBookmarked(q.question) ? (
+                                                <BookmarkCheck className="h-4 w-4 text-jade" />
+                                              ) : (
+                                                <Bookmark className="h-4 w-4 text-muted-foreground hover:text-jade" />
+                                              )}
+                                            </Button>
+                                          </div>
                                         ))
                                     )}
                                   </div>
@@ -1134,7 +1242,7 @@ export default function TcmBrain() {
                                 isRecording ? 'text-red-500 bg-red-500/10' : 'text-muted-foreground'
                               }`}
                             >
-                              {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                              {isRecording ? <MicOff className="h-5 w-5" /> : <AnimatedMic size="sm" isRecording={false} />}
                             </Button>
                           </div>
                           <Button 
@@ -1292,7 +1400,7 @@ export default function TcmBrain() {
                         isRecording ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20' : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
-                      {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                      {isRecording ? <MicOff className="h-4 w-4" /> : <AnimatedMic size="sm" isRecording={false} />}
                     </Button>
                   </div>
                   <Button 
@@ -1487,7 +1595,7 @@ Include:
                     setRightSidebarOpen(false);
                   }}
                 >
-                  {isRecording ? <MicOff className="h-4 w-4 text-red-500" /> : <Mic className="h-4 w-4" />}
+                  {isRecording ? <MicOff className="h-4 w-4 text-red-500" /> : <AnimatedMic size="sm" isRecording={false} />}
                   {isRecording ? 'Stop Recording' : 'Voice Input'}
                 </Button>
                 <Button
