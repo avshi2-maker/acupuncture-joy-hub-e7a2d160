@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Menu, X, Leaf, Code, Volume2 } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Menu, X, Leaf, Code } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -12,7 +12,12 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isPlayingBio, setIsPlayingBio] = useState(false);
   const [bioProgress, setBioProgress] = useState(0);
+  const [frequencyData, setFrequencyData] = useState<number[]>([0, 0, 0, 0]);
   const bioAudioRef = useRef<HTMLAudioElement | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
   const location = useLocation();
   const { t } = useLanguage();
 
@@ -30,16 +35,49 @@ const Header = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Frequency analysis animation loop
+  const updateFrequencyData = useCallback(() => {
+    if (analyserRef.current && isPlayingBio) {
+      const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+      analyserRef.current.getByteFrequencyData(dataArray);
+      
+      // Sample 4 frequency bands for our 4 bars
+      const bands = [
+        dataArray.slice(0, 4).reduce((a, b) => a + b, 0) / 4,      // Low
+        dataArray.slice(4, 8).reduce((a, b) => a + b, 0) / 4,      // Low-mid
+        dataArray.slice(8, 16).reduce((a, b) => a + b, 0) / 8,     // Mid
+        dataArray.slice(16, 32).reduce((a, b) => a + b, 0) / 16,   // High
+      ].map(v => Math.min(1, v / 180)); // Normalize to 0-1
+      
+      setFrequencyData(bands);
+      animationFrameRef.current = requestAnimationFrame(updateFrequencyData);
+    }
+  }, [isPlayingBio]);
+
+  useEffect(() => {
+    if (isPlayingBio) {
+      animationFrameRef.current = requestAnimationFrame(updateFrequencyData);
+    }
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [isPlayingBio, updateFrequencyData]);
+
   const handleBioToggle = () => {
     if (!bioAudioRef.current) {
       bioAudioRef.current = new Audio('/audio/roni_bio.mp3');
+      bioAudioRef.current.crossOrigin = "anonymous";
       bioAudioRef.current.onended = () => {
         setIsPlayingBio(false);
         setBioProgress(0);
+        setFrequencyData([0, 0, 0, 0]);
       };
       bioAudioRef.current.onerror = () => {
         setIsPlayingBio(false);
         setBioProgress(0);
+        setFrequencyData([0, 0, 0, 0]);
       };
       bioAudioRef.current.ontimeupdate = () => {
         if (bioAudioRef.current && bioAudioRef.current.duration) {
@@ -48,13 +86,27 @@ const Header = () => {
       };
     }
     
+    // Setup Web Audio API for frequency analysis
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      analyserRef.current.fftSize = 64;
+      sourceRef.current = audioContextRef.current.createMediaElementSource(bioAudioRef.current);
+      sourceRef.current.connect(analyserRef.current);
+      analyserRef.current.connect(audioContextRef.current.destination);
+    }
+    
     if (isPlayingBio) {
       bioAudioRef.current.pause();
       bioAudioRef.current.currentTime = 0;
       setIsPlayingBio(false);
       setBioProgress(0);
+      setFrequencyData([0, 0, 0, 0]);
     } else {
       bioAudioRef.current.currentTime = 0;
+      if (audioContextRef.current?.state === 'suspended') {
+        audioContextRef.current.resume();
+      }
       bioAudioRef.current.play().then(() => {
         setIsPlayingBio(true);
       }).catch(console.error);
@@ -75,6 +127,7 @@ const Header = () => {
       bioAudioRef.current.currentTime = 0;
       setIsPlayingBio(false);
       setBioProgress(0);
+      setFrequencyData([0, 0, 0, 0]);
     }
   };
 
@@ -108,37 +161,52 @@ const Header = () => {
               >
                 Dr Roni Sapir
                 {isPlayingBio ? (
-                  <span className="relative inline-flex items-center justify-center w-6 h-6">
-                    {/* Circular progress ring */}
-                    <svg className="absolute inset-0 w-6 h-6 -rotate-90" viewBox="0 0 24 24">
+                  <span className="relative inline-flex items-center justify-center w-7 h-7">
+                    {/* Glow effect */}
+                    <span 
+                      className="absolute inset-0 rounded-full blur-md transition-opacity duration-300"
+                      style={{ 
+                        backgroundColor: 'hsl(var(--gold))',
+                        opacity: 0.4 + (frequencyData.reduce((a, b) => a + b, 0) / 4) * 0.4
+                      }}
+                    />
+                    {/* Circular progress ring with glow */}
+                    <svg className="absolute inset-0 w-7 h-7 -rotate-90 drop-shadow-[0_0_6px_hsl(var(--gold))]" viewBox="0 0 28 28">
                       <circle
-                        cx="12"
-                        cy="12"
-                        r="10"
+                        cx="14"
+                        cy="14"
+                        r="12"
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="2"
                         className="opacity-20"
                       />
                       <circle
-                        cx="12"
-                        cy="12"
-                        r="10"
+                        cx="14"
+                        cy="14"
+                        r="12"
                         fill="none"
                         stroke="hsl(var(--gold))"
-                        strokeWidth="2"
+                        strokeWidth="2.5"
                         strokeLinecap="round"
-                        strokeDasharray={2 * Math.PI * 10}
-                        strokeDashoffset={2 * Math.PI * 10 * (1 - bioProgress / 100)}
+                        strokeDasharray={2 * Math.PI * 12}
+                        strokeDashoffset={2 * Math.PI * 12 * (1 - bioProgress / 100)}
                         className="transition-all duration-150 ease-linear"
+                        style={{ filter: 'drop-shadow(0 0 3px hsl(var(--gold)))' }}
                       />
                     </svg>
-                    {/* Waveform inside */}
-                    <span className="inline-flex items-center gap-0.5 h-3 z-10">
-                      <span className="w-0.5 h-full bg-gold rounded-full animate-waveform" style={{ animationDelay: '0ms' }} />
-                      <span className="w-0.5 h-2 bg-gold rounded-full animate-waveform" style={{ animationDelay: '100ms' }} />
-                      <span className="w-0.5 h-full bg-gold rounded-full animate-waveform" style={{ animationDelay: '200ms' }} />
-                      <span className="w-0.5 h-2 bg-gold rounded-full animate-waveform" style={{ animationDelay: '300ms' }} />
+                    {/* Real frequency waveform inside */}
+                    <span className="inline-flex items-end justify-center gap-0.5 h-3 z-10">
+                      {frequencyData.map((level, i) => (
+                        <span 
+                          key={i}
+                          className="w-0.5 bg-gold rounded-full transition-all duration-75"
+                          style={{ 
+                            height: `${Math.max(20, level * 100)}%`,
+                            boxShadow: level > 0.3 ? '0 0 4px hsl(var(--gold))' : 'none'
+                          }}
+                        />
+                      ))}
                     </span>
                   </span>
                 ) : (
