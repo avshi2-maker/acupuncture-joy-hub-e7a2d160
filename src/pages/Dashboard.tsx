@@ -31,17 +31,22 @@ interface FeatureCardProps {
   href?: string;
   highlighted?: boolean;
   backgroundImage?: string;
+  animationDelay?: number;
 }
 
-function FeatureCard({ title, description, icon, available, href, highlighted, backgroundImage }: FeatureCardProps) {
+function FeatureCard({ title, description, icon, available, href, highlighted, backgroundImage, animationDelay = 0 }: FeatureCardProps) {
   const content = (
     <Card 
-      className={`transition-all duration-300 h-full relative overflow-hidden transform ${available ? 'hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:shadow-jade/20 hover:scale-[1.03] cursor-pointer' : 'opacity-60'} ${highlighted ? 'ring-2 ring-jade border-jade hover:ring-jade/80 hover:shadow-jade/30' : ''}`}
-      style={backgroundImage ? { 
-        backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(${backgroundImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center'
-      } : {}}
+      className={`transition-all duration-300 h-full relative overflow-hidden transform opacity-0 animate-fade-in ${available ? 'hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:shadow-jade/20 hover:scale-[1.03] cursor-pointer' : 'opacity-60'} ${highlighted ? 'ring-2 ring-jade border-jade hover:ring-jade/80 hover:shadow-jade/30' : ''}`}
+      style={{
+        animationDelay: `${animationDelay}ms`,
+        animationFillMode: 'forwards',
+        ...(backgroundImage ? { 
+          backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(${backgroundImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        } : {})
+      }}
     >
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
@@ -214,7 +219,7 @@ export default function Dashboard() {
 
         {/* Row 1: Calendar, Patient Management, Reminders */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-          {row1Features.map((feature) => (
+          {row1Features.map((feature, index) => (
             <FeatureCard
               key={feature.id}
               title={feature.title}
@@ -223,13 +228,14 @@ export default function Dashboard() {
               available={hasFeature(feature.feature)}
               href={feature.href}
               backgroundImage={feature.backgroundImage}
+              animationDelay={index * 100}
             />
           ))}
         </div>
 
-        {/* Row 2: Video Session, TCM Brain, Body Map */}
+        {/* Row 2: Video Session, CM Brain, Body Map */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-          {row2Features.map((feature) => (
+          {row2Features.map((feature, index) => (
             <FeatureCard
               key={feature.id}
               title={feature.title}
@@ -239,13 +245,14 @@ export default function Dashboard() {
               href={feature.href}
               highlighted={feature.highlighted}
               backgroundImage={feature.backgroundImage}
+              animationDelay={300 + index * 100}
             />
           ))}
         </div>
 
         {/* Row 3: Knowledge Registry */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {row3Features.map((feature) => (
+          {row3Features.map((feature, index) => (
             <FeatureCard
               key={feature.id}
               title={feature.title}
@@ -254,6 +261,7 @@ export default function Dashboard() {
               available={true}
               href={feature.href}
               backgroundImage={feature.backgroundImage}
+              animationDelay={600 + index * 100}
             />
           ))}
         </div>
