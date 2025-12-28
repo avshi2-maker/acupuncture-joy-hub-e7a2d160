@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Menu, X, Leaf, Code } from "lucide-react";
+import { Menu, X, Leaf, Code, Volume2, VolumeX } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -13,6 +13,8 @@ const Header = () => {
   const [isPlayingBio, setIsPlayingBio] = useState(false);
   const [bioProgress, setBioProgress] = useState(0);
   const [frequencyData, setFrequencyData] = useState<number[]>([0, 0, 0, 0]);
+  const [bioVolume, setBioVolume] = useState(80); // 0-100
+  const [showVolumeControl, setShowVolumeControl] = useState(false);
   const bioAudioRef = useRef<HTMLAudioElement | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -69,15 +71,18 @@ const Header = () => {
     if (!bioAudioRef.current) {
       bioAudioRef.current = new Audio('/audio/roni_bio.mp3');
       bioAudioRef.current.crossOrigin = "anonymous";
+      bioAudioRef.current.volume = bioVolume / 100;
       bioAudioRef.current.onended = () => {
         setIsPlayingBio(false);
         setBioProgress(0);
         setFrequencyData([0, 0, 0, 0]);
+        setShowVolumeControl(false);
       };
       bioAudioRef.current.onerror = () => {
         setIsPlayingBio(false);
         setBioProgress(0);
         setFrequencyData([0, 0, 0, 0]);
+        setShowVolumeControl(false);
       };
       bioAudioRef.current.ontimeupdate = () => {
         if (bioAudioRef.current && bioAudioRef.current.duration) {
@@ -102,14 +107,23 @@ const Header = () => {
       setIsPlayingBio(false);
       setBioProgress(0);
       setFrequencyData([0, 0, 0, 0]);
+      setShowVolumeControl(false);
     } else {
       bioAudioRef.current.currentTime = 0;
+      bioAudioRef.current.volume = bioVolume / 100;
       if (audioContextRef.current?.state === 'suspended') {
         audioContextRef.current.resume();
       }
       bioAudioRef.current.play().then(() => {
         setIsPlayingBio(true);
       }).catch(console.error);
+    }
+  };
+
+  const handleVolumeChange = (newVolume: number) => {
+    setBioVolume(newVolume);
+    if (bioAudioRef.current) {
+      bioAudioRef.current.volume = newVolume / 100;
     }
   };
 
@@ -131,72 +145,116 @@ const Header = () => {
           </div>
           <div className={`font-display tracking-wide transition-colors duration-300 ${isScrolled || !isHomePage ? 'text-foreground' : 'text-primary-foreground'} hidden sm:flex flex-col leading-tight`}>
             <div className="relative inline-block">
-              <button 
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleBioToggle();
-                }}
-                className="text-lg lg:text-xl font-bold cursor-pointer hover:underline underline-offset-2 inline-flex items-center gap-2 text-left group/bio relative"
-                title={isPlayingBio ? "לחץ לעצור" : "לחץ לשמוע ביוגרפיה"}
-              >
-                Dr Roni Sapir
-                {isPlayingBio ? (
-                  <span className="relative inline-flex items-center justify-center w-7 h-7">
-                    {/* Glow effect */}
-                    <span 
-                      className="absolute inset-0 rounded-full blur-md transition-opacity duration-300"
-                      style={{ 
-                        backgroundColor: 'hsl(var(--gold))',
-                        opacity: 0.4 + (frequencyData.reduce((a, b) => a + b, 0) / 4) * 0.4
-                      }}
-                    />
-                    {/* Circular progress ring with glow */}
-                    <svg className="absolute inset-0 w-7 h-7 -rotate-90 drop-shadow-[0_0_6px_hsl(var(--gold))]" viewBox="0 0 28 28">
-                      <circle
-                        cx="14"
-                        cy="14"
-                        r="12"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        className="opacity-20"
+              <div className="flex items-center gap-1">
+                <button 
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleBioToggle();
+                  }}
+                  className="text-lg lg:text-xl font-bold cursor-pointer hover:underline underline-offset-2 inline-flex items-center gap-1.5 text-left group/bio relative"
+                  title={isPlayingBio ? "לחץ לעצור" : "לחץ לשמוע ביוגרפיה"}
+                >
+                  Dr Roni Sapir
+                  {isPlayingBio ? (
+                    <span className="relative inline-flex items-center justify-center w-7 h-7">
+                      {/* Glow effect */}
+                      <span 
+                        className="absolute inset-0 rounded-full blur-md transition-opacity duration-300"
+                        style={{ 
+                          backgroundColor: 'hsl(var(--gold))',
+                          opacity: 0.4 + (frequencyData.reduce((a, b) => a + b, 0) / 4) * 0.4
+                        }}
                       />
-                      <circle
-                        cx="14"
-                        cy="14"
-                        r="12"
-                        fill="none"
-                        stroke="hsl(var(--gold))"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeDasharray={2 * Math.PI * 12}
-                        strokeDashoffset={2 * Math.PI * 12 * (1 - bioProgress / 100)}
-                        className="transition-all duration-150 ease-linear"
-                        style={{ filter: 'drop-shadow(0 0 3px hsl(var(--gold)))' }}
-                      />
-                    </svg>
-                    {/* Real frequency waveform inside */}
-                    <span className="inline-flex items-end justify-center gap-0.5 h-3 z-10">
-                      {frequencyData.map((level, i) => (
-                        <span 
-                          key={i}
-                          className="w-0.5 bg-gold rounded-full transition-all duration-75"
-                          style={{ 
-                            height: `${Math.max(20, level * 100)}%`,
-                            boxShadow: level > 0.3 ? '0 0 4px hsl(var(--gold))' : 'none'
-                          }}
+                      {/* Circular progress ring with glow */}
+                      <svg className="absolute inset-0 w-7 h-7 -rotate-90 drop-shadow-[0_0_6px_hsl(var(--gold))]" viewBox="0 0 28 28">
+                        <circle
+                          cx="14"
+                          cy="14"
+                          r="12"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="opacity-20"
                         />
-                      ))}
+                        <circle
+                          cx="14"
+                          cy="14"
+                          r="12"
+                          fill="none"
+                          stroke="hsl(var(--gold))"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeDasharray={2 * Math.PI * 12}
+                          strokeDashoffset={2 * Math.PI * 12 * (1 - bioProgress / 100)}
+                          className="transition-all duration-150 ease-linear"
+                          style={{ filter: 'drop-shadow(0 0 3px hsl(var(--gold)))' }}
+                        />
+                      </svg>
+                      {/* Real frequency waveform inside */}
+                      <span className="inline-flex items-end justify-center gap-0.5 h-3 z-10">
+                        {frequencyData.map((level, i) => (
+                          <span 
+                            key={i}
+                            className="w-0.5 bg-gold rounded-full transition-all duration-75"
+                            style={{ 
+                              height: `${Math.max(20, level * 100)}%`,
+                              boxShadow: level > 0.3 ? '0 0 4px hsl(var(--gold))' : 'none'
+                            }}
+                          />
+                        ))}
+                      </span>
                     </span>
-                  </span>
-                ) : (
-                  <span className="text-xs opacity-0 group-hover/bio:opacity-70 transition-opacity duration-200 font-normal whitespace-nowrap">
-                    🔊 Click to hear bio
-                  </span>
+                  ) : (
+                    <Volume2 className="w-4 h-4 opacity-50 group-hover/bio:opacity-100 transition-opacity" />
+                  )}
+                </button>
+
+                {/* Volume Control - appears when playing */}
+                {isPlayingBio && (
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setShowVolumeControl(!showVolumeControl);
+                      }}
+                      className="p-1 hover:bg-white/10 rounded transition-colors"
+                      title="עוצמת שמע"
+                    >
+                      {bioVolume === 0 ? (
+                        <VolumeX className="w-4 h-4 opacity-70" />
+                      ) : (
+                        <Volume2 className="w-4 h-4 opacity-70" />
+                      )}
+                    </button>
+
+                    {/* Volume Slider Dropdown */}
+                    {showVolumeControl && (
+                      <div 
+                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-background/95 backdrop-blur-md rounded-lg shadow-lg p-3 z-50 min-w-[120px] animate-fade-in"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <VolumeX className="w-3 h-3 opacity-50" />
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={bioVolume}
+                            onChange={(e) => handleVolumeChange(Number(e.target.value))}
+                            className="flex-1 h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-gold"
+                          />
+                          <Volume2 className="w-3 h-3 opacity-50" />
+                        </div>
+                        <p className="text-xs text-center text-muted-foreground">{bioVolume}%</p>
+                      </div>
+                    )}
+                  </div>
                 )}
-              </button>
+              </div>
             </div>
             <span className="text-sm lg:text-base font-semibold opacity-90">Complementary Medicine - Acupuncture Clinic</span>
             <span className="text-xs lg:text-sm font-normal opacity-70 italic">Healing Through Balance with AI</span>
