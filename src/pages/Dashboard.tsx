@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,14 +16,9 @@ import {
   Lock,
   Leaf,
   LogOut,
-  PanelLeftClose,
-  PanelLeft,
   Database
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { VideoSessionPanel } from '@/components/video/VideoSessionPanel';
-import { SessionTimerWidget } from '@/components/crm/SessionTimerWidget';
-import { SessionTimerProvider } from '@/contexts/SessionTimerContext';
 
 interface FeatureCardProps {
   title: string;
@@ -72,7 +67,6 @@ function FeatureCard({ title, description, icon, available, href, highlighted }:
 export default function Dashboard() {
   const navigate = useNavigate();
   const { tier, hasFeature, daysRemaining } = useTier();
-  const [showVideoPanel, setShowVideoPanel] = useState(true);
 
   useEffect(() => {
     if (!tier) {
@@ -87,6 +81,15 @@ export default function Dashboard() {
   };
 
   const features = [
+    {
+      id: 'video_sessions',
+      title: 'פגישות וידאו',
+      description: 'טיפולים מרחוק בוידאו עם שאלוני תמיכה',
+      icon: <Video className={`h-6 w-6 ${hasFeature('video_sessions') ? 'text-jade' : 'text-muted-foreground'}`} />,
+      feature: 'video_sessions' as const,
+      href: '/video-session',
+      highlighted: true,
+    },
     {
       id: 'knowledge_registry',
       title: 'Knowledge Registry',
@@ -137,135 +140,83 @@ export default function Dashboard() {
 
   if (!tier) return null;
 
-  const hasVideoAccess = hasFeature('video_sessions');
-
   return (
-    <SessionTimerProvider>
+    <>
       <Helmet>
         <title>דשבורד מטפל | TCM Clinic</title>
         <meta name="description" content="דשבורד ניהול למטפלים ברפואה סינית" />
       </Helmet>
 
       <div className="min-h-screen bg-background" dir="rtl">
-        {/* Header */}
-        <header className="bg-card border-b border-border sticky top-0 z-50">
-          <div className="max-w-full mx-auto px-4 py-4 flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-4 hover:opacity-90 transition-opacity" aria-label="דף הבית">
-              <div className="w-10 h-10 bg-jade-light rounded-full flex items-center justify-center">
-                <Leaf className="h-5 w-5 text-jade" />
-              </div>
-              <div>
-                <h1 className="font-display text-xl">TCM Clinic</h1>
-                <p className="text-sm text-muted-foreground">דשבורד מטפל</p>
-              </div>
-            </Link>
-            <div className="flex items-center gap-3">
-              {hasVideoAccess && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setShowVideoPanel(!showVideoPanel)}
-                  className="gap-2"
-                >
-                  {showVideoPanel ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeft className="h-4 w-4" />}
-                  {showVideoPanel ? 'הסתר וידאו' : 'הצג וידאו'}
-                </Button>
-              )}
-              <Button asChild variant="outline" size="sm">
-                <Link to="/#tcm-brain-preview">דף הבית</Link>
-              </Button>
-              <TierBadge />
-              <Button variant="ghost" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4" />
-              </Button>
+      {/* Header */}
+      <header className="bg-card border-b border-border sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-4 hover:opacity-90 transition-opacity" aria-label="דף הבית">
+            <div className="w-10 h-10 bg-jade-light rounded-full flex items-center justify-center">
+              <Leaf className="h-5 w-5 text-jade" />
             </div>
+            <div>
+              <h1 className="font-display text-xl">TCM Clinic</h1>
+              <p className="text-sm text-muted-foreground">דשבורד מטפל</p>
+            </div>
+          </Link>
+          <div className="flex items-center gap-3">
+            <Button asChild variant="outline" size="sm">
+              <Link to="/#tcm-brain-preview">דף הבית</Link>
+            </Button>
+            <TierBadge />
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
-        </header>
-
-        {/* Main Content - Split Layout */}
-        <div className={`flex ${hasVideoAccess && showVideoPanel ? 'gap-4' : ''}`}>
-          {/* Video Panel - 25% */}
-          {hasVideoAccess && showVideoPanel && (
-            <aside className="w-1/4 min-w-[300px] max-w-[400px] p-4 border-l border-border bg-card/50 min-h-[calc(100vh-73px)]">
-              <VideoSessionPanel />
-            </aside>
-          )}
-
-          {/* Main Content - 75% */}
-          <main className={`flex-1 px-4 py-8 ${hasVideoAccess && showVideoPanel ? 'max-w-[75%]' : 'max-w-7xl mx-auto'}`}>
-            {/* Welcome Section */}
-            <div className="mb-8">
-              <h2 className="font-display text-3xl mb-2">שלום וברוכים הבאים!</h2>
-              <p className="text-muted-foreground">
-                {tier === 'trial' && daysRemaining !== null && (
-                  <>נותרו לכם {daysRemaining} ימי ניסיון. <Link to="/pricing" className="text-jade hover:underline">שדרגו עכשיו</Link></>
-                )}
-                {tier === 'standard' && 'אתם בתוכנית סטנדרט. כל הכלים הבסיסיים זמינים עבורכם.'}
-                {tier === 'premium' && 'אתם בתוכנית פרימיום. כל הפיצ׳רים זמינים עבורכם!'}
-              </p>
-            </div>
-
-            {/* Features Grid */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {features.map((feature) => (
-                <FeatureCard
-                  key={feature.id}
-                  title={feature.title}
-                  description={feature.description}
-                  icon={feature.icon}
-                  available={'alwaysAvailable' in feature ? true : hasFeature(feature.feature)}
-                  href={feature.href}
-                  highlighted={'alwaysAvailable' in feature}
-                />
-              ))}
-              
-              {/* Video Sessions Card - Special handling */}
-              <div onClick={() => {
-                if (hasVideoAccess) {
-                  setShowVideoPanel(true);
-                } else {
-                  toast.info('שדרגו את התוכנית שלכם לגישה לפיצ׳ר זה');
-                }
-              }}>
-                <Card className={`transition-all duration-300 h-full ${hasVideoAccess ? 'hover:shadow-elevated cursor-pointer border-jade/30' : 'opacity-60'}`}>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${hasVideoAccess ? 'bg-jade-light' : 'bg-muted'}`}>
-                        <Video className={`h-6 w-6 ${hasVideoAccess ? 'text-jade' : 'text-muted-foreground'}`} />
-                      </div>
-                      {!hasVideoAccess && <Lock className="h-5 w-5 text-muted-foreground" />}
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <CardTitle className="text-lg mb-1">פגישות וידאו</CardTitle>
-                    <CardDescription className="text-sm">
-                      {hasVideoAccess ? 'טיפולים מרחוק בוידאו עם שאלוני תמיכה' : 'שדרגו לתוכנית גבוהה יותר'}
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-
-            {/* Upgrade CTA for non-premium */}
-            {tier !== 'premium' && (
-              <Card className="mt-8 bg-gradient-to-r from-jade to-jade-dark text-primary-foreground">
-                <CardContent className="py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div>
-                    <h3 className="font-display text-xl mb-1">רוצים גישה לכל הפיצ׳רים?</h3>
-                    <p className="opacity-90">שדרגו לתוכנית פרימיום וקבלו גישה מלאה כולל פגישות וידאו</p>
-                  </div>
-                  <Button asChild variant="secondary" className="shrink-0">
-                    <Link to="/pricing">צפו בתוכניות</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-          </main>
         </div>
-        
-        {/* Session Timer Widget - Always visible */}
-        <SessionTimerWidget position="bottom-right" />
-      </div>
-    </SessionTimerProvider>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <h2 className="font-display text-3xl mb-2">שלום וברוכים הבאים!</h2>
+          <p className="text-muted-foreground">
+            {tier === 'trial' && daysRemaining !== null && (
+              <>נותרו לכם {daysRemaining} ימי ניסיון. <Link to="/pricing" className="text-jade hover:underline">שדרגו עכשיו</Link></>
+            )}
+            {tier === 'standard' && 'אתם בתוכנית סטנדרט. כל הכלים הבסיסיים זמינים עבורכם.'}
+            {tier === 'premium' && 'אתם בתוכנית פרימיום. כל הפיצ׳רים זמינים עבורכם!'}
+          </p>
+        </div>
+
+        {/* Features Grid */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {features.map((feature) => (
+            <FeatureCard
+              key={feature.id}
+              title={feature.title}
+              description={feature.description}
+              icon={feature.icon}
+              available={'alwaysAvailable' in feature ? true : hasFeature(feature.feature)}
+              href={feature.href}
+              highlighted={feature.highlighted}
+            />
+          ))}
+        </div>
+
+        {/* Upgrade CTA for non-premium */}
+        {tier !== 'premium' && (
+          <Card className="mt-8 bg-gradient-to-r from-jade to-jade-dark text-primary-foreground">
+            <CardContent className="py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div>
+                <h3 className="font-display text-xl mb-1">רוצים גישה לכל הפיצ׳רים?</h3>
+                <p className="opacity-90">שדרגו לתוכנית פרימיום וקבלו גישה מלאה כולל פגישות וידאו</p>
+              </div>
+              <Button asChild variant="secondary" className="shrink-0">
+                <Link to="/pricing">צפו בתוכניות</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+      </main>
+    </div>
+    </>
   );
 }

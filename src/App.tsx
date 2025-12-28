@@ -15,6 +15,7 @@ import PaymentInstructions from "./pages/PaymentInstructions";
 import Gate from "./pages/Gate";
 import Admin from "./pages/Admin";
 import Dashboard from "./pages/Dashboard";
+import VideoSession from "./pages/VideoSession";
 import Auth from "./pages/Auth";
 import TcmBrain from "./pages/TcmBrain";
 import CRM from "./pages/CRM";
@@ -62,6 +63,7 @@ const App = () => (
                     <Route path="/gate" element={<Gate />} />
                     <Route path="/admin" element={<Admin />} />
                     <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/video-session" element={<VideoSession />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/tcm-brain" element={<TcmBrain />} />
                     <Route path="/therapist-disclaimer" element={<TherapistDisclaimer />} />
