@@ -38,3 +38,9 @@ verify_jwt = true
 
 [functions.text-to-speech]
 verify_jwt = false
+
+[functions.generate-session-report]
+verify_jwt = false
+
+[functions.elevenlabs-tts]
+verify_jwt = false

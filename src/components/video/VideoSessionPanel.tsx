@@ -38,6 +38,7 @@ import { TherapistSettingsDialog, getAudioAlertsEnabled } from './TherapistSetti
 import { FollowUpPlanDialog } from './FollowUpPlanDialog';
 import { VoiceDictationDialog } from './VoiceDictationDialog';
 import { CalendarInviteDialog } from './CalendarInviteDialog';
+import { SessionReportDialog } from './SessionReportDialog';
 import { useSessionPersistence } from '@/hooks/useSessionPersistence';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -69,6 +70,7 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
   const [showFollowUpPlan, setShowFollowUpPlan] = useState(false);
   const [showVoiceDictation, setShowVoiceDictation] = useState(false);
   const [showCalendarInvite, setShowCalendarInvite] = useState(false);
+  const [showSessionReport, setShowSessionReport] = useState(false);
   const [currentAppointmentId, setCurrentAppointmentId] = useState<string | null>(null);
   const [isCancellingBlock, setIsCancellingBlock] = useState(false);
   const warningShownRef = useRef(false);
@@ -556,6 +558,16 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
               <VideoIcon className="h-4 w-4" />
               הזמנת Zoom
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowSessionReport(true)}
+              disabled={!selectedPatientId || !sessionNotes}
+              className="gap-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200"
+            >
+              <Sparkles className="h-4 w-4" />
+              דו"ח + MP3
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -760,6 +772,15 @@ export function VideoSessionPanel({ onSessionEnd }: VideoSessionPanelProps) {
         patientName={selectedPatientName || undefined}
         patientPhone={selectedPatientPhone || undefined}
         onAppointmentCreated={handleCalendarInviteCreated}
+      />
+      
+      <SessionReportDialog
+        open={showSessionReport}
+        onOpenChange={setShowSessionReport}
+        patientName={selectedPatientName || ''}
+        patientPhone={selectedPatientPhone}
+        sessionNotes={sessionNotes}
+        anxietyResponses={anxietyConversation}
       />
     </div>
   );
