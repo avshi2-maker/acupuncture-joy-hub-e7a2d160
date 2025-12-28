@@ -60,7 +60,7 @@ const TherapistTeaser = () => {
     
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/text-to-speech`,
         {
           method: 'POST',
           headers: {
@@ -70,7 +70,8 @@ const TherapistTeaser = () => {
           },
           body: JSON.stringify({ 
             text: description,
-            voice: 'Sarah'
+            voice: 'nova',
+            language: 'he'
           }),
         }
       );
