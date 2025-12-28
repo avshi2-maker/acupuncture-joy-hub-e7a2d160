@@ -19,6 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { AnimatedMic } from '@/components/ui/AnimatedMic';
 import acupunctureRoomBg from '@/assets/acupuncture-room-bg.png';
+import clockImg from '@/assets/clock.png';
 import { 
   Brain, 
   Send, 
@@ -57,8 +58,10 @@ import {
   Bookmark,
   BookmarkCheck,
   Sun,
-  MoonStar
+  MoonStar,
+  Monitor
 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Link } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 
@@ -295,6 +298,13 @@ export default function TcmBrain() {
   const [currentQuery, setCurrentQuery] = useState<string>('');
   const [activeFeatureTab, setActiveFeatureTab] = useState<string>('chat');
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  
+  // Update clock every second
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const [disclaimerStatus, setDisclaimerStatus] = useState<DisclaimerStatus>(() => {
     try {
@@ -776,22 +786,60 @@ export default function TcmBrain() {
                 </div>
                 <span className="font-display text-sm">TCM Brain</span>
               </div>
+              
+              {/* Clock - circular with full background */}
+              <div className="hidden md:block ml-4">
+                <div className="relative h-12 w-12 rounded-full shadow-lg overflow-hidden ring-2 ring-jade/30">
+                  <img
+                    src={clockImg}
+                    alt="Session clock"
+                    className="absolute inset-0 h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                    <span className="text-xs font-bold text-white font-mono drop-shadow-lg">
+                      {currentTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
             <div className="flex items-center gap-2">
-              {/* Dark Mode Toggle */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0"
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-              >
-                {theme === 'dark' ? (
-                  <Sun className="h-3.5 w-3.5 text-amber-400" />
-                ) : (
-                  <MoonStar className="h-3.5 w-3.5" />
-                )}
-              </Button>
+              {/* Theme Toggle with System Option */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0 relative overflow-hidden"
+                    title="Change theme"
+                  >
+                    <Sun className={`h-3.5 w-3.5 absolute transition-all duration-500 ${
+                      theme === 'light' ? 'rotate-0 scale-100 opacity-100' : 'rotate-90 scale-0 opacity-0'
+                    } text-amber-500`} />
+                    <MoonStar className={`h-3.5 w-3.5 absolute transition-all duration-500 ${
+                      theme === 'dark' ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-0 opacity-0'
+                    } text-blue-400`} />
+                    <Monitor className={`h-3.5 w-3.5 absolute transition-all duration-500 ${
+                      theme === 'system' ? 'rotate-0 scale-100 opacity-100' : 'rotate-90 scale-0 opacity-0'
+                    }`} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[120px]">
+                  <DropdownMenuItem onClick={() => setTheme('light')} className="gap-2 cursor-pointer">
+                    <Sun className="h-4 w-4 text-amber-500" />
+                    <span>Light</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme('dark')} className="gap-2 cursor-pointer">
+                    <MoonStar className="h-4 w-4 text-blue-400" />
+                    <span>Dark</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme('system')} className="gap-2 cursor-pointer">
+                    <Monitor className="h-4 w-4" />
+                    <span>System</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button
                 variant={showDetailedView ? "default" : "outline"}
                 size="sm"
