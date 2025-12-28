@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { AnimatedMic } from '@/components/ui/AnimatedMic';
+import acupunctureRoomBg from '@/assets/acupuncture-room-bg.png';
 import { 
   Brain, 
   Send, 
@@ -715,7 +716,7 @@ export default function TcmBrain() {
                 onClick={toggleRecording}
                 className={isRecording ? 'bg-red-500/10 border-red-500 text-red-500' : ''}
               >
-                {isRecording ? <MicOff className="h-4 w-4" /> : <AnimatedMic size="sm" isRecording={false} />}
+                {isRecording ? <MicOff className="h-4 w-4" /> : <AnimatedMic size="sm" isRecording={isRecording} />}
               </Button>
             </div>
           </CardContent>
@@ -731,9 +732,15 @@ export default function TcmBrain() {
         <meta name="description" content="Comprehensive TCM knowledge base with AI" />
       </Helmet>
 
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="min-h-screen bg-background flex flex-col relative">
+        {/* Background Image with 75% transparency overlay */}
+        <div 
+          className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${acupunctureRoomBg})` }}
+        />
+        <div className="fixed inset-0 z-0 bg-background/75" />
         {/* Minimal Header */}
-        <header className="bg-card border-b border-border sticky top-0 z-50">
+        <header className="bg-card/90 backdrop-blur-sm border-b border-border sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-2 py-1.5 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Link 
@@ -793,7 +800,7 @@ export default function TcmBrain() {
         </header>
 
         {/* Main Content with Right Sidebar */}
-        <div className="flex-1 flex relative">
+        <div className="flex-1 flex relative z-10">
           {/* Main Area */}
           <main className="flex-1 flex flex-col max-w-6xl mx-auto w-full">
             {/* Disclaimer removed - only shown during therapist registration */}
@@ -1242,7 +1249,7 @@ export default function TcmBrain() {
                                 isRecording ? 'text-red-500 bg-red-500/10' : 'text-muted-foreground'
                               }`}
                             >
-                              {isRecording ? <MicOff className="h-5 w-5" /> : <AnimatedMic size="sm" isRecording={false} />}
+                              {isRecording ? <MicOff className="h-5 w-5" /> : <AnimatedMic size="sm" isRecording={isRecording} />}
                             </Button>
                           </div>
                           <Button 
@@ -1400,7 +1407,7 @@ export default function TcmBrain() {
                         isRecording ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20' : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
-                      {isRecording ? <MicOff className="h-4 w-4" /> : <AnimatedMic size="sm" isRecording={false} />}
+                      {isRecording ? <MicOff className="h-4 w-4" /> : <AnimatedMic size="sm" isRecording={isRecording} />}
                     </Button>
                   </div>
                   <Button 
@@ -1595,7 +1602,7 @@ Include:
                     setRightSidebarOpen(false);
                   }}
                 >
-                  {isRecording ? <MicOff className="h-4 w-4 text-red-500" /> : <AnimatedMic size="sm" isRecording={false} />}
+                  {isRecording ? <MicOff className="h-4 w-4 text-red-500" /> : <AnimatedMic size="sm" isRecording={isRecording} />}
                   {isRecording ? 'Stop Recording' : 'Voice Input'}
                 </Button>
                 <Button
