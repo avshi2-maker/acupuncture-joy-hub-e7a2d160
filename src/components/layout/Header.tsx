@@ -11,6 +11,7 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isPlayingBio, setIsPlayingBio] = useState(false);
+  const [bioProgress, setBioProgress] = useState(0);
   const bioAudioRef = useRef<HTMLAudioElement | null>(null);
   const location = useLocation();
   const { t } = useLanguage();
@@ -32,14 +33,26 @@ const Header = () => {
   const handleBioToggle = () => {
     if (!bioAudioRef.current) {
       bioAudioRef.current = new Audio('/audio/roni_bio.mp3');
-      bioAudioRef.current.onended = () => setIsPlayingBio(false);
-      bioAudioRef.current.onerror = () => setIsPlayingBio(false);
+      bioAudioRef.current.onended = () => {
+        setIsPlayingBio(false);
+        setBioProgress(0);
+      };
+      bioAudioRef.current.onerror = () => {
+        setIsPlayingBio(false);
+        setBioProgress(0);
+      };
+      bioAudioRef.current.ontimeupdate = () => {
+        if (bioAudioRef.current && bioAudioRef.current.duration) {
+          setBioProgress((bioAudioRef.current.currentTime / bioAudioRef.current.duration) * 100);
+        }
+      };
     }
     
     if (isPlayingBio) {
       bioAudioRef.current.pause();
       bioAudioRef.current.currentTime = 0;
       setIsPlayingBio(false);
+      setBioProgress(0);
     } else {
       bioAudioRef.current.currentTime = 0;
       bioAudioRef.current.play().then(() => {
@@ -61,6 +74,7 @@ const Header = () => {
       bioAudioRef.current.pause();
       bioAudioRef.current.currentTime = 0;
       setIsPlayingBio(false);
+      setBioProgress(0);
     }
   };
 
@@ -79,28 +93,44 @@ const Header = () => {
             <Leaf className={`w-6 h-6 transition-colors duration-300 ${isScrolled || !isHomePage ? 'text-jade' : 'text-primary-foreground'}`} />
           </div>
           <div className={`font-display tracking-wide transition-colors duration-300 ${isScrolled || !isHomePage ? 'text-foreground' : 'text-primary-foreground'} hidden sm:flex flex-col leading-tight`}>
-            <button 
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleBioToggle();
-              }}
-              onMouseEnter={handleBioHover}
-              onMouseLeave={handleBioLeave}
-              className="text-lg lg:text-xl font-bold cursor-pointer hover:underline underline-offset-2 inline-flex items-center gap-2 text-left"
-            >
-              Dr Roni Sapir
+            <div className="relative inline-block">
+              <button 
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleBioToggle();
+                }}
+                onMouseEnter={handleBioHover}
+                onMouseLeave={handleBioLeave}
+                className="text-lg lg:text-xl font-bold cursor-pointer hover:underline underline-offset-2 inline-flex items-center gap-2 text-left group/bio relative"
+                title={isPlayingBio ? "Click to stop" : "Click to hear bio"}
+              >
+                Dr Roni Sapir
+                {isPlayingBio ? (
+                  <span className="inline-flex items-center gap-0.5 h-4">
+                    <span className="w-0.5 h-full bg-gold rounded-full animate-waveform" style={{ animationDelay: '0ms' }} />
+                    <span className="w-0.5 h-3 bg-gold rounded-full animate-waveform" style={{ animationDelay: '100ms' }} />
+                    <span className="w-0.5 h-full bg-gold rounded-full animate-waveform" style={{ animationDelay: '200ms' }} />
+                    <span className="w-0.5 h-2 bg-gold rounded-full animate-waveform" style={{ animationDelay: '300ms' }} />
+                    <span className="w-0.5 h-3 bg-gold rounded-full animate-waveform" style={{ animationDelay: '400ms' }} />
+                  </span>
+                ) : (
+                  <span className="text-xs opacity-0 group-hover/bio:opacity-70 transition-opacity duration-200 font-normal whitespace-nowrap">
+                    🔊 Click to hear bio
+                  </span>
+                )}
+              </button>
+              {/* Progress bar */}
               {isPlayingBio && (
-                <span className="inline-flex items-center gap-0.5 h-4">
-                  <span className="w-0.5 h-full bg-gold rounded-full animate-[waveform_0.5s_ease-in-out_infinite]" style={{ animationDelay: '0ms' }} />
-                  <span className="w-0.5 h-3 bg-gold rounded-full animate-[waveform_0.5s_ease-in-out_infinite]" style={{ animationDelay: '100ms' }} />
-                  <span className="w-0.5 h-full bg-gold rounded-full animate-[waveform_0.5s_ease-in-out_infinite]" style={{ animationDelay: '200ms' }} />
-                  <span className="w-0.5 h-2 bg-gold rounded-full animate-[waveform_0.5s_ease-in-out_infinite]" style={{ animationDelay: '300ms' }} />
-                  <span className="w-0.5 h-3 bg-gold rounded-full animate-[waveform_0.5s_ease-in-out_infinite]" style={{ animationDelay: '400ms' }} />
-                </span>
+                <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary-foreground/20 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gold transition-all duration-150 ease-linear rounded-full"
+                    style={{ width: `${bioProgress}%` }}
+                  />
+                </div>
               )}
-            </button>
+            </div>
             <span className="text-sm lg:text-base font-semibold opacity-90">Complementary Medicine - Acupuncture Clinic</span>
             <span className="text-xs lg:text-sm font-normal opacity-70 italic">Healing Through Balance with AI</span>
           </div>
