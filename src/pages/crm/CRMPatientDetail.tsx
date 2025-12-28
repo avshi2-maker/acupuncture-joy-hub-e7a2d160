@@ -13,10 +13,12 @@ import { toast } from 'sonner';
 import { 
   ArrowLeft, User, Phone, Mail, Calendar, MapPin, Heart, 
   Activity, FileText, Plus, Edit, Trash2, Baby, AlertTriangle,
-  Clock, Stethoscope, Pill, Brain, Moon, Utensils, Video, Play, Pause
+  Clock, Stethoscope, Pill, Brain, Moon, Utensils, Video, Play, Pause,
+  Sparkles, Headphones
 } from 'lucide-react';
 import { AnimatedMic } from '@/components/ui/AnimatedMic';
 import { VisitFormDialog } from '@/components/crm/VisitFormDialog';
+import { SessionReportDialog } from '@/components/video/SessionReportDialog';
 
 interface Patient {
   id: string;
@@ -125,6 +127,8 @@ export default function CRMPatientDetail() {
   const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [selectedSessionForReport, setSelectedSessionForReport] = useState<VideoSession | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -599,13 +603,28 @@ export default function CRMPatientDetail() {
                         </Badge>
                       </CardDescription>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => handleDeleteVideoSession(session.id)}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setSelectedSessionForReport(session);
+                          setShowReportDialog(true);
+                        }}
+                        disabled={!session.notes}
+                        className="gap-1 text-purple-600 border-purple-200 hover:bg-purple-50"
+                      >
+                        <Sparkles className="h-3 w-3" />
+                        דו"ח + MP3
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleDeleteVideoSession(session.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {session.notes && (
@@ -1058,6 +1077,20 @@ export default function CRMPatientDetail() {
           patientId={id!}
           visit={selectedVisit}
           onSaved={handleVisitSaved}
+        />
+        
+        {/* Session Report Dialog */}
+        <SessionReportDialog
+          open={showReportDialog}
+          onOpenChange={setShowReportDialog}
+          patientName={patient.full_name}
+          patientPhone={patient.phone}
+          sessionNotes={selectedSessionForReport?.notes || ''}
+          anxietyResponses={
+            Array.isArray(selectedSessionForReport?.anxiety_qa_responses) 
+              ? selectedSessionForReport?.anxiety_qa_responses as string[]
+              : undefined
+          }
         />
       </div>
     </CRMLayout>
