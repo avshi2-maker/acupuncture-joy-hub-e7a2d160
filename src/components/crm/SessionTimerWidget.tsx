@@ -133,7 +133,7 @@ export function SessionTimerWidget({
   return (
     <div 
       className={cn(
-        "fixed z-40 transition-all duration-300",
+        "fixed z-20 transition-all duration-300",
         positionClasses[position],
         className
       )}
