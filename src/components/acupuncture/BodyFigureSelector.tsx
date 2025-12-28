@@ -635,28 +635,30 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Image with points */}
-          <Card className="lg:col-span-2 overflow-hidden">
-            <CardHeader className="py-3">
+          {/* Image with points - Enhanced with thicker border */}
+          <Card className="lg:col-span-2 overflow-hidden border-4 border-jade/40 shadow-xl ring-2 ring-jade/20 bg-gradient-to-br from-card to-jade/5">
+            <CardHeader className="py-4 bg-gradient-to-r from-jade/10 to-transparent border-b-2 border-jade/20">
               <CardTitle className="text-lg flex items-center gap-2 flex-wrap">
-                <MapPin className="h-5 w-5 text-primary" />
+                <div className="w-8 h-8 rounded-lg bg-jade/20 flex items-center justify-center">
+                  <MapPin className="h-5 w-5 text-jade" />
+                </div>
                 {getFigureName(selectedFigure)}
-                <Badge variant="secondary" className="ml-2">
+                <Badge variant="secondary" className="ml-2 bg-jade/10 border-jade/30">
                   {figurePoints.length} points
                 </Badge>
                 {highlightedPoints.length > 0 && (
-                  <Badge variant="default" className="ml-1 bg-jade">
+                  <Badge variant="default" className="ml-1 bg-jade shadow-md">
                     {figurePoints.filter(p => highlightedPoints.includes(p.point_code)).length} recommended
                   </Badge>
                 )}
                 {multiSelectMode && (
-                  <Badge variant="outline" className="ml-1 border-jade text-jade">
+                  <Badge variant="outline" className="ml-1 border-jade text-jade bg-jade/10">
                     Click points to select
                   </Badge>
                 )}
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
+            <CardContent className="p-2 bg-background/50">
               <ScrollArea className="h-[500px]">
                 <div 
                   className="relative inline-block"

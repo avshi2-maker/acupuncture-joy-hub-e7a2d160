@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -50,7 +51,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { ElevenLabsWidget } from '@/components/ui/ElevenLabsWidget';
+
 import {
   herbsQuestions,
   pointsQuestions,
@@ -315,6 +316,7 @@ export default function TcmBrain() {
   const [selectedAstroQuestion, setSelectedAstroQuestion] = useState('');
   const [showDetailedView, setShowDetailedView] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [showInlineChat, setShowInlineChat] = useState(false);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -787,31 +789,49 @@ export default function TcmBrain() {
               /* Main Queries View - First Page (No Quick Questions) */
               <div className="flex-1 p-4 space-y-4">
 
-                {/* 3 Main Query Categories */}
-                <div className="grid md:grid-cols-3 gap-4">
+                {/* 3 Main Query Categories - Enhanced Design */}
+                <div className="grid md:grid-cols-3 gap-6">
                   {mainQueryCategories.map((category) => {
                     const categories = [...new Set(category.questions.map(q => q.category))].sort();
                     const isExpanded = expandedCategory === category.id;
                     return (
-                      <Card key={category.id} className={`bg-card border-border hover:border-jade/50 transition-colors ${isExpanded ? 'md:col-span-3' : ''}`}>
-                        <CardHeader className="pb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-jade-light flex items-center justify-center">
-                              <category.icon className="h-5 w-5 text-jade" />
+                      <Card 
+                        key={category.id} 
+                        className={`relative overflow-hidden bg-gradient-to-br from-card via-card to-jade/5 
+                                   border-2 border-border/60 hover:border-jade/60 
+                                   shadow-lg hover:shadow-xl hover:shadow-jade/10
+                                   transition-all duration-300 
+                                   ${isExpanded ? 'md:col-span-3 ring-2 ring-jade/30' : 'hover:-translate-y-1'}`}
+                      >
+                        {/* Decorative corner accent */}
+                        <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-jade/10 to-transparent rounded-bl-full" />
+                        
+                        <CardHeader className="pb-4 relative">
+                          <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-jade-light to-jade/20 
+                                          flex items-center justify-center shadow-md border border-jade/20
+                                          group-hover:scale-105 transition-transform">
+                              <category.icon className="h-7 w-7 text-jade" />
                             </div>
-                            <div>
-                              <CardTitle className="text-base">{category.title}</CardTitle>
-                              <p className="text-xs text-muted-foreground">{category.description}</p>
+                            <div className="flex-1">
+                              <CardTitle className="text-lg font-display">{category.title}</CardTitle>
+                              <p className="text-sm text-muted-foreground mt-0.5">{category.description}</p>
+                              <Badge variant="secondary" className="mt-2 text-xs bg-jade/10 text-jade border-jade/20">
+                                {category.questions.length} questions
+                              </Badge>
                             </div>
                           </div>
                         </CardHeader>
-                        <CardContent className="space-y-2">
+                        <CardContent className="space-y-3 pt-0">
                           {isExpanded ? (
-                            <div className="grid md:grid-cols-3 gap-3">
+                            <div className="grid md:grid-cols-3 gap-4 p-3 bg-background/50 rounded-xl border border-border/50">
                               {categories.map(cat => (
-                                <div key={cat} className="space-y-1">
-                                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{cat}</h4>
-                                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                                <div key={cat} className="space-y-2">
+                                  <h4 className="text-xs font-semibold text-jade uppercase tracking-wider flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-jade" />
+                                    {cat}
+                                  </h4>
+                                  <div className="space-y-1 max-h-48 overflow-y-auto pr-2">
                                     {category.questions
                                       .filter(q => q.category === cat)
                                       .sort((a, b) => a.question.localeCompare(b.question))
@@ -819,11 +839,15 @@ export default function TcmBrain() {
                                         <button
                                           key={q.id}
                                           onClick={() => handleQAQuestionSelect(q.question)}
-                                          className="w-full text-left text-xs p-2 rounded hover:bg-jade/20 hover:pl-4 transition-all duration-200 group flex items-center gap-2 border border-transparent hover:border-jade/30"
+                                          className="w-full text-left text-xs p-2.5 rounded-lg 
+                                                   bg-card hover:bg-jade/15 hover:pl-5 
+                                                   transition-all duration-200 group 
+                                                   flex items-center gap-2 
+                                                   border border-border/50 hover:border-jade/40
+                                                   shadow-sm hover:shadow-md"
                                         >
                                           <Send className="h-3 w-3 opacity-0 group-hover:opacity-100 text-jade transition-opacity shrink-0" />
                                           <span className="flex-1">{q.question}</span>
-                                          <span className="text-[10px] text-jade opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Click to ask</span>
                                         </button>
                                       ))}
                                   </div>
@@ -831,34 +855,36 @@ export default function TcmBrain() {
                               ))}
                             </div>
                           ) : (
-                            categories.slice(0, 3).map(cat => (
-                              <Select
-                                key={cat}
-                                onValueChange={(value) => handleQAQuestionSelect(value)}
-                              >
-                                <SelectTrigger className="text-left text-sm h-8">
-                                  <SelectValue placeholder={cat} />
-                                </SelectTrigger>
-                                <SelectContent className="bg-card border-border z-50 max-h-60">
-                                  {category.questions
-                                    .filter(q => q.category === cat)
-                                    .sort((a, b) => a.question.localeCompare(b.question))
-                                    .map(q => (
-                                      <SelectItem key={q.id} value={q.question} className="text-left text-sm cursor-pointer">
-                                        <span className="flex items-center gap-2">
-                                          <Send className="h-3 w-3 text-jade" />
-                                          {q.question}
-                                        </span>
-                                      </SelectItem>
-                                    ))}
-                                </SelectContent>
-                              </Select>
-                            ))
+                            <div className="space-y-2">
+                              {categories.slice(0, 3).map(cat => (
+                                <Select
+                                  key={cat}
+                                  onValueChange={(value) => handleQAQuestionSelect(value)}
+                                >
+                                  <SelectTrigger className="text-left text-sm h-10 bg-background/80 border-border/60 hover:border-jade/50 transition-colors">
+                                    <SelectValue placeholder={cat} />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-card border-border z-50 max-h-60">
+                                    {category.questions
+                                      .filter(q => q.category === cat)
+                                      .sort((a, b) => a.question.localeCompare(b.question))
+                                      .map(q => (
+                                        <SelectItem key={q.id} value={q.question} className="text-left text-sm cursor-pointer">
+                                          <span className="flex items-center gap-2">
+                                            <Send className="h-3 w-3 text-jade" />
+                                            {q.question}
+                                          </span>
+                                        </SelectItem>
+                                      ))}
+                                  </SelectContent>
+                                </Select>
+                              ))}
+                            </div>
                           )}
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="w-full text-jade hover:text-jade-dark text-xs h-7"
+                            className="w-full text-jade hover:text-jade-dark hover:bg-jade/10 text-xs h-9 mt-2 font-medium"
                             onClick={() => setExpandedCategory(isExpanded ? null : category.id)}
                           >
                             {isExpanded ? '← Collapse' : `View all ${category.questions.length} questions →`}
@@ -886,30 +912,86 @@ export default function TcmBrain() {
                   </div>
                 )}
 
-                {/* Ask AI/RAG Button */}
-                <div className="pt-4 flex justify-center">
-                  <button
-                    onClick={() => {
-                      setShowDetailedView(true);
-                      setActiveFeatureTab('chat');
-                      setTimeout(() => chatInputRef.current?.focus(), 100);
-                    }}
-                    className="group relative flex items-center gap-3 px-8 py-4 rounded-2xl 
-                               bg-gradient-to-r from-jade-600 via-jade-500 to-jade-600
-                               hover:from-jade-500 hover:via-jade-400 hover:to-jade-500
-                               text-white font-semibold text-lg shadow-lg hover:shadow-xl
-                               transition-all duration-300 hover:scale-105
-                               border border-jade-400/30 overflow-hidden"
-                  >
-                    {/* Animated background pattern */}
-                    <div className="absolute inset-0 opacity-20">
-                      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgY3g9IjIwIiBjeT0iMjAiIHI9IjIiIGZpbGw9IndoaXRlIiBmaWxsLW9wYWNpdHk9IjAuMyIvPjwvZz48L3N2Zz4=')] animate-pulse" />
-                    </div>
-                    
-                    <Brain className="h-6 w-6 relative z-10" />
-                    <span className="relative z-10">Ask AI / RAG</span>
-                    <Sparkles className="h-5 w-5 relative z-10 text-gold-light group-hover:animate-bounce" />
-                  </button>
+                {/* Ask AI/RAG Button with Inline Chat Expansion */}
+                <div className="pt-4 space-y-4">
+                  <div className="flex justify-center">
+                    <button
+                      onClick={() => setShowInlineChat(!showInlineChat)}
+                      className="group relative flex items-center gap-3 px-8 py-4 rounded-2xl 
+                                 bg-gradient-to-r from-jade-600 via-jade-500 to-jade-600
+                                 hover:from-jade-500 hover:via-jade-400 hover:to-jade-500
+                                 text-white font-semibold text-lg shadow-lg hover:shadow-xl
+                                 transition-all duration-300 hover:scale-105
+                                 border border-jade-400/30 overflow-hidden"
+                    >
+                      {/* Animated background pattern */}
+                      <div className="absolute inset-0 opacity-20">
+                        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgY3g9IjIwIiBjeT0iMjAiIHI9IjIiIGZpbGw9IndoaXRlIiBmaWxsLW9wYWNpdHk9IjAuMyIvPjwvZz48L3N2Zz4=')] animate-pulse" />
+                      </div>
+                      
+                      <Brain className="h-6 w-6 relative z-10" />
+                      <span className="relative z-10">{showInlineChat ? 'Close Chat' : 'Ask AI / RAG'}</span>
+                      <Sparkles className="h-5 w-5 relative z-10 text-gold-light group-hover:animate-bounce" />
+                    </button>
+                  </div>
+                  
+                  {/* Inline Chat Expansion */}
+                  {showInlineChat && (
+                    <Card className="max-w-2xl mx-auto border-2 border-jade/30 shadow-lg animate-fade-in-up">
+                      <CardContent className="p-4">
+                        <form 
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            if (!input.trim() || isLoading) return;
+                            const message = input.trim();
+                            setInput('');
+                            streamChat(message);
+                          }} 
+                          className="flex gap-2"
+                        >
+                          <div className="flex-1 relative">
+                            <Input
+                              ref={chatInputRef}
+                              value={input}
+                              onChange={(e) => setInput(e.target.value)}
+                              placeholder="Ask any TCM question..."
+                              disabled={isLoading}
+                              autoFocus
+                              className="text-left pr-12 h-12 rounded-xl border-jade/30 focus:border-jade transition-colors"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={toggleRecording}
+                              className={`absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 rounded-lg ${
+                                isRecording ? 'text-red-500 bg-red-500/10' : 'text-muted-foreground'
+                              }`}
+                            >
+                              {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                            </Button>
+                          </div>
+                          <Button 
+                            type="submit" 
+                            disabled={isLoading || !input.trim()}
+                            className="h-12 px-6 rounded-xl bg-jade hover:bg-jade/90"
+                          >
+                            {isLoading ? (
+                              <Loader2 className="h-5 w-5 animate-spin" />
+                            ) : (
+                              <>
+                                <Send className="h-5 w-5 mr-2" />
+                                Send
+                              </>
+                            )}
+                          </Button>
+                        </form>
+                        <p className="text-xs text-muted-foreground mt-3 text-center">
+                          Ask about herbs, acupuncture points, TCM patterns, and more
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
 
                 {/* Clear Chat Button */}
@@ -1310,8 +1392,6 @@ Include:
         </div>
       </div>
 
-      {/* ElevenLabs Voice Agent Widget */}
-      <ElevenLabsWidget agentId="agent_9301kdj55g7ef3tadnchsm54vxwt" />
     </>
   );
 }
