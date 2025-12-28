@@ -63,8 +63,11 @@ import { SessionTimerProvider } from '@/contexts/SessionTimerContext';
 import { useSessionPersistence } from '@/hooks/useSessionPersistence';
 import { useTier } from '@/hooks/useTier';
 import { TierBadge } from '@/components/layout/TierBadge';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import aiGeneratorBg from '@/assets/ai-generator-bg.png';
+import animatedMicGif from '@/assets/mic-animated.gif';
 
 interface Patient {
   id: string;
@@ -369,10 +372,10 @@ export default function VideoSession() {
     });
   };
 
-  // AI Query handler
+  // AI Query handler - sends to tcm-rag-chat function
   const handleAiQuery = async (type: 'nutrition' | 'herbs' | 'diagnosis' | 'mental' | 'sleep' | 'worklife' | 'wellness' | 'sports' | 'bazi' | 'astro' | 'points') => {
     if (!aiQueryInput.trim()) {
-      toast.error('נא להזין שאלה');
+      toast.error('Please enter a question');
       return;
     }
     setAiQueryLoading(true);
@@ -385,10 +388,10 @@ export default function VideoSession() {
         }
       });
       if (error) throw error;
-      setAiQueryResult(data?.response || 'לא התקבלה תשובה');
+      setAiQueryResult(data?.response || 'No response received');
     } catch (error) {
       console.error('AI Query error:', error);
-      toast.error('שגיאה בשליחת השאלה');
+      toast.error('Error sending question to AI');
     } finally {
       setAiQueryLoading(false);
     }
@@ -446,10 +449,11 @@ export default function VideoSession() {
               </div>
             </Link>
             <div className="flex items-center gap-3">
+              <LanguageSwitcher variant="outline" isScrolled={true} />
               <Button asChild variant="outline" size="sm">
                 <Link to="/dashboard" className="gap-2">
                   <ArrowRight className="h-4 w-4" />
-                  חזרה לדשבורד
+                  Dashboard
                 </Link>
               </Button>
               <TierBadge />
@@ -457,7 +461,7 @@ export default function VideoSession() {
           </div>
         </header>
 
-        {/* CAF Asset Boxes */}
+        {/* CAF Asset Boxes - All connected to RAG */}
         <div className="px-4 pt-4 pb-2">
           <div className="flex flex-wrap gap-2">
             {/* Herbs */}
@@ -468,7 +472,7 @@ export default function VideoSession() {
               className="gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200"
             >
               <Leaf className="h-4 w-4" />
-              צמחי מרפא
+              Herbs
             </Button>
             {/* Nutrition */}
             <Button 
@@ -478,7 +482,7 @@ export default function VideoSession() {
               className="gap-1.5 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
             >
               <Apple className="h-4 w-4" />
-              תזונה
+              Nutrition
             </Button>
             {/* Mental Health */}
             <Button 
@@ -488,7 +492,7 @@ export default function VideoSession() {
               className="gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200"
             >
               <Heart className="h-4 w-4" />
-              בריאות הנפש
+              Mental
             </Button>
             {/* Sleep */}
             <Button 
@@ -498,7 +502,7 @@ export default function VideoSession() {
               className="gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200"
             >
               <Moon className="h-4 w-4" />
-              שינה
+              Sleep
             </Button>
             {/* Work-Life Balance */}
             <Button 
@@ -508,7 +512,7 @@ export default function VideoSession() {
               className="gap-1.5 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border-cyan-200"
             >
               <Briefcase className="h-4 w-4" />
-              איזון
+              Balance
             </Button>
             {/* Wellness */}
             <Button 
@@ -518,7 +522,7 @@ export default function VideoSession() {
               className="gap-1.5 bg-teal-50 hover:bg-teal-100 text-teal-700 border-teal-200"
             >
               <Activity className="h-4 w-4" />
-              בריאות
+              Wellness
             </Button>
             {/* Sports */}
             <Button 
@@ -528,7 +532,7 @@ export default function VideoSession() {
               className="gap-1.5 bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200"
             >
               <Dumbbell className="h-4 w-4" />
-              ספורט
+              Sports
             </Button>
             {/* Bazi */}
             <Button 
@@ -538,7 +542,7 @@ export default function VideoSession() {
               className="gap-1.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border-yellow-200"
             >
               <Compass className="h-4 w-4" />
-              באזי
+              Bazi
             </Button>
             {/* Astrology */}
             <Button 
@@ -548,7 +552,7 @@ export default function VideoSession() {
               className="gap-1.5 bg-violet-50 hover:bg-violet-100 text-violet-700 border-violet-200"
             >
               <Star className="h-4 w-4" />
-              אסטרולוגיה
+              Astrology
             </Button>
             {/* Acupuncture Points */}
             <Button 
@@ -558,7 +562,7 @@ export default function VideoSession() {
               className="gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200"
             >
               <MapPin className="h-4 w-4" />
-              נקודות
+              Points
             </Button>
             {/* Diagnosis */}
             <Button 
@@ -568,11 +572,35 @@ export default function VideoSession() {
               className="gap-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200"
             >
               <Stethoscope className="h-4 w-4" />
-              אבחון
+              Diagnosis
             </Button>
           </div>
           {/* Second Row - Main Actions */}
-          <div className="flex flex-wrap gap-2 mt-2">
+          <div className="flex flex-wrap gap-2 mt-3">
+            {/* Animated AI Query Button */}
+            <button
+              onClick={() => setActiveAiQuery(activeAiQuery ? null : 'nutrition')}
+              className="relative overflow-hidden rounded-lg px-4 py-2 text-white font-medium shadow-lg 
+                         hover:scale-105 transition-all duration-300 animate-pulse-slow group"
+              style={{
+                background: `linear-gradient(135deg, rgba(22, 163, 74, 0.9), rgba(6, 95, 70, 0.95))`,
+              }}
+            >
+              <div 
+                className="absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity"
+                style={{
+                  backgroundImage: `url(${aiGeneratorBg})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              />
+              <div className="relative flex items-center gap-2">
+                <Sparkles className="h-5 w-5 animate-bounce" />
+                <span>Ask AI / RAG</span>
+                <Brain className="h-4 w-4" />
+              </div>
+            </button>
+            
             <Button 
               variant="outline" 
               size="sm" 
@@ -580,7 +608,7 @@ export default function VideoSession() {
               className="gap-1.5 bg-rose-100 hover:bg-rose-200 text-rose-800 border-rose-300"
             >
               <Heart className="h-4 w-4" />
-              שאלון חרדה מלא
+              Anxiety Q&A
             </Button>
             <Button 
               variant="outline" 
@@ -592,60 +620,85 @@ export default function VideoSession() {
               CM Brain
               <span className="ms-1 text-[11px] opacity-80">(150)</span>
             </Button>
-            {/* CM Brain full experience requires signed disclaimer; in-session we use the 150 questions page to avoid interruptions */}
-            {/* (Button removed to prevent redirect to therapist disclaimer during a live session) */}
             <Button 
               variant="outline" 
               size="sm" 
               onClick={() => setShowSessionReport(true)}
               disabled={!selectedPatientId || !sessionNotes}
               className="gap-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-800 border-indigo-300"
+              title="Generate AI summary report of the session notes"
             >
               <FileText className="h-4 w-4" />
-              דו"ח AI
+              AI Report
             </Button>
           </div>
         </div>
 
-        {/* AI Query Panel */}
+        {/* AI Query Panel with Voice Input */}
         {activeAiQuery && (
           <div className="px-4 pb-2">
-            <Card className="border-jade/30 bg-jade/5">
-              <CardContent className="p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  {activeAiQuery === 'nutrition' && <Apple className="h-4 w-4 text-green-600" />}
-                  {activeAiQuery === 'herbs' && <Leaf className="h-4 w-4 text-amber-600" />}
-                  {activeAiQuery === 'diagnosis' && <Stethoscope className="h-4 w-4 text-purple-600" />}
-                  {activeAiQuery === 'mental' && <Heart className="h-4 w-4 text-rose-600" />}
-                  {activeAiQuery === 'sleep' && <Moon className="h-4 w-4 text-indigo-600" />}
-                  {activeAiQuery === 'worklife' && <Briefcase className="h-4 w-4 text-cyan-600" />}
-                  {activeAiQuery === 'wellness' && <Activity className="h-4 w-4 text-teal-600" />}
-                  {activeAiQuery === 'sports' && <Dumbbell className="h-4 w-4 text-orange-600" />}
-                  {activeAiQuery === 'bazi' && <Compass className="h-4 w-4 text-yellow-600" />}
-                  {activeAiQuery === 'astro' && <Star className="h-4 w-4 text-violet-600" />}
-                  {activeAiQuery === 'points' && <MapPin className="h-4 w-4 text-emerald-600" />}
-                  <span className="text-sm font-medium">
-                    שאלה בנושא {activeAiQuery}
+            <Card className="border-jade/30 bg-jade/5 overflow-hidden">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  {activeAiQuery === 'nutrition' && <Apple className="h-5 w-5 text-green-600" />}
+                  {activeAiQuery === 'herbs' && <Leaf className="h-5 w-5 text-amber-600" />}
+                  {activeAiQuery === 'diagnosis' && <Stethoscope className="h-5 w-5 text-purple-600" />}
+                  {activeAiQuery === 'mental' && <Heart className="h-5 w-5 text-rose-600" />}
+                  {activeAiQuery === 'sleep' && <Moon className="h-5 w-5 text-indigo-600" />}
+                  {activeAiQuery === 'worklife' && <Briefcase className="h-5 w-5 text-cyan-600" />}
+                  {activeAiQuery === 'wellness' && <Activity className="h-5 w-5 text-teal-600" />}
+                  {activeAiQuery === 'sports' && <Dumbbell className="h-5 w-5 text-orange-600" />}
+                  {activeAiQuery === 'bazi' && <Compass className="h-5 w-5 text-yellow-600" />}
+                  {activeAiQuery === 'astro' && <Star className="h-5 w-5 text-violet-600" />}
+                  {activeAiQuery === 'points' && <MapPin className="h-5 w-5 text-emerald-600" />}
+                  <span className="text-sm font-semibold capitalize">
+                    Ask about: {activeAiQuery}
                   </span>
+                  <span className="text-xs text-muted-foreground ml-2">(Connected to RAG)</span>
                 </div>
-                <div className="flex gap-2">
-                  <Textarea
-                    value={aiQueryInput}
-                    onChange={(e) => setAiQueryInput(e.target.value)}
-                    placeholder="שאל שאלה..."
-                    rows={2}
-                    className="flex-1"
-                  />
+                <div className="flex gap-2 items-end">
+                  <div className="flex-1 relative">
+                    <Textarea
+                      value={aiQueryInput}
+                      onChange={(e) => setAiQueryInput(e.target.value)}
+                      placeholder="Type your question or use voice input..."
+                      rows={2}
+                      className="pr-12"
+                    />
+                    {/* Voice Microphone Button */}
+                    <button 
+                      onClick={() => setShowVoiceDictation(true)}
+                      className="absolute bottom-2 right-2 p-1 rounded-full hover:bg-jade/10 transition-colors"
+                      title="Voice input"
+                    >
+                      <img 
+                        src={animatedMicGif} 
+                        alt="Voice input" 
+                        className="h-8 w-8 object-contain"
+                      />
+                    </button>
+                  </div>
                   <Button 
                     onClick={() => handleAiQuery(activeAiQuery)} 
-                    disabled={aiQueryLoading}
-                    className="bg-jade hover:bg-jade/90"
+                    disabled={aiQueryLoading || !aiQueryInput.trim()}
+                    className="bg-jade hover:bg-jade/90 h-12 px-4"
                   >
-                    {aiQueryLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    {aiQueryLoading ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4 mr-2" />
+                        Send
+                      </>
+                    )}
                   </Button>
                 </div>
                 {aiQueryResult && (
-                  <div className="mt-3 p-3 bg-background rounded-lg border text-sm">
+                  <div className="mt-4 p-4 bg-background rounded-lg border text-sm whitespace-pre-wrap">
+                    <div className="flex items-center gap-2 mb-2 text-jade font-medium">
+                      <Sparkles className="h-4 w-4" />
+                      AI Response
+                    </div>
                     {aiQueryResult}
                   </div>
                 )}
