@@ -39,6 +39,7 @@ import QATesting from "./pages/QATesting";
 import EncyclopediaLanding from "./pages/EncyclopediaLanding";
 import Developers from "./pages/Developers";
 import ScenariosDashboard from "./pages/ScenariosDashboard";
+import TherapistDisclaimer from "./pages/TherapistDisclaimer";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,7 @@ const App = () => (
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/tcm-brain" element={<TcmBrain />} />
+                    <Route path="/therapist-disclaimer" element={<TherapistDisclaimer />} />
                     <Route path="/crm" element={<CRMDashboard />} />
                     <Route path="/crm/dashboard" element={<CRMDashboard />} />
                     <Route path="/crm/calendar" element={<CRMCalendar />} />
