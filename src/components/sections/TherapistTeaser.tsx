@@ -72,6 +72,7 @@ const TherapistTeaser = () => {
   const [narrationVolume, setNarrationVolume] = useState(80); // 0-100
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [showSubtitles, setShowSubtitles] = useState(true);
+  const [subtitleSize, setSubtitleSize] = useState(20); // Font size in px (14-32)
   const [currentSubtitle, setCurrentSubtitle] = useState<string>("");
   const [videoVolume, setVideoVolume] = useState(100); // For ducking
   const originalVolumeRef = useRef(100); // Store original volume before ducking
@@ -481,7 +482,11 @@ const TherapistTeaser = () => {
             {/* Hebrew Subtitles Overlay - Time-synced */}
             {isPlaying && showSubtitles && currentSubtitle && (
               <div className="absolute bottom-16 left-0 right-0 flex justify-center px-4 pointer-events-none">
-                <div className="bg-green-200/90 text-gray-900 text-lg md:text-xl px-6 py-3 rounded-lg text-center max-w-3xl font-medium" dir="rtl">
+                <div 
+                  className="bg-green-200/90 text-gray-900 px-6 py-3 rounded-lg text-center max-w-3xl font-subtitle font-light"
+                  style={{ fontSize: `${subtitleSize}px` }}
+                  dir="rtl"
+                >
                   {currentSubtitle}
                 </div>
               </div>
@@ -549,18 +554,36 @@ const TherapistTeaser = () => {
                     {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
                   </button>
                   
-                  {/* Subtitles Toggle */}
-                  <button
-                    onClick={toggleSubtitles}
-                    className={`px-2 py-1 rounded text-sm transition-colors ${
-                      showSubtitles 
-                        ? 'bg-white/30 text-white' 
-                        : 'bg-white/10 text-white/60'
-                    }`}
-                    title={showSubtitles ? "Hide subtitles" : "Show subtitles"}
-                  >
-                    CC
-                  </button>
+                  {/* Subtitles Toggle with Size Slider */}
+                  <div className="relative flex items-center gap-1">
+                    <button
+                      onClick={toggleSubtitles}
+                      className={`px-2 py-1 rounded text-sm transition-colors ${
+                        showSubtitles 
+                          ? 'bg-white/30 text-white' 
+                          : 'bg-white/10 text-white/60'
+                      }`}
+                      title={showSubtitles ? "Hide subtitles" : "Show subtitles"}
+                    >
+                      CC
+                    </button>
+                    
+                    {/* Subtitle size slider */}
+                    {showSubtitles && (
+                      <div className="flex items-center gap-2 bg-black/60 rounded-lg px-2 py-1">
+                        <span className="text-white/70 text-xs">A</span>
+                        <Slider
+                          value={[subtitleSize]}
+                          onValueChange={(value) => setSubtitleSize(value[0])}
+                          min={14}
+                          max={32}
+                          step={2}
+                          className="w-16"
+                        />
+                        <span className="text-white/70 text-sm font-bold">A</span>
+                      </div>
+                    )}
+                  </div>
                   
                   {/* Hebrew Narration Toggle with Volume */}
                   <div className="relative flex items-center gap-1">

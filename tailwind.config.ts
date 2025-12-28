@@ -16,6 +16,7 @@ export default {
       fontFamily: {
         display: ['Cormorant Garamond', 'serif'],
         body: ['Lato', 'sans-serif'],
+        subtitle: ['Rubik', 'Varela Round', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
