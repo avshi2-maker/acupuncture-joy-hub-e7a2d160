@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -27,7 +27,8 @@ import {
   Settings,
   X,
   Check,
-  RotateCw
+  RotateCw,
+  GripVertical
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSessionTimer } from '@/contexts/SessionTimerContext';
@@ -46,12 +47,26 @@ const PRESET_DURATIONS = [
   { label: '90 min', value: 90 },
 ];
 
+const POSITION_STORAGE_KEY = 'timer_widget_position';
+
 export function SessionTimerWidget({ 
   className,
   position = 'bottom-right' 
 }: SessionTimerWidgetProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [newPreset, setNewPreset] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragPosition, setDragPosition] = useState<{ x: number; y: number } | null>(() => {
+    try {
+      const saved = localStorage.getItem(POSITION_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  
+  const widgetRef = useRef<HTMLDivElement>(null);
+  const dragStartRef = useRef<{ x: number; y: number; posX: number; posY: number } | null>(null);
   
   const {
     status,
@@ -76,6 +91,109 @@ export function SessionTimerWidget({
     getProgress,
     formatTime,
   } = useSessionTimer();
+
+  // Save position to localStorage
+  useEffect(() => {
+    if (dragPosition) {
+      localStorage.setItem(POSITION_STORAGE_KEY, JSON.stringify(dragPosition));
+    }
+  }, [dragPosition]);
+
+  const handleDragStart = useCallback((clientX: number, clientY: number) => {
+    if (!widgetRef.current) return;
+    
+    const rect = widgetRef.current.getBoundingClientRect();
+    dragStartRef.current = {
+      x: clientX,
+      y: clientY,
+      posX: rect.left,
+      posY: rect.top
+    };
+    setIsDragging(true);
+  }, []);
+
+  const handleDragMove = useCallback((clientX: number, clientY: number) => {
+    if (!isDragging || !dragStartRef.current || !widgetRef.current) return;
+    
+    const deltaX = clientX - dragStartRef.current.x;
+    const deltaY = clientY - dragStartRef.current.y;
+    
+    const newX = dragStartRef.current.posX + deltaX;
+    const newY = dragStartRef.current.posY + deltaY;
+    
+    // Constrain to viewport
+    const rect = widgetRef.current.getBoundingClientRect();
+    const maxX = window.innerWidth - rect.width;
+    const maxY = window.innerHeight - rect.height;
+    
+    setDragPosition({
+      x: Math.max(0, Math.min(newX, maxX)),
+      y: Math.max(0, Math.min(newY, maxY))
+    });
+  }, [isDragging]);
+
+  const handleDragEnd = useCallback(() => {
+    setIsDragging(false);
+    dragStartRef.current = null;
+  }, []);
+
+  // Mouse events
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    handleDragStart(e.clientX, e.clientY);
+  };
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      handleDragMove(e.clientX, e.clientY);
+    };
+
+    const handleMouseUp = () => {
+      handleDragEnd();
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, handleDragMove, handleDragEnd]);
+
+  // Touch events
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    handleDragStart(touch.clientX, touch.clientY);
+  };
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      handleDragMove(touch.clientX, touch.clientY);
+    };
+
+    const handleTouchEnd = () => {
+      handleDragEnd();
+    };
+
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isDragging, handleDragMove, handleDragEnd]);
+
+  const resetPosition = () => {
+    setDragPosition(null);
+    localStorage.removeItem(POSITION_STORAGE_KEY);
+  };
 
   const formatCurrentTime = (date: Date) => {
     return date.toLocaleTimeString('en-US', { 
@@ -130,13 +248,21 @@ export function SessionTimerWidget({
     }
   };
 
+  // Use custom position if dragged, otherwise use preset position
+  const positionStyle = dragPosition 
+    ? { left: dragPosition.x, top: dragPosition.y, right: 'auto', bottom: 'auto' }
+    : {};
+
   return (
     <div 
+      ref={widgetRef}
       className={cn(
         "fixed z-20 transition-all duration-300",
-        positionClasses[position],
+        !dragPosition && positionClasses[position],
+        isDragging && "cursor-grabbing select-none",
         className
       )}
+      style={positionStyle}
     >
       <div 
         className={cn(
@@ -150,11 +276,19 @@ export function SessionTimerWidget({
         {/* Compact Header - Always visible */}
         <div 
           className={cn(
-            "flex items-center gap-3 px-4 py-3 cursor-pointer",
+            "flex items-center gap-3 px-4 py-3",
             "hover:bg-muted/50 transition-colors"
           )}
-          onClick={() => setIsExpanded(!isExpanded)}
         >
+          {/* Drag handle */}
+          <div 
+            className="cursor-grab active:cursor-grabbing p-1 -ml-2 hover:bg-muted rounded"
+            onMouseDown={handleMouseDown}
+            onTouchStart={handleTouchStart}
+          >
+            <GripVertical className="h-4 w-4 text-muted-foreground" />
+          </div>
+
           {/* Status indicator */}
           <div className={cn("w-3 h-3 rounded-full", getStatusColor())} />
           
@@ -388,14 +522,26 @@ export function SessionTimerWidget({
                     </Button>
                   </div>
                   
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full"
-                    onClick={resetSettingsToDefaults}
-                  >
-                    <RotateCw className="h-3 w-3 mr-2" /> Reset to Defaults
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={resetSettingsToDefaults}
+                    >
+                      <RotateCw className="h-3 w-3 mr-2" /> Reset Timer
+                    </Button>
+                    {dragPosition && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={resetPosition}
+                      >
+                        <RotateCw className="h-3 w-3 mr-2" /> Reset Position
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
