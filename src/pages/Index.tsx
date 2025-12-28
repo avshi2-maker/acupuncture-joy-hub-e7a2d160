@@ -3,6 +3,8 @@ import Header from "@/components/layout/Header";
 import Hero from "@/components/sections/Hero";
 import TherapistTeaser from "@/components/sections/TherapistTeaser";
 import TcmBrainPreview from "@/components/sections/TcmBrainPreview";
+import EnglishQASection from "@/components/sections/EnglishQASection";
+import BodyFiguresGallery from "@/components/sections/BodyFiguresGallery";
 import Contact from "@/components/sections/Contact";
 import Footer from "@/components/layout/Footer";
 import InstallBanner from "@/components/pwa/InstallBanner";
@@ -12,10 +14,10 @@ const Index = () => {
   return (
     <>
       <Helmet>
-        <title>TCM Clinic | רפואה סינית מסורתית</title>
+        <title>TCM Clinic | Traditional Chinese Medicine</title>
         <meta
           name="description"
-          content="מרפאת רפואה סינית מסורתית - דיקור, צמחי מרפא וטיפולים הוליסטיים"
+          content="Traditional Chinese Medicine Clinic - Acupuncture, Herbal Medicine and Holistic Treatments"
         />
       </Helmet>
 
@@ -24,6 +26,8 @@ const Index = () => {
         <main>
           <Hero />
           <TherapistTeaser />
+          <BodyFiguresGallery />
+          <EnglishQASection />
           <TcmBrainPreview />
           <Contact />
         </main>
