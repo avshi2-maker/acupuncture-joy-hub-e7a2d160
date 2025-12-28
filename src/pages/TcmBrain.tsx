@@ -742,25 +742,7 @@ export default function TcmBrain() {
         <div className="flex-1 flex relative">
           {/* Main Area */}
           <main className="flex-1 flex flex-col max-w-6xl mx-auto w-full">
-            {!disclaimerStatus.signed && (
-              <div className="px-4 pt-3">
-                <Card className="border-destructive/30 bg-destructive/5">
-                  <CardContent className="p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div className="flex items-start gap-3">
-                      <AlertTriangle className="h-5 w-5 text-destructive mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium">נדרש אישור הצהרה משפטית לפני שימוש ב‑CM Brain</p>
-                        <p className="text-xs text-muted-foreground">אפשר לצפות בעמוד, אבל שליחת שאלות ל‑AI חסומה עד חתימה.</p>
-                      </div>
-                    </div>
-                    <Button size="sm" onClick={() => navigate('/therapist-disclaimer')} className="gap-2">
-                      <FileText className="h-4 w-4" />
-                      חתימה על הצהרה
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+            {/* Disclaimer removed - only shown during therapist registration */}
 
             {/* Feature tabs header */}
             {!showDetailedView && (
@@ -904,42 +886,30 @@ export default function TcmBrain() {
                   </div>
                 )}
 
-                {/* Chat Input at bottom */}
-                <div className="pt-4 border-t border-border/50">
-                  <form onSubmit={handleSubmit} className="flex gap-2">
-                    <div className="flex-1 relative">
-                      <Input
-                        ref={chatInputRef}
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="Ask any TCM question..."
-                        disabled={isLoading}
-                        className="text-left pr-12 h-12 rounded-xl border-border/80 focus:border-jade transition-colors"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={toggleRecording}
-                        className={`absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 rounded-lg ${
-                          isRecording ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20' : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                      </Button>
+                {/* Ask AI/RAG Button */}
+                <div className="pt-4 flex justify-center">
+                  <button
+                    onClick={() => {
+                      setShowDetailedView(true);
+                      setActiveFeatureTab('chat');
+                      setTimeout(() => chatInputRef.current?.focus(), 100);
+                    }}
+                    className="group relative flex items-center gap-3 px-8 py-4 rounded-2xl 
+                               bg-gradient-to-r from-jade-600 via-jade-500 to-jade-600
+                               hover:from-jade-500 hover:via-jade-400 hover:to-jade-500
+                               text-white font-semibold text-lg shadow-lg hover:shadow-xl
+                               transition-all duration-300 hover:scale-105
+                               border border-jade-400/30 overflow-hidden"
+                  >
+                    {/* Animated background pattern */}
+                    <div className="absolute inset-0 opacity-20">
+                      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgY3g9IjIwIiBjeT0iMjAiIHI9IjIiIGZpbGw9IndoaXRlIiBmaWxsLW9wYWNpdHk9IjAuMyIvPjwvZz48L3N2Zz4=')] animate-pulse" />
                     </div>
-                    <Button 
-                      type="submit" 
-                      disabled={isLoading || !input.trim()}
-                      className="h-12 w-12 rounded-xl bg-jade hover:bg-jade/90"
-                    >
-                      {isLoading ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                      ) : (
-                        <Send className="h-5 w-5" />
-                      )}
-                    </Button>
-                  </form>
+                    
+                    <Brain className="h-6 w-6 relative z-10" />
+                    <span className="relative z-10">Ask AI / RAG</span>
+                    <Sparkles className="h-5 w-5 relative z-10 text-gold-light group-hover:animate-bounce" />
+                  </button>
                 </div>
 
                 {/* Clear Chat Button */}
