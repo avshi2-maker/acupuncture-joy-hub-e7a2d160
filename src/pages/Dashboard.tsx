@@ -36,7 +36,7 @@ interface FeatureCardProps {
 function FeatureCard({ title, description, icon, available, href, highlighted, backgroundImage }: FeatureCardProps) {
   const content = (
     <Card 
-      className={`transition-all duration-300 h-full relative overflow-hidden ${available ? 'hover:shadow-elevated cursor-pointer' : 'opacity-60'} ${highlighted ? 'ring-2 ring-jade border-jade' : ''}`}
+      className={`transition-all duration-300 h-full relative overflow-hidden transform ${available ? 'hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] hover:shadow-jade/20 hover:scale-[1.03] cursor-pointer' : 'opacity-60'} ${highlighted ? 'ring-2 ring-jade border-jade hover:ring-jade/80 hover:shadow-jade/30' : ''}`}
       style={backgroundImage ? { 
         backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url(${backgroundImage})`,
         backgroundSize: 'cover',
