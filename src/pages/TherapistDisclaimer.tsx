@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { SignaturePad } from '@/components/crm/SignaturePad';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { AlertTriangle, FileDown, Mail, CheckCircle2, Shield } from 'lucide-react';
+import { AlertTriangle, FileDown, Mail, CheckCircle2, Shield, User, Award } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 type Language = 'en' | 'he' | 'ru';
@@ -19,6 +20,10 @@ const disclaimerContent = {
     subtitle: 'TCM Practice Support System',
     emergencyTitle: '🚨 IN CASE OF MEDICAL EMERGENCY',
     emergencyText: 'DO NOT USE THIS SYSTEM. CALL 101 OR 911 IMMEDIATELY',
+    therapistName: 'Full Name',
+    therapistNamePlaceholder: 'Enter your full name',
+    licenseNumber: 'License Number',
+    licenseNumberPlaceholder: 'Enter your license number',
     points: [
       'I am a licensed TCM practitioner with a valid license to practice.',
       'This system is a support tool only and is NOT a substitute for my professional medical judgment.',
@@ -39,12 +44,17 @@ const disclaimerContent = {
     success: 'Disclaimer signed and sent successfully!',
     emailSent: 'Email sent to Dr. Roni',
     savedLocally: 'Saved to local disk',
+    requiredFields: 'Please fill in your name and license number',
   },
   he: {
     title: 'הצהרה משפטית',
     subtitle: 'מערכת תמיכה לרפואה סינית מסורתית',
     emergencyTitle: '🚨 במקרה חירום רפואי',
     emergencyText: 'אין להשתמש במערכת - יש לפנות מיידית למוקד 101',
+    therapistName: 'שם מלא',
+    therapistNamePlaceholder: 'הזן את שמך המלא',
+    licenseNumber: 'מספר רישיון',
+    licenseNumberPlaceholder: 'הזן את מספר הרישיון שלך',
     points: [
       'אני מטפל/ת מורשה ברפואה סינית מסורתית עם רישיון תקף לעסוק במקצוע.',
       'מערכת זו היא כלי תמיכה בלבד ואינה מהווה תחליף לשיקול הדעת הרפואי המקצועי שלי.',
@@ -65,12 +75,17 @@ const disclaimerContent = {
     success: 'ההצהרה נחתמה ונשלחה בהצלחה!',
     emailSent: 'נשלח אימייל לד"ר רוני',
     savedLocally: 'נשמר לדיסק המקומי',
+    requiredFields: 'אנא מלא את שמך ומספר הרישיון',
   },
   ru: {
     title: 'Юридический отказ от ответственности',
     subtitle: 'Система поддержки практики ТКМ',
     emergencyTitle: '🚨 В СЛУЧАЕ ЭКСТРЕННОЙ МЕДИЦИНСКОЙ СИТУАЦИИ',
     emergencyText: 'НЕ ИСПОЛЬЗУЙТЕ ЭТУ СИСТЕМУ. НЕМЕДЛЕННО ЗВОНИТЕ 101 ИЛИ 911',
+    therapistName: 'Полное имя',
+    therapistNamePlaceholder: 'Введите ваше полное имя',
+    licenseNumber: 'Номер лицензии',
+    licenseNumberPlaceholder: 'Введите номер вашей лицензии',
     points: [
       'Я являюсь лицензированным практикующим врачом ТКМ с действующей лицензией.',
       'Эта система является только инструментом поддержки и НЕ заменяет моего профессионального медицинского суждения.',
@@ -91,6 +106,7 @@ const disclaimerContent = {
     success: 'Отказ подписан и отправлен успешно!',
     emailSent: 'Email отправлен Д-ру Рони',
     savedLocally: 'Сохранено на локальный диск',
+    requiredFields: 'Пожалуйста, заполните ваше имя и номер лицензии',
   },
 };
 
@@ -99,6 +115,8 @@ const DISCLAIMER_STORAGE_KEY = 'tcm_therapist_disclaimer_signed';
 export default function TherapistDisclaimer() {
   const navigate = useNavigate();
   const [language, setLanguage] = useState<Language>('en');
+  const [therapistName, setTherapistName] = useState('');
+  const [licenseNumber, setLicenseNumber] = useState('');
   const [confirmLicensed, setConfirmLicensed] = useState(false);
   const [confirmRead, setConfirmRead] = useState(false);
   const [signature, setSignature] = useState<string | null>(null);
@@ -108,7 +126,8 @@ export default function TherapistDisclaimer() {
 
   const content = disclaimerContent[language];
   const isRtl = language === 'he';
-  const canProceed = confirmLicensed && confirmRead && signature && isSaved && isEmailSent;
+  const hasRequiredFields = therapistName.trim().length >= 2 && licenseNumber.trim().length >= 2;
+  const canProceed = confirmLicensed && confirmRead && signature && isSaved && isEmailSent && hasRequiredFields;
 
   useEffect(() => {
     // Check if already signed
@@ -140,6 +159,8 @@ export default function TherapistDisclaimer() {
         <style>
           body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
           .header { text-align: center; border-bottom: 2px solid #16a34a; padding-bottom: 20px; margin-bottom: 20px; }
+          .therapist-info { background: #e0f2fe; border: 1px solid #0284c7; padding: 15px; border-radius: 8px; margin: 20px 0; }
+          .therapist-info h3 { margin-top: 0; color: #0369a1; }
           .emergency { background: #fee2e2; border: 2px solid #dc2626; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0; }
           .points { background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0; }
           .points li { margin: 10px 0; }
@@ -154,6 +175,12 @@ export default function TherapistDisclaimer() {
           <h1>🏥 TCM Practice Support System</h1>
           <h2>Legal Disclaimer - Signed Agreement</h2>
           <p><strong>Date:</strong> ${date}</p>
+        </div>
+
+        <div class="therapist-info">
+          <h3>👤 Therapist Information</h3>
+          <p><strong>Full Name:</strong> ${therapistName}</p>
+          <p><strong>License Number:</strong> ${licenseNumber}</p>
         </div>
         
         <div class="emergency">
@@ -175,6 +202,8 @@ export default function TherapistDisclaimer() {
         
         <div class="signature-section">
           <h3>Therapist Signature</h3>
+          <p><strong>Name:</strong> ${therapistName}</p>
+          <p><strong>License:</strong> ${licenseNumber}</p>
           <img src="${signature}" alt="Signature" class="signature-img" />
           <p><strong>Signed on:</strong> ${date}</p>
         </div>
@@ -220,12 +249,16 @@ export default function TherapistDisclaimer() {
           message: `
 A new therapist has signed the legal disclaimer.
 
-Date: ${new Date().toLocaleString()}
-Language: ${language.toUpperCase()}
+📋 THERAPIST INFORMATION:
+• Full Name: ${therapistName}
+• License Number: ${licenseNumber}
 
-Confirmations:
-✅ Licensed TCM Practitioner: Yes
-✅ Read and Understood Disclaimer: Yes
+📅 Date: ${new Date().toLocaleString()}
+🌐 Language: ${language.toUpperCase()}
+
+✅ Confirmations:
+• Licensed TCM Practitioner: Yes
+• Read and Understood Disclaimer: Yes
 
 The signed disclaimer document is attached.
 
@@ -252,10 +285,17 @@ This is an automated message from the TCM Practice Support System.
   };
 
   const handleProceed = () => {
-    // Save signed status
+    if (!hasRequiredFields) {
+      toast.error(content.requiredFields);
+      return;
+    }
+    
+    // Save signed status with therapist info
     localStorage.setItem(DISCLAIMER_STORAGE_KEY, JSON.stringify({
       signedAt: new Date().toISOString(),
       language,
+      therapistName,
+      licenseNumber,
     }));
     
     toast.success(content.success);
@@ -300,6 +340,42 @@ This is an automated message from the TCM Practice Support System.
             <p className="text-muted-foreground">{content.subtitle}</p>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Therapist Information */}
+            <div className="bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 rounded-lg p-4 space-y-4">
+              <h3 className="font-semibold flex items-center gap-2 text-sky-800 dark:text-sky-200">
+                <User className="h-5 w-5" />
+                {content.therapistName}
+              </h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="therapistName" className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    {content.therapistName} *
+                  </Label>
+                  <Input
+                    id="therapistName"
+                    value={therapistName}
+                    onChange={(e) => setTherapistName(e.target.value)}
+                    placeholder={content.therapistNamePlaceholder}
+                    className="bg-background"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="licenseNumber" className="flex items-center gap-2">
+                    <Award className="h-4 w-4 text-muted-foreground" />
+                    {content.licenseNumber} *
+                  </Label>
+                  <Input
+                    id="licenseNumber"
+                    value={licenseNumber}
+                    onChange={(e) => setLicenseNumber(e.target.value)}
+                    placeholder={content.licenseNumberPlaceholder}
+                    className="bg-background"
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Disclaimer Points */}
             <div className="bg-muted/50 rounded-lg p-4">
               <h3 className="font-semibold mb-4">I hereby confirm that:</h3>
@@ -317,8 +393,9 @@ This is an automated message from the TCM Practice Support System.
                   id="confirmLicensed"
                   checked={confirmLicensed}
                   onCheckedChange={(checked) => setConfirmLicensed(checked === true)}
+                  disabled={!hasRequiredFields}
                 />
-                <Label htmlFor="confirmLicensed" className="text-sm leading-relaxed cursor-pointer">
+                <Label htmlFor="confirmLicensed" className={`text-sm leading-relaxed cursor-pointer ${!hasRequiredFields ? 'text-muted-foreground' : ''}`}>
                   {content.confirmLicensed}
                 </Label>
               </div>
@@ -327,11 +404,15 @@ This is an automated message from the TCM Practice Support System.
                   id="confirmRead"
                   checked={confirmRead}
                   onCheckedChange={(checked) => setConfirmRead(checked === true)}
+                  disabled={!hasRequiredFields}
                 />
-                <Label htmlFor="confirmRead" className="text-sm leading-relaxed cursor-pointer">
+                <Label htmlFor="confirmRead" className={`text-sm leading-relaxed cursor-pointer ${!hasRequiredFields ? 'text-muted-foreground' : ''}`}>
                   {content.confirmRead}
                 </Label>
               </div>
+              {!hasRequiredFields && (
+                <p className="text-sm text-amber-600">{content.requiredFields}</p>
+              )}
             </div>
 
             {/* Signature Section */}
