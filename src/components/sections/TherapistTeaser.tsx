@@ -520,6 +520,19 @@ const TherapistTeaser = () => {
               Your browser does not support the video tag.
             </video>
 
+            {/* Now Playing Badge */}
+            {isPlaying && (
+              <div 
+                className="absolute top-4 right-4 z-10 animate-fade-in"
+                style={{ animationDuration: '0.4s' }}
+              >
+                <div className="bg-black/60 backdrop-blur-sm text-white text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
+                  <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                  <span>Now playing: {currentVideo + 1}/{videos.length}</span>
+                </div>
+              </div>
+            )}
+
             {/* Video Progress Indicator Dots */}
             {isPlaying && (
               <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 z-10">
