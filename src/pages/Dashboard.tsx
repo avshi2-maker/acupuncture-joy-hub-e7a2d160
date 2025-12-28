@@ -133,13 +133,13 @@ export default function Dashboard() {
       backgroundImage: deskBg,
     },
     {
-      id: 'tcm_brain',
-      title: 'TCM Brain',
+      id: 'cm_brain',
+      title: 'CM Brain',
       description: 'מאגר ידע מקיף ברפואה סינית',
       icon: <Brain className="h-6 w-6 text-white" />,
       feature: 'tcm_brain' as const,
       href: '/tcm-brain',
-      backgroundImage: deskBg,
+      backgroundImage: brainBg,
     },
     {
       id: 'body_map',
@@ -151,17 +151,8 @@ export default function Dashboard() {
     },
   ];
 
-  // Row 3: TCM Brain + Knowledge Registry
+  // Row 3: Knowledge Registry
   const row3Features = [
-    {
-      id: 'tcm_brain_2',
-      title: 'TCM Brain',
-      description: 'מאגר ידע מקיף ברפואה סינית',
-      icon: <Brain className="h-6 w-6 text-white" />,
-      feature: 'tcm_brain' as const,
-      href: '/tcm-brain',
-      backgroundImage: brainBg,
-    },
     {
       id: 'knowledge_registry',
       title: 'Knowledge Registry',
@@ -252,7 +243,7 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Row 3: TCM Brain + Knowledge Registry */}
+        {/* Row 3: Knowledge Registry */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {row3Features.map((feature) => (
             <FeatureCard
@@ -260,7 +251,7 @@ export default function Dashboard() {
               title={feature.title}
               description={feature.description}
               icon={feature.icon}
-              available={'alwaysAvailable' in feature ? true : hasFeature(feature.feature)}
+              available={true}
               href={feature.href}
               backgroundImage={feature.backgroundImage}
             />
