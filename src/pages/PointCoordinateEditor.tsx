@@ -286,9 +286,17 @@ export default function PointCoordinateEditor() {
     setSelectedPoint(pointCode);
   };
 
-  // Handle mouse move for dragging
+  // Throttle ref for mouse move
+  const lastMoveTime = useRef(0);
+
+  // Handle mouse move for dragging - throttled
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!draggingPoint || !containerRef.current || !imageRef.current) return;
+    if (!draggingPoint || !imageRef.current) return;
+    
+    // Throttle to ~60fps
+    const now = Date.now();
+    if (now - lastMoveTime.current < 16) return;
+    lastMoveTime.current = now;
 
     const rect = imageRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -302,9 +310,9 @@ export default function PointCoordinateEditor() {
   }, [draggingPoint, updatePointCoordinates]);
 
   // Handle mouse up
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     setDraggingPoint(null);
-  };
+  }, []);
 
   // Save coordinates to localStorage
   const handleSave = () => {
