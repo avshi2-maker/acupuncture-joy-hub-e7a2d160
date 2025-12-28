@@ -75,6 +75,8 @@ const TherapistTeaser = () => {
   const [subtitleSize, setSubtitleSize] = useState(20); // Font size in px (14-32)
   const [currentSubtitle, setCurrentSubtitle] = useState<string>("");
   const [videoVolume, setVideoVolume] = useState(100); // For ducking
+  const [isTransitioning, setIsTransitioning] = useState(false); // For crossfade transitions
+  const [videoOpacity, setVideoOpacity] = useState(1); // Control video fade
   const originalVolumeRef = useRef(100); // Store original volume before ducking
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -225,7 +227,14 @@ const TherapistTeaser = () => {
     const handleEnded = () => {
       console.log('Video ended, current:', currentVideo);
       if (currentVideo < videos.length - 1) {
-        setCurrentVideo(prev => prev + 1);
+        // Start crossfade transition
+        setIsTransitioning(true);
+        setVideoOpacity(0);
+        
+        // Brief delay for fade-out, then switch video
+        setTimeout(() => {
+          setCurrentVideo(prev => prev + 1);
+        }, 150); // Minimal overlap - just enough for smooth transition
       } else {
         setIsPlaying(false);
         setShowDialog(true);
@@ -315,6 +324,10 @@ const TherapistTeaser = () => {
       const playVideo = async () => {
         try {
           await video.play();
+          // Fade in new video
+          setVideoOpacity(1);
+          setTimeout(() => setIsTransitioning(false), 200);
+          
           // Auto-narration for subsequent videos if user consented
           if (userConsentedNarration && narrationEnabled) {
             playNarration(currentVideo);
@@ -325,16 +338,23 @@ const TherapistTeaser = () => {
           setIsMuted(true);
           try {
             await video.play();
+            setVideoOpacity(1);
+            setTimeout(() => setIsTransitioning(false), 200);
             if (userConsentedNarration && narrationEnabled) {
               playNarration(currentVideo);
             }
           } catch (err2) {
             console.error('Muted play also failed:', err2);
             setVideoError('Could not play video. Please try again.');
+            setIsTransitioning(false);
           }
         }
       };
       playVideo();
+    } else {
+      // Reset opacity for non-playing state
+      setVideoOpacity(1);
+      setIsTransitioning(false);
     }
   }, [currentVideo]);
 
@@ -464,11 +484,12 @@ const TherapistTeaser = () => {
           <div 
             className="relative rounded-2xl overflow-hidden bg-transparent shadow-elevated aspect-video"
           >
-            {/* Video Element */}
+            {/* Video Element with transition */}
             <video
               ref={videoRef}
               src={videos[currentVideo]}
-              className="w-full h-full object-contain bg-gradient-to-br from-jade/10 to-gold/5"
+              className="w-full h-full object-contain bg-gradient-to-br from-jade/10 to-gold/5 transition-opacity duration-200 ease-in-out"
+              style={{ opacity: videoOpacity }}
               muted={isMuted}
               playsInline
               preload="auto"
@@ -478,6 +499,47 @@ const TherapistTeaser = () => {
               <source src={videos[currentVideo]} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
+
+            {/* Video Progress Indicator Dots */}
+            {isPlaying && (
+              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 z-10">
+                {videos.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      if (audioRef.current) {
+                        audioRef.current.pause();
+                        audioRef.current = null;
+                        setIsNarrating(false);
+                      }
+                      setIsTransitioning(true);
+                      setVideoOpacity(0);
+                      setTimeout(() => setCurrentVideo(index), 150);
+                    }}
+                    className={`relative transition-all duration-300 ${
+                      index === currentVideo 
+                        ? 'w-8 h-3 rounded-full' 
+                        : 'w-3 h-3 rounded-full hover:scale-110'
+                    }`}
+                  >
+                    {/* Background */}
+                    <span 
+                      className={`absolute inset-0 rounded-full transition-all duration-300 ${
+                        index === currentVideo 
+                          ? 'bg-primary shadow-lg shadow-primary/50' 
+                          : index < currentVideo 
+                            ? 'bg-primary/60' 
+                            : 'bg-white/40 hover:bg-white/60'
+                      }`}
+                    />
+                    {/* Pulse animation for current */}
+                    {index === currentVideo && (
+                      <span className="absolute inset-0 rounded-full bg-primary/40 animate-ping" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Hebrew Subtitles Overlay - Time-synced */}
             {isPlaying && showSubtitles && currentSubtitle && (
