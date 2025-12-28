@@ -13,6 +13,9 @@ const videos = [
   "/videos/promo-4.mp4",
 ];
 
+// Default poster image for videos
+const videoPoster = "/videos/poster-default.jpg";
+
 // Hebrew descriptions for each video - will be narrated by TTS
 const videoDescriptions = [
   "ברוכים הבאים למערכת ניהול הקליניקה המתקדמת ביותר לרפואה סינית. המערכת שלנו מאפשרת לכם לנהל את המטופלים, התורים והטיפולים במקום אחד.",
@@ -84,9 +87,57 @@ const TherapistTeaser = () => {
   const currentVideoRef = useRef(0);
   const isPlayingRef = useRef(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const preloadedVideosRef = useRef<Set<string>>(new Set());
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Preload next video for smooth transitions
+  const preloadNextVideo = (currentIndex: number) => {
+    const nextIndex = currentIndex + 1;
+    if (nextIndex < videos.length && !preloadedVideosRef.current.has(videos[nextIndex])) {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'video';
+      link.href = videos[nextIndex];
+      document.head.appendChild(link);
+      preloadedVideosRef.current.add(videos[nextIndex]);
+      
+      // Also create a hidden video element to buffer the content
+      const preloadVideo = document.createElement('video');
+      preloadVideo.src = videos[nextIndex];
+      preloadVideo.preload = 'auto';
+      preloadVideo.muted = true;
+      preloadVideo.style.display = 'none';
+      document.body.appendChild(preloadVideo);
+      
+      // Remove after buffering starts
+      preloadVideo.addEventListener('canplay', () => {
+        document.body.removeChild(preloadVideo);
+      }, { once: true });
+      
+      // Cleanup timeout fallback
+      setTimeout(() => {
+        if (document.body.contains(preloadVideo)) {
+          document.body.removeChild(preloadVideo);
+        }
+      }, 10000);
+    }
+  };
+
+  // Preload all videos on mount
+  useEffect(() => {
+    videos.forEach((videoSrc, index) => {
+      if (!preloadedVideosRef.current.has(videoSrc)) {
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'video';
+        link.href = videoSrc;
+        document.head.appendChild(link);
+        preloadedVideosRef.current.add(videoSrc);
+      }
+    });
+  }, []);
 
   // Keep refs so media event listeners can read latest state
   useEffect(() => {
@@ -518,13 +569,18 @@ const TherapistTeaser = () => {
             <video
               ref={videoRef}
               src={videos[currentVideo]}
+              poster={videoPoster}
               className="w-full h-full object-contain bg-gradient-to-br from-jade/10 to-gold/5 transition-opacity duration-200 ease-in-out"
               style={{ opacity: videoOpacity }}
               muted={isMuted}
               playsInline
               preload="auto"
               crossOrigin="anonymous"
-              onLoadedMetadata={() => console.log('Video metadata loaded:', videos[currentVideo])}
+              onLoadedMetadata={() => {
+                console.log('Video metadata loaded:', videos[currentVideo]);
+                // Preload next video when current starts playing
+                preloadNextVideo(currentVideo);
+              }}
             >
               <source src={videos[currentVideo]} type="video/mp4" />
               Your browser does not support the video tag.
