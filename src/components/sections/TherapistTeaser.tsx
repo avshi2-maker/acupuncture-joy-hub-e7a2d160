@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Play, Pause, SkipForward, Volume2, VolumeX, Users, Brain, Calendar, TrendingUp, CheckCircle, Loader2 } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Play, Pause, SkipForward, Volume2, VolumeX, Users, Brain, Calendar, TrendingUp, CheckCircle, Loader2, Mic } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
@@ -12,12 +13,20 @@ const videos = [
   "/videos/promo-4.mp4",
 ];
 
-// Hebrew descriptions for each video - will be narrated by ElevenLabs TTS
+// Hebrew descriptions for each video - will be narrated by TTS
 const videoDescriptions = [
   "ברוכים הבאים למערכת ניהול הקליניקה המתקדמת ביותר לרפואה סינית. המערכת שלנו מאפשרת לכם לנהל את המטופלים, התורים והטיפולים במקום אחד.",
   "מוח ה-TCM המופעל על ידי בינה מלאכותית מספק תשובות מקצועיות לכל שאלה ברפואה סינית. בעזרת מאגר הידע העשיר שלנו, תקבלו המלצות טיפוליות מדויקות.",
   "ניהול יומן תורים חכם שמסנכרן עם זום ומזכיר למטופלים על התורים שלהם בוואטסאפ. חסכו זמן ומנעו ביטולים מיותרים.",
   "עקבו אחר ההחזר על ההשקעה שלכם עם אנליטיקה מתקדמת. צפו בצמיחה של הקליניקה והבינו אילו טיפולים הכי רווחיים."
+];
+
+// Hebrew subtitles for each video (shorter version for display)
+const videoSubtitles = [
+  "ברוכים הבאים למערכת ניהול הקליניקה המתקדמת ביותר לרפואה סינית",
+  "מוח TCM מופעל בינה מלאכותית - תשובות מקצועיות לכל שאלה",
+  "יומן תורים חכם עם סנכרון זום ותזכורות וואטסאפ",
+  "אנליטיקה מתקדמת - עקבו אחר הצמיחה וההחזר על ההשקעה"
 ];
 
 const features = [
@@ -31,17 +40,28 @@ const TherapistTeaser = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentVideo, setCurrentVideo] = useState(0);
   const [showDialog, setShowDialog] = useState(false);
-  const [isMuted, setIsMuted] = useState(true); // Start muted for autoplay compatibility
+  const [isMuted, setIsMuted] = useState(true);
   const [progress, setProgress] = useState(0);
   const [videoError, setVideoError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
   const [isNarrating, setIsNarrating] = useState(false);
-  const [narrationEnabled, setNarrationEnabled] = useState(true);
+  const [narrationEnabled, setNarrationEnabled] = useState(false); // Start disabled, enable after user consent
+  const [userConsentedNarration, setUserConsentedNarration] = useState(false); // Track if user clicked narration button
+  const [narrationVolume, setNarrationVolume] = useState(80); // 0-100
+  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const [showSubtitles, setShowSubtitles] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Update audio volume when slider changes
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = narrationVolume / 100;
+    }
+  }, [narrationVolume]);
 
   // Play Hebrew narration for current video
   const playNarration = async (videoIndex: number) => {
@@ -89,7 +109,7 @@ const TherapistTeaser = () => {
         toast({
           variant: "destructive",
           title: "לא ניתן להפעיל קריינות",
-          description: "לחצו שוב על 'עברית' כדי לאשר השמעת אודיו בדפדפן.",
+          description: "נסו שוב מאוחר יותר.",
         });
         setIsNarrating(false);
         return;
@@ -100,6 +120,7 @@ const TherapistTeaser = () => {
       if (data.audioContent) {
         const audioUrl = `data:audio/mpeg;base64,${data.audioContent}`;
         const audio = new Audio(audioUrl);
+        audio.volume = narrationVolume / 100;
         audioRef.current = audio;
         
         audio.onended = () => {
@@ -112,6 +133,7 @@ const TherapistTeaser = () => {
           setIsNarrating(false);
           audioRef.current = null;
         };
+        
         try {
           await audio.play();
         } catch (e) {
@@ -119,7 +141,7 @@ const TherapistTeaser = () => {
           toast({
             variant: "destructive",
             title: "השמעת אודיו נחסמה",
-            description: "לחצו שוב על 'עברית' כדי להתחיל את הקריינות.",
+            description: "לחצו שוב על כפתור הקריינות.",
           });
           setIsNarrating(false);
           audioRef.current = null;
@@ -131,7 +153,7 @@ const TherapistTeaser = () => {
     }
   };
 
-  // Stop narration when component unmounts or video stops
+  // Stop narration when component unmounts
   useEffect(() => {
     return () => {
       if (audioRef.current) {
@@ -240,17 +262,19 @@ const TherapistTeaser = () => {
       const playVideo = async () => {
         try {
           await video.play();
-          // Play Hebrew narration for this video
-          playNarration(currentVideo);
+          // Auto-narration for subsequent videos if user consented
+          if (userConsentedNarration && narrationEnabled) {
+            playNarration(currentVideo);
+          }
         } catch (err) {
           console.error('Auto-play on video change failed:', err);
-          // Try again muted (browser autoplay policy)
           video.muted = true;
           setIsMuted(true);
           try {
             await video.play();
-            // Play Hebrew narration for this video
-            playNarration(currentVideo);
+            if (userConsentedNarration && narrationEnabled) {
+              playNarration(currentVideo);
+            }
           } catch (err2) {
             console.error('Muted play also failed:', err2);
             setVideoError('Could not play video. Please try again.');
@@ -267,26 +291,18 @@ const TherapistTeaser = () => {
 
     setVideoError(null);
     setCurrentVideo(0);
-    
-    // Load the video first
     video.load();
     
     try {
-      // Try to play - browsers may block unmuted autoplay
       await video.play();
       setIsPlaying(true);
-      // Start Hebrew narration for the first video
-      playNarration(0);
     } catch (err) {
       console.log('Initial play blocked, trying muted:', err);
-      // If blocked, try muted (most browsers allow muted autoplay)
       video.muted = true;
       setIsMuted(true);
       try {
         await video.play();
         setIsPlaying(true);
-        // Start Hebrew narration for the first video
-        playNarration(0);
       } catch (err2) {
         console.error('Even muted play failed:', err2);
         setVideoError('Could not play video. Please click to try again.');
@@ -298,7 +314,6 @@ const TherapistTeaser = () => {
     if (videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();
-        // Stop narration when pausing
         if (audioRef.current) {
           audioRef.current.pause();
           audioRef.current = null;
@@ -306,15 +321,15 @@ const TherapistTeaser = () => {
         }
       } else {
         videoRef.current.play();
-        // Resume narration when playing again
-        playNarration(currentVideo);
+        if (userConsentedNarration && narrationEnabled) {
+          playNarration(currentVideo);
+        }
       }
       setIsPlaying(!isPlaying);
     }
   };
 
   const handleSkip = () => {
-    // Stop current narration before skipping
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
@@ -347,9 +362,14 @@ const TherapistTeaser = () => {
       return;
     }
 
-    // Otherwise enable and start
+    // Enable and mark consent, then start
+    setUserConsentedNarration(true);
     setNarrationEnabled(true);
     playNarration(currentVideo);
+  };
+
+  const toggleSubtitles = () => {
+    setShowSubtitles(!showSubtitles);
   };
 
   return (
@@ -387,6 +407,15 @@ const TherapistTeaser = () => {
               <source src={videos[currentVideo]} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
+
+            {/* Hebrew Subtitles Overlay */}
+            {isPlaying && showSubtitles && (
+              <div className="absolute bottom-16 left-0 right-0 flex justify-center px-4 pointer-events-none">
+                <div className="bg-black/70 text-white text-lg md:text-xl px-6 py-3 rounded-lg text-center max-w-3xl" dir="rtl">
+                  {videoSubtitles[currentVideo]}
+                </div>
+              </div>
+            )}
 
             {/* Loading State */}
             {isLoading && (
@@ -429,7 +458,7 @@ const TherapistTeaser = () => {
             {/* Video Controls (shown when playing) */}
             {isPlaying && (
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 flex-wrap">
                   <button
                     onClick={handlePause}
                     className="text-white hover:text-primary transition-colors"
@@ -450,23 +479,65 @@ const TherapistTeaser = () => {
                     {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
                   </button>
                   
-                  {/* Hebrew Narration Toggle */}
+                  {/* Subtitles Toggle */}
                   <button
-                    onClick={toggleNarration}
-                    className={`flex items-center gap-1 px-2 py-1 rounded text-sm transition-colors ${
-                      narrationEnabled 
-                        ? 'bg-primary/80 text-white' 
-                        : 'bg-white/20 text-white/60'
+                    onClick={toggleSubtitles}
+                    className={`px-2 py-1 rounded text-sm transition-colors ${
+                      showSubtitles 
+                        ? 'bg-white/30 text-white' 
+                        : 'bg-white/10 text-white/60'
                     }`}
-                    title={narrationEnabled ? "Hebrew narration ON" : "Hebrew narration OFF"}
+                    title={showSubtitles ? "Hide subtitles" : "Show subtitles"}
                   >
-                    {isNarrating ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Volume2 className="w-4 h-4" />
-                    )}
-                    <span>עברית</span>
+                    CC
                   </button>
+                  
+                  {/* Hebrew Narration Toggle with Volume */}
+                  <div className="relative flex items-center gap-1">
+                    <button
+                      onClick={toggleNarration}
+                      className={`flex items-center gap-1 px-2 py-1 rounded text-sm transition-colors ${
+                        narrationEnabled 
+                          ? 'bg-primary/80 text-white' 
+                          : 'bg-white/20 text-white/60'
+                      }`}
+                      title={narrationEnabled ? "Hebrew narration ON" : "Hebrew narration OFF"}
+                    >
+                      {isNarrating ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Mic className="w-4 h-4" />
+                      )}
+                      <span>עברית</span>
+                    </button>
+                    
+                    {/* Volume slider toggle for narration */}
+                    {narrationEnabled && (
+                      <button
+                        onClick={() => setShowVolumeSlider(!showVolumeSlider)}
+                        className="text-white/80 hover:text-white p-1"
+                        title="Adjust narration volume"
+                      >
+                        <Volume2 className="w-4 h-4" />
+                      </button>
+                    )}
+                    
+                    {/* Narration Volume Slider */}
+                    {showVolumeSlider && narrationEnabled && (
+                      <div className="absolute bottom-full left-0 mb-2 bg-black/90 rounded-lg p-3 min-w-[120px]">
+                        <p className="text-white text-xs mb-2 text-center">עוצמת קריינות</p>
+                        <Slider
+                          value={[narrationVolume]}
+                          onValueChange={(val) => setNarrationVolume(val[0])}
+                          min={0}
+                          max={100}
+                          step={5}
+                          className="w-full"
+                        />
+                        <p className="text-white/60 text-xs text-center mt-1">{narrationVolume}%</p>
+                      </div>
+                    )}
+                  </div>
                   
                   <span className="text-white text-sm ml-auto">
                     Part {currentVideo + 1} of {videos.length}
@@ -512,22 +583,25 @@ const TherapistTeaser = () => {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-3">
-              {features.map((feature) => (
-                <div key={feature.label} className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <feature.icon className="w-4 h-4 text-primary" />
-                  </div>
-                  <span className="text-sm">{feature.label}</span>
-                  <CheckCircle className="w-4 h-4 text-green-500 ml-auto" />
+              {[
+                "AI-powered TCM knowledge assistant",
+                "Integrated patient management",
+                "Smart appointment scheduling",
+                "ROI tracking & analytics",
+                "WhatsApp & Zoom integration"
+              ].map((feature, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />
+                  <span className="text-sm">{feature}</span>
                 </div>
               ))}
             </div>
-            <div className="flex flex-col gap-2 pt-4">
+            <div className="flex flex-col gap-3 pt-4">
               <Button onClick={() => { setShowDialog(false); navigate("/therapist-register"); }}>
-                Start Free Trial
+                Start 14-Day Free Trial
               </Button>
-              <Button variant="ghost" onClick={() => setShowDialog(false)}>
-                Maybe Later
+              <Button variant="outline" onClick={() => { setShowDialog(false); navigate("/pricing"); }}>
+                View Pricing
               </Button>
             </div>
           </div>
