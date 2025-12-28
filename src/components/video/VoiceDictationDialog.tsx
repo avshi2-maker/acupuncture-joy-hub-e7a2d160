@@ -238,13 +238,11 @@ export function VoiceDictationDialog({
               {formatDuration(recordingDuration)}
             </div>
 
-            {/* Recording Progress */}
+            {/* Recording Animation - Show animated mic with sound waves when recording */}
             {isRecording && (
-              <div className="w-full space-y-2">
-                <div className="flex items-center gap-2 justify-center">
-                  <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-                  <span className="text-sm text-red-500 font-medium">מקליט...</span>
-                </div>
+              <div className="flex flex-col items-center gap-4">
+                <AnimatedMic size="xl" isRecording={true} />
+                <span className="text-sm text-red-500 font-medium">מקליט...</span>
               </div>
             )}
 
