@@ -58,6 +58,13 @@ const TherapistTeaser = () => {
 
     setIsNarrating(true);
     
+    // Keep video muted while narration plays so the voice is audible
+    const video = videoRef.current;
+    if (video && !video.muted) {
+      video.muted = true;
+      setIsMuted(true);
+    }
+    
     try {
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/text-to-speech`,
@@ -77,7 +84,13 @@ const TherapistTeaser = () => {
       );
 
       if (!response.ok) {
-        console.error('Narration failed:', response.status);
+        const errText = await response.text().catch(() => "");
+        console.error('Narration failed:', response.status, errText);
+        toast({
+          variant: "destructive",
+          title: "לא ניתן להפעיל קריינות",
+          description: "לחצו שוב על 'עברית' כדי לאשר השמעת אודיו בדפדפן.",
+        });
         setIsNarrating(false);
         return;
       }
@@ -99,8 +112,18 @@ const TherapistTeaser = () => {
           setIsNarrating(false);
           audioRef.current = null;
         };
-        
-        await audio.play();
+        try {
+          await audio.play();
+        } catch (e) {
+          console.error('Narration audio play blocked:', e);
+          toast({
+            variant: "destructive",
+            title: "השמעת אודיו נחסמה",
+            description: "לחצו שוב על 'עברית' כדי להתחיל את הקריינות.",
+          });
+          setIsNarrating(false);
+          audioRef.current = null;
+        }
       }
     } catch (error) {
       console.error('Narration error:', error);
@@ -315,17 +338,18 @@ const TherapistTeaser = () => {
   };
 
   const toggleNarration = () => {
-    if (narrationEnabled && audioRef.current) {
+    // If currently narrating, stop
+    if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
       setIsNarrating(false);
+      setNarrationEnabled(false);
+      return;
     }
-    setNarrationEnabled(!narrationEnabled);
-    
-    // If enabling narration and video is playing, start narration
-    if (!narrationEnabled && isPlaying) {
-      playNarration(currentVideo);
-    }
+
+    // Otherwise enable and start
+    setNarrationEnabled(true);
+    playNarration(currentVideo);
   };
 
   return (
