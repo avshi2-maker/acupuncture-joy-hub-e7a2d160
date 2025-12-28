@@ -78,6 +78,7 @@ const TherapistTeaser = () => {
   const [isTransitioning, setIsTransitioning] = useState(false); // For crossfade transitions
   const [videoOpacity, setVideoOpacity] = useState(1); // Control video fade
   const [videoProgressPercent, setVideoProgressPercent] = useState(0); // 0-100 progress for current video
+  const [showDebug, setShowDebug] = useState(false); // Dev mode debug overlay
   const originalVolumeRef = useRef(100); // Store original volume before ducking
   const isTransitioningRef = useRef(false);
   const currentVideoRef = useRef(0);
@@ -528,6 +529,28 @@ const TherapistTeaser = () => {
               <source src={videos[currentVideo]} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
+
+            {/* Dev Mode Debug Toggle & Overlay */}
+            {import.meta.env.DEV && (
+              <>
+                <button
+                  onClick={() => setShowDebug(!showDebug)}
+                  className="absolute top-4 left-4 z-20 bg-black/70 text-white text-[10px] px-2 py-1 rounded font-mono hover:bg-black/90 transition-colors"
+                >
+                  {showDebug ? '🔧 Hide' : '🔧 Debug'}
+                </button>
+                {showDebug && (
+                  <div className="absolute top-12 left-4 z-20 bg-black/80 backdrop-blur-sm text-white text-[11px] font-mono px-3 py-2 rounded-lg shadow-lg space-y-1 animate-fade-in">
+                    <div>currentVideo: <span className="text-green-400">{currentVideo}</span> / {videos.length - 1}</div>
+                    <div>isPlaying: <span className={isPlaying ? 'text-green-400' : 'text-red-400'}>{String(isPlaying)}</span></div>
+                    <div>isTransitioning: <span className={isTransitioning ? 'text-yellow-400' : 'text-gray-400'}>{String(isTransitioning)}</span></div>
+                    <div>videoOpacity: <span className="text-blue-400">{videoOpacity}</span></div>
+                    <div>progress: <span className="text-purple-400">{videoProgressPercent.toFixed(1)}%</span></div>
+                    <div>isMuted: <span className={isMuted ? 'text-red-400' : 'text-green-400'}>{String(isMuted)}</span></div>
+                  </div>
+                )}
+              </>
+            )}
 
             {/* Now Playing Badge */}
             {isPlaying && (
