@@ -49,6 +49,7 @@ import {
   Menu
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ElevenLabsWidget } from '@/components/ui/ElevenLabsWidget';
 import {
   herbsQuestions,
   pointsQuestions,
@@ -1289,6 +1290,9 @@ Include:
           )}
         </div>
       </div>
+
+      {/* ElevenLabs Voice Agent Widget */}
+      <ElevenLabsWidget agentId="agent_9301kdj55g7ef3tadnchsm54vxwt" />
     </>
   );
 }
