@@ -29,14 +29,18 @@ const Header = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleBioHover = () => {
+  const handleBioToggle = () => {
     if (!bioAudioRef.current) {
       bioAudioRef.current = new Audio('/audio/roni_bio.mp3');
       bioAudioRef.current.onended = () => setIsPlayingBio(false);
       bioAudioRef.current.onerror = () => setIsPlayingBio(false);
     }
     
-    if (!isPlayingBio) {
+    if (isPlayingBio) {
+      bioAudioRef.current.pause();
+      bioAudioRef.current.currentTime = 0;
+      setIsPlayingBio(false);
+    } else {
       bioAudioRef.current.currentTime = 0;
       bioAudioRef.current.play().then(() => {
         setIsPlayingBio(true);
@@ -44,8 +48,16 @@ const Header = () => {
     }
   };
 
+  const handleBioHover = () => {
+    // Only auto-play on hover for desktop (non-touch devices)
+    if (window.matchMedia('(hover: hover)').matches && !isPlayingBio) {
+      handleBioToggle();
+    }
+  };
+
   const handleBioLeave = () => {
-    if (bioAudioRef.current && isPlayingBio) {
+    // Only auto-stop on leave for desktop
+    if (window.matchMedia('(hover: hover)').matches && bioAudioRef.current && isPlayingBio) {
       bioAudioRef.current.pause();
       bioAudioRef.current.currentTime = 0;
       setIsPlayingBio(false);
@@ -67,16 +79,28 @@ const Header = () => {
             <Leaf className={`w-6 h-6 transition-colors duration-300 ${isScrolled || !isHomePage ? 'text-jade' : 'text-primary-foreground'}`} />
           </div>
           <div className={`font-display tracking-wide transition-colors duration-300 ${isScrolled || !isHomePage ? 'text-foreground' : 'text-primary-foreground'} hidden sm:flex flex-col leading-tight`}>
-            <span 
+            <button 
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleBioToggle();
+              }}
               onMouseEnter={handleBioHover}
               onMouseLeave={handleBioLeave}
-              className="text-lg lg:text-xl font-bold cursor-pointer hover:underline underline-offset-2 inline-flex items-center gap-2"
+              className="text-lg lg:text-xl font-bold cursor-pointer hover:underline underline-offset-2 inline-flex items-center gap-2 text-left"
             >
               Dr Roni Sapir
               {isPlayingBio && (
-                <Volume2 className="w-4 h-4 animate-pulse text-gold" />
+                <span className="inline-flex items-center gap-0.5 h-4">
+                  <span className="w-0.5 h-full bg-gold rounded-full animate-[waveform_0.5s_ease-in-out_infinite]" style={{ animationDelay: '0ms' }} />
+                  <span className="w-0.5 h-3 bg-gold rounded-full animate-[waveform_0.5s_ease-in-out_infinite]" style={{ animationDelay: '100ms' }} />
+                  <span className="w-0.5 h-full bg-gold rounded-full animate-[waveform_0.5s_ease-in-out_infinite]" style={{ animationDelay: '200ms' }} />
+                  <span className="w-0.5 h-2 bg-gold rounded-full animate-[waveform_0.5s_ease-in-out_infinite]" style={{ animationDelay: '300ms' }} />
+                  <span className="w-0.5 h-3 bg-gold rounded-full animate-[waveform_0.5s_ease-in-out_infinite]" style={{ animationDelay: '400ms' }} />
+                </span>
               )}
-            </span>
+            </button>
             <span className="text-sm lg:text-base font-semibold opacity-90">Complementary Medicine - Acupuncture Clinic</span>
             <span className="text-xs lg:text-sm font-normal opacity-70 italic">Healing Through Balance with AI</span>
           </div>

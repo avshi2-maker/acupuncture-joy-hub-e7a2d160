@@ -129,6 +129,10 @@ export default {
           "0%, 100%": { transform: "rotate(-3deg)" },
           "50%": { transform: "rotate(3deg)" },
         },
+        "waveform": {
+          "0%, 100%": { transform: "scaleY(0.5)" },
+          "50%": { transform: "scaleY(1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -143,6 +147,7 @@ export default {
         "ping-slow": "ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite",
         "shake": "shake 0.5s ease-in-out",
         "wiggle": "wiggle 0.3s ease-in-out infinite",
+        "waveform": "waveform 0.5s ease-in-out infinite",
       },
     },
   },
