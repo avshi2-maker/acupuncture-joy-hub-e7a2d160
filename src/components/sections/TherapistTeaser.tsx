@@ -481,7 +481,7 @@ const TherapistTeaser = () => {
             {/* Hebrew Subtitles Overlay - Time-synced */}
             {isPlaying && showSubtitles && currentSubtitle && (
               <div className="absolute bottom-16 left-0 right-0 flex justify-center px-4 pointer-events-none">
-                <div className="bg-black/70 text-white text-lg md:text-xl px-6 py-3 rounded-lg text-center max-w-3xl" dir="rtl">
+                <div className="bg-green-200/90 text-gray-900 text-lg md:text-xl px-6 py-3 rounded-lg text-center max-w-3xl font-medium" dir="rtl">
                   {currentSubtitle}
                 </div>
               </div>
