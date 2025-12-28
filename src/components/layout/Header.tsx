@@ -113,23 +113,7 @@ const Header = () => {
     }
   };
 
-  const handleBioHover = () => {
-    // Only auto-play on hover for desktop (non-touch devices)
-    if (window.matchMedia('(hover: hover)').matches && !isPlayingBio) {
-      handleBioToggle();
-    }
-  };
-
-  const handleBioLeave = () => {
-    // Only auto-stop on leave for desktop
-    if (window.matchMedia('(hover: hover)').matches && bioAudioRef.current && isPlayingBio) {
-      bioAudioRef.current.pause();
-      bioAudioRef.current.currentTime = 0;
-      setIsPlayingBio(false);
-      setBioProgress(0);
-      setFrequencyData([0, 0, 0, 0]);
-    }
-  };
+  // Removed auto-play on hover - user requested click-only playback
 
   return (
     <header
@@ -154,10 +138,8 @@ const Header = () => {
                   e.stopPropagation();
                   handleBioToggle();
                 }}
-                onMouseEnter={handleBioHover}
-                onMouseLeave={handleBioLeave}
                 className="text-lg lg:text-xl font-bold cursor-pointer hover:underline underline-offset-2 inline-flex items-center gap-2 text-left group/bio relative"
-                title={isPlayingBio ? "Click to stop" : "Click to hear bio"}
+                title={isPlayingBio ? "לחץ לעצור" : "לחץ לשמוע ביוגרפיה"}
               >
                 Dr Roni Sapir
                 {isPlayingBio ? (
