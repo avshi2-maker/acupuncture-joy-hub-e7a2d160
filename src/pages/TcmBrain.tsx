@@ -65,11 +65,15 @@ import {
   RotateCcw,
   Timer,
   Square,
-  Download
+  Download,
+  Mail,
+  FileDown
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Link } from 'react-router-dom';
 import { useTheme } from 'next-themes';
+import { useTcmSessionHistory, TcmSession } from '@/hooks/useTcmSessionHistory';
+import { SessionHistoryDialog } from '@/components/tcm/SessionHistoryDialog';
 
 import {
   herbsQuestions,
@@ -306,10 +310,13 @@ export default function TcmBrain() {
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [sessionSeconds, setSessionSeconds] = useState(0);
-  const [isSessionRunning, setIsSessionRunning] = useState(false); // Start paused, user clicks Start
+  const [isSessionRunning, setIsSessionRunning] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const [sessionStatus, setSessionStatus] = useState<'idle' | 'running' | 'paused' | 'ended'>('idle');
   const [questionsAsked, setQuestionsAsked] = useState<string[]>([]);
+  
+  // Session history hook
+  const { saveSession, exportSessionAsPDF, openGmailWithSession, openWhatsAppWithSession } = useTcmSessionHistory();
   
   // Update clock every second
   useEffect(() => {
@@ -361,9 +368,9 @@ export default function TcmBrain() {
     setIsSessionRunning(false);
     setSessionStatus('ended');
     
-    // Prepare session report
-    const sessionReport = {
-      sessionId: `TCM-${Date.now()}`,
+    // Prepare session report for localStorage
+    const sessionData: TcmSession = {
+      id: `TCM-${Date.now()}`,
       startTime: sessionStartTime?.toISOString() || new Date().toISOString(),
       endTime: new Date().toISOString(),
       duration: formatSessionTime(sessionSeconds),
@@ -378,18 +385,13 @@ export default function TcmBrain() {
       totalResponses: messages.filter(m => m.role === 'assistant').length
     };
     
-    // Download as JSON file
-    const blob = new Blob([JSON.stringify(sessionReport, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `tcm-session-${new Date().toISOString().split('T')[0]}-${Date.now()}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // Save to localStorage
+    saveSession(sessionData);
     
-    toast.success('Session ended & report saved to your device');
+    // Export PDF automatically
+    exportSessionAsPDF(sessionData);
+    
+    toast.success('Session ended & saved to history');
     
     // Reset for new session
     setTimeout(() => {
@@ -397,6 +399,53 @@ export default function TcmBrain() {
       setSessionSeconds(0);
       setSessionStartTime(null);
     }, 2000);
+  };
+  
+  // Quick share current session
+  const shareCurrentSessionViaEmail = () => {
+    if (questionsAsked.length === 0) {
+      toast.error('No session data to share');
+      return;
+    }
+    const sessionData: TcmSession = {
+      id: `TCM-${Date.now()}`,
+      startTime: sessionStartTime?.toISOString() || new Date().toISOString(),
+      endTime: new Date().toISOString(),
+      duration: formatSessionTime(sessionSeconds),
+      durationSeconds: sessionSeconds,
+      questionsAsked: questionsAsked,
+      conversationHistory: messages.map(m => ({
+        role: m.role,
+        content: m.content,
+        timestamp: new Date().toISOString()
+      })),
+      totalQuestions: questionsAsked.length,
+      totalResponses: messages.filter(m => m.role === 'assistant').length
+    };
+    openGmailWithSession(sessionData);
+  };
+  
+  const shareCurrentSessionViaWhatsApp = () => {
+    if (questionsAsked.length === 0) {
+      toast.error('No session data to share');
+      return;
+    }
+    const sessionData: TcmSession = {
+      id: `TCM-${Date.now()}`,
+      startTime: sessionStartTime?.toISOString() || new Date().toISOString(),
+      endTime: new Date().toISOString(),
+      duration: formatSessionTime(sessionSeconds),
+      durationSeconds: sessionSeconds,
+      questionsAsked: questionsAsked,
+      conversationHistory: messages.map(m => ({
+        role: m.role,
+        content: m.content,
+        timestamp: new Date().toISOString()
+      })),
+      totalQuestions: questionsAsked.length,
+      totalResponses: messages.filter(m => m.role === 'assistant').length
+    };
+    openWhatsAppWithSession(sessionData);
   };
 
   const [disclaimerStatus, setDisclaimerStatus] = useState<DisclaimerStatus>(() => {
@@ -971,7 +1020,46 @@ export default function TcmBrain() {
                     </span>
                   )}
                 </div>
+                
+                {/* Share buttons - visible when session has data */}
+                {questionsAsked.length > 0 && (
+                  <div className="flex items-center gap-0.5 ml-1 border-l border-border/50 pl-1.5">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-5 w-5 p-0"
+                      onClick={shareCurrentSessionViaEmail}
+                      title="Email session report"
+                    >
+                      <Mail className="h-3 w-3 text-blue-500" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-5 w-5 p-0"
+                      onClick={shareCurrentSessionViaWhatsApp}
+                      title="Send via WhatsApp"
+                    >
+                      <MessageCircle className="h-3 w-3 text-green-500" />
+                    </Button>
+                  </div>
+                )}
               </div>
+              
+              {/* Session History Button */}
+              <SessionHistoryDialog 
+                trigger={
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-7 px-2 gap-1.5 text-xs hidden sm:flex"
+                    title="View session history"
+                  >
+                    <History className="h-3.5 w-3.5" />
+                    <span className="hidden md:inline">History</span>
+                  </Button>
+                }
+              />
             </div>
             <div className="flex items-center gap-2">
               {/* Theme Toggle with System Option */}
