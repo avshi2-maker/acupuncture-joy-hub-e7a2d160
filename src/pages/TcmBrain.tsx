@@ -48,7 +48,10 @@ import {
   ChevronRight,
   ChevronLeft,
   Menu,
-  AlertTriangle
+  AlertTriangle,
+  Search,
+  Filter,
+  X
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -317,6 +320,23 @@ export default function TcmBrain() {
   const [showDetailedView, setShowDetailedView] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [showInlineChat, setShowInlineChat] = useState(false);
+  
+  // Search and filter states for main categories
+  const [categorySearches, setCategorySearches] = useState<Record<string, string>>({
+    symptoms: '',
+    diagnosis: '',
+    treatment: ''
+  });
+  const [categoryFilters, setCategoryFilters] = useState<Record<string, string>>({
+    symptoms: 'all',
+    diagnosis: 'all',
+    treatment: 'all'
+  });
+  const [alphabetFilters, setAlphabetFilters] = useState<Record<string, string>>({
+    symptoms: 'all',
+    diagnosis: 'all',
+    treatment: 'all'
+  });
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -789,11 +809,30 @@ export default function TcmBrain() {
               /* Main Queries View - First Page (No Quick Questions) */
               <div className="flex-1 p-4 space-y-4">
 
-                {/* 3 Main Query Categories - Enhanced Design */}
+                {/* 3 Main Query Categories - Enhanced Design with Search & Filters */}
                 <div className="grid md:grid-cols-3 gap-6">
                   {mainQueryCategories.map((category) => {
-                    const categories = [...new Set(category.questions.map(q => q.category))].sort();
+                    const allCategories = [...new Set(category.questions.map(q => q.category))].sort();
                     const isExpanded = expandedCategory === category.id;
+                    const searchTerm = categorySearches[category.id] || '';
+                    const subjectFilter = categoryFilters[category.id] || 'all';
+                    const alphabetFilter = alphabetFilters[category.id] || 'all';
+                    
+                    // Filter questions based on search, subject, and alphabet
+                    const filteredQuestions = category.questions.filter(q => {
+                      const matchesSearch = searchTerm === '' || 
+                        q.question.toLowerCase().includes(searchTerm.toLowerCase());
+                      const matchesSubject = subjectFilter === 'all' || q.category === subjectFilter;
+                      const matchesAlphabet = alphabetFilter === 'all' || 
+                        q.question.charAt(0).toUpperCase() === alphabetFilter;
+                      return matchesSearch && matchesSubject && matchesAlphabet;
+                    });
+                    
+                    // Get unique first letters for alphabet filter
+                    const availableLetters = [...new Set(
+                      category.questions.map(q => q.question.charAt(0).toUpperCase())
+                    )].sort();
+                    
                     return (
                       <Card 
                         key={category.id} 
@@ -817,46 +856,173 @@ export default function TcmBrain() {
                               <CardTitle className="text-lg font-display">{category.title}</CardTitle>
                               <p className="text-sm text-muted-foreground mt-0.5">{category.description}</p>
                               <Badge variant="secondary" className="mt-2 text-xs bg-jade/10 text-jade border-jade/20">
-                                {category.questions.length} questions
+                                {filteredQuestions.length} / {category.questions.length} questions
                               </Badge>
                             </div>
                           </div>
                         </CardHeader>
                         <CardContent className="space-y-3 pt-0">
                           {isExpanded ? (
-                            <div className="grid md:grid-cols-3 gap-4 p-3 bg-background/50 rounded-xl border border-border/50">
-                              {categories.map(cat => (
-                                <div key={cat} className="space-y-2">
-                                  <h4 className="text-xs font-semibold text-jade uppercase tracking-wider flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-jade" />
-                                    {cat}
-                                  </h4>
-                                  <div className="space-y-1 max-h-48 overflow-y-auto pr-2">
-                                    {category.questions
-                                      .filter(q => q.category === cat)
-                                      .sort((a, b) => a.question.localeCompare(b.question))
-                                      .map(q => (
-                                        <button
-                                          key={q.id}
-                                          onClick={() => handleQAQuestionSelect(q.question)}
-                                          className="w-full text-left text-xs p-2.5 rounded-lg 
-                                                   bg-card hover:bg-jade/15 hover:pl-5 
-                                                   transition-all duration-200 group 
-                                                   flex items-center gap-2 
-                                                   border border-border/50 hover:border-jade/40
-                                                   shadow-sm hover:shadow-md"
-                                        >
-                                          <Send className="h-3 w-3 opacity-0 group-hover:opacity-100 text-jade transition-opacity shrink-0" />
-                                          <span className="flex-1">{q.question}</span>
-                                        </button>
-                                      ))}
-                                  </div>
+                            <>
+                              {/* Search & Filter Bar */}
+                              <div className="space-y-3 p-3 bg-jade/5 rounded-xl border border-jade/20">
+                                {/* Search Input */}
+                                <div className="relative">
+                                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                  <Input
+                                    placeholder="Search questions..."
+                                    value={searchTerm}
+                                    onChange={(e) => setCategorySearches(prev => ({ 
+                                      ...prev, 
+                                      [category.id]: e.target.value 
+                                    }))}
+                                    className="pl-10 h-9 bg-background border-border/60"
+                                  />
+                                  {searchTerm && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                                      onClick={() => setCategorySearches(prev => ({ 
+                                        ...prev, 
+                                        [category.id]: '' 
+                                      }))}
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  )}
                                 </div>
-                              ))}
-                            </div>
+                                
+                                {/* Filter Row */}
+                                <div className="flex flex-wrap gap-2">
+                                  {/* Subject Filter */}
+                                  <Select
+                                    value={subjectFilter}
+                                    onValueChange={(value) => setCategoryFilters(prev => ({ 
+                                      ...prev, 
+                                      [category.id]: value 
+                                    }))}
+                                  >
+                                    <SelectTrigger className="w-[140px] h-8 text-xs bg-background">
+                                      <Filter className="h-3 w-3 mr-1" />
+                                      <SelectValue placeholder="Subject" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-card border-border z-50">
+                                      <SelectItem value="all">All Subjects</SelectItem>
+                                      {allCategories.map(cat => (
+                                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  
+                                  {/* Alphabet Filter */}
+                                  <Select
+                                    value={alphabetFilter}
+                                    onValueChange={(value) => setAlphabetFilters(prev => ({ 
+                                      ...prev, 
+                                      [category.id]: value 
+                                    }))}
+                                  >
+                                    <SelectTrigger className="w-[100px] h-8 text-xs bg-background">
+                                      <SelectValue placeholder="A-Z" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-card border-border z-50 max-h-60">
+                                      <SelectItem value="all">All (A-Z)</SelectItem>
+                                      {availableLetters.map(letter => (
+                                        <SelectItem key={letter} value={letter}>{letter}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  
+                                  {/* Clear Filters */}
+                                  {(searchTerm || subjectFilter !== 'all' || alphabetFilter !== 'all') && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                                      onClick={() => {
+                                        setCategorySearches(prev => ({ ...prev, [category.id]: '' }));
+                                        setCategoryFilters(prev => ({ ...prev, [category.id]: 'all' }));
+                                        setAlphabetFilters(prev => ({ ...prev, [category.id]: 'all' }));
+                                      }}
+                                    >
+                                      <X className="h-3 w-3 mr-1" />
+                                      Clear
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              {/* Filtered Questions Grid */}
+                              <div className="grid md:grid-cols-3 gap-4 p-3 bg-background/50 rounded-xl border border-border/50">
+                                {subjectFilter === 'all' ? (
+                                  // Group by category when showing all
+                                  allCategories.map(cat => {
+                                    const catQuestions = filteredQuestions.filter(q => q.category === cat);
+                                    if (catQuestions.length === 0) return null;
+                                    return (
+                                      <div key={cat} className="space-y-2">
+                                        <h4 className="text-xs font-semibold text-jade uppercase tracking-wider flex items-center gap-2">
+                                          <div className="w-2 h-2 rounded-full bg-jade" />
+                                          {cat}
+                                          <span className="text-muted-foreground font-normal">({catQuestions.length})</span>
+                                        </h4>
+                                        <div className="space-y-1 max-h-48 overflow-y-auto pr-2">
+                                          {catQuestions
+                                            .sort((a, b) => a.question.localeCompare(b.question))
+                                            .map(q => (
+                                              <button
+                                                key={q.id}
+                                                onClick={() => handleQAQuestionSelect(q.question)}
+                                                className="w-full text-left text-xs p-2.5 rounded-lg 
+                                                         bg-card hover:bg-jade/15 hover:pl-5 
+                                                         transition-all duration-200 group 
+                                                         flex items-center gap-2 
+                                                         border border-border/50 hover:border-jade/40
+                                                         shadow-sm hover:shadow-md"
+                                              >
+                                                <Send className="h-3 w-3 opacity-0 group-hover:opacity-100 text-jade transition-opacity shrink-0" />
+                                                <span className="flex-1">{q.question}</span>
+                                              </button>
+                                            ))}
+                                        </div>
+                                      </div>
+                                    );
+                                  })
+                                ) : (
+                                  // Show flat list when filtered by subject
+                                  <div className="md:col-span-3 space-y-1 max-h-64 overflow-y-auto">
+                                    {filteredQuestions.length === 0 ? (
+                                      <p className="text-center text-muted-foreground py-8 text-sm">
+                                        No questions match your filters
+                                      </p>
+                                    ) : (
+                                      filteredQuestions
+                                        .sort((a, b) => a.question.localeCompare(b.question))
+                                        .map(q => (
+                                          <button
+                                            key={q.id}
+                                            onClick={() => handleQAQuestionSelect(q.question)}
+                                            className="w-full text-left text-xs p-2.5 rounded-lg 
+                                                     bg-card hover:bg-jade/15 hover:pl-5 
+                                                     transition-all duration-200 group 
+                                                     flex items-center gap-2 
+                                                     border border-border/50 hover:border-jade/40
+                                                     shadow-sm hover:shadow-md"
+                                          >
+                                            <Send className="h-3 w-3 opacity-0 group-hover:opacity-100 text-jade transition-opacity shrink-0" />
+                                            <span className="flex-1">{q.question}</span>
+                                            <Badge variant="outline" className="text-[10px] shrink-0">{q.category}</Badge>
+                                          </button>
+                                        ))
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </>
                           ) : (
                             <div className="space-y-2">
-                              {categories.slice(0, 3).map(cat => (
+                              {allCategories.slice(0, 3).map(cat => (
                                 <Select
                                   key={cat}
                                   onValueChange={(value) => handleQAQuestionSelect(value)}
