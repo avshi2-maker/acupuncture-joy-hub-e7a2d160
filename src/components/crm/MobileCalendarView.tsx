@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { format, addDays, isSameDay, differenceInMinutes } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useSwipeGesture } from '@/hooks/useSwipeGesture';
+import { useHapticFeedback } from '@/hooks/useHapticFeedback';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import {
   ChevronLeft,
   ChevronRight,
@@ -16,6 +18,8 @@ import {
   MessageCircle,
   Repeat,
   CalendarDays,
+  RefreshCw,
+  Loader2,
 } from 'lucide-react';
 
 interface Appointment {
@@ -48,6 +52,7 @@ interface MobileCalendarViewProps {
   rooms: Room[];
   onAppointmentClick: (appt: Appointment) => void;
   onStartSession?: (appt: Appointment) => void;
+  onRefresh?: () => Promise<void>;
 }
 
 export function MobileCalendarView({
@@ -57,16 +62,31 @@ export function MobileCalendarView({
   rooms,
   onAppointmentClick,
   onStartSession,
+  onRefresh,
 }: MobileCalendarViewProps) {
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
+  const haptic = useHapticFeedback();
+
+  // Pull to refresh
+  const { isRefreshing, pullDistance, handlers: pullHandlers } = usePullToRefresh({
+    onRefresh: async () => {
+      haptic.medium();
+      if (onRefresh) {
+        await onRefresh();
+        haptic.success();
+      }
+    },
+    threshold: 80,
+  });
 
   const navigateDay = useCallback((direction: number) => {
+    haptic.light(); // Haptic feedback on swipe
     setSwipeDirection(direction > 0 ? 'left' : 'right');
     setTimeout(() => {
       onDateChange(addDays(selectedDate, direction));
       setSwipeDirection(null);
     }, 150);
-  }, [selectedDate, onDateChange]);
+  }, [selectedDate, onDateChange, haptic]);
 
   const swipeHandlers = useSwipeGesture({
     onSwipeLeft: () => navigateDay(1),
@@ -162,14 +182,45 @@ export function MobileCalendarView({
         </div>
       </div>
 
+      {/* Pull to refresh indicator */}
+      <div 
+        className={cn(
+          'flex items-center justify-center overflow-hidden transition-all duration-200 bg-jade/5',
+          pullDistance > 0 ? 'border-b border-jade/20' : ''
+        )}
+        style={{ 
+          height: pullDistance > 0 ? Math.min(pullDistance, 80) : 0,
+          opacity: pullDistance > 0 ? Math.min(pullDistance / 80, 1) : 0 
+        }}
+      >
+        {isRefreshing ? (
+          <Loader2 className="h-5 w-5 text-jade animate-spin" />
+        ) : (
+          <div className="flex items-center gap-2 text-jade">
+            <RefreshCw 
+              className={cn(
+                'h-5 w-5 transition-transform duration-200',
+                pullDistance >= 80 && 'rotate-180'
+              )} 
+            />
+            <span className="text-xs font-medium">
+              {pullDistance >= 80 ? 'Release to refresh' : 'Pull to refresh'}
+            </span>
+          </div>
+        )}
+      </div>
+
       {/* Swipe hint */}
       <div className="text-center py-2 text-xs text-muted-foreground bg-muted/30">
         <CalendarDays className="h-3 w-3 inline mr-1" />
-        Swipe left/right to change day
+        Swipe left/right • Pull down to refresh
       </div>
 
       {/* Appointments List */}
-      <ScrollArea className="flex-1">
+      <div 
+        className="flex-1 overflow-y-auto"
+        {...pullHandlers}
+      >
         <div 
           className={cn(
             'p-3 space-y-3 transition-transform duration-150',
@@ -293,7 +344,7 @@ export function MobileCalendarView({
             })
           )}
         </div>
-      </ScrollArea>
+      </div>
 
       {/* Summary footer */}
       <div className="bg-card border-t border-border/50 p-3">
