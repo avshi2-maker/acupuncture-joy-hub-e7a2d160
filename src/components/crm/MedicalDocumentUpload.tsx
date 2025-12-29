@@ -128,6 +128,16 @@ export function MedicalDocumentUpload({
         </span>
       </div>
 
+      {/* Privacy Notice */}
+      <div className="p-3 rounded-lg border border-destructive/30 bg-destructive/5">
+        <p className="text-xs text-destructive font-medium flex items-center gap-1">
+          ⚠️ All documents are saved exclusively on the Therapist's secure files – never stored on this application.
+        </p>
+        <p className="text-xs text-destructive/80 mt-1" dir="rtl">
+          כל המסמכים נשמרים בתיק המטפל בלבד – לעולם לא מאוחסנים באפליקציה זו.
+        </p>
+      </div>
+
       <div
         className={cn(
           'border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer',
