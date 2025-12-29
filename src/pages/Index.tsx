@@ -28,7 +28,7 @@ const promoVideos = [
   { src: "/videos/promo-1.mp4", titleHe: "הקליניקה שלנו - סיור וירטואלי", titleEn: "Our Clinic - Virtual Tour" },
   { src: "/videos/promo-2.mp4", titleHe: "טיפולי דיקור סיני מסורתי", titleEn: "Traditional Acupuncture Treatments" },
   { src: "/videos/promo-3.mp4", titleHe: "רפואה סינית לכאבים כרוניים", titleEn: "Chinese Medicine for Chronic Pain" },
-  { src: "/videos/promo-4.mp4", titleHe: "המלצות מטופלים מרוצים", titleEn: "Happy Patient Testimonials" },
+  { src: "/videos/promo-4.mp4", titleHe: "כל נתוני הרפואה הסינית מהידע, המחקר והניסיון של ד״ר רוני ספיר", titleEn: "All Chinese medicine data uniquely from Dr Roni Sapir own knowledge research & experience" },
 ];
 
 const Index = () => {
@@ -379,7 +379,10 @@ const Index = () => {
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3">
           {/* Watch Video Button */}
           <button
-            onClick={() => setShowVideoModal(true)}
+            onClick={() => {
+              setCurrentVideoIndex(0); // Always start from video #1
+              setShowVideoModal(true);
+            }}
             className="flex items-center gap-3 bg-foreground/80 hover:bg-foreground/90 backdrop-blur-sm text-cream px-4 py-3 rounded-full transition-all shadow-lg hover:shadow-xl hover:scale-105 group"
           >
             <div className="w-8 h-8 rounded-full bg-gold flex items-center justify-center animate-[pulse_2s_ease-in-out_infinite]">
@@ -460,7 +463,7 @@ const Index = () => {
         </div>
       </main>
 
-      {/* Video Modal */}
+      {/* Video Modal - Auto-playing all videos in sequence */}
       {showVideoModal && (
         <div 
           className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 animate-fade-in"
@@ -489,58 +492,55 @@ const Index = () => {
               <X className="h-5 w-5" />
             </button>
 
-            {/* Video title - show both Hebrew and English */}
+            {/* Video title - show current video info */}
             <div className="absolute top-14 left-3 z-10 bg-black/60 backdrop-blur-sm px-4 py-2 rounded-lg">
               <p className="text-white font-medium text-sm md:text-base" dir="rtl">
-                {currentVideo.titleHe}
+                {promoVideos[currentVideoIndex].titleHe}
               </p>
               <p className="text-white/70 text-xs md:text-sm">
-                {currentVideo.titleEn}
+                {promoVideos[currentVideoIndex].titleEn}
+              </p>
+              <p className="text-gold text-xs mt-1">
+                {language === "he" ? `סרטון ${currentVideoIndex + 1} מתוך ${promoVideos.length}` : `Video ${currentVideoIndex + 1} of ${promoVideos.length}`}
               </p>
             </div>
 
-            {/* Previous button */}
-            <button
-              onClick={prevVideo}
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 text-white rounded-full p-2 transition-colors"
-              aria-label="Previous video"
-            >
-              <ChevronLeft className="h-6 w-6" />
-            </button>
-
-            {/* Next button */}
-            <button
-              onClick={nextVideo}
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 text-white rounded-full p-2 transition-colors"
-              aria-label="Next video"
-            >
-              <ChevronRight className="h-6 w-6" />
-            </button>
-
-            {/* Video player */}
+            {/* Video player - auto-advances to next video */}
             <video 
-              key={currentVideo.src}
+              key={promoVideos[currentVideoIndex].src}
               className="w-full aspect-video"
               controls
               autoPlay
               poster="/videos/poster-default.jpg"
+              onEnded={() => {
+                // Auto-advance to next video, or close modal if last video
+                if (currentVideoIndex < promoVideos.length - 1) {
+                  setCurrentVideoIndex(prev => prev + 1);
+                } else {
+                  // Optional: loop back to first video or close
+                  setCurrentVideoIndex(0); // Loop back to start
+                }
+              }}
             >
-              <source src={currentVideo.src} type="video/mp4" />
+              <source src={promoVideos[currentVideoIndex].src} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
 
-            {/* Video indicators/thumbnails */}
+            {/* Video progress indicators */}
             <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10 flex gap-2">
-              {promoVideos.map((_, index) => (
+              {promoVideos.map((video, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentVideoIndex(index)}
                   className={`w-3 h-3 rounded-full transition-all ${
                     index === currentVideoIndex 
                       ? "bg-gold scale-125" 
-                      : "bg-white/50 hover:bg-white/80"
+                      : index < currentVideoIndex 
+                        ? "bg-green-500" // Already played
+                        : "bg-white/50 hover:bg-white/80" // Not yet played
                   }`}
                   aria-label={`Go to video ${index + 1}`}
+                  title={video.titleEn}
                 />
               ))}
             </div>
