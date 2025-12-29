@@ -2,7 +2,7 @@ import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Leaf, MessageCircle, Smartphone, X, Download, Play, BookOpen } from "lucide-react";
+import { Leaf, MessageCircle, Smartphone, X, Play, BookOpen } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import heroBg from "@/assets/hero-meridian-bg.png";
@@ -96,36 +96,24 @@ const Index = () => {
           </button>
         </div>
 
-        {/* Install App Banner - Bottom Right */}
+        {/* Install App Button - Bottom Right */}
         {showInstallBanner && (
           <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-30 animate-fade-in">
-            <div className="bg-card border border-border rounded-lg shadow-elevated p-4 w-72">
+            <div className="relative">
+              <Link 
+                to="/install"
+                className="flex items-center gap-2 bg-jade hover:bg-jade/90 text-white px-4 py-3 rounded-full transition-all shadow-lg hover:shadow-xl font-medium text-sm"
+              >
+                <Smartphone className="h-4 w-4" />
+                <span>Install App</span>
+              </Link>
               <button 
-                onClick={() => setShowInstallBanner(false)}
-                className="absolute top-2 right-2 text-muted-foreground hover:text-foreground transition-colors"
+                onClick={(e) => { e.preventDefault(); setShowInstallBanner(false); }}
+                className="absolute -top-2 -right-2 bg-foreground/80 hover:bg-foreground text-cream rounded-full p-1 transition-colors"
                 aria-label="Close"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3" />
               </button>
-              
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg border border-jade/30 bg-jade/5">
-                  <Smartphone className="h-6 w-6 text-jade animate-pulse" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-foreground text-sm">Install Our App</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Install for faster access and offline support.
-                  </p>
-                </div>
-              </div>
-              
-              <Button asChild size="sm" className="w-full mt-3 bg-jade hover:bg-jade/90 text-white">
-                <Link to="/install" className="flex items-center justify-center gap-2">
-                  <Download className="h-4 w-4" />
-                  Install Mobile App Android/iOS
-                </Link>
-              </Button>
             </div>
           </div>
         )}
