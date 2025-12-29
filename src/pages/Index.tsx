@@ -2,7 +2,7 @@ import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Leaf, MessageCircle, Smartphone, X, Download } from "lucide-react";
+import { Leaf, MessageCircle, Smartphone, X, Download, Play } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import heroBg from "@/assets/hero-meridian-bg.png";
@@ -74,6 +74,16 @@ const Index = () => {
             {t("heroDescription")}
           </p>
         </section>
+
+        {/* Watch Video Button - Bottom Left */}
+        <div className="fixed bottom-4 left-4 md:bottom-6 md:left-6 z-30">
+          <button className="flex items-center gap-3 bg-foreground/80 hover:bg-foreground/90 backdrop-blur-sm text-cream px-4 py-3 rounded-full transition-all shadow-lg hover:shadow-xl group">
+            <div className="w-8 h-8 rounded-full bg-gold flex items-center justify-center">
+              <Play className="h-4 w-4 text-foreground fill-foreground" />
+            </div>
+            <span className="text-sm font-medium pr-2">Watch Short Video Clinic Presentation</span>
+          </button>
+        </div>
 
         {/* Install App Banner - Bottom Right */}
         {showInstallBanner && (
