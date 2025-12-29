@@ -25,6 +25,14 @@ const Index = () => {
         {/* Text container with glass effect */}
         <section className="relative z-10 w-full max-w-2xl text-center">
           <div className="bg-background/80 backdrop-blur-md rounded-2xl p-8 md:p-12 shadow-elevated border border-jade/20">
+            <p className="text-lg md:text-xl font-display text-foreground">Dr Roni Sapir</p>
+            <p className="text-sm md:text-base text-muted-foreground">
+              Complementary Medicine - Acupuncture Clinic
+            </p>
+            <p className="text-xs text-muted-foreground/70 italic mb-6">
+              Healing Through Balance with AI
+            </p>
+
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl tracking-tight text-foreground">
               Restore Balance.
             </h1>
