@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { BodyFigureSelector, parsePointReferences } from '@/components/acupuncture/BodyFigureSelector';
 import { AIResponseDisplay } from '@/components/tcm/AIResponseDisplay';
 import { useNavigate } from 'react-router-dom';
@@ -321,9 +321,10 @@ export default function TcmBrain() {
   const [questionsAsked, setQuestionsAsked] = useState<string[]>([]);
   const [voiceNotes, setVoiceNotes] = useState<VoiceNote[]>([]);
   const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
+  const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
   
   // Session history hook
-  const { saveSession, exportSessionAsPDF, openGmailWithSession, openWhatsAppWithSession } = useTcmSessionHistory();
+  const { sessions, saveSession, exportSessionAsPDF, openGmailWithSession, openWhatsAppWithSession } = useTcmSessionHistory();
   
   // Update clock every second
   useEffect(() => {
@@ -585,11 +586,18 @@ export default function TcmBrain() {
       };
       
       saveSession(sessionData);
+      setLastAutoSave(new Date());
     };
     
     const timer = setInterval(autoSave, 30000); // Auto-save every 30 seconds
     return () => clearInterval(timer);
   }, [isSessionRunning, messages, questionsAsked, voiceNotes, sessionStartTime, sessionSeconds, selectedPatient, activeTemplate, saveSession, formatSessionTime]);
+
+  // Get patient's past sessions
+  const patientSessions = useMemo(() => {
+    if (!selectedPatient?.name) return [];
+    return sessions.filter(s => s.patientName === selectedPatient.name).slice(0, 5);
+  }, [sessions, selectedPatient?.name]);
   
   // Search and filter states for main categories
   const [categorySearches, setCategorySearches] = useState<Record<string, string>>({
@@ -1153,7 +1161,30 @@ export default function TcmBrain() {
                     </Button>
                   </div>
                 )}
+                
+                {/* Auto-save indicator */}
+                {lastAutoSave && isSessionRunning && (
+                  <div className="flex items-center gap-1 ml-1 border-l border-border/50 pl-1.5" title={`Last saved: ${lastAutoSave.toLocaleTimeString()}`}>
+                    <div className="w-1.5 h-1.5 rounded-full bg-jade animate-pulse" />
+                    <span className="text-[9px] text-muted-foreground">
+                      Saved {lastAutoSave.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                )}
               </div>
+              
+              {/* Patient History Preview - show when patient selected */}
+              {selectedPatient && patientSessions.length > 0 && (
+                <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded bg-muted/30 border border-border/30">
+                  <History className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-[10px] text-muted-foreground">
+                    {patientSessions.length} past session{patientSessions.length !== 1 ? 's' : ''}
+                  </span>
+                  <span className="text-[10px] text-jade">
+                    Last: {new Date(patientSessions[0].startTime).toLocaleDateString()}
+                  </span>
+                </div>
+              )}
               
               {/* Patient Selection Dropdown */}
               <PatientSelectorDropdown
