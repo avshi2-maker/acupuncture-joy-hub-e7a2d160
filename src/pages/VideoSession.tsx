@@ -58,6 +58,7 @@ import { FollowUpPlanDialog } from '@/components/video/FollowUpPlanDialog';
 import { VoiceDictationDialog } from '@/components/video/VoiceDictationDialog';
 import { CalendarInviteDialog } from '@/components/video/CalendarInviteDialog';
 import { SessionReportDialog } from '@/components/video/SessionReportDialog';
+import { MobileSessionBar } from '@/components/video/MobileSessionBar';
 import { SessionTimerWidget } from '@/components/crm/SessionTimerWidget';
 import { SessionTimerProvider } from '@/contexts/SessionTimerContext';
 import { useSessionPersistence } from '@/hooks/useSessionPersistence';
@@ -448,21 +449,50 @@ export default function VideoSession() {
       </Helmet>
 
       <div className="min-h-screen bg-background flex flex-col" dir="rtl">
-        {/* Header */}
+        {/* Header - Optimized for mobile */}
         <header className="bg-card border-b border-border sticky top-0 z-50">
-          <div className="max-w-full mx-auto px-4 py-4 relative flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-4 hover:opacity-90 transition-opacity">
-              <div className="w-10 h-10 bg-jade-light rounded-full flex items-center justify-center">
-                <Leaf className="h-5 w-5 text-jade" />
+          <div className="max-w-full mx-auto px-3 md:px-4 py-2 md:py-4 relative flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-2 md:gap-4 hover:opacity-90 transition-opacity">
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-jade-light rounded-full flex items-center justify-center">
+                <Leaf className="h-4 w-4 md:h-5 md:w-5 text-jade" />
               </div>
-              <div>
-                <h1 className="font-display text-xl">TCM Clinic</h1>
-                <p className="text-sm text-muted-foreground">פגישת וידאו</p>
+              <div className="hidden sm:block">
+                <h1 className="font-display text-lg md:text-xl">TCM Clinic</h1>
+                <p className="text-xs md:text-sm text-muted-foreground">פגישת וידאו</p>
               </div>
             </Link>
 
-            {/* Clock - circular with full background */}
-            <div className="absolute left-1/2 -translate-x-1/2">
+            {/* Mobile Patient Selector - Quick access */}
+            <div className="flex md:hidden items-center gap-2 flex-1 mx-2">
+              <Select
+                value={selectedPatientId || 'none'}
+                onValueChange={handlePatientSelect}
+                disabled={loadingPatients}
+              >
+                <SelectTrigger className="flex-1 bg-background h-9 text-sm">
+                  <SelectValue placeholder={loadingPatients ? "טוען..." : "בחר מטופל"} />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border shadow-lg z-50">
+                  <SelectItem value="none">ללא מטופל</SelectItem>
+                  {patients.map((patient) => (
+                    <SelectItem key={patient.id} value={patient.id}>
+                      {patient.full_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-9 w-9 shrink-0 touch-manipulation" 
+                onClick={() => setShowSettings(true)}
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Clock - circular with full background - hidden on mobile */}
+            <div className="absolute left-1/2 -translate-x-1/2 hidden md:block">
               <div className="relative h-20 w-20 rounded-full shadow-lg overflow-hidden">
                 <img
                   src={clockImg}
@@ -478,7 +508,7 @@ export default function VideoSession() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-3">
               <LanguageSwitcher variant="outline" isScrolled={true} />
               <Button asChild variant="outline" size="sm">
                 <Link to="/dashboard" className="gap-2">
@@ -491,9 +521,9 @@ export default function VideoSession() {
           </div>
         </header>
 
-        {/* CAF Asset Boxes - All connected to RAG */}
-        <div className="px-4 pt-4 pb-2">
-          <div className="flex flex-wrap gap-2">
+        {/* CAF Asset Boxes - All connected to RAG - Scrollable on mobile */}
+        <div className="px-3 md:px-4 pt-3 md:pt-4 pb-2">
+          <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 md:flex-wrap scrollbar-hide -mx-3 px-3 md:mx-0 md:px-0">
             {/* Herbs */}
             <Button 
               variant={activeAiQuery === 'herbs' ? 'default' : 'outline'} 
@@ -738,23 +768,23 @@ export default function VideoSession() {
         )}
 
         {/* Main Content - 2 Column Layout */}
-        <main className="p-4 flex-1 overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-full">
+        <main className="p-3 md:p-4 flex-1 overflow-hidden pb-24 md:pb-4">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 md:gap-4 h-full">
             
             {/* Left Column - Video + Anxiety Q&A (3/4 width) */}
-            <div className="lg:col-span-3 flex flex-col gap-4 h-full overflow-hidden">
+            <div className="lg:col-span-3 flex flex-col gap-3 md:gap-4 h-full overflow-hidden">
               {/* Top Row: Video Area + Anxiety Q&A Chat */}
-              <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
-                {/* Video Area */}
+              <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 min-h-0">
+                {/* Video Area - Compact on mobile */}
                 <Card className="bg-muted/30 overflow-hidden">
-                  <CardContent className="p-0 h-full flex items-center justify-center min-h-[300px]">
-                    <div className="w-full h-full bg-gradient-to-br from-jade/10 to-jade/5 rounded-lg flex flex-col items-center justify-center p-6">
-                      <Video className="h-16 w-16 text-jade/40 mb-3" />
-                      <p className="text-muted-foreground text-lg">אזור וידאו</p>
-                      <p className="text-xs text-muted-foreground mt-1">Zoom / Google Meet</p>
+                  <CardContent className="p-0 h-full flex items-center justify-center min-h-[200px] md:min-h-[300px]">
+                    <div className="w-full h-full bg-gradient-to-br from-jade/10 to-jade/5 rounded-lg flex flex-col items-center justify-center p-4 md:p-6">
+                      <Video className="h-10 w-10 md:h-16 md:w-16 text-jade/40 mb-2 md:mb-3" />
+                      <p className="text-muted-foreground text-base md:text-lg">אזור וידאו</p>
+                      <p className="text-xs text-muted-foreground mt-1 hidden md:block">Zoom / Google Meet</p>
                       
                       {sessionStatus !== 'idle' && (
-                        <Badge className={`mt-4 text-sm px-3 py-1 ${
+                        <Badge className={`mt-3 md:mt-4 text-xs md:text-sm px-2 md:px-3 py-0.5 md:py-1 ${
                           sessionStatus === 'running' ? 'bg-jade animate-pulse' : 
                           sessionStatus === 'paused' ? 'bg-gold' : 'bg-destructive'
                         }`}>
@@ -763,7 +793,7 @@ export default function VideoSession() {
                         </Badge>
                       )}
                       
-                      <p className="text-4xl font-mono mt-4 text-jade font-bold">
+                      <p className="text-3xl md:text-4xl font-mono mt-3 md:mt-4 text-jade font-bold hidden md:block">
                         {formatDuration(sessionDuration)}
                       </p>
                       
@@ -865,8 +895,8 @@ export default function VideoSession() {
               </Card>
             </div>
 
-            {/* Right Sidebar - All Tools & Controls (1/4 width) */}
-            <div className="lg:col-span-1 flex flex-col gap-3 overflow-y-auto max-h-[calc(100vh-105px)]">
+            {/* Right Sidebar - All Tools & Controls (1/4 width) - Hidden on mobile */}
+            <div className="hidden lg:flex lg:col-span-1 flex-col gap-3 overflow-y-auto max-h-[calc(100vh-105px)]">
               {/* Patient Selection */}
               <Card>
                 <CardHeader className="pb-2 pt-3">
@@ -1050,7 +1080,22 @@ export default function VideoSession() {
           </div>
         </main>
 
-        {/* Session timer widget removed - using header clock instead */}
+        {/* Mobile Session Bar - Fixed bottom bar for mobile */}
+        <MobileSessionBar
+          sessionStatus={sessionStatus}
+          sessionDuration={sessionDuration}
+          selectedPatientName={selectedPatientName}
+          isZoomWarning={isZoomWarning}
+          onStart={handleStart}
+          onPause={handlePause}
+          onResume={handleResume}
+          onEnd={handleEnd}
+          onReset={handleRepeat}
+          onQuickPatient={() => setShowQuickPatient(true)}
+          onQuickAppointment={() => setShowQuickAppointment(true)}
+          onZoomInvite={() => setShowZoomInvite(true)}
+          zoomTimeRemaining={getZoomTimeRemaining()}
+        />
       </div>
 
       {/* Dialogs */}

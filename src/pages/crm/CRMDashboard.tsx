@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Users, Clock, TrendingUp, Plus, ArrowRight } from 'lucide-react';
+import { Calendar, Users, Clock, TrendingUp, Plus, ArrowRight, Video } from 'lucide-react';
 import { WhatsAppReminderButton } from '@/components/crm/WhatsAppReminderButton';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -78,10 +78,10 @@ export default function CRMDashboard() {
   };
 
   const statCards = [
-    { title: 'Total Patients', value: stats.totalPatients, icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    { title: "Today's Appointments", value: stats.todayAppointments, icon: Calendar, color: 'text-jade', bg: 'bg-jade/10' },
-    { title: 'Upcoming', value: stats.upcomingAppointments, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-    { title: 'Weekly Visits', value: stats.weeklyVisits, icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+    { title: 'Patients', shortTitle: 'Patients', value: stats.totalPatients, icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+    { title: "Today's Appts", shortTitle: 'Today', value: stats.todayAppointments, icon: Calendar, color: 'text-jade', bg: 'bg-jade/10' },
+    { title: 'Upcoming', shortTitle: 'Soon', value: stats.upcomingAppointments, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+    { title: 'This Week', shortTitle: 'Week', value: stats.weeklyVisits, icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
   ];
 
   return (
@@ -111,19 +111,22 @@ export default function CRMDashboard() {
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        {/* Stats Grid - Mobile Optimized */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
           {statCards.map((stat) => (
-            <Card key={stat.title} className="border-border/50">
-              <CardContent className="p-4 md:p-6">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-xs md:text-sm text-muted-foreground truncate">{stat.title}</p>
-                    <p className="text-2xl md:text-3xl font-semibold mt-1">
+            <Card key={stat.title} className="border-border/50 active:scale-[0.98] transition-transform touch-manipulation">
+              <CardContent className="p-3 md:p-6">
+                <div className="flex items-center justify-between gap-1 md:gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] md:text-sm text-muted-foreground truncate">
+                      <span className="hidden sm:inline">{stat.title}</span>
+                      <span className="sm:hidden">{stat.shortTitle}</span>
+                    </p>
+                    <p className="text-xl md:text-3xl font-semibold mt-0.5 md:mt-1">
                       {loading ? '—' : stat.value}
                     </p>
                   </div>
-                  <div className={`p-2 md:p-3 rounded-xl ${stat.bg} shrink-0`}>
+                  <div className={`p-1.5 md:p-3 rounded-lg md:rounded-xl ${stat.bg} shrink-0`}>
                     <stat.icon className={`h-4 w-4 md:h-6 md:w-6 ${stat.color}`} />
                   </div>
                 </div>
@@ -206,34 +209,50 @@ export default function CRMDashboard() {
             </CardContent>
           </Card>
 
-          {/* Quick Actions */}
+          {/* Quick Actions - Mobile Optimized with larger touch targets */}
           <Card className="border-border/50">
-            <CardHeader className="pb-3 px-4 md:px-6">
+            <CardHeader className="pb-2 md:pb-3 px-3 md:px-6">
               <CardTitle className="text-base md:text-lg">Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent className="px-4 md:px-6">
+            <CardContent className="px-3 md:px-6 pb-4">
               <div className="grid grid-cols-2 gap-2 md:gap-3">
-                <Button variant="outline" className="h-16 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm" asChild>
+                <Button 
+                  variant="outline" 
+                  className="h-14 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm touch-manipulation active:scale-[0.98]" 
+                  asChild
+                >
                   <Link to="/crm/patients/new">
-                    <Users className="h-4 w-4 md:h-5 md:w-5" />
+                    <Users className="h-5 w-5 md:h-5 md:w-5" />
                     <span>Add Patient</span>
                   </Link>
                 </Button>
-                <Button variant="outline" className="h-16 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm" asChild>
+                <Button 
+                  variant="outline" 
+                  className="h-14 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm touch-manipulation active:scale-[0.98]" 
+                  asChild
+                >
                   <Link to="/crm/calendar">
-                    <Calendar className="h-4 w-4 md:h-5 md:w-5" />
-                    <span>New Appointment</span>
+                    <Calendar className="h-5 w-5 md:h-5 md:w-5" />
+                    <span>Appointment</span>
                   </Link>
                 </Button>
-                <Button variant="outline" className="h-16 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm" asChild>
-                  <Link to="/crm/rooms">
-                    <Clock className="h-4 w-4 md:h-5 md:w-5" />
-                    <span>Manage Rooms</span>
+                <Button 
+                  variant="outline" 
+                  className="h-14 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm touch-manipulation active:scale-[0.98]" 
+                  asChild
+                >
+                  <Link to="/video-session">
+                    <Video className="h-5 w-5 md:h-5 md:w-5 text-jade" />
+                    <span>Video Session</span>
                   </Link>
                 </Button>
-                <Button variant="outline" className="h-16 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm" asChild>
+                <Button 
+                  variant="outline" 
+                  className="h-14 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm touch-manipulation active:scale-[0.98]" 
+                  asChild
+                >
                   <Link to="/tcm-brain">
-                    <TrendingUp className="h-4 w-4 md:h-5 md:w-5" />
+                    <TrendingUp className="h-5 w-5 md:h-5 md:w-5" />
                     <span>TCM Brain</span>
                   </Link>
                 </Button>
