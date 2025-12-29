@@ -105,6 +105,7 @@ export default function Dashboard() {
       description: 'ניהול תורים וזמינות',
       icon: <Calendar className="h-6 w-6 text-white" />,
       feature: 'calendar' as const,
+      href: '/crm/calendar',
       backgroundImage: calendarBg,
     },
     {
@@ -113,7 +114,7 @@ export default function Dashboard() {
       description: 'CRM מותאם למטפלים',
       icon: <Users className="h-6 w-6 text-white" />,
       feature: 'crm' as const,
-      href: '/crm',
+      href: '/crm/patients',
       backgroundImage: calendarBg,
     },
     {
@@ -122,6 +123,7 @@ export default function Dashboard() {
       description: 'שליחת תזכורות Email / WhatsApp',
       icon: <MessageSquare className="h-6 w-6 text-white" />,
       feature: 'email_reminders' as const,
+      href: '/crm/calendar',
       backgroundImage: calendarBg,
     },
   ];
@@ -153,6 +155,7 @@ export default function Dashboard() {
       description: 'מפה אינטראקטיבית לאבחון',
       icon: <MapPin className="h-6 w-6 text-white" />,
       feature: 'body_map' as const,
+      href: '/tcm-brain',
       backgroundImage: deskBg,
     },
   ];
