@@ -79,6 +79,9 @@ const stepFields: Record<number, (keyof PatientFormData)[]> = {
   3: ['consent_signed'],
 };
 
+// Which steps can be skipped (have no required fields)
+const skippableSteps = [2]; // Only Lifestyle step is skippable
+
 const stepTitles = [
   { title: 'Personal Info', icon: User },
   { title: 'Medical History', icon: Heart },
@@ -158,6 +161,14 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
   const [idCheckStatus, setIdCheckStatus] = useState<'idle' | 'checking' | 'valid' | 'duplicate' | 'invalid_checksum'>('idle');
   const [isIdDuplicate, setIsIdDuplicate] = useState(false);
   const [idChecksumError, setIdChecksumError] = useState<string | null>(null);
+  
+  // Custom notes alongside dropdowns
+  const [customNotes, setCustomNotes] = useState<Record<string, string>>({
+    sleep_quality: '',
+    stress_level: '',
+    exercise_frequency: '',
+    constitution_type: '',
+  });
 
   const totalSteps = stepTitles.length;
   const progress = ((currentStep + 1) / totalSteps) * 100;
@@ -384,6 +395,21 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
       if (dietHabits.length > 0) {
         compiledNotes += '\n\n--- Diet & Nutrition Habits ---\n';
         compiledNotes += dietHabits.join('\n');
+      }
+
+      // Add custom notes from dropdowns
+      const customNoteLabels: Record<string, string> = {
+        sleep_quality: 'Sleep Notes',
+        stress_level: 'Stress Notes',
+        exercise_frequency: 'Exercise Notes',
+        constitution_type: 'Constitution Notes',
+      };
+      const customNotesEntries = Object.entries(customNotes).filter(([_, value]) => value.trim());
+      if (customNotesEntries.length > 0) {
+        compiledNotes += '\n\n--- Additional Assessment Notes ---\n';
+        customNotesEntries.forEach(([key, value]) => {
+          compiledNotes += `${customNoteLabels[key] || key}: ${value}\n`;
+        });
       }
 
       const patientData = {
@@ -1011,6 +1037,12 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                             <SelectItem value="poor">Poor</SelectItem>
                           </SelectContent>
                         </Select>
+                        <Input
+                          placeholder="Additional details..."
+                          className="mt-2"
+                          value={customNotes.sleep_quality}
+                          onChange={(e) => setCustomNotes(prev => ({ ...prev, sleep_quality: e.target.value }))}
+                        />
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1038,6 +1070,12 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                             <SelectItem value="severe">Severe</SelectItem>
                           </SelectContent>
                         </Select>
+                        <Input
+                          placeholder="Additional details..."
+                          className="mt-2"
+                          value={customNotes.stress_level}
+                          onChange={(e) => setCustomNotes(prev => ({ ...prev, stress_level: e.target.value }))}
+                        />
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1066,6 +1104,12 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                             <SelectItem value="never">Never</SelectItem>
                           </SelectContent>
                         </Select>
+                        <Input
+                          placeholder="Additional details..."
+                          className="mt-2"
+                          value={customNotes.exercise_frequency}
+                          onChange={(e) => setCustomNotes(prev => ({ ...prev, exercise_frequency: e.target.value }))}
+                        />
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1187,6 +1231,12 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                           <SelectItem value="special">Special Constitution (特禀)</SelectItem>
                         </SelectContent>
                       </Select>
+                      <Input
+                        placeholder="Additional notes about constitution..."
+                        className="mt-2"
+                        value={customNotes.constitution_type}
+                        onChange={(e) => setCustomNotes(prev => ({ ...prev, constitution_type: e.target.value }))}
+                      />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -1294,25 +1344,42 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
               {currentStep === 0 ? 'Cancel' : 'Previous'}
             </Button>
             
-            {currentStep < totalSteps - 1 ? (
-              <Button 
-                type="button"
-                onClick={handleNext}
-                className="bg-jade hover:bg-jade/90 gap-2"
-              >
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            ) : (
-              <Button 
-                type="submit" 
-                disabled={loading}
-                className="bg-jade hover:bg-jade/90 gap-2"
-              >
-                <Save className="h-4 w-4" />
-                {loading ? 'Saving...' : patientId ? 'Update & Choose Next' : 'Save & Choose Next'}
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {/* Skip button for optional steps */}
+              {currentStep < totalSteps - 1 && skippableSteps.includes(currentStep) && (
+                <Button 
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setCurrentStep(prev => prev + 1);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="text-muted-foreground"
+                >
+                  Skip
+                </Button>
+              )}
+              
+              {currentStep < totalSteps - 1 ? (
+                <Button 
+                  type="button"
+                  onClick={handleNext}
+                  className="bg-jade hover:bg-jade/90 gap-2"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              ) : (
+                <Button 
+                  type="submit" 
+                  disabled={loading}
+                  className="bg-jade hover:bg-jade/90 gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  {loading ? 'Saving...' : patientId ? 'Update & Choose Next' : 'Save & Choose Next'}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </form>
