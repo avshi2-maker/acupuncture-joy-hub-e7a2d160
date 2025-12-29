@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,18 +6,21 @@ import { Button } from '@/components/ui/button';
 import { useTier } from '@/hooks/useTier';
 import { TierBadge } from '@/components/layout/TierBadge';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { 
   Brain, 
   Calendar, 
   Users, 
-  MapPin, 
-  MessageSquare, 
   Video, 
   Lock,
   Leaf,
   LogOut,
-  Database
+  Database,
+  CheckCircle2,
+  FileCheck,
+  Clock,
+  UserCheck
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import calendarBg from '@/assets/calendar-bg.png';
@@ -88,9 +91,75 @@ function FeatureCard({ title, description, icon, available, href, highlighted, b
   return content;
 }
 
+interface DashboardStats {
+  totalPatients: number;
+  appointmentsToday: number;
+  patientsWithConsent: number;
+  pendingConsents: number;
+  hasAppointmentWithConsent: boolean;
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const { tier, hasFeature, daysRemaining } = useTier();
+  const [stats, setStats] = useState<DashboardStats>({
+    totalPatients: 0,
+    appointmentsToday: 0,
+    patientsWithConsent: 0,
+    pendingConsents: 0,
+    hasAppointmentWithConsent: false,
+  });
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+
+  // Fetch dashboard statistics
+  useEffect(() => {
+    const fetchStats = async () => {
+      setIsLoadingStats(true);
+      try {
+        // Get today's date range
+        const today = new Date();
+        const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
+        const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString();
+
+        // Fetch patients
+        const { data: patients } = await supabase
+          .from('patients')
+          .select('id, consent_signed');
+
+        // Fetch today's appointments with patient info
+        const { data: appointments } = await supabase
+          .from('appointments')
+          .select('id, patient_id')
+          .gte('start_time', startOfDay)
+          .lte('start_time', endOfDay);
+
+        const totalPatients = patients?.length || 0;
+        const patientsWithConsent = patients?.filter(p => p.consent_signed).length || 0;
+        const pendingConsents = totalPatients - patientsWithConsent;
+        const appointmentsToday = appointments?.length || 0;
+
+        // Check if any appointment today has a patient with consent
+        const patientIds = appointments?.map(a => a.patient_id).filter(Boolean) || [];
+        const hasAppointmentWithConsent = patients?.some(
+          p => p.consent_signed && patientIds.includes(p.id)
+        ) || false;
+
+        setStats({
+          totalPatients,
+          appointmentsToday,
+          patientsWithConsent,
+          pendingConsents,
+          hasAppointmentWithConsent,
+        });
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   useEffect(() => {
     if (!tier) {
@@ -228,47 +297,138 @@ export default function Dashboard() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-0">
               {/* Step 1: Schedule */}
               <Link to="/crm/calendar" className="flex flex-col items-center group cursor-pointer">
-                <div className="w-14 h-14 rounded-full bg-jade/10 border-2 border-jade flex items-center justify-center group-hover:bg-jade group-hover:scale-110 transition-all duration-300">
-                  <Calendar className="h-6 w-6 text-jade group-hover:text-white transition-colors" />
+                <div className={`w-14 h-14 rounded-full border-2 flex items-center justify-center group-hover:scale-110 transition-all duration-300 ${
+                  stats.appointmentsToday > 0 
+                    ? 'bg-jade border-jade' 
+                    : 'bg-jade/10 border-jade group-hover:bg-jade'
+                }`}>
+                  {stats.appointmentsToday > 0 ? (
+                    <CheckCircle2 className="h-6 w-6 text-white" />
+                  ) : (
+                    <Calendar className="h-6 w-6 text-jade group-hover:text-white transition-colors" />
+                  )}
                 </div>
-                <span className="mt-2 text-sm font-medium text-jade">1. קביעת תור</span>
-                <span className="text-xs text-muted-foreground">ביומן</span>
+                <span className={`mt-2 text-sm font-medium ${stats.appointmentsToday > 0 ? 'text-jade' : 'text-jade'}`}>
+                  1. קביעת תור
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {stats.appointmentsToday > 0 ? `${stats.appointmentsToday} תורים היום` : 'ביומן'}
+                </span>
               </Link>
 
               {/* Arrow 1 */}
               <div className="hidden sm:flex items-center px-4">
-                <div className="w-16 h-0.5 bg-gradient-to-l from-jade/60 to-jade/20"></div>
-                <div className="w-0 h-0 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent border-r-[8px] border-r-jade/60"></div>
+                <div className={`w-16 h-0.5 ${stats.appointmentsToday > 0 ? 'bg-jade' : 'bg-gradient-to-l from-jade/60 to-jade/20'}`}></div>
+                <div className={`w-0 h-0 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent border-r-[8px] ${stats.appointmentsToday > 0 ? 'border-r-jade' : 'border-r-jade/60'}`}></div>
               </div>
-              <div className="sm:hidden h-6 w-0.5 bg-gradient-to-b from-jade/60 to-jade/20"></div>
+              <div className={`sm:hidden h-6 w-0.5 ${stats.appointmentsToday > 0 ? 'bg-jade' : 'bg-gradient-to-b from-jade/60 to-jade/20'}`}></div>
 
               {/* Step 2: Patient Consent */}
               <Link to="/crm/patients" className="flex flex-col items-center group cursor-pointer">
-                <div className="w-14 h-14 rounded-full bg-jade/10 border-2 border-jade/60 flex items-center justify-center group-hover:bg-jade group-hover:border-jade group-hover:scale-110 transition-all duration-300">
-                  <Users className="h-6 w-6 text-jade/80 group-hover:text-white transition-colors" />
+                <div className={`w-14 h-14 rounded-full border-2 flex items-center justify-center group-hover:scale-110 transition-all duration-300 ${
+                  stats.hasAppointmentWithConsent 
+                    ? 'bg-jade border-jade' 
+                    : 'bg-jade/10 border-jade/60 group-hover:bg-jade group-hover:border-jade'
+                }`}>
+                  {stats.hasAppointmentWithConsent ? (
+                    <CheckCircle2 className="h-6 w-6 text-white" />
+                  ) : (
+                    <Users className="h-6 w-6 text-jade/80 group-hover:text-white transition-colors" />
+                  )}
                 </div>
-                <span className="mt-2 text-sm font-medium text-jade/80">2. הסכמת מטופל</span>
-                <span className="text-xs text-muted-foreground">חתימה על טופס</span>
+                <span className={`mt-2 text-sm font-medium ${stats.hasAppointmentWithConsent ? 'text-jade' : 'text-jade/80'}`}>
+                  2. הסכמת מטופל
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {stats.hasAppointmentWithConsent ? 'מוכן לטיפול ✓' : 'חתימה על טופס'}
+                </span>
               </Link>
 
               {/* Arrow 2 */}
               <div className="hidden sm:flex items-center px-4">
-                <div className="w-16 h-0.5 bg-gradient-to-l from-jade/60 to-jade/20"></div>
-                <div className="w-0 h-0 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent border-r-[8px] border-r-jade/60"></div>
+                <div className={`w-16 h-0.5 ${stats.hasAppointmentWithConsent ? 'bg-jade' : 'bg-gradient-to-l from-jade/60 to-jade/20'}`}></div>
+                <div className={`w-0 h-0 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent border-r-[8px] ${stats.hasAppointmentWithConsent ? 'border-r-jade' : 'border-r-jade/60'}`}></div>
               </div>
-              <div className="sm:hidden h-6 w-0.5 bg-gradient-to-b from-jade/60 to-jade/20"></div>
+              <div className={`sm:hidden h-6 w-0.5 ${stats.hasAppointmentWithConsent ? 'bg-jade' : 'bg-gradient-to-b from-jade/60 to-jade/20'}`}></div>
 
               {/* Step 3: Start Session */}
-              <div className="flex flex-col items-center">
-                <div className="w-14 h-14 rounded-full bg-jade/10 border-2 border-jade/40 flex items-center justify-center">
-                  <Video className="h-6 w-6 text-jade/60" />
+              <Link to="/crm/calendar" className={`flex flex-col items-center ${stats.hasAppointmentWithConsent ? 'group cursor-pointer' : ''}`}>
+                <div className={`w-14 h-14 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                  stats.hasAppointmentWithConsent 
+                    ? 'bg-jade/10 border-jade group-hover:bg-jade group-hover:scale-110' 
+                    : 'bg-jade/10 border-jade/40'
+                }`}>
+                  <Video className={`h-6 w-6 transition-colors ${stats.hasAppointmentWithConsent ? 'text-jade group-hover:text-white' : 'text-jade/60'}`} />
                 </div>
-                <span className="mt-2 text-sm font-medium text-jade/60">3. התחלת טיפול</span>
-                <span className="text-xs text-muted-foreground">מהיומן</span>
-              </div>
+                <span className={`mt-2 text-sm font-medium ${stats.hasAppointmentWithConsent ? 'text-jade' : 'text-jade/60'}`}>
+                  3. התחלת טיפול
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {stats.hasAppointmentWithConsent ? 'לחץ להתחלה' : 'מהיומן'}
+                </span>
+              </Link>
             </div>
           </CardContent>
         </Card>
+
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8 opacity-0 animate-fade-in" style={{ animationDelay: '450ms', animationFillMode: 'forwards' }}>
+          <Card className="border-border/50">
+            <CardContent className="pt-4 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-jade/10 flex items-center justify-center">
+                  <Users className="h-5 w-5 text-jade" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{isLoadingStats ? '-' : stats.totalPatients}</p>
+                  <p className="text-xs text-muted-foreground">סה״כ מטופלים</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-border/50">
+            <CardContent className="pt-4 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <Clock className="h-5 w-5 text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{isLoadingStats ? '-' : stats.appointmentsToday}</p>
+                  <p className="text-xs text-muted-foreground">תורים היום</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-border/50">
+            <CardContent className="pt-4 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                  <UserCheck className="h-5 w-5 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{isLoadingStats ? '-' : stats.patientsWithConsent}</p>
+                  <p className="text-xs text-muted-foreground">חתמו הסכמה</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-border/50">
+            <CardContent className="pt-4 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                  <FileCheck className="h-5 w-5 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{isLoadingStats ? '-' : stats.pendingConsents}</p>
+                  <p className="text-xs text-muted-foreground">ממתינים לחתימה</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Row 1: Calendar, Patient Management, Reminders */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
