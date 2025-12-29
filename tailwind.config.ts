@@ -133,6 +133,15 @@ export default {
           "0%, 100%": { transform: "scaleY(0.5)" },
           "50%": { transform: "scaleY(1)" },
         },
+        "confetti-fall": {
+          "0%": { transform: "translateY(-10vh) rotate(0deg)", opacity: "1" },
+          "100%": { transform: "translateY(110vh) rotate(720deg)", opacity: "0" },
+        },
+        "scale-in": {
+          "0%": { transform: "scale(0) translateX(-50%) translateY(-50%)", opacity: "0" },
+          "50%": { transform: "scale(1.2) translateX(-50%) translateY(-50%)", opacity: "1" },
+          "100%": { transform: "scale(1) translateX(-50%) translateY(-50%)", opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -148,6 +157,8 @@ export default {
         "shake": "shake 0.5s ease-in-out",
         "wiggle": "wiggle 0.3s ease-in-out infinite",
         "waveform": "waveform 0.5s ease-in-out infinite",
+        "confetti-fall": "confetti-fall 3s ease-out forwards",
+        "scale-in": "scale-in 0.4s ease-out forwards",
       },
     },
   },

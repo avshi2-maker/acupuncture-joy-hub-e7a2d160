@@ -74,6 +74,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { useDoubleTapGesture } from '@/hooks/useDoubleTapGesture';
+import { useShakeGesture } from '@/hooks/useShakeGesture';
+import { MilestoneCelebration } from '@/components/video/MilestoneCelebration';
 import { cn } from '@/lib/utils';
 import aiGeneratorBg from '@/assets/ai-generator-bg.png';
 import animatedMicGif from '@/assets/mic-animated.gif';
@@ -134,7 +136,10 @@ export default function VideoSession() {
   
   // Background/pause dimming state
   const [isBackgroundPaused, setIsBackgroundPaused] = useState(false);
-
+  
+  // Undo state for shake gesture
+  const [notesHistory, setNotesHistory] = useState<string[]>([]);
+  const lastNotesRef = useRef<string>('');
   const {
     status: sessionStatus,
     duration: sessionDuration,
@@ -172,6 +177,38 @@ export default function VideoSession() {
     pauseOnBackground: sessionStatus === 'running',
   });
 
+  // Track notes history for undo
+  useEffect(() => {
+    if (sessionNotes !== lastNotesRef.current && sessionNotes.length > lastNotesRef.current.length) {
+      // Only add to history when content is added (not when undoing)
+      setNotesHistory(prev => [...prev.slice(-9), lastNotesRef.current]); // Keep last 10 states
+    }
+    lastNotesRef.current = sessionNotes;
+  }, [sessionNotes]);
+
+  // Shake gesture to undo last note entry
+  const handleShakeUndo = useCallback(() => {
+    if (notesHistory.length === 0) {
+      haptic.warning();
+      toast.info('📝 Nothing to undo', { duration: 2000 });
+      return;
+    }
+    
+    const previousNotes = notesHistory[notesHistory.length - 1];
+    setNotesHistory(prev => prev.slice(0, -1));
+    lastNotesRef.current = previousNotes; // Prevent this from being added to history
+    setNotes(previousNotes);
+    haptic.success();
+    toast.success('↩️ Undo successful!', { duration: 2000 });
+  }, [notesHistory, setNotes, haptic]);
+
+  useShakeGesture({
+    onShake: handleShakeUndo,
+    threshold: 20,
+    shakeCount: 3,
+    timeout: 1000,
+  });
+
   // Double-tap gesture to add timestamp marker to notes
   const handleDoubleTapTimestamp = useCallback(() => {
     const timestamp = formatDuration(sessionDuration);
@@ -183,21 +220,6 @@ export default function VideoSession() {
 
   const doubleTapHandlers = useDoubleTapGesture({
     onDoubleTap: handleDoubleTapTimestamp,
-  });
-  useBackgroundDetection({
-    onBackground: () => {
-      if (sessionStatus === 'running') {
-        pauseSession();
-        setIsBackgroundPaused(true);
-        toast.info('⏸️ Session auto-paused (app in background)', { duration: 3000 });
-      }
-    },
-    onForeground: () => {
-      if (isBackgroundPaused) {
-        toast.info('👋 Welcome back! Session is paused', { duration: 3000 });
-      }
-    },
-    pauseOnBackground: sessionStatus === 'running',
   });
 
   // Reset background paused state when manually resumed
@@ -562,6 +584,12 @@ export default function VideoSession() {
       </Helmet>
 
       <div className="min-h-screen bg-background flex flex-col relative" dir="rtl">
+        {/* Milestone Celebrations with confetti */}
+        <MilestoneCelebration 
+          sessionDuration={sessionDuration} 
+          sessionStatus={sessionStatus} 
+        />
+        
         {/* Paused Dimming Overlay */}
         {sessionStatus === 'paused' && (
           <div 
