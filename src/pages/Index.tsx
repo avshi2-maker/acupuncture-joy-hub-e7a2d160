@@ -2,7 +2,7 @@ import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Leaf, MessageCircle, Smartphone, X, Download, Play } from "lucide-react";
+import { Leaf, MessageCircle, Smartphone, X, Download, Play, BookOpen } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import heroBg from "@/assets/hero-meridian-bg.png";
@@ -74,6 +74,17 @@ const Index = () => {
             {t("heroDescription")}
           </p>
         </section>
+
+        {/* CM Digital Encyclopedia Button - Bottom Center */}
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30">
+          <Link 
+            to="/encyclopedia"
+            className="flex items-center gap-2 bg-gradient-to-r from-gold to-gold/80 hover:from-gold/90 hover:to-gold/70 text-foreground px-6 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl font-medium"
+          >
+            <BookOpen className="h-5 w-5" />
+            <span>CM Digital Encyclopedia</span>
+          </Link>
+        </div>
 
         {/* Watch Video Button - Bottom Left */}
         <div className="fixed bottom-4 left-4 md:bottom-6 md:left-6 z-30">
