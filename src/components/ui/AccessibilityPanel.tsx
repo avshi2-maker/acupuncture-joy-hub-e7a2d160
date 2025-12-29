@@ -20,6 +20,8 @@ export function AccessibilityPanel() {
   const { fontSize, setFontSize, highContrast, setHighContrast } = useAccessibility();
   const [open, setOpen] = useState(false);
 
+  console.log('AccessibilityPanel - highContrast:', highContrast);
+
   const currentIndex = FONT_SIZES.findIndex(s => s.value === fontSize);
 
   const decreaseFont = () => {

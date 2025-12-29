@@ -155,6 +155,8 @@
     --muted: 0 0% 90%;
     --muted-foreground: 0 0% 20%;
     --border: 0 0% 0%;
+    --accent: 0 0% 20%;
+    --accent-foreground: 0 0% 100%;
   }
 
   html.high-contrast.dark {
@@ -167,6 +169,22 @@
     --muted: 0 0% 15%;
     --muted-foreground: 0 0% 80%;
     --border: 0 0% 100%;
+    --accent: 0 0% 80%;
+    --accent-foreground: 0 0% 0%;
+  }
+
+  /* High contrast overrides for images and backgrounds */
+  html.high-contrast img {
+    filter: grayscale(100%) contrast(1.2);
+  }
+
+  html.high-contrast [style*="background-image"] {
+    filter: grayscale(100%) contrast(1.2);
+  }
+
+  html.high-contrast .bg-jade,
+  html.high-contrast .bg-jade\/40 {
+    background-color: hsl(0 0% 20%) !important;
   }
 
   body {
