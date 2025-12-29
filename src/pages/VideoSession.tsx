@@ -78,6 +78,8 @@ import { useShakeGesture } from '@/hooks/useShakeGesture';
 import { MilestoneCelebration } from '@/components/video/MilestoneCelebration';
 import { SwipeStatusTags } from '@/components/video/SwipeStatusTags';
 import { AutoSaveIndicator } from '@/components/video/AutoSaveIndicator';
+import { VoiceCommandSystem } from '@/components/video/VoiceCommandSystem';
+import { SessionPresets } from '@/components/video/SessionPresets';
 import { useThreeFingerTap } from '@/hooks/useThreeFingerTap';
 import { cn } from '@/lib/utils';
 import aiGeneratorBg from '@/assets/ai-generator-bg.png';
@@ -151,6 +153,9 @@ export default function VideoSession() {
   
   // Panel toggle state for three-finger tap
   const [activePanel, setActivePanel] = useState<'notes' | 'chat'>('notes');
+  
+  // Session preset state
+  const [sessionPreset, setSessionPreset] = useState<number | null>(null);
   
   const {
     status: sessionStatus,
@@ -281,6 +286,54 @@ export default function VideoSession() {
     setNotes(sessionNotes + voiceNote);
     haptic.success();
   }, [sessionDuration, sessionNotes, setNotes, haptic]);
+
+  // Voice command handler
+  const handleVoiceCommand = useCallback((command: string) => {
+    const timestamp = formatDuration(sessionDuration);
+    
+    switch (command) {
+      case 'start':
+        if (sessionStatus === 'idle') {
+          startSession();
+          toast.success('Session started via voice command');
+        }
+        break;
+      case 'stop':
+        if (sessionStatus === 'running' || sessionStatus === 'paused') {
+          endSession();
+          toast.success('Session ended via voice command');
+        }
+        break;
+      case 'pause':
+        if (sessionStatus === 'running') {
+          pauseSession();
+          toast.info('Session paused via voice command');
+        }
+        break;
+      case 'resume':
+        if (sessionStatus === 'paused') {
+          resumeSession();
+          toast.info('Session resumed via voice command');
+        }
+        break;
+      case 'reset':
+        resetSession();
+        toast.info('Session reset via voice command');
+        break;
+      case 'timestamp':
+        setNotes(sessionNotes + `\n📍 [${timestamp}] `);
+        toast.success(`Timestamp added at ${timestamp}`);
+        break;
+      case 'feeling-better':
+        setNotes(sessionNotes + `\n✅ Patient feeling better`);
+        toast.success('Status tag added');
+        break;
+      case 'needs-followup':
+        setNotes(sessionNotes + `\n⚠️ Patient needs follow-up`);
+        toast.success('Status tag added');
+        break;
+    }
+  }, [sessionStatus, sessionDuration, sessionNotes, startSession, endSession, pauseSession, resumeSession, resetSession, setNotes]);
 
   // Check access
   // Clock update effect
@@ -641,6 +694,12 @@ export default function VideoSession() {
           sessionStatus={sessionStatus}
         />
         
+        {/* Voice Command System - Mobile only */}
+        <VoiceCommandSystem
+          onCommand={handleVoiceCommand}
+          isSessionActive={sessionStatus === 'running' || sessionStatus === 'paused'}
+        />
+        
         {/* Paused Dimming Overlay */}
         {sessionStatus === 'paused' && (
           <div 
@@ -756,8 +815,17 @@ export default function VideoSession() {
           </div>
         </header>
 
+        {/* Session Presets - Mobile only */}
+        <div className="md:hidden px-3 pt-2">
+          <SessionPresets
+            sessionDuration={sessionDuration}
+            sessionStatus={sessionStatus}
+            onPresetSelect={setSessionPreset}
+          />
+        </div>
+
         {/* CAF Asset Boxes - All connected to RAG - Scrollable on mobile */}
-        <div className="px-3 md:px-4 pt-3 md:pt-4 pb-2">
+        <div className="px-3 md:px-4 pt-2 md:pt-4 pb-2">
           <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 md:flex-wrap scrollbar-hide -mx-3 px-3 md:mx-0 md:px-0">
             {/* Herbs */}
             <Button 
@@ -1034,6 +1102,15 @@ export default function VideoSession() {
                       <p className="text-3xl md:text-4xl font-mono mt-3 md:mt-4 text-jade font-bold hidden md:block">
                         {formatDuration(sessionDuration)}
                       </p>
+                      
+                      {/* Session Presets - Desktop */}
+                      <div className="hidden md:block mt-3 w-full max-w-xs">
+                        <SessionPresets
+                          sessionDuration={sessionDuration}
+                          sessionStatus={sessionStatus}
+                          onPresetSelect={setSessionPreset}
+                        />
+                      </div>
                       
                       {sessionStartTime && sessionStatus !== 'idle' && (
                         <p className="text-xs text-muted-foreground mt-1">
