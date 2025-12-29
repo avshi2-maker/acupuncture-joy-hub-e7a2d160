@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,13 +12,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, addMonths, subMonths, startOfWeek, endOfWeek, isToday } from 'date-fns';
 import { he } from 'date-fns/locale';
-import { ChevronRight, ChevronLeft, Plus, Clock, User, Trash2, Edit, X } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Plus, Clock, User, Trash2, Edit, X, Play, AlertCircle } from 'lucide-react';
 import { WhatsAppReminderButton } from '@/components/crm/WhatsAppReminderButton';
+import { useTier } from '@/hooks/useTier';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface Patient {
   id: string;
   full_name: string;
   phone?: string | null;
+  consent_signed?: boolean | null;
 }
 
 interface Appointment {
@@ -37,6 +41,8 @@ interface AppointmentCalendarProps {
 }
 
 export function AppointmentCalendar({ userId, patients }: AppointmentCalendarProps) {
+  const navigate = useNavigate();
+  const { tier, daysRemaining } = useTier();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -44,6 +50,51 @@ export function AppointmentCalendar({ userId, patients }: AppointmentCalendarPro
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showTrialExpiredDialog, setShowTrialExpiredDialog] = useState(false);
+
+  // Check if trial is expired
+  const isTrialExpired = tier === 'trial' && daysRemaining !== null && daysRemaining <= 0;
+
+  // Determine session type based on tier
+  const getSessionType = () => {
+    if (tier === 'trial') return 'video';
+    if (tier === 'standard') return 'standard';
+    if (tier === 'premium') return 'video';
+    return null;
+  };
+
+  // Check if appointment can start a session
+  const canStartSession = (apt: Appointment) => {
+    if (!apt.patient_id) return { canStart: false, reason: 'יש לבחור מטופל לתור' };
+    
+    const patient = patients.find(p => p.id === apt.patient_id);
+    if (!patient?.consent_signed) {
+      return { canStart: false, reason: 'המטופל לא חתם על הסכמה מודעת' };
+    }
+    
+    return { canStart: true, reason: null };
+  };
+
+  // Handle start session
+  const handleStartSession = (apt: Appointment) => {
+    if (isTrialExpired) {
+      setShowTrialExpiredDialog(true);
+      return;
+    }
+
+    const { canStart, reason } = canStartSession(apt);
+    if (!canStart) {
+      toast.error(reason || 'לא ניתן להתחיל את הטיפול');
+      return;
+    }
+
+    const sessionType = getSessionType();
+    if (sessionType === 'video') {
+      navigate(`/video-session?appointmentId=${apt.id}&patientId=${apt.patient_id}`);
+    } else {
+      navigate(`/tcm-brain?appointmentId=${apt.id}&patientId=${apt.patient_id}`);
+    }
+  };
 
   const [form, setForm] = useState({
     title: '',
@@ -295,62 +346,138 @@ export function AppointmentCalendar({ userId, patients }: AppointmentCalendarPro
       {/* Today's Appointments */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">תורים להיום</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2">
+            תורים להיום
+            {isTrialExpired && (
+              <Badge variant="destructive" className="text-xs">תקופת ניסיון הסתיימה</Badge>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {getAppointmentsForDay(new Date()).length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">אין תורים להיום</p>
           ) : (
             <div className="space-y-2">
-              {getAppointmentsForDay(new Date()).map(apt => (
-                <div key={apt.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="text-sm">
-                      <div className="font-medium">{apt.title}</div>
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        {format(new Date(apt.start_time), 'HH:mm')} - {format(new Date(apt.end_time), 'HH:mm')}
-                      </div>
-                      {apt.patient_id && (
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <User className="h-3 w-3" />
-                          {getPatientName(apt.patient_id)}
+              {getAppointmentsForDay(new Date()).map(apt => {
+                const sessionCheck = canStartSession(apt);
+                return (
+                  <div key={apt.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="text-sm">
+                        <div className="font-medium">{apt.title}</div>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {format(new Date(apt.start_time), 'HH:mm')} - {format(new Date(apt.end_time), 'HH:mm')}
                         </div>
+                        {apt.patient_id && (
+                          <div className="flex items-center gap-1 text-muted-foreground">
+                            <User className="h-3 w-3" />
+                            {getPatientName(apt.patient_id)}
+                            {!sessionCheck.canStart && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                    <AlertCircle className="h-3 w-3 text-amber-500 mr-1" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{sessionCheck.reason}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {/* Start Session Button */}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant={sessionCheck.canStart ? "default" : "outline"}
+                              size="sm"
+                              className={`h-8 gap-1 ${sessionCheck.canStart ? 'bg-jade hover:bg-jade-dark text-white' : 'opacity-60'}`}
+                              onClick={() => handleStartSession(apt)}
+                            >
+                              <Play className="h-3 w-3" />
+                              התחל טיפול
+                            </Button>
+                          </TooltipTrigger>
+                          {!sessionCheck.canStart && (
+                            <TooltipContent>
+                              <p>{sessionCheck.reason}</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
+                      
+                      {apt.patient_id && (
+                        <WhatsAppReminderButton
+                          patientName={getPatientName(apt.patient_id) || 'Patient'}
+                          patientPhone={getPatientPhone(apt.patient_id)}
+                          appointmentId={apt.id}
+                          appointmentDate={apt.start_time}
+                          appointmentTime={format(new Date(apt.start_time), 'HH:mm')}
+                        />
                       )}
+                      <Select value={apt.status} onValueChange={(v) => handleStatusChange(apt.id, v)}>
+                        <SelectTrigger className="h-7 text-xs w-24">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="scheduled">מתוכנן</SelectItem>
+                          <SelectItem value="confirmed">מאושר ✅</SelectItem>
+                          <SelectItem value="completed">הושלם</SelectItem>
+                          <SelectItem value="cancelled">בוטל</SelectItem>
+                          <SelectItem value="no_show">לא הגיע</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditDialog(apt)}>
+                        <Edit className="h-3 w-3" />
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {apt.patient_id && (
-                      <WhatsAppReminderButton
-                        patientName={getPatientName(apt.patient_id) || 'Patient'}
-                        patientPhone={getPatientPhone(apt.patient_id)}
-                        appointmentId={apt.id}
-                        appointmentDate={apt.start_time}
-                        appointmentTime={format(new Date(apt.start_time), 'HH:mm')}
-                      />
-                    )}
-                    <Select value={apt.status} onValueChange={(v) => handleStatusChange(apt.id, v)}>
-                      <SelectTrigger className="h-7 text-xs w-24">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="scheduled">מתוכנן</SelectItem>
-                        <SelectItem value="confirmed">מאושר ✅</SelectItem>
-                        <SelectItem value="completed">הושלם</SelectItem>
-                        <SelectItem value="cancelled">בוטל</SelectItem>
-                        <SelectItem value="no_show">לא הגיע</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditDialog(apt)}>
-                      <Edit className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Trial Expired Dialog */}
+      <Dialog open={showTrialExpiredDialog} onOpenChange={setShowTrialExpiredDialog}>
+        <DialogContent dir="rtl" className="text-center">
+          <DialogHeader>
+            <DialogTitle className="text-xl text-center mb-4">תודה שניסיתם את המערכת! 🙏</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-muted-foreground">
+              תקופת הניסיון של 14 הימים הסתיימה. אנו מקווים שנהניתם מהשימוש במערכת.
+            </p>
+            <p className="text-muted-foreground">
+              כדי להמשיך ליהנות מכל הפיצ'רים, אנא שדרגו לאחת מהתוכניות שלנו:
+            </p>
+            <div className="flex gap-3 justify-center pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowTrialExpiredDialog(false)}
+              >
+                סגור
+              </Button>
+              <Button
+                className="bg-jade hover:bg-jade-dark text-white"
+                onClick={() => {
+                  setShowTrialExpiredDialog(false);
+                  navigate('/pricing');
+                }}
+              >
+                צפה בתוכניות
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Add Appointment Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
