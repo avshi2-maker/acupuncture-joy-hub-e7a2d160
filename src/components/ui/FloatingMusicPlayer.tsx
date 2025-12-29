@@ -16,6 +16,43 @@ interface MusicSource {
 }
 
 const musicSources: MusicSource[] = [
+  // Nature Sounds
+  {
+    id: 'ocean',
+    name: 'Ocean Waves',
+    nameHe: 'גלי ים',
+    url: 'https://mynoise.net/NoiseMachines/oceanNoiseGenerator.php',
+    description: 'צלילי גלים מרגיעים',
+  },
+  {
+    id: 'forest',
+    name: 'Forest Sounds',
+    nameHe: 'צלילי יער',
+    url: 'https://mynoise.net/NoiseMachines/japaneseGardenSoundscapeGenerator.php',
+    description: 'ציפורים וטבע',
+  },
+  {
+    id: 'tibetan',
+    name: 'Tibetan Bowls',
+    nameHe: 'קערות טיבטיות',
+    url: 'https://mynoise.net/NoiseMachines/tibetanSingingBowlsDroneGenerator.php',
+    description: 'צלילי מדיטציה עמוקים',
+  },
+  {
+    id: 'rain',
+    name: 'Rain & Thunder',
+    nameHe: 'גשם ורעמים',
+    url: 'https://rainymood.com/',
+    description: 'צלילי גשם מרגיעים',
+  },
+  {
+    id: 'fireplace',
+    name: 'Fireplace',
+    nameHe: 'אח בוער',
+    url: 'https://mynoise.net/NoiseMachines/campfireNoiseGenerator.php',
+    description: 'צלילי אש מרגיעים',
+  },
+  // Music Streams
   {
     id: 'lofi',
     name: 'Lofi.cafe',
@@ -24,30 +61,23 @@ const musicSources: MusicSource[] = [
     description: 'מוזיקת לופי מרגיעה',
   },
   {
-    id: 'rain',
-    name: 'Rainymood',
-    nameHe: 'צלילי גשם',
-    url: 'https://rainymood.com/',
-    description: 'צלילי גשם מרגיעים',
-  },
-  {
-    id: 'calm',
-    name: 'Calm Radio',
-    nameHe: 'רדיו רגוע',
-    url: 'https://calmradio.com/meditation',
-    description: 'מוזיקת מדיטציה',
+    id: 'generative',
+    name: 'Generative FM',
+    nameHe: 'מוזיקה גנרטיבית',
+    url: 'https://generative.fm/',
+    description: 'אמביינט אינסופי',
   },
   {
     id: 'nature',
-    name: 'Nature Sounds',
-    nameHe: 'צלילי טבע',
+    name: 'A Soft Murmur',
+    nameHe: 'לחישה רכה',
     url: 'https://asoftmurmur.com/',
-    description: 'צלילי טבע מותאמים אישית',
+    description: 'מיקס צלילים מותאם אישית',
   },
   {
     id: 'focus',
-    name: 'Focus Music',
-    nameHe: 'מוזיקת ריכוז',
+    name: 'Noisli',
+    nameHe: 'נויזלי',
     url: 'https://www.noisli.com/',
     description: 'צלילי רקע לריכוז',
   },
