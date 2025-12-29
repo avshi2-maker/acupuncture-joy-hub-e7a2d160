@@ -72,11 +72,6 @@ const Index = () => {
             {t("heroDescription")}
           </p>
 
-          <div className="mt-8">
-            <Button asChild size="lg" variant="hero">
-              <Link to="/gate">{t("therapistLogin")}</Link>
-            </Button>
-          </div>
         </section>
       </main>
     </>
