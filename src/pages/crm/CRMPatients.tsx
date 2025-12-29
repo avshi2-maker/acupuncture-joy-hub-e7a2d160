@@ -13,6 +13,7 @@ import { Plus, Search, User, Phone, Mail, Calendar, FileText } from 'lucide-reac
 interface Patient {
   id: string;
   full_name: string;
+  id_number: string | null;
   email: string | null;
   phone: string | null;
   date_of_birth: string | null;
@@ -49,7 +50,7 @@ export default function CRMPatients() {
     try {
       const { data, error } = await supabase
         .from('patients')
-        .select('id, full_name, email, phone, date_of_birth, gender, is_pregnant, consent_signed, created_at')
+        .select('id, full_name, id_number, email, phone, date_of_birth, gender, is_pregnant, consent_signed, created_at')
         .order('full_name');
 
       if (error) throw error;
@@ -138,8 +139,9 @@ export default function CRMPatients() {
                             <div>
                               <p className="font-medium">{patient.full_name}</p>
                               <p className="text-xs text-muted-foreground">
+                                {patient.id_number && <span className="font-mono">{patient.id_number} • </span>}
                                 {patient.gender || 'Not specified'}
-                                {age !== null && ` • ${age} years`}
+                                {age !== null ? ` • ${age} years` : ''}
                               </p>
                             </div>
                           </div>
