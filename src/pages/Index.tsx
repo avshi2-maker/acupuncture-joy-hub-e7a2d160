@@ -476,7 +476,8 @@ const Index = () => {
           </div>
         </div>
 
-          {/* Test with Password Button for Dr. Roni - subtle, positioned to the side */}
+        {/* Test with Password Button for Dr. Roni - subtle, positioned to the side */}
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-20">
           <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
             <DialogTrigger asChild>
               <button

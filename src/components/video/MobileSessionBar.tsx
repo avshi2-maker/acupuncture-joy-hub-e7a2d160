@@ -153,7 +153,7 @@ export function MobileSessionBar({
 
   return (
     <div 
-      className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-t border-border safe-area-inset-bottom"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-t border-border pb-safe"
       {...swipeHandlers}
     >
       {/* Session Status Bar */}
@@ -196,16 +196,16 @@ export function MobileSessionBar({
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex items-center justify-around px-2 py-3 gap-1">
+      {/* Action Buttons - Compact sizing */}
+      <div className="flex items-center justify-around px-2 py-2 gap-1">
         {/* Session Control */}
         {sessionStatus === 'idle' || sessionStatus === 'ended' ? (
           <Button
             onClick={handleStart}
-            size="lg"
-            className="flex-1 h-12 gap-2 bg-jade hover:bg-jade/90 text-white touch-manipulation active:scale-95"
+            size="sm"
+            className="flex-1 h-10 gap-1.5 bg-jade hover:bg-jade/90 text-white touch-manipulation active:scale-95 text-sm"
           >
-            <Play className="h-5 w-5" />
+            <Play className="h-4 w-4" />
             Start
           </Button>
         ) : sessionStatus === 'running' ? (
@@ -213,19 +213,19 @@ export function MobileSessionBar({
             <Button
               onClick={handlePause}
               variant="outline"
-              size="lg"
-              className="flex-1 h-12 gap-2 touch-manipulation active:scale-95"
+              size="sm"
+              className="flex-1 h-10 gap-1.5 touch-manipulation active:scale-95 text-sm"
             >
-              <Pause className="h-5 w-5" />
+              <Pause className="h-4 w-4" />
               Pause
             </Button>
             <Button
               onClick={handleEnd}
               variant="destructive"
-              size="lg"
-              className="flex-1 h-12 gap-2 touch-manipulation active:scale-95"
+              size="sm"
+              className="flex-1 h-10 gap-1.5 touch-manipulation active:scale-95 text-sm"
             >
-              <Square className="h-5 w-5" />
+              <Square className="h-4 w-4" />
               End
             </Button>
           </>
@@ -233,19 +233,19 @@ export function MobileSessionBar({
           <>
             <Button
               onClick={handleResume}
-              size="lg"
-              className="flex-1 h-12 gap-2 bg-jade hover:bg-jade/90 touch-manipulation active:scale-95"
+              size="sm"
+              className="flex-1 h-10 gap-1.5 bg-jade hover:bg-jade/90 touch-manipulation active:scale-95 text-sm"
             >
-              <Play className="h-5 w-5" />
+              <Play className="h-4 w-4" />
               Resume
             </Button>
             <Button
               onClick={handleEnd}
               variant="destructive"
-              size="lg"
-              className="flex-1 h-12 gap-2 touch-manipulation active:scale-95"
+              size="sm"
+              className="flex-1 h-10 gap-1.5 touch-manipulation active:scale-95 text-sm"
             >
-              <Square className="h-5 w-5" />
+              <Square className="h-4 w-4" />
               End
             </Button>
           </>
@@ -258,25 +258,25 @@ export function MobileSessionBar({
               onClick={handleQuickPatient}
               variant="outline"
               size="icon"
-              className="h-12 w-12 shrink-0 touch-manipulation active:scale-95"
+              className="h-10 w-10 shrink-0 touch-manipulation active:scale-95"
             >
-              <UserPlus className="h-5 w-5" />
+              <UserPlus className="h-4 w-4" />
             </Button>
             <Button
               onClick={handleQuickAppointment}
               variant="outline"
               size="icon"
-              className="h-12 w-12 shrink-0 touch-manipulation active:scale-95"
+              className="h-10 w-10 shrink-0 touch-manipulation active:scale-95"
             >
-              <Calendar className="h-5 w-5" />
+              <Calendar className="h-4 w-4" />
             </Button>
             <Button
               onClick={handleZoomInvite}
               variant="outline"
               size="icon"
-              className="h-12 w-12 shrink-0 touch-manipulation active:scale-95"
+              className="h-10 w-10 shrink-0 touch-manipulation active:scale-95"
             >
-              <Video className="h-5 w-5 text-blue-600" />
+              <Video className="h-4 w-4 text-blue-600" />
             </Button>
           </>
         )}
@@ -287,9 +287,9 @@ export function MobileSessionBar({
             onClick={handleReset}
             variant="outline"
             size="icon"
-            className="h-12 w-12 shrink-0 touch-manipulation active:scale-95"
+            className="h-10 w-10 shrink-0 touch-manipulation active:scale-95"
           >
-            <RotateCcw className="h-5 w-5" />
+            <RotateCcw className="h-4 w-4" />
           </Button>
         )}
       </div>
