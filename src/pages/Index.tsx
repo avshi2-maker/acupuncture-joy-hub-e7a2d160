@@ -187,10 +187,13 @@ const Index = () => {
               <X className="h-5 w-5" />
             </button>
 
-            {/* Video title */}
+            {/* Video title - show both Hebrew and English */}
             <div className="absolute top-3 left-3 z-10 bg-black/60 backdrop-blur-sm px-4 py-2 rounded-lg">
-              <p className="text-white font-medium text-sm md:text-base" dir={language === "he" ? "rtl" : "ltr"}>
-                {language === "he" ? currentVideo.titleHe : currentVideo.titleEn}
+              <p className="text-white font-medium text-sm md:text-base" dir="rtl">
+                {currentVideo.titleHe}
+              </p>
+              <p className="text-white/70 text-xs md:text-sm">
+                {currentVideo.titleEn}
               </p>
             </div>
 
