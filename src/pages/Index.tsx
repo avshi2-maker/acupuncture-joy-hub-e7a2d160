@@ -44,56 +44,8 @@ const Index = () => {
   const [audioVolume, setAudioVolume] = useState(0.7);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
-  
-  // Draggable audio player state
-  const [playerPosition, setPlayerPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStartRef = useRef({ x: 0, y: 0, playerX: 0, playerY: 0 });
+  // Audio player is fixed to screen (not draggable) to ensure it never covers the hero name.
 
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = audioVolume;
-    }
-  }, [audioVolume]);
-
-  // Handle mouse move for dragging
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (isDragging) {
-        const deltaX = e.clientX - dragStartRef.current.x;
-        const deltaY = e.clientY - dragStartRef.current.y;
-        setPlayerPosition({
-          x: dragStartRef.current.playerX + deltaX,
-          y: dragStartRef.current.playerY + deltaY,
-        });
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsDragging(false);
-    };
-
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging]);
-
-  const handleDragStart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-    dragStartRef.current = {
-      x: e.clientX,
-      y: e.clientY,
-      playerX: playerPosition.x,
-      playerY: playerPosition.y,
-    };
-  };
 
   const toggleAudio = () => {
     if (audioRef.current) {
@@ -212,7 +164,6 @@ const Index = () => {
           
           <div
             className="relative inline-block group"
-            onMouseEnter={() => setShowAudioPlayer(true)}
             onClick={() => setShowAudioPlayer((v) => !v)}
           >
             <div className="flex items-center justify-center gap-2 mb-1 cursor-pointer select-none">
@@ -223,29 +174,17 @@ const Index = () => {
               <Volume2 className="h-4 w-4 text-cream/60 group-hover:text-gold transition-colors" />
             </div>
             
-            {/* Audio player popup - fixed to the RIGHT side (won't cover the name), draggable */}
+            {/* Audio player popup - fixed bottom-right so it never covers the name/subtitle */}
             {showAudioPlayer && (
               <div
                 className="fixed bg-cream rounded-lg p-4 shadow-2xl z-50 animate-fade-in w-[340px] max-w-[calc(100vw-32px)] border-2 border-gold"
                 style={{
                   right: "16px",
-                  top: "112px",
-                  transform: `translate(${playerPosition.x}px, ${playerPosition.y}px)`,
-                  cursor: isDragging ? "grabbing" : "default",
+                  bottom: "104px",
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
-                {/* Drag handle */}
-                <div 
-                  className="absolute top-0 left-0 right-0 h-8 bg-gold/30 rounded-t-lg cursor-grab flex items-center justify-center"
-                  onMouseDown={handleDragStart}
-                >
-                  <div className="flex gap-1">
-                    <div className="w-8 h-1 bg-foreground/40 rounded-full" />
-                  </div>
-                </div>
-                
-                {/* Close button - more prominent */}
+                {/* Close button */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -256,9 +195,9 @@ const Index = () => {
                     setIsPlaying(false);
                     setAudioProgress(0);
                     setShowAudioPlayer(false);
-                    setPlayerPosition({ x: 0, y: 0 });
                   }}
-                  className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-destructive hover:bg-destructive/90 flex items-center justify-center transition-colors shadow-lg border-2 border-background"
+                  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-destructive hover:bg-destructive/90 flex items-center justify-center transition-colors shadow-lg border-2 border-background"
+                  aria-label={language === "he" ? "סגור" : "Close"}
                 >
                   <X className="h-5 w-5 text-destructive-foreground" />
                 </button>
