@@ -228,9 +228,9 @@ const Index = () => {
               <div
                 className="fixed bg-cream rounded-lg p-4 shadow-2xl z-50 animate-fade-in min-w-[300px] border-2 border-gold"
                 style={{
-                  left: `calc(50% + ${playerPosition.x}px)`,
-                  top: `calc(10% + ${playerPosition.y}px)`,
-                  transform: 'translate(-50%, 0)',
+                  left: `${24 + playerPosition.x}px`,
+                  top: `${88 + playerPosition.y}px`,
+                  transform: 'none',
                   cursor: isDragging ? 'grabbing' : 'default',
                 }}
                 onClick={(e) => e.stopPropagation()}
@@ -258,9 +258,9 @@ const Index = () => {
                     setShowAudioPlayer(false);
                     setPlayerPosition({ x: 0, y: 0 });
                   }}
-                  className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-colors shadow-lg border-2 border-white"
+                  className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-destructive hover:bg-destructive/90 flex items-center justify-center transition-colors shadow-lg border-2 border-background"
                 >
-                  <X className="h-5 w-5 text-white" />
+                  <X className="h-5 w-5 text-destructive-foreground" />
                 </button>
                 
                 <audio 
@@ -536,7 +536,7 @@ const Index = () => {
                     index === currentVideoIndex 
                       ? "bg-gold scale-125" 
                       : index < currentVideoIndex 
-                        ? "bg-green-500" // Already played
+                        ? "bg-jade" // Already played
                         : "bg-white/50 hover:bg-white/80" // Not yet played
                   }`}
                   aria-label={`Go to video ${index + 1}`}
