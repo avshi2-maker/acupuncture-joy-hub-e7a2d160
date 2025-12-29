@@ -645,28 +645,28 @@ function CalendarContent() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full">
         {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-display font-semibold">Calendar</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl font-display font-semibold">Calendar</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">
               {viewMode === 'day'
-                ? format(selectedDate, 'EEEE, MMMM d, yyyy')
-                : `Week of ${format(weekDays[0], 'MMM d')} - ${format(weekDays[6], 'MMM d, yyyy')}`}
+                ? format(selectedDate, 'EEE, MMM d, yyyy')
+                : `${format(weekDays[0], 'MMM d')} - ${format(weekDays[6], 'MMM d')}`}
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center border border-border rounded-lg">
-              <Button variant="ghost" size="icon" onClick={() => navigateDate(-1)}>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigateDate(-1)}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" className="px-3">
-                    <CalendarIcon className="h-4 w-4 mr-2" />
-                    Today
+                  <Button variant="ghost" className="px-2 h-8 text-xs sm:text-sm">
+                    <CalendarIcon className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Today</span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="center">
@@ -678,13 +678,13 @@ function CalendarContent() {
                   />
                 </PopoverContent>
               </Popover>
-              <Button variant="ghost" size="icon" onClick={() => navigateDate(1)}>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigateDate(1)}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
 
             <Select value={viewMode} onValueChange={(v) => setViewMode(v as 'day' | 'week')}>
-              <SelectTrigger className="w-24">
+              <SelectTrigger className="w-20 h-8 text-xs sm:text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -699,9 +699,9 @@ function CalendarContent() {
               if (!open) setSelectedReminders(new Set()); 
             }}>
               <DialogTrigger asChild>
-                <Button variant="outline" className="border-jade/30 text-jade hover:bg-jade/10">
-                  <Send className="h-4 w-4 mr-2" />
-                  Send Reminders
+                <Button variant="outline" size="sm" className="border-jade/30 text-jade hover:bg-jade/10 h-8 text-xs sm:text-sm">
+                  <Send className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Send Reminders</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
@@ -1104,9 +1104,9 @@ function CalendarContent() {
           </div>
         </div>
 
-        {/* Room Legend */}
+        {/* Room Legend - Hidden on mobile */}
         {rooms.length > 0 && (
-          <div className="flex items-center gap-4 flex-wrap">
+          <div className="hidden sm:flex items-center gap-4 flex-wrap">
             <span className="text-sm text-muted-foreground">Rooms:</span>
             {rooms.map((room) => (
               <div key={room.id} className="flex items-center gap-2">
@@ -1123,8 +1123,8 @@ function CalendarContent() {
 
         {/* Calendar Grid */}
         <Card className="border-border/50 overflow-hidden">
-          <ScrollArea className="h-[calc(100vh-280px)]">
-            <div className="min-w-[800px]" ref={gridRef}>
+          <ScrollArea className="h-[calc(100vh-200px)] sm:h-[calc(100vh-280px)]">
+            <div className="min-w-[600px] sm:min-w-[800px]" ref={gridRef}>
               {/* Header row */}
               <div className="grid border-b border-border/50 sticky top-0 bg-card z-20" style={{
                 gridTemplateColumns: viewMode === 'day'

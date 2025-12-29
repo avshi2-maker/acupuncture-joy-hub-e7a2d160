@@ -41,10 +41,10 @@ export function CRMLayout({ children }: CRMLayoutProps) {
       <SidebarProvider defaultOpen={true}>
         <div className="min-h-screen flex w-full bg-background">
           <CRMSidebar />
-          <SidebarInset className="flex-1 flex flex-col">
+          <SidebarInset className="flex-1 flex flex-col min-w-0">
             <MobileHeader />
-            <main className="flex-1 p-4 md:p-6 overflow-auto">
-              <CRMBreadcrumb />
+            <main className="flex-1 p-2 sm:p-4 md:p-6 overflow-x-auto overflow-y-auto">
+              <div className="hidden sm:block"><CRMBreadcrumb /></div>
               {children}
             </main>
           </SidebarInset>
