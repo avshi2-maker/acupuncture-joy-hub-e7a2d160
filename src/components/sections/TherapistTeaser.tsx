@@ -96,26 +96,26 @@ const TherapistTeaser = () => {
   const preloadNextVideo = (currentIndex: number) => {
     const nextIndex = currentIndex + 1;
     if (nextIndex < videos.length && !preloadedVideosRef.current.has(videos[nextIndex])) {
-      const link = document.createElement('link');
-      link.rel = 'preload';
-      link.as = 'video';
-      link.href = videos[nextIndex];
-      document.head.appendChild(link);
       preloadedVideosRef.current.add(videos[nextIndex]);
-      
-      // Also create a hidden video element to buffer the content
-      const preloadVideo = document.createElement('video');
+
+      // Create a hidden video element to buffer the content (avoids <link rel="preload"> warnings in some browsers)
+      const preloadVideo = document.createElement("video");
       preloadVideo.src = videos[nextIndex];
-      preloadVideo.preload = 'auto';
+      preloadVideo.preload = "auto";
       preloadVideo.muted = true;
-      preloadVideo.style.display = 'none';
+      preloadVideo.playsInline = true;
+      preloadVideo.style.display = "none";
       document.body.appendChild(preloadVideo);
-      
+
       // Remove after buffering starts
-      preloadVideo.addEventListener('canplay', () => {
-        document.body.removeChild(preloadVideo);
-      }, { once: true });
-      
+      preloadVideo.addEventListener(
+        "canplay",
+        () => {
+          if (document.body.contains(preloadVideo)) document.body.removeChild(preloadVideo);
+        },
+        { once: true },
+      );
+
       // Cleanup timeout fallback
       setTimeout(() => {
         if (document.body.contains(preloadVideo)) {
@@ -125,17 +125,10 @@ const TherapistTeaser = () => {
     }
   };
 
-  // Preload all videos on mount
+  // Mark current video as preloaded (we rely on browser caching + hidden buffering)
   useEffect(() => {
-    videos.forEach((videoSrc, index) => {
-      if (!preloadedVideosRef.current.has(videoSrc)) {
-        const link = document.createElement('link');
-        link.rel = 'preload';
-        link.as = 'video';
-        link.href = videoSrc;
-        document.head.appendChild(link);
-        preloadedVideosRef.current.add(videoSrc);
-      }
+    videos.forEach((videoSrc) => {
+      preloadedVideosRef.current.add(videoSrc);
     });
   }, []);
 

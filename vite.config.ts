@@ -45,6 +45,11 @@ export default defineConfig(({ mode }) => ({
         clientsClaim: true,
         skipWaiting: true,
         cleanupOutdatedCaches: true,
+
+        // Prevent the PWA from serving stale HTML after publish (common during frequent updates)
+        // This forces navigations (/, /tcm-brain, etc.) to go to the network instead of cached app-shell.
+        navigateFallbackDenylist: [/./],
+
         globPatterns: ["**/*.{js,css,html,ico,svg,woff,woff2}"],
         globIgnores: ["**/body-figures/**", "**/assets/body-figures/**"],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
