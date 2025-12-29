@@ -211,9 +211,6 @@ export default function Dashboard() {
             </div>
           </Link>
           <div className="flex items-center gap-3 opacity-0 animate-fade-in" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/#tcm-brain-preview">דף הבית</Link>
-            </Button>
             <TierBadge />
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="h-4 w-4" />
