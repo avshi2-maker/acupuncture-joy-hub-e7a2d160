@@ -70,10 +70,16 @@ import { TierBadge } from '@/components/layout/TierBadge';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useHapticFeedback } from '@/hooks/useHapticFeedback';
+import { useDoubleTapGesture } from '@/hooks/useDoubleTapGesture';
 import { cn } from '@/lib/utils';
 import aiGeneratorBg from '@/assets/ai-generator-bg.png';
 import animatedMicGif from '@/assets/mic-animated.gif';
 import clockImg from '@/assets/clock.png';
+
+// Session time alerts (in seconds)
+const SESSION_ALERT_30_MIN = 30 * 60;
+const SESSION_ALERT_35_MIN = 35 * 60;
 
 interface Patient {
   id: string;
@@ -105,6 +111,11 @@ export default function VideoSession() {
   const [currentAppointmentId, setCurrentAppointmentId] = useState<string | null>(null);
   const [isCancellingBlock, setIsCancellingBlock] = useState(false);
   const warningShownRef = useRef(false);
+  const alert30ShownRef = useRef(false);
+  const alert35ShownRef = useRef(false);
+  
+  // Haptic feedback hook
+  const haptic = useHapticFeedback();
   
   // AI Query states
   const [activeAiQuery, setActiveAiQuery] = useState<'nutrition' | 'herbs' | 'diagnosis' | 'mental' | 'sleep' | 'worklife' | 'wellness' | 'sports' | 'bazi' | 'astro' | 'points' | null>(null);
@@ -143,6 +154,34 @@ export default function VideoSession() {
   } = useSessionPersistence();
 
   // Background detection - auto-pause when app goes to background
+  useBackgroundDetection({
+    onBackground: () => {
+      if (sessionStatus === 'running') {
+        pauseSession();
+        setIsBackgroundPaused(true);
+        toast.info('⏸️ Session auto-paused (app in background)', { duration: 3000 });
+      }
+    },
+    onForeground: () => {
+      if (isBackgroundPaused) {
+        toast.info('👋 Welcome back! Session is paused', { duration: 3000 });
+      }
+    },
+    pauseOnBackground: sessionStatus === 'running',
+  });
+
+  // Double-tap gesture to add timestamp marker to notes
+  const handleDoubleTapTimestamp = useCallback(() => {
+    const timestamp = formatDuration(sessionDuration);
+    const marker = `\n📍 [${timestamp}] `;
+    setNotes(sessionNotes + marker);
+    haptic.success();
+    toast.success(`⏱️ Timestamp added at ${timestamp}`, { duration: 2000 });
+  }, [sessionDuration, sessionNotes, setNotes, haptic]);
+
+  const doubleTapHandlers = useDoubleTapGesture({
+    onDoubleTap: handleDoubleTapTimestamp,
+  });
   useBackgroundDetection({
     onBackground: () => {
       if (sessionStatus === 'running') {
@@ -242,9 +281,42 @@ export default function VideoSession() {
     }
   }, [sessionDuration, sessionStatus, playAlertSound]);
 
+  // Session time alerts at 30 and 35 minutes with haptic feedback
+  useEffect(() => {
+    if (sessionStatus === 'running') {
+      // 30 minute alert
+      if (sessionDuration >= SESSION_ALERT_30_MIN && sessionDuration < SESSION_ALERT_30_MIN + 2 && !alert30ShownRef.current) {
+        alert30ShownRef.current = true;
+        haptic.warning();
+        playAlertSound();
+        toast.info('⏰ 30 minutes - Session halfway point', { 
+          duration: 5000,
+          icon: '🕐'
+        });
+      }
+      // 35 minute alert
+      if (sessionDuration >= SESSION_ALERT_35_MIN && sessionDuration < SESSION_ALERT_35_MIN + 2 && !alert35ShownRef.current) {
+        alert35ShownRef.current = true;
+        haptic.heavy();
+        playAlertSound();
+        toast.warning('⏰ 35 minutes - Consider wrapping up', { 
+          duration: 8000,
+          icon: '⚠️'
+        });
+      }
+    }
+  }, [sessionDuration, sessionStatus, haptic, playAlertSound]);
+
+  // Reset alert refs when session is reset
   useEffect(() => {
     if (sessionStatus === 'idle' || sessionDuration < ZOOM_WARNING_SECONDS) {
       warningShownRef.current = false;
+    }
+    if (sessionStatus === 'idle' || sessionDuration < SESSION_ALERT_30_MIN) {
+      alert30ShownRef.current = false;
+    }
+    if (sessionStatus === 'idle' || sessionDuration < SESSION_ALERT_35_MIN) {
+      alert35ShownRef.current = false;
     }
   }, [sessionStatus, sessionDuration]);
 
@@ -948,10 +1020,18 @@ export default function VideoSession() {
                 </Card>
               </div>
 
-              {/* Session Notes - Below */}
-              <Card>
+              {/* Session Notes - Below with double-tap gesture */}
+              <Card 
+                className="touch-manipulation"
+                {...doubleTapHandlers}
+              >
                 <CardContent className="p-3">
-                  <label className="text-xs font-medium mb-1 block">הערות פגישה:</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-medium">הערות פגישה:</label>
+                    <span className="text-[10px] text-muted-foreground md:hidden">
+                      Double-tap to add timestamp
+                    </span>
+                  </div>
                   <Textarea
                     value={sessionNotes}
                     onChange={(e) => setNotes(e.target.value)}
