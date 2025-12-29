@@ -337,6 +337,7 @@ export default function TcmBrain() {
     const timer = setInterval(() => setSessionSeconds(s => s + 1), 1000);
     return () => clearInterval(timer);
   }, [isSessionRunning]);
+
   
   const formatSessionTime = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
@@ -549,6 +550,46 @@ export default function TcmBrain() {
     };
     fetchPatients();
   }, [session?.user?.id]);
+
+  // Auto-save session every 30 seconds when running and has data
+  useEffect(() => {
+    if (!isSessionRunning || messages.length === 0) return;
+    
+    const autoSave = () => {
+      const voiceNoteData = voiceNotes.map(vn => ({
+        id: vn.id,
+        transcription: vn.transcription,
+        duration: vn.duration,
+        timestamp: vn.timestamp
+      }));
+      
+      const sessionData: TcmSession = {
+        id: `TCM-${sessionStartTime?.getTime() || Date.now()}`,
+        startTime: sessionStartTime?.toISOString() || new Date().toISOString(),
+        endTime: new Date().toISOString(),
+        duration: formatSessionTime(sessionSeconds),
+        durationSeconds: sessionSeconds,
+        questionsAsked: questionsAsked,
+        conversationHistory: messages.map(m => ({
+          role: m.role,
+          content: m.content,
+          timestamp: new Date().toISOString()
+        })),
+        totalQuestions: questionsAsked.length,
+        totalResponses: messages.filter(m => m.role === 'assistant').length,
+        patientName: selectedPatient?.name,
+        patientEmail: selectedPatient?.email,
+        patientPhone: selectedPatient?.phone,
+        voiceNotes: voiceNoteData,
+        templateUsed: activeTemplate || undefined
+      };
+      
+      saveSession(sessionData);
+    };
+    
+    const timer = setInterval(autoSave, 30000); // Auto-save every 30 seconds
+    return () => clearInterval(timer);
+  }, [isSessionRunning, messages, questionsAsked, voiceNotes, sessionStartTime, sessionSeconds, selectedPatient, activeTemplate, saveSession, formatSessionTime]);
   
   // Search and filter states for main categories
   const [categorySearches, setCategorySearches] = useState<Record<string, string>>({
@@ -877,15 +918,15 @@ export default function TcmBrain() {
     return (
       <div className="space-y-6 p-4">
         <div className="text-left">
-          <h3 className="font-display text-xl mb-2">{title}</h3>
-          <p className="text-muted-foreground text-sm">Select a question from the list or write your own</p>
+          <h3 className="font-display text-2xl mb-2">{title}</h3>
+          <p className="text-muted-foreground text-base">Select a question from the list or write your own</p>
         </div>
         
         <div className="grid gap-4">
           {categories.map(category => (
             <Card key={category} className="bg-card">
-              <CardHeader className="py-3">
-                <CardTitle className="text-sm font-medium text-jade text-left">{category}</CardTitle>
+              <CardHeader className="py-4">
+                <CardTitle className="text-lg font-semibold text-jade text-left">{category}</CardTitle>
               </CardHeader>
               <CardContent className="py-2">
                 <Select
@@ -1121,6 +1162,19 @@ export default function TcmBrain() {
                 onSelectPatient={setSelectedPatient}
                 isLoading={loadingPatients}
                 showOnMobile={true}
+                onPatientAdded={() => {
+                  // Refresh patients list after adding new patient
+                  const fetchPatients = async () => {
+                    if (!session?.user?.id) return;
+                    const { data } = await supabase
+                      .from('patients')
+                      .select('id, full_name, email, phone')
+                      .eq('therapist_id', session.user.id)
+                      .order('full_name');
+                    setPatients(data || []);
+                  };
+                  fetchPatients();
+                }}
               />
               
               {/* Session Templates Button */}
