@@ -76,6 +76,7 @@ import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { useDoubleTapGesture } from '@/hooks/useDoubleTapGesture';
 import { useShakeGesture } from '@/hooks/useShakeGesture';
 import { MilestoneCelebration } from '@/components/video/MilestoneCelebration';
+import { SwipeStatusTags } from '@/components/video/SwipeStatusTags';
 import { cn } from '@/lib/utils';
 import aiGeneratorBg from '@/assets/ai-generator-bg.png';
 import animatedMicGif from '@/assets/mic-animated.gif';
@@ -588,6 +589,12 @@ export default function VideoSession() {
         <MilestoneCelebration 
           sessionDuration={sessionDuration} 
           sessionStatus={sessionStatus} 
+        />
+        
+        {/* Swipe-down Status Tags - Mobile only */}
+        <SwipeStatusTags 
+          onAddTag={(tag) => setNotes(sessionNotes + tag)}
+          sessionStatus={sessionStatus}
         />
         
         {/* Paused Dimming Overlay */}
