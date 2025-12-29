@@ -25,7 +25,8 @@ import {
   UserPlus,
   Bell,
   Search,
-  X
+  X,
+  Phone
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
@@ -203,6 +204,7 @@ export default function Dashboard() {
   const [searchResults, setSearchResults] = useState<Array<{ id: string; full_name: string; phone: string | null }>>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   // Fetch notifications (pending follow-ups and today's appointments)
   const fetchNotifications = useCallback(async () => {
@@ -514,23 +516,36 @@ export default function Dashboard() {
             {showSearchResults && searchResults.length > 0 && (
               <div className="absolute top-full mt-2 w-full bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden">
                 {searchResults.map((patient) => (
-                  <Link
+                  <div
                     key={patient.id}
-                    to={`/crm/patients/${patient.id}`}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors border-b border-border/50 last:border-b-0"
-                    onClick={() => {
-                      setSearchQuery('');
-                      setShowSearchResults(false);
-                    }}
+                    className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/50 transition-colors border-b border-border/50 last:border-b-0"
                   >
-                    <Users className="h-4 w-4 text-jade" />
-                    <div>
-                      <p className="font-medium text-sm">{patient.full_name}</p>
-                      {patient.phone && (
-                        <p className="text-xs text-muted-foreground">{patient.phone}</p>
-                      )}
-                    </div>
-                  </Link>
+                    <Link
+                      to={`/crm/patients/${patient.id}`}
+                      className="flex items-center gap-3 flex-1"
+                      onClick={() => {
+                        setSearchQuery('');
+                        setShowSearchResults(false);
+                      }}
+                    >
+                      <Users className="h-4 w-4 text-jade" />
+                      <div>
+                        <p className="font-medium text-sm">{patient.full_name}</p>
+                        {patient.phone && (
+                          <p className="text-xs text-muted-foreground">{patient.phone}</p>
+                        )}
+                      </div>
+                    </Link>
+                    {patient.phone && (
+                      <a
+                        href={`tel:${patient.phone}`}
+                        className="p-2 rounded-full bg-jade/10 hover:bg-jade/20 transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Phone className="h-4 w-4 text-jade" />
+                      </a>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
@@ -542,6 +557,16 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 opacity-0 animate-fade-in" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
+            {/* Mobile Search Button */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="md:hidden"
+              onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+            
             {/* Phosphor Clock */}
             <PhosphorClock />
             
@@ -613,6 +638,77 @@ export default function Dashboard() {
           </div>
         </div>
       </header>
+
+      {/* Mobile Search Panel */}
+      {mobileSearchOpen && (
+        <div className="md:hidden bg-card border-b border-border px-4 py-3 animate-fade-in">
+          <div className="relative">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="חיפוש מטופל לפי שם או טלפון..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pr-10 pl-8 bg-muted/50 border-border/50 focus:bg-background"
+              autoFocus
+            />
+            {searchQuery && (
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setShowSearchResults(false);
+                }}
+                className="absolute left-3 top-1/2 -translate-y-1/2"
+              >
+                <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+              </button>
+            )}
+          </div>
+          
+          {/* Mobile Search Results */}
+          {showSearchResults && searchResults.length > 0 && (
+            <div className="mt-3 bg-card border border-border rounded-lg overflow-hidden">
+              {searchResults.map((patient) => (
+                <div
+                  key={patient.id}
+                  className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/50 transition-colors border-b border-border/50 last:border-b-0"
+                >
+                  <Link
+                    to={`/crm/patients/${patient.id}`}
+                    className="flex items-center gap-3 flex-1"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setShowSearchResults(false);
+                      setMobileSearchOpen(false);
+                    }}
+                  >
+                    <Users className="h-4 w-4 text-jade" />
+                    <div>
+                      <p className="font-medium text-sm">{patient.full_name}</p>
+                      {patient.phone && (
+                        <p className="text-xs text-muted-foreground">{patient.phone}</p>
+                      )}
+                    </div>
+                  </Link>
+                  {patient.phone && (
+                    <a
+                      href={`tel:${patient.phone}`}
+                      className="p-2 rounded-full bg-jade/10 hover:bg-jade/20 transition-colors"
+                    >
+                      <Phone className="h-4 w-4 text-jade" />
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          {showSearchResults && searchResults.length === 0 && searchQuery && !isSearching && (
+            <div className="mt-3 p-4 text-center text-muted-foreground text-sm bg-card border border-border rounded-lg">
+              לא נמצאו תוצאות
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
