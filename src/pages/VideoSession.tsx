@@ -82,6 +82,9 @@ import { VoiceCommandSystem } from '@/components/video/VoiceCommandSystem';
 import { SessionPresets } from '@/components/video/SessionPresets';
 import { useThreeFingerTap } from '@/hooks/useThreeFingerTap';
 import { PatientHistoryPanel } from '@/components/video/PatientHistoryPanel';
+import { FloatingQuickActions } from '@/components/video/FloatingQuickActions';
+import { CustomizableToolbar, ToolbarItemId } from '@/components/video/CustomizableToolbar';
+import { useLongPressTimer } from '@/hooks/useLongPressTimer';
 import { cn } from '@/lib/utils';
 import aiGeneratorBg from '@/assets/ai-generator-bg.png';
 import animatedMicGif from '@/assets/mic-animated.gif';
@@ -128,10 +131,23 @@ export default function VideoSession() {
   const haptic = useHapticFeedback();
   
   // AI Query states
-  const [activeAiQuery, setActiveAiQuery] = useState<'nutrition' | 'herbs' | 'diagnosis' | 'mental' | 'sleep' | 'worklife' | 'wellness' | 'sports' | 'bazi' | 'astro' | 'points' | null>(null);
+  const [activeAiQuery, setActiveAiQuery] = useState<ToolbarItemId | null>(null);
   const [aiQueryInput, setAiQueryInput] = useState('');
   const [aiQueryLoading, setAiQueryLoading] = useState(false);
   const [aiQueryResult, setAiQueryResult] = useState<string | null>(null);
+  
+  // Floating quick actions state
+  const [showQuickActions, setShowQuickActions] = useState(false);
+  const [quickActionsPosition, setQuickActionsPosition] = useState<{ x: number; y: number } | undefined>();
+  
+  // Long press timer hook
+  const longPressTimer = useLongPressTimer({
+    onLongPress: (position) => {
+      setQuickActionsPosition(position);
+      setShowQuickActions(true);
+    },
+    delay: 600,
+  });
   
   // Anxiety Q&A inline state
   const [inlineAnxietyMessages, setInlineAnxietyMessages] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
@@ -825,120 +841,12 @@ export default function VideoSession() {
           />
         </div>
 
-        {/* CAF Asset Boxes - All connected to RAG - Scrollable on mobile */}
+        {/* CAF Asset Boxes - Customizable Toolbar */}
         <div className="px-3 md:px-4 pt-2 md:pt-4 pb-2">
-          <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 md:flex-wrap scrollbar-hide -mx-3 px-3 md:mx-0 md:px-0">
-            {/* Herbs */}
-            <Button 
-              variant={activeAiQuery === 'herbs' ? 'default' : 'outline'} 
-              size="sm" 
-              onClick={() => setActiveAiQuery(activeAiQuery === 'herbs' ? null : 'herbs')}
-              className="gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200"
-            >
-              <Leaf className="h-4 w-4" />
-              Herbs
-            </Button>
-            {/* Nutrition */}
-            <Button 
-              variant={activeAiQuery === 'nutrition' ? 'default' : 'outline'} 
-              size="sm" 
-              onClick={() => setActiveAiQuery(activeAiQuery === 'nutrition' ? null : 'nutrition')}
-              className="gap-1.5 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-            >
-              <Apple className="h-4 w-4" />
-              Nutrition
-            </Button>
-            {/* Mental Health */}
-            <Button 
-              variant={activeAiQuery === 'mental' ? 'default' : 'outline'} 
-              size="sm" 
-              onClick={() => setActiveAiQuery(activeAiQuery === 'mental' ? null : 'mental')}
-              className="gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200"
-            >
-              <Heart className="h-4 w-4" />
-              Mental
-            </Button>
-            {/* Sleep */}
-            <Button 
-              variant={activeAiQuery === 'sleep' ? 'default' : 'outline'} 
-              size="sm" 
-              onClick={() => setActiveAiQuery(activeAiQuery === 'sleep' ? null : 'sleep')}
-              className="gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200"
-            >
-              <Moon className="h-4 w-4" />
-              Sleep
-            </Button>
-            {/* Work-Life Balance */}
-            <Button 
-              variant={activeAiQuery === 'worklife' ? 'default' : 'outline'} 
-              size="sm" 
-              onClick={() => setActiveAiQuery(activeAiQuery === 'worklife' ? null : 'worklife')}
-              className="gap-1.5 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border-cyan-200"
-            >
-              <Briefcase className="h-4 w-4" />
-              Balance
-            </Button>
-            {/* Wellness */}
-            <Button 
-              variant={activeAiQuery === 'wellness' ? 'default' : 'outline'} 
-              size="sm" 
-              onClick={() => setActiveAiQuery(activeAiQuery === 'wellness' ? null : 'wellness')}
-              className="gap-1.5 bg-teal-50 hover:bg-teal-100 text-teal-700 border-teal-200"
-            >
-              <Activity className="h-4 w-4" />
-              Wellness
-            </Button>
-            {/* Sports */}
-            <Button 
-              variant={activeAiQuery === 'sports' ? 'default' : 'outline'} 
-              size="sm" 
-              onClick={() => setActiveAiQuery(activeAiQuery === 'sports' ? null : 'sports')}
-              className="gap-1.5 bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200"
-            >
-              <Dumbbell className="h-4 w-4" />
-              Sports
-            </Button>
-            {/* Bazi */}
-            <Button 
-              variant={activeAiQuery === 'bazi' ? 'default' : 'outline'} 
-              size="sm" 
-              onClick={() => setActiveAiQuery(activeAiQuery === 'bazi' ? null : 'bazi')}
-              className="gap-1.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border-yellow-200"
-            >
-              <Compass className="h-4 w-4" />
-              Bazi
-            </Button>
-            {/* Astrology */}
-            <Button 
-              variant={activeAiQuery === 'astro' ? 'default' : 'outline'} 
-              size="sm" 
-              onClick={() => setActiveAiQuery(activeAiQuery === 'astro' ? null : 'astro')}
-              className="gap-1.5 bg-violet-50 hover:bg-violet-100 text-violet-700 border-violet-200"
-            >
-              <Star className="h-4 w-4" />
-              Astrology
-            </Button>
-            {/* Acupuncture Points */}
-            <Button 
-              variant={activeAiQuery === 'points' ? 'default' : 'outline'} 
-              size="sm" 
-              onClick={() => setActiveAiQuery(activeAiQuery === 'points' ? null : 'points')}
-              className="gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200"
-            >
-              <MapPin className="h-4 w-4" />
-              Points
-            </Button>
-            {/* Diagnosis */}
-            <Button 
-              variant={activeAiQuery === 'diagnosis' ? 'default' : 'outline'} 
-              size="sm" 
-              onClick={() => setActiveAiQuery(activeAiQuery === 'diagnosis' ? null : 'diagnosis')}
-              className="gap-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200"
-            >
-              <Stethoscope className="h-4 w-4" />
-              Diagnosis
-            </Button>
-          </div>
+          <CustomizableToolbar
+            activeQuery={activeAiQuery}
+            onQueryChange={setActiveAiQuery}
+          />
           {/* Second Row - Main Actions - Compact sizing for mobile */}
           <div className="grid grid-cols-4 gap-1 md:flex md:flex-wrap md:gap-2 mt-2 md:mt-3">
             {/* Animated AI Query Button */}
@@ -1103,9 +1011,17 @@ export default function VideoSession() {
                         </Badge>
                       )}
                       
-                      <p className="text-3xl md:text-4xl font-mono mt-3 md:mt-4 text-jade font-bold hidden md:block">
+                      <div 
+                        className={cn(
+                          "text-3xl md:text-4xl font-mono mt-3 md:mt-4 text-jade font-bold hidden md:block cursor-pointer",
+                          "hover:scale-105 transition-transform select-none",
+                          longPressTimer.isPressing && "scale-95"
+                        )}
+                        {...longPressTimer.handlers}
+                        title="Long press for quick actions"
+                      >
                         {formatDuration(sessionDuration)}
-                      </p>
+                      </div>
                       
                       {/* Session Presets - Desktop */}
                       <div className="hidden md:block mt-3 w-full max-w-xs">
@@ -1440,6 +1356,10 @@ export default function VideoSession() {
           onQuickAppointment={() => setShowQuickAppointment(true)}
           onZoomInvite={() => setShowZoomInvite(true)}
           zoomTimeRemaining={getZoomTimeRemaining()}
+          onLongPressTimer={(position) => {
+            setQuickActionsPosition(position);
+            setShowQuickActions(true);
+          }}
         />
 
         {/* Mobile Tools Drawer - Floating button */}
@@ -1468,6 +1388,25 @@ export default function VideoSession() {
       <VoiceDictationDialog open={showVoiceDictation} onOpenChange={setShowVoiceDictation} patientId={selectedPatientId || undefined} patientName={selectedPatientName || undefined} />
       <CalendarInviteDialog open={showCalendarInvite} onOpenChange={setShowCalendarInvite} patientId={selectedPatientId || undefined} patientName={selectedPatientName || undefined} patientPhone={selectedPatientPhone || undefined} onAppointmentCreated={handleCalendarInviteCreated} />
       <SessionReportDialog open={showSessionReport} onOpenChange={setShowSessionReport} patientName={selectedPatientName || ''} patientPhone={selectedPatientPhone} sessionNotes={sessionNotes} anxietyResponses={anxietyConversation} />
+      
+      {/* Floating Quick Actions - Long press on timer */}
+      <FloatingQuickActions
+        isOpen={showQuickActions}
+        onClose={() => setShowQuickActions(false)}
+        sessionStatus={sessionStatus}
+        onStart={handleStart}
+        onPause={handlePause}
+        onResume={handleResume}
+        onEnd={handleEnd}
+        onReset={handleRepeat}
+        onQuickPatient={() => setShowQuickPatient(true)}
+        onQuickAppointment={() => setShowQuickAppointment(true)}
+        onVoiceDictation={() => setShowVoiceDictation(true)}
+        onAnxietyQA={() => setShowAnxietyQA(true)}
+        onFollowUp={() => setShowFollowUpPlan(true)}
+        onSessionReport={() => setShowSessionReport(true)}
+        anchorPosition={quickActionsPosition}
+      />
     </SessionTimerProvider>
   );
 }

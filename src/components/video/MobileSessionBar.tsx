@@ -13,7 +13,9 @@ import {
 } from 'lucide-react';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { useSwipeGesture } from '@/hooks/useSwipeGesture';
+import { useLongPressTimer } from '@/hooks/useLongPressTimer';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface MobileSessionBarProps {
   sessionStatus: 'idle' | 'running' | 'paused' | 'ended';
@@ -29,6 +31,7 @@ interface MobileSessionBarProps {
   onQuickAppointment: () => void;
   onZoomInvite: () => void;
   zoomTimeRemaining: string;
+  onLongPressTimer?: (position: { x: number; y: number }) => void;
 }
 
 export function MobileSessionBar({
@@ -45,8 +48,19 @@ export function MobileSessionBar({
   onQuickAppointment,
   onZoomInvite,
   zoomTimeRemaining,
+  onLongPressTimer,
 }: MobileSessionBarProps) {
   const haptic = useHapticFeedback();
+
+  // Long press on timer
+  const longPressTimer = useLongPressTimer({
+    onLongPress: (position) => {
+      if (onLongPressTimer) {
+        onLongPressTimer(position);
+      }
+    },
+    delay: 600,
+  });
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -160,9 +174,15 @@ export function MobileSessionBar({
             {getSwipeHint()}
             <ChevronRight className="h-3 w-3" />
           </span>
-          <span className={`text-lg font-mono font-bold ${
-            sessionStatus === 'running' ? 'text-jade' : 'text-muted-foreground'
-          }`}>
+          <span 
+            className={cn(
+              "text-lg font-mono font-bold cursor-pointer select-none transition-transform",
+              sessionStatus === 'running' ? 'text-jade' : 'text-muted-foreground',
+              longPressTimer.isPressing && "scale-95"
+            )}
+            {...longPressTimer.handlers}
+            title="Long press for quick actions"
+          >
             {formatDuration(sessionDuration)}
           </span>
           {sessionStatus !== 'idle' && sessionStatus !== 'ended' && (
