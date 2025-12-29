@@ -39,6 +39,8 @@ import {
   Play,
   Timer,
   FileText,
+  Send,
+  CheckCircle,
 } from 'lucide-react';
 import { WhatsAppReminderButton } from '@/components/crm/WhatsAppReminderButton';
 import { useSessionTimer } from '@/contexts/SessionTimerContext';
@@ -100,6 +102,12 @@ function CalendarContent() {
   const [quickPatientIdNumber, setQuickPatientIdNumber] = useState('');
   const [creatingPatient, setCreatingPatient] = useState(false);
   const [patientSearchFilter, setPatientSearchFilter] = useState('');
+  
+  // Bulk reminder state
+  const [showBulkReminder, setShowBulkReminder] = useState(false);
+  const [reminderTimeRange, setReminderTimeRange] = useState<'today' | 'tomorrow' | 'next3days' | 'thisweek'>('tomorrow');
+  const [selectedReminders, setSelectedReminders] = useState<Set<string>>(new Set());
+  const [sendingReminders, setSendingReminders] = useState(false);
   
   // Drag state
   const [dragState, setDragState] = useState<DragState | null>(null);
@@ -476,6 +484,116 @@ function CalendarContent() {
     });
   };
 
+  // Get filtered appointments for bulk reminders
+  const getFilteredAppointmentsForReminder = useCallback(() => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayEnd = addDays(todayStart, 1);
+    const tomorrowEnd = addDays(todayStart, 2);
+    const next3DaysEnd = addDays(todayStart, 4);
+    const thisWeekEnd = endOfWeek(now, { weekStartsOn: 0 });
+
+    let rangeStart: Date;
+    let rangeEnd: Date;
+
+    switch (reminderTimeRange) {
+      case 'today':
+        rangeStart = now;
+        rangeEnd = todayEnd;
+        break;
+      case 'tomorrow':
+        rangeStart = todayEnd;
+        rangeEnd = tomorrowEnd;
+        break;
+      case 'next3days':
+        rangeStart = now;
+        rangeEnd = next3DaysEnd;
+        break;
+      case 'thisweek':
+        rangeStart = now;
+        rangeEnd = thisWeekEnd;
+        break;
+      default:
+        rangeStart = now;
+        rangeEnd = todayEnd;
+    }
+
+    return appointments.filter(appt => {
+      const apptDate = new Date(appt.start_time);
+      return apptDate >= rangeStart && 
+             apptDate <= rangeEnd && 
+             appt.patient_id && 
+             appt.patients?.phone &&
+             appt.status === 'scheduled';
+    });
+  }, [appointments, reminderTimeRange]);
+
+  // Format phone number for WhatsApp
+  const formatPhoneForWhatsApp = (phone: string): string => {
+    let cleaned = phone.replace(/[\s\-\(\)]/g, '');
+    if (cleaned.startsWith('0')) {
+      cleaned = '972' + cleaned.substring(1);
+    }
+    if (!cleaned.startsWith('+') && !cleaned.startsWith('972')) {
+      cleaned = '972' + cleaned;
+    }
+    return cleaned.replace('+', '');
+  };
+
+  // Create WhatsApp reminder message
+  const createReminderMessage = (appt: Appointment): string => {
+    const dateStr = format(new Date(appt.start_time), 'EEEE, MMMM d');
+    const timeStr = format(new Date(appt.start_time), 'HH:mm');
+    const patientName = appt.patients?.full_name || 'there';
+    
+    return `שלום ${patientName}! 🌿
+
+זוהי תזכורת לתור שלך ב-${dateStr} בשעה ${timeStr}.
+
+נשמח לראות אותך! 💚`;
+  };
+
+  // Send bulk reminders - opens each in new tab
+  const handleSendBulkReminders = async () => {
+    const appointmentsToRemind = getFilteredAppointmentsForReminder().filter(
+      appt => selectedReminders.has(appt.id)
+    );
+    
+    if (appointmentsToRemind.length === 0) {
+      toast.error('No appointments selected');
+      return;
+    }
+
+    setSendingReminders(true);
+    
+    for (const appt of appointmentsToRemind) {
+      if (appt.patients?.phone) {
+        const phone = formatPhoneForWhatsApp(appt.patients.phone);
+        const message = createReminderMessage(appt);
+        const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+        
+        // Small delay between opening tabs
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+
+    toast.success(`Opened ${appointmentsToRemind.length} WhatsApp reminder(s)`);
+    setSendingReminders(false);
+    setShowBulkReminder(false);
+    setSelectedReminders(new Set());
+  };
+
+  // Toggle all reminders selection
+  const toggleAllReminders = (checked: boolean) => {
+    if (checked) {
+      const allIds = getFilteredAppointmentsForReminder().map(a => a.id);
+      setSelectedReminders(new Set(allIds));
+    } else {
+      setSelectedReminders(new Set());
+    }
+  };
+
   const navigateDate = (direction: number) => {
     if (viewMode === 'day') {
       setSelectedDate(addDays(selectedDate, direction));
@@ -574,6 +692,134 @@ function CalendarContent() {
                 <SelectItem value="week">Week</SelectItem>
               </SelectContent>
             </Select>
+
+            {/* Bulk Reminder Button */}
+            <Dialog open={showBulkReminder} onOpenChange={(open) => { 
+              setShowBulkReminder(open); 
+              if (!open) setSelectedReminders(new Set()); 
+            }}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="border-jade/30 text-jade hover:bg-jade/10">
+                  <Send className="h-4 w-4 mr-2" />
+                  Send Reminders
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <MessageCircle className="h-5 w-5 text-jade" />
+                    Send WhatsApp Reminders
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  {/* Time Range Filter */}
+                  <div className="space-y-2">
+                    <Label>Time Range</Label>
+                    <Select value={reminderTimeRange} onValueChange={(v) => {
+                      setReminderTimeRange(v as 'today' | 'tomorrow' | 'next3days' | 'thisweek');
+                      setSelectedReminders(new Set());
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="today">Today</SelectItem>
+                        <SelectItem value="tomorrow">Tomorrow</SelectItem>
+                        <SelectItem value="next3days">Next 3 Days</SelectItem>
+                        <SelectItem value="thisweek">This Week</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Appointments List */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label>Appointments ({getFilteredAppointmentsForReminder().length})</Label>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => toggleAllReminders(selectedReminders.size !== getFilteredAppointmentsForReminder().length)}
+                      >
+                        {selectedReminders.size === getFilteredAppointmentsForReminder().length ? 'Deselect All' : 'Select All'}
+                      </Button>
+                    </div>
+                    
+                    <ScrollArea className="h-[300px] border rounded-lg p-2">
+                      {getFilteredAppointmentsForReminder().length === 0 ? (
+                        <div className="text-center text-muted-foreground py-8">
+                          <CalendarIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p>No upcoming appointments with patient phone numbers</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {getFilteredAppointmentsForReminder().map((appt) => (
+                            <div 
+                              key={appt.id}
+                              className={cn(
+                                "flex items-center gap-3 p-3 rounded-lg border transition-colors cursor-pointer",
+                                selectedReminders.has(appt.id) 
+                                  ? "bg-jade/10 border-jade/30" 
+                                  : "bg-background hover:bg-muted/50"
+                              )}
+                              onClick={() => {
+                                const newSet = new Set(selectedReminders);
+                                if (newSet.has(appt.id)) {
+                                  newSet.delete(appt.id);
+                                } else {
+                                  newSet.add(appt.id);
+                                }
+                                setSelectedReminders(newSet);
+                              }}
+                            >
+                              <Checkbox 
+                                checked={selectedReminders.has(appt.id)}
+                                className="pointer-events-none"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">{appt.patients?.full_name || appt.title}</p>
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                  <CalendarIcon className="h-3 w-3" />
+                                  <span>{format(new Date(appt.start_time), 'EEE, MMM d')}</span>
+                                  <Clock className="h-3 w-3 ml-1" />
+                                  <span>{format(new Date(appt.start_time), 'HH:mm')}</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground truncate">
+                                  📱 {appt.patients?.phone}
+                                </p>
+                              </div>
+                              {selectedReminders.has(appt.id) && (
+                                <CheckCircle className="h-4 w-4 text-jade shrink-0" />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </ScrollArea>
+                  </div>
+
+                  {/* Send Button */}
+                  <Button
+                    className="w-full bg-jade hover:bg-jade/90"
+                    onClick={handleSendBulkReminders}
+                    disabled={sendingReminders || selectedReminders.size === 0}
+                  >
+                    {sendingReminders ? (
+                      <>Sending...</>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4 mr-2" />
+                        Send {selectedReminders.size} Reminder{selectedReminders.size !== 1 ? 's' : ''}
+                      </>
+                    )}
+                  </Button>
+                  
+                  <p className="text-xs text-muted-foreground text-center">
+                    Each reminder will open in a new WhatsApp tab for you to send
+                  </p>
+                </div>
+              </DialogContent>
+            </Dialog>
 
             <Dialog open={showNewAppt} onOpenChange={(open) => { setShowNewAppt(open); if (!open) { resetForm(); setConflictWarning(null); } }}>
               <DialogTrigger asChild>
