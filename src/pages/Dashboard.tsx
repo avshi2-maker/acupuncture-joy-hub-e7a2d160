@@ -143,8 +143,8 @@ export default function Dashboard() {
     },
     {
       id: 'cm_brain',
-      title: 'Standard Session',
-      description: 'AI Brain & Body Figures',
+      title: 'טיפול סטנדרטי',
+      description: 'מוח AI ומפות גוף אינטראקטיביות',
       icon: <Brain className="h-6 w-6 text-white" />,
       feature: 'tcm_brain' as const,
       href: '/tcm-brain',
