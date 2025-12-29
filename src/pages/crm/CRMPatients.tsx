@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { CRMLayout } from '@/components/crm/CRMLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +8,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { format, differenceInYears } from 'date-fns';
 import { Link } from 'react-router-dom';
-import { Plus, Search, User, Phone, Mail, Calendar, FileText } from 'lucide-react';
+import { Plus, Search, User, Phone, Mail, FileText, Filter, X, ChevronDown, Check } from 'lucide-react';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 interface Patient {
   id: string;
@@ -23,6 +25,9 @@ interface Patient {
   created_at: string;
 }
 
+type AgeGroupFilter = 'all' | 'Child' | 'Teen' | 'Adult' | 'Senior';
+type ConsentFilter = 'all' | 'signed' | 'pending';
+
 function calculateAge(dob: string | null): number | null {
   if (!dob) return null;
   return differenceInYears(new Date(), new Date(dob));
@@ -36,10 +41,27 @@ function getAgeGroup(age: number | null): string {
   return 'Senior';
 }
 
+const AGE_GROUPS: { value: AgeGroupFilter; label: string; color: string }[] = [
+  { value: 'all', label: 'All Ages', color: 'bg-muted' },
+  { value: 'Child', label: 'Child', color: 'bg-blue-500/20 text-blue-600' },
+  { value: 'Teen', label: 'Teen', color: 'bg-purple-500/20 text-purple-600' },
+  { value: 'Adult', label: 'Adult', color: 'bg-jade/20 text-jade' },
+  { value: 'Senior', label: 'Senior', color: 'bg-amber-500/20 text-amber-600' },
+];
+
+const CONSENT_OPTIONS: { value: ConsentFilter; label: string; color: string }[] = [
+  { value: 'all', label: 'All Status', color: 'bg-muted' },
+  { value: 'signed', label: 'Signed', color: 'bg-emerald-500/20 text-emerald-600' },
+  { value: 'pending', label: 'Pending', color: 'bg-orange-500/20 text-orange-600' },
+];
+
 export default function CRMPatients() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [ageFilter, setAgeFilter] = useState<AgeGroupFilter>('all');
+  const [consentFilter, setConsentFilter] = useState<ConsentFilter>('all');
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     fetchPatients();
@@ -62,19 +84,41 @@ export default function CRMPatients() {
     }
   };
 
-  const filteredPatients = patients.filter((p) =>
-    p.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.phone?.includes(searchQuery)
-  );
+  const filteredPatients = patients.filter((p) => {
+    // Text search
+    const matchesSearch = 
+      p.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.phone?.includes(searchQuery);
+
+    // Age group filter
+    const age = calculateAge(p.date_of_birth);
+    const patientAgeGroup = getAgeGroup(age);
+    const matchesAge = ageFilter === 'all' || patientAgeGroup === ageFilter;
+
+    // Consent filter
+    const matchesConsent = 
+      consentFilter === 'all' || 
+      (consentFilter === 'signed' && p.consent_signed) ||
+      (consentFilter === 'pending' && !p.consent_signed);
+
+    return matchesSearch && matchesAge && matchesConsent;
+  });
+
+  const activeFilterCount = (ageFilter !== 'all' ? 1 : 0) + (consentFilter !== 'all' ? 1 : 0);
+
+  const clearFilters = () => {
+    setAgeFilter('all');
+    setConsentFilter('all');
+  };
 
   return (
     <CRMLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-2xl font-display font-semibold">Patients</h1>
+            <h1 className="text-xl md:text-2xl font-display font-semibold">Patients</h1>
             <p className="text-sm text-muted-foreground">
               Manage patient records and intake forms
             </p>
@@ -82,20 +126,147 @@ export default function CRMPatients() {
           <Button asChild className="bg-jade hover:bg-jade/90">
             <Link to="/crm/patients/new">
               <Plus className="h-4 w-4 mr-2" />
-              Add Patient
+              <span className="hidden sm:inline">Add</span> Patient
             </Link>
           </Button>
         </div>
 
-        {/* Search */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search patients by name, email, or phone..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+        {/* Search & Filters - Mobile Optimized */}
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search patients..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 h-10"
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6"
+                  onClick={() => setSearchQuery('')}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+            <Button
+              variant={activeFilterCount > 0 ? 'default' : 'outline'}
+              size="icon"
+              className={cn(
+                'h-10 w-10 shrink-0',
+                activeFilterCount > 0 && 'bg-jade hover:bg-jade/90'
+              )}
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <Filter className="h-4 w-4" />
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground text-[10px] rounded-full flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
+            </Button>
+          </div>
+
+          {/* Filter Pills - Horizontal Scroll on Mobile */}
+          {showFilters && (
+            <div className="space-y-2 p-3 bg-muted/30 rounded-lg border border-border/50">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground">Filters</span>
+                {activeFilterCount > 0 && (
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="h-6 text-xs">
+                    Clear all
+                  </Button>
+                )}
+              </div>
+              
+              {/* Age Group Filter */}
+              <div>
+                <span className="text-xs text-muted-foreground mb-1.5 block">Age Group</span>
+                <ScrollArea className="w-full whitespace-nowrap">
+                  <div className="flex gap-1.5 pb-2">
+                    {AGE_GROUPS.map((group) => (
+                      <Button
+                        key={group.value}
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setAgeFilter(group.value)}
+                        className={cn(
+                          'h-8 px-3 rounded-full text-xs shrink-0 touch-manipulation',
+                          ageFilter === group.value
+                            ? group.value === 'all' 
+                              ? 'bg-foreground text-background' 
+                              : group.color + ' ring-2 ring-offset-1 ring-current'
+                            : 'bg-muted/50 hover:bg-muted'
+                        )}
+                      >
+                        {ageFilter === group.value && <Check className="h-3 w-3 mr-1" />}
+                        {group.label}
+                      </Button>
+                    ))}
+                  </div>
+                  <ScrollBar orientation="horizontal" />
+                </ScrollArea>
+              </div>
+
+              {/* Consent Filter */}
+              <div>
+                <span className="text-xs text-muted-foreground mb-1.5 block">Consent Status</span>
+                <div className="flex gap-1.5 flex-wrap">
+                  {CONSENT_OPTIONS.map((option) => (
+                    <Button
+                      key={option.value}
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setConsentFilter(option.value)}
+                      className={cn(
+                        'h-8 px-3 rounded-full text-xs touch-manipulation',
+                        consentFilter === option.value
+                          ? option.value === 'all'
+                            ? 'bg-foreground text-background'
+                            : option.color + ' ring-2 ring-offset-1 ring-current'
+                          : 'bg-muted/50 hover:bg-muted'
+                      )}
+                    >
+                      {consentFilter === option.value && <Check className="h-3 w-3 mr-1" />}
+                      {option.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Active Filters Summary */}
+          {activeFilterCount > 0 && !showFilters && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>Filtered by:</span>
+              {ageFilter !== 'all' && (
+                <Badge variant="secondary" className="text-xs">
+                  {ageFilter}
+                  <button onClick={() => setAgeFilter('all')} className="ml-1">
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                </Badge>
+              )}
+              {consentFilter !== 'all' && (
+                <Badge variant="secondary" className="text-xs">
+                  {consentFilter === 'signed' ? 'Consent Signed' : 'Pending Consent'}
+                  <button onClick={() => setConsentFilter('all')} className="ml-1">
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                </Badge>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Results Count */}
+        <div className="text-sm text-muted-foreground">
+          {filteredPatients.length} of {patients.length} patients
         </div>
 
         {/* Patient List */}
@@ -107,11 +278,18 @@ export default function CRMPatients() {
               <div className="p-8 text-center">
                 <User className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
                 <p className="text-muted-foreground">
-                  {searchQuery ? 'No patients found matching your search' : 'No patients yet'}
+                  {searchQuery || activeFilterCount > 0 ? 'No patients found matching your criteria' : 'No patients yet'}
                 </p>
-                <Button asChild variant="link" className="mt-2">
-                  <Link to="/crm/patients/new">Add your first patient</Link>
-                </Button>
+                {(searchQuery || activeFilterCount > 0) && (
+                  <Button variant="link" className="mt-2" onClick={() => { setSearchQuery(''); clearFilters(); }}>
+                    Clear all filters
+                  </Button>
+                )}
+                {!searchQuery && activeFilterCount === 0 && (
+                  <Button asChild variant="link" className="mt-2">
+                    <Link to="/crm/patients/new">Add your first patient</Link>
+                  </Button>
+                )}
               </div>
             ) : (
               <Table>
