@@ -383,91 +383,98 @@ const Index = () => {
           </p>
         </section>
 
-        {/* Bottom buttons row - all three in one line */}
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3">
-          {/* Watch Video Button */}
-          <button
-            onClick={() => {
-              setCurrentVideoIndex(0); // Always start from video #1
-              setShowVideoModal(true);
-            }}
-            className="flex items-center gap-3 bg-foreground/80 hover:bg-foreground/90 backdrop-blur-sm text-cream px-4 py-3 rounded-full transition-all shadow-lg hover:shadow-xl hover:scale-105 group"
-          >
-            <div className="w-8 h-8 rounded-full bg-gold flex items-center justify-center animate-[pulse_2s_ease-in-out_infinite]">
-              <PlayIcon className="h-4 w-4 text-foreground fill-foreground" />
-            </div>
-            <span className="text-sm font-medium pr-2">{t("watchVideoCta")}</span>
-          </button>
-
-          {/* CM Digital Encyclopedia Button */}
-          <Link
-            to="/encyclopedia"
-            className="flex items-center gap-2 bg-gradient-to-r from-gold to-gold/80 hover:from-gold/90 hover:to-gold/70 text-foreground px-6 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl hover:scale-105 font-medium animate-[pulse_3s_ease-in-out_infinite]"
-          >
-            <BookOpen className="h-5 w-5" />
-            <span>{t("encyclopediaCta")}</span>
-          </Link>
-
-          {/* Install App Button with touch-friendly help */}
-          {showInstallBanner && (
-            <div className="relative animate-fade-in group flex items-center">
-              <Link
-                to="/install"
-                className="flex items-center gap-2 bg-jade hover:bg-jade/90 text-cream px-4 py-3 rounded-full transition-all shadow-lg hover:shadow-xl hover:scale-105 font-medium text-sm animate-[pulse_2.5s_ease-in-out_infinite]"
-              >
-                <Smartphone className="h-4 w-4" />
-                <span>{t("installAppCta")}</span>
-              </Link>
-
-              {/* Help button (tap-friendly) */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setShowInstallTooltip((v) => !v);
-                }}
-                className="ml-2 w-10 h-10 rounded-full bg-foreground/70 hover:bg-foreground text-cream flex items-center justify-center transition-colors"
-                aria-label={t("installHelpAria")}
-              >
-                <Info className="h-5 w-5" />
-              </button>
-
-              {/* Tooltip: shows on hover (desktop) AND on tap via help button */}
-              <div
-                className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-3 transition-opacity duration-200 z-40 group-hover:opacity-100 group-hover:pointer-events-auto ${showInstallTooltip ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
-              >
-                <div className="bg-foreground/95 text-cream rounded-lg p-3 shadow-xl min-w-[220px] text-xs">
-                  <p className="font-semibold mb-2 text-gold">{t("installTooltipTitle")}</p>
-                  <div className="space-y-2">
-                    <div>
-                      <p className="font-medium text-cream/90">{t("installTooltipIOS")}</p>
-                      <p className="text-cream/70">{t("installTooltipIOSStep")}</p>
-                    </div>
-                    <div>
-                      <p className="font-medium text-cream/90">{t("installTooltipAndroid")}</p>
-                      <p className="text-cream/70">{t("installTooltipAndroidStep")}</p>
-                    </div>
-                  </div>
-                  <p className="mt-2 text-cream/50 italic">{t("installTooltipFooter")}</p>
-                  {/* Arrow */}
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-foreground/95" />
-                </div>
+        {/* Bottom buttons row - responsive wrap */}
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 w-[calc(100%-1.5rem)] max-w-5xl safe-area-inset-bottom">
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {/* Watch Video Button */}
+            <button
+              onClick={() => {
+                setCurrentVideoIndex(0); // Always start from video #1
+                setShowVideoModal(true);
+              }}
+              className="flex items-center gap-2 bg-foreground/80 hover:bg-foreground/90 backdrop-blur-sm text-cream px-3 py-2 sm:px-4 sm:py-3 rounded-full transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] group max-w-full min-w-0"
+            >
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gold flex items-center justify-center animate-[pulse_2s_ease-in-out_infinite] flex-shrink-0">
+                <PlayIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-foreground fill-foreground" />
               </div>
+              <span className="text-xs sm:text-sm font-medium truncate max-w-[220px]">
+                {t("watchVideoCta")}
+              </span>
+            </button>
 
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  setShowInstallTooltip(false);
-                  setShowInstallBanner(false);
-                }}
-                className="absolute -top-2 -right-2 bg-foreground/80 hover:bg-foreground text-cream rounded-full p-1 transition-colors"
-                aria-label="Close"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
-          )}
+            {/* CM Digital Encyclopedia Button */}
+            <Link
+              to="/encyclopedia"
+              className="flex items-center gap-2 bg-gradient-to-r from-gold to-gold/80 hover:from-gold/90 hover:to-gold/70 text-foreground px-4 py-2 sm:px-6 sm:py-3 rounded-full sm:rounded-lg transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] font-medium max-w-full min-w-0"
+            >
+              <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+              <span className="text-xs sm:text-sm truncate max-w-[220px]">
+                {t("encyclopediaCta")}
+              </span>
+            </Link>
+
+            {/* Install App Button with touch-friendly help */}
+            {showInstallBanner && (
+              <div className="relative animate-fade-in group flex items-center max-w-full">
+                <Link
+                  to="/install"
+                  className="flex items-center gap-2 bg-jade hover:bg-jade/90 text-cream px-3 py-2 sm:px-4 sm:py-3 rounded-full transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] font-medium text-xs sm:text-sm max-w-full min-w-0"
+                >
+                  <Smartphone className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate max-w-[140px] sm:max-w-none">{t("installAppCta")}</span>
+                </Link>
+
+                {/* Help button (tap-friendly) */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowInstallTooltip((v) => !v);
+                  }}
+                  className="ml-2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-foreground/70 hover:bg-foreground text-cream flex items-center justify-center transition-colors flex-shrink-0"
+                  aria-label={t("installHelpAria")}
+                >
+                  <Info className="h-4 w-4 sm:h-5 sm:w-5" />
+                </button>
+
+                {/* Tooltip: shows on hover (desktop) AND on tap via help button */}
+                <div
+                  className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-3 transition-opacity duration-200 z-40 group-hover:opacity-100 group-hover:pointer-events-auto ${showInstallTooltip ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+                >
+                  <div className="bg-foreground/95 text-cream rounded-lg p-3 shadow-xl w-[min(280px,90vw)] text-xs">
+                    <p className="font-semibold mb-2 text-gold">{t("installTooltipTitle")}</p>
+                    <div className="space-y-2">
+                      <div>
+                        <p className="font-medium text-cream/90">{t("installTooltipIOS")}</p>
+                        <p className="text-cream/70">{t("installTooltipIOSStep")}</p>
+                      </div>
+                      <div>
+                        <p className="font-medium text-cream/90">{t("installTooltipAndroid")}</p>
+                        <p className="text-cream/70">{t("installTooltipAndroidStep")}</p>
+                      </div>
+                    </div>
+                    <p className="mt-2 text-cream/50 italic">{t("installTooltipFooter")}</p>
+                    {/* Arrow */}
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-foreground/95" />
+                  </div>
+                </div>
+
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowInstallTooltip(false);
+                    setShowInstallBanner(false);
+                  }}
+                  className="absolute -top-2 -right-2 bg-foreground/80 hover:bg-foreground text-cream rounded-full p-1 transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
 
           {/* Test with Password Button for Dr. Roni - subtle, positioned to the side */}
           <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
