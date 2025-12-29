@@ -65,10 +65,12 @@ import { SessionTimerWidget } from '@/components/crm/SessionTimerWidget';
 import { SessionTimerProvider } from '@/contexts/SessionTimerContext';
 import { useSessionPersistence } from '@/hooks/useSessionPersistence';
 import { useTier } from '@/hooks/useTier';
+import { useBackgroundDetection } from '@/hooks/useBackgroundDetection';
 import { TierBadge } from '@/components/layout/TierBadge';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { cn } from '@/lib/utils';
 import aiGeneratorBg from '@/assets/ai-generator-bg.png';
 import animatedMicGif from '@/assets/mic-animated.gif';
 import clockImg from '@/assets/clock.png';
@@ -116,6 +118,9 @@ export default function VideoSession() {
   
   // Current time for clock display
   const [currentTime, setCurrentTime] = useState(new Date());
+  
+  // Background/pause dimming state
+  const [isBackgroundPaused, setIsBackgroundPaused] = useState(false);
 
   const {
     status: sessionStatus,
@@ -136,6 +141,30 @@ export default function VideoSession() {
     setPatient,
     setAnxietyConversation,
   } = useSessionPersistence();
+
+  // Background detection - auto-pause when app goes to background
+  useBackgroundDetection({
+    onBackground: () => {
+      if (sessionStatus === 'running') {
+        pauseSession();
+        setIsBackgroundPaused(true);
+        toast.info('⏸️ Session auto-paused (app in background)', { duration: 3000 });
+      }
+    },
+    onForeground: () => {
+      if (isBackgroundPaused) {
+        toast.info('👋 Welcome back! Session is paused', { duration: 3000 });
+      }
+    },
+    pauseOnBackground: sessionStatus === 'running',
+  });
+
+  // Reset background paused state when manually resumed
+  useEffect(() => {
+    if (sessionStatus === 'running') {
+      setIsBackgroundPaused(false);
+    }
+  }, [sessionStatus]);
 
   // Check access
   // Clock update effect
@@ -450,7 +479,34 @@ export default function VideoSession() {
         <meta name="description" content="ניהול פגישת וידאו עם מטופלים" />
       </Helmet>
 
-      <div className="min-h-screen bg-background flex flex-col" dir="rtl">
+      <div className="min-h-screen bg-background flex flex-col relative" dir="rtl">
+        {/* Paused Dimming Overlay */}
+        {sessionStatus === 'paused' && (
+          <div 
+            className={cn(
+              'fixed inset-0 z-40 bg-background/80 backdrop-blur-sm transition-opacity duration-300 pointer-events-none',
+              'flex items-center justify-center'
+            )}
+          >
+            <div className="text-center pointer-events-auto">
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-amber-500/20 flex items-center justify-center animate-pulse">
+                <Pause className="h-10 w-10 text-amber-500" />
+              </div>
+              <p className="text-xl font-semibold text-foreground">Session Paused</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {isBackgroundPaused ? 'Auto-paused when app went to background' : 'Tap Resume to continue'}
+              </p>
+              <Button 
+                onClick={resumeSession} 
+                className="mt-4 bg-jade hover:bg-jade/90"
+              >
+                <Play className="h-4 w-4 mr-2" />
+                Resume Session
+              </Button>
+            </div>
+          </div>
+        )}
+        
         {/* Header - Optimized for mobile */}
         <header className="bg-card border-b border-border sticky top-0 z-50">
           <div className="max-w-full mx-auto px-3 md:px-4 py-2 md:py-4 relative flex items-center justify-between">
