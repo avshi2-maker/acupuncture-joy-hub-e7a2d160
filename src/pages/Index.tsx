@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTier } from "@/hooks/useTier";
@@ -64,6 +66,7 @@ const Index = () => {
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [testPassword, setTestPassword] = useState("");
   const [isValidating, setIsValidating] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   // Audio player is fixed to screen (not draggable) to ensure it never covers the hero name.
 
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -91,6 +94,11 @@ const Index = () => {
       setTier(result.tier as 'trial' | 'standard' | 'premium');
       if (result.expires_at) {
         setExpiresAt(new Date(result.expires_at));
+      }
+
+      // Handle remember me - extend session storage
+      if (rememberMe) {
+        localStorage.setItem('tcm_remember_session', 'true');
       }
 
       await supabase.from('access_logs').insert({
@@ -461,14 +469,15 @@ const Index = () => {
             </div>
           )}
 
-          {/* Test with Password Button for Dr. Roni */}
+          {/* Test with Password Button for Dr. Roni - subtle, positioned to the side */}
           <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
             <DialogTrigger asChild>
               <button
-                className="flex items-center gap-2 bg-muted/80 hover:bg-muted backdrop-blur-sm text-foreground px-3 py-2 rounded-full transition-all shadow-md hover:shadow-lg text-xs border border-border"
+                className="flex items-center gap-1 bg-foreground/10 hover:bg-foreground/20 backdrop-blur-sm text-cream/60 hover:text-cream px-2 py-1 rounded transition-all text-[10px] opacity-60 hover:opacity-100"
+                title="כניסת מטפלים עם סיסמה"
               >
-                <Key className="h-3 w-3" />
-                <span>בדיקה עם סיסמה</span>
+                <Key className="h-2.5 w-2.5" />
+                <span>מטפלים</span>
               </button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md" dir="rtl">
@@ -492,6 +501,19 @@ const Index = () => {
                   className="text-right"
                   dir="rtl"
                 />
+                
+                {/* Remember me checkbox */}
+                <div className="flex items-center gap-2 justify-end">
+                  <Label htmlFor="remember-me" className="text-sm text-muted-foreground cursor-pointer">
+                    זכור אותי
+                  </Label>
+                  <Checkbox
+                    id="remember-me"
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(checked === true)}
+                  />
+                </div>
+                
                 <Button
                   onClick={handlePasswordSubmit}
                   disabled={isValidating || !testPassword.trim()}
