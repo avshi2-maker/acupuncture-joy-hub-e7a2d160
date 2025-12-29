@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Music, X, Volume2, ExternalLink } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Music, X, Volume2, ExternalLink, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/popover';
 
 interface MusicSource {
+  id: string;
   name: string;
   nameHe: string;
   url: string;
@@ -16,30 +17,35 @@ interface MusicSource {
 
 const musicSources: MusicSource[] = [
   {
+    id: 'lofi',
     name: 'Lofi.cafe',
     nameHe: 'לופי קפה',
     url: 'https://lofi.cafe/',
     description: 'מוזיקת לופי מרגיעה',
   },
   {
+    id: 'rain',
     name: 'Rainymood',
     nameHe: 'צלילי גשם',
     url: 'https://rainymood.com/',
     description: 'צלילי גשם מרגיעים',
   },
   {
+    id: 'calm',
     name: 'Calm Radio',
     nameHe: 'רדיו רגוע',
     url: 'https://calmradio.com/meditation',
     description: 'מוזיקת מדיטציה',
   },
   {
+    id: 'nature',
     name: 'Nature Sounds',
     nameHe: 'צלילי טבע',
     url: 'https://asoftmurmur.com/',
     description: 'צלילי טבע מותאמים אישית',
   },
   {
+    id: 'focus',
     name: 'Focus Music',
     nameHe: 'מוזיקת ריכוז',
     url: 'https://www.noisli.com/',
@@ -47,12 +53,53 @@ const musicSources: MusicSource[] = [
   },
 ];
 
+const FAVORITES_KEY = 'tcm-music-favorites';
+
 export function FloatingMusicPlayer() {
   const [isOpen, setIsOpen] = useState(false);
+  const [favorites, setFavorites] = useState<string[]>([]);
+
+  // Load favorites from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem(FAVORITES_KEY);
+    if (stored) {
+      try {
+        setFavorites(JSON.parse(stored));
+      } catch {
+        setFavorites([]);
+      }
+    }
+  }, []);
+
+  // Save favorites to localStorage
+  const saveFavorites = (newFavorites: string[]) => {
+    setFavorites(newFavorites);
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(newFavorites));
+  };
+
+  const toggleFavorite = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (favorites.includes(id)) {
+      saveFavorites(favorites.filter(f => f !== id));
+    } else {
+      saveFavorites([...favorites, id]);
+    }
+  };
 
   const openMusicSource = (url: string) => {
     window.open(url, 'music_player', 'width=400,height=600,left=100,top=100');
   };
+
+  // Sort sources: favorites first, then others
+  const sortedSources = [...musicSources].sort((a, b) => {
+    const aFav = favorites.includes(a.id);
+    const bFav = favorites.includes(b.id);
+    if (aFav && !bFav) return -1;
+    if (!aFav && bFav) return 1;
+    return 0;
+  });
+
+  const hasFavorites = favorites.length > 0;
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -76,22 +123,51 @@ export function FloatingMusicPlayer() {
             <Volume2 className="h-4 w-4 text-jade" />
             <h3 className="font-medium text-foreground">מוזיקה מרגיעה לטיפול</h3>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">בחר מקור מוזיקה לפתיחה בחלון נפרד</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {hasFavorites ? 'המועדפים שלך מופיעים ראשונים' : 'לחץ על ⭐ לשמירת מועדפים'}
+          </p>
         </div>
         <div className="p-2 max-h-64 overflow-y-auto">
-          {musicSources.map((source) => (
-            <button
-              key={source.name}
-              onClick={() => openMusicSource(source.url)}
-              className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-muted/80 transition-colors text-right group"
-            >
-              <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="flex-1 mr-2">
-                <div className="font-medium text-foreground text-sm">{source.nameHe}</div>
-                <div className="text-xs text-muted-foreground">{source.description}</div>
+          {sortedSources.map((source, index) => {
+            const isFavorite = favorites.includes(source.id);
+            const isFirstNonFavorite = hasFavorites && !isFavorite && 
+              (index === 0 || favorites.includes(sortedSources[index - 1].id));
+            
+            return (
+              <div key={source.id}>
+                {isFirstNonFavorite && (
+                  <div className="border-t border-border my-2" />
+                )}
+                <button
+                  onClick={() => openMusicSource(source.url)}
+                  className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-muted/80 transition-colors text-right group"
+                >
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => toggleFavorite(source.id, e)}
+                      className="p-1 rounded hover:bg-muted transition-colors"
+                      aria-label={isFavorite ? 'הסר ממועדפים' : 'הוסף למועדפים'}
+                    >
+                      <Star 
+                        className={`h-4 w-4 transition-colors ${
+                          isFavorite 
+                            ? 'fill-amber-400 text-amber-400' 
+                            : 'text-muted-foreground hover:text-amber-400'
+                        }`} 
+                      />
+                    </button>
+                    <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  <div className="flex-1 mr-2">
+                    <div className="font-medium text-foreground text-sm flex items-center justify-end gap-1">
+                      {source.nameHe}
+                    </div>
+                    <div className="text-xs text-muted-foreground">{source.description}</div>
+                  </div>
+                </button>
               </div>
-            </button>
-          ))}
+            );
+          })}
         </div>
         <div className="p-3 border-t border-border bg-muted/30">
           <p className="text-xs text-muted-foreground text-center">
