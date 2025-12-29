@@ -54,6 +54,7 @@ import CMBrainQuestions from "./pages/CMBrainQuestions";
 import PointCoordinateEditor from "./pages/PointCoordinateEditor";
 import Contact from "./pages/Contact";
 import AdminPasswordGenerator from "./pages/AdminPasswordGenerator";
+
 const queryClient = new QueryClient();
 
 const App = () => (
