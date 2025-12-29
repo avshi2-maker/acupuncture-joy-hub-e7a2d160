@@ -8,9 +8,11 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/hooks/useAuth";
 import { TierProvider } from "@/hooks/useTier";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import RequireTier from "@/components/auth/RequireTier";
 import { FloatingMusicPlayer } from "@/components/ui/FloatingMusicPlayer";
 import { OfflineBanner } from "@/components/ui/OfflineBanner";
+import { AccessibilityPanel } from "@/components/ui/AccessibilityPanel";
 
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -58,72 +60,75 @@ const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem storageKey="tcm-theme">
-        <LanguageProvider>
-          <AuthProvider>
-            <TierProvider>
-              <TooltipProvider>
-                <OfflineBanner />
-                <Toaster />
-                <Sonner />
-                <BrowserRouter>
-                  <Routes>
-                    {/* Public */}
-                    <Route path="/" element={<Index />} />
-                    <Route path="/therapist-register" element={<TherapistRegister />} />
-                    <Route path="/pricing" element={<Pricing />} />
-                    <Route path="/payment-instructions" element={<PaymentInstructions />} />
-                    <Route path="/gate" element={<Gate />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/confirm" element={<AppointmentConfirm />} />
-                    <Route path="/install" element={<InstallApp />} />
-                    <Route path="/contact" element={<Contact />} />
+        <AccessibilityProvider>
+          <LanguageProvider>
+            <AuthProvider>
+              <TierProvider>
+                <TooltipProvider>
+                  <OfflineBanner />
+                  <Toaster />
+                  <Sonner />
+                  <BrowserRouter>
+                    <Routes>
+                      {/* Public */}
+                      <Route path="/" element={<Index />} />
+                      <Route path="/therapist-register" element={<TherapistRegister />} />
+                      <Route path="/pricing" element={<Pricing />} />
+                      <Route path="/payment-instructions" element={<PaymentInstructions />} />
+                      <Route path="/gate" element={<Gate />} />
+                      <Route path="/auth" element={<Auth />} />
+                      <Route path="/confirm" element={<AppointmentConfirm />} />
+                      <Route path="/install" element={<InstallApp />} />
+                      <Route path="/contact" element={<Contact />} />
 
-                    {/* Protected (requires tier) */}
-                    <Route path="/dashboard" element={<RequireTier><Dashboard /></RequireTier>} />
-                    <Route path="/video-session" element={<RequireTier><VideoSession /></RequireTier>} />
-                    <Route path="/tcm-brain" element={<RequireTier><TcmBrain /></RequireTier>} />
+                      {/* Protected (requires tier) */}
+                      <Route path="/dashboard" element={<RequireTier><Dashboard /></RequireTier>} />
+                      <Route path="/video-session" element={<RequireTier><VideoSession /></RequireTier>} />
+                      <Route path="/tcm-brain" element={<RequireTier><TcmBrain /></RequireTier>} />
 
-                    <Route path="/crm" element={<RequireTier><CRMDashboard /></RequireTier>} />
-                    <Route path="/crm/dashboard" element={<RequireTier><CRMDashboard /></RequireTier>} />
-                    <Route path="/crm/calendar" element={<RequireTier><CRMCalendar /></RequireTier>} />
-                    <Route path="/crm/patients" element={<RequireTier><CRMPatients /></RequireTier>} />
-                    <Route path="/crm/patients/new" element={<RequireTier><CRMPatientNew /></RequireTier>} />
-                    <Route path="/crm/patients/:id" element={<RequireTier><CRMPatientDetail /></RequireTier>} />
-                    <Route path="/crm/patients/:id/edit" element={<RequireTier><CRMPatientEdit /></RequireTier>} />
-                    <Route path="/crm/rooms" element={<RequireTier><CRMRooms /></RequireTier>} />
-                    <Route path="/crm/staff" element={<RequireTier><CRMStaff /></RequireTier>} />
-                    <Route path="/crm/clinics" element={<RequireTier><CRMClinics /></RequireTier>} />
-                    <Route path="/crm/patients/:patientId/consent" element={<RequireTier><PatientConsentForm /></RequireTier>} />
+                      <Route path="/crm" element={<RequireTier><CRMDashboard /></RequireTier>} />
+                      <Route path="/crm/dashboard" element={<RequireTier><CRMDashboard /></RequireTier>} />
+                      <Route path="/crm/calendar" element={<RequireTier><CRMCalendar /></RequireTier>} />
+                      <Route path="/crm/patients" element={<RequireTier><CRMPatients /></RequireTier>} />
+                      <Route path="/crm/patients/new" element={<RequireTier><CRMPatientNew /></RequireTier>} />
+                      <Route path="/crm/patients/:id" element={<RequireTier><CRMPatientDetail /></RequireTier>} />
+                      <Route path="/crm/patients/:id/edit" element={<RequireTier><CRMPatientEdit /></RequireTier>} />
+                      <Route path="/crm/rooms" element={<RequireTier><CRMRooms /></RequireTier>} />
+                      <Route path="/crm/staff" element={<RequireTier><CRMStaff /></RequireTier>} />
+                      <Route path="/crm/clinics" element={<RequireTier><CRMClinics /></RequireTier>} />
+                      <Route path="/crm/patients/:patientId/consent" element={<RequireTier><PatientConsentForm /></RequireTier>} />
 
-                    <Route path="/therapist-profile" element={<RequireTier><TherapistProfile /></RequireTier>} />
-                    <Route path="/therapist-disclaimer" element={<RequireTier><TherapistDisclaimer /></RequireTier>} />
+                      <Route path="/therapist-profile" element={<RequireTier><TherapistProfile /></RequireTier>} />
+                      <Route path="/therapist-disclaimer" element={<RequireTier><TherapistDisclaimer /></RequireTier>} />
 
-                    <Route path="/admin" element={<RequireTier><Admin /></RequireTier>} />
-                    <Route path="/admin/feedback" element={<RequireTier><AdminFeedback /></RequireTier>} />
-                    <Route path="/admin/knowledge" element={<RequireTier><KnowledgeRegistry /></RequireTier>} />
-                    <Route path="/admin/disclaimers" element={<RequireTier><AdminDisclaimers /></RequireTier>} />
-                    <Route path="/admin/passwords" element={<RequireTier><AdminPasswordGenerator /></RequireTier>} />
+                      <Route path="/admin" element={<RequireTier><Admin /></RequireTier>} />
+                      <Route path="/admin/feedback" element={<RequireTier><AdminFeedback /></RequireTier>} />
+                      <Route path="/admin/knowledge" element={<RequireTier><KnowledgeRegistry /></RequireTier>} />
+                      <Route path="/admin/disclaimers" element={<RequireTier><AdminDisclaimers /></RequireTier>} />
+                      <Route path="/admin/passwords" element={<RequireTier><AdminPasswordGenerator /></RequireTier>} />
 
-                    <Route path="/knowledge-registry" element={<RequireTier><KnowledgeRegistry /></RequireTier>} />
-                    <Route path="/bazi-calculator" element={<RequireTier><BaziCalculator /></RequireTier>} />
-                    <Route path="/legal-report" element={<RequireTier><LegalReport /></RequireTier>} />
-                    <Route path="/symptom-checker" element={<RequireTier><SymptomChecker /></RequireTier>} />
-                    <Route path="/treatment-planner" element={<RequireTier><TreatmentPlanner /></RequireTier>} />
-                    <Route path="/qa-testing" element={<RequireTier><QATesting /></RequireTier>} />
-                    <Route path="/encyclopedia" element={<RequireTier><EncyclopediaLanding /></RequireTier>} />
-                    <Route path="/developers" element={<RequireTier><Developers /></RequireTier>} />
-                    <Route path="/scenarios" element={<RequireTier><ScenariosDashboard /></RequireTier>} />
-                    <Route path="/cm-brain-questions" element={<RequireTier><CMBrainQuestions /></RequireTier>} />
-                    <Route path="/point-editor" element={<RequireTier><PointCoordinateEditor /></RequireTier>} />
+                      <Route path="/knowledge-registry" element={<RequireTier><KnowledgeRegistry /></RequireTier>} />
+                      <Route path="/bazi-calculator" element={<RequireTier><BaziCalculator /></RequireTier>} />
+                      <Route path="/legal-report" element={<RequireTier><LegalReport /></RequireTier>} />
+                      <Route path="/symptom-checker" element={<RequireTier><SymptomChecker /></RequireTier>} />
+                      <Route path="/treatment-planner" element={<RequireTier><TreatmentPlanner /></RequireTier>} />
+                      <Route path="/qa-testing" element={<RequireTier><QATesting /></RequireTier>} />
+                      <Route path="/encyclopedia" element={<RequireTier><EncyclopediaLanding /></RequireTier>} />
+                      <Route path="/developers" element={<RequireTier><Developers /></RequireTier>} />
+                      <Route path="/scenarios" element={<RequireTier><ScenariosDashboard /></RequireTier>} />
+                      <Route path="/cm-brain-questions" element={<RequireTier><CMBrainQuestions /></RequireTier>} />
+                      <Route path="/point-editor" element={<RequireTier><PointCoordinateEditor /></RequireTier>} />
 
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                  <FloatingMusicPlayer />
-                </BrowserRouter>
-              </TooltipProvider>
-            </TierProvider>
-          </AuthProvider>
-        </LanguageProvider>
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                    <FloatingMusicPlayer />
+                    <AccessibilityPanel />
+                  </BrowserRouter>
+                </TooltipProvider>
+              </TierProvider>
+            </AuthProvider>
+          </LanguageProvider>
+        </AccessibilityProvider>
       </ThemeProvider>
     </QueryClientProvider>
   </HelmetProvider>

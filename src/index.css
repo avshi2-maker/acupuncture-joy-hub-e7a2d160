@@ -130,6 +130,45 @@
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 
+  /* Font size scaling */
+  html.text-size-small {
+    font-size: 14px;
+  }
+  html.text-size-medium {
+    font-size: 16px;
+  }
+  html.text-size-large {
+    font-size: 18px;
+  }
+  html.text-size-xlarge {
+    font-size: 20px;
+  }
+
+  /* High contrast mode */
+  html.high-contrast {
+    --foreground: 0 0% 0%;
+    --background: 0 0% 100%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+    --muted: 0 0% 90%;
+    --muted-foreground: 0 0% 20%;
+    --border: 0 0% 0%;
+  }
+
+  html.high-contrast.dark {
+    --foreground: 0 0% 100%;
+    --background: 0 0% 0%;
+    --card: 0 0% 5%;
+    --card-foreground: 0 0% 100%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 80%;
+    --border: 0 0% 100%;
+  }
+
   body {
     @apply bg-background text-foreground font-bold;
     font-family: var(--font-body);
