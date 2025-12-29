@@ -749,12 +749,6 @@ export default function Dashboard() {
               {tier === 'premium' && 'אתם בתוכנית פרימיום. כל הפיצ׳רים זמינים עבורכם!'}
             </p>
           </div>
-          <Button asChild className="opacity-0 animate-fade-in shrink-0" style={{ animationDelay: '350ms', animationFillMode: 'forwards' }}>
-            <Link to="/crm/patients/new">
-              <UserPlus className="h-4 w-4 ml-2" />
-              הוספת מטופל חדש
-            </Link>
-          </Button>
         </div>
 
         {/* Workflow Stepper Guide */}
