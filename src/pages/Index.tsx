@@ -293,19 +293,9 @@ const Index = () => {
           </p>
         </section>
 
-        {/* CM Digital Encyclopedia Button - Bottom Center */}
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30">
-          <Link 
-            to="/encyclopedia"
-            className="flex items-center gap-2 bg-gradient-to-r from-gold to-gold/80 hover:from-gold/90 hover:to-gold/70 text-foreground px-6 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl hover:scale-105 font-medium animate-[pulse_3s_ease-in-out_infinite]"
-          >
-            <BookOpen className="h-5 w-5" />
-            <span>CM Digital Encyclopedia</span>
-          </Link>
-        </div>
-
-        {/* Watch Video Button - Bottom Left */}
-        <div className="fixed bottom-4 left-4 md:bottom-6 md:left-6 z-30">
+        {/* Bottom buttons row - all three in one line */}
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3">
+          {/* Watch Video Button */}
           <button 
             onClick={() => setShowVideoModal(true)}
             className="flex items-center gap-3 bg-foreground/80 hover:bg-foreground/90 backdrop-blur-sm text-cream px-4 py-3 rounded-full transition-all shadow-lg hover:shadow-xl hover:scale-105 group"
@@ -315,12 +305,19 @@ const Index = () => {
             </div>
             <span className="text-sm font-medium pr-2">Watch Short Video Clinic Presentation</span>
           </button>
-        </div>
-
-        {/* Install App Button - Bottom Right */}
-        {showInstallBanner && (
-          <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-30 animate-fade-in">
-            <div className="relative">
+          
+          {/* CM Digital Encyclopedia Button */}
+          <Link 
+            to="/encyclopedia"
+            className="flex items-center gap-2 bg-gradient-to-r from-gold to-gold/80 hover:from-gold/90 hover:to-gold/70 text-foreground px-6 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl hover:scale-105 font-medium animate-[pulse_3s_ease-in-out_infinite]"
+          >
+            <BookOpen className="h-5 w-5" />
+            <span>CM Digital Encyclopedia</span>
+          </Link>
+          
+          {/* Install App Button */}
+          {showInstallBanner && (
+            <div className="relative animate-fade-in">
               <Link 
                 to="/install"
                 className="flex items-center gap-2 bg-jade hover:bg-jade/90 text-white px-4 py-3 rounded-full transition-all shadow-lg hover:shadow-xl hover:scale-105 font-medium text-sm animate-[pulse_2.5s_ease-in-out_infinite]"
@@ -336,8 +333,8 @@ const Index = () => {
                 <X className="h-3 w-3" />
               </button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </main>
 
       {/* Video Modal */}
