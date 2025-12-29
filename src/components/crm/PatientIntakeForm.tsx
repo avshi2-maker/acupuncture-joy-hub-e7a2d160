@@ -17,7 +17,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { User, Heart, Baby, Activity, Utensils, Moon, Brain, AlertTriangle, FileSignature } from 'lucide-react';
+import { User, Heart, Baby, Activity, Utensils, Moon, Brain, AlertTriangle, FileSignature, PenTool } from 'lucide-react';
+import { SignaturePad } from './SignaturePad';
+import { MedicalDocumentUpload } from './MedicalDocumentUpload';
 
 // Base patient schema
 const basePatientSchema = z.object({
@@ -125,6 +127,8 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
   const [ageGroup, setAgeGroup] = useState<'child' | 'teen' | 'adult' | 'senior' | null>(null);
   const [ageSpecificAnswers, setAgeSpecificAnswers] = useState<Record<string, string>>({});
   const [pregnancyAnswers, setPregnancyAnswers] = useState<Record<string, string>>({});
+  const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
+  const [medicalDocuments, setMedicalDocuments] = useState<File[]>([]);
 
   const form = useForm<PatientFormData>({
     resolver: zodResolver(basePatientSchema),
@@ -578,6 +582,14 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                 </FormItem>
               )}
             />
+
+            <Separator className="my-4" />
+
+            {/* Medical Document Upload */}
+            <MedicalDocumentUpload
+              maxFiles={5}
+              onFilesChange={setMedicalDocuments}
+            />
           </CardContent>
         </Card>
 
@@ -964,6 +976,32 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                 </FormItem>
               )}
             />
+
+            {/* Signature Pad */}
+            <Separator className="my-4" />
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <PenTool className="h-4 w-4 text-jade" />
+                <Label className="text-base font-medium">Patient Signature</Label>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Please sign below to confirm your consent to treatment
+              </p>
+              <SignaturePad
+                onSave={(dataUrl) => {
+                  setSignatureDataUrl(dataUrl);
+                  toast.success('Signature captured');
+                }}
+                onClear={() => setSignatureDataUrl(null)}
+                disabled={loading}
+              />
+              {signatureDataUrl && (
+                <p className="text-sm text-jade flex items-center gap-2">
+                  ✓ Signature captured successfully
+                </p>
+              )}
+            </div>
           </CardContent>
         </Card>
 
