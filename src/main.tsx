@@ -1,31 +1,44 @@
 import { createRoot } from "react-dom/client";
-import { toast } from "sonner";
-import { registerSW } from "virtual:pwa-register";
 import App from "./App.tsx";
 import "./index.css";
 
-// Ensure published updates reliably reach users (especially installed PWA)
-const updateSW = registerSW({
-  immediate: true,
-  onRegisteredSW(_swUrl, registration) {
-    // Proactively check for an update on load
-    registration?.update().catch(() => undefined);
-  },
-  onNeedRefresh() {
-    toast("New version available", {
-      description: "Tap Reload to update.",
-      duration: Infinity,
-      action: {
-        label: "Reload",
-        onClick: () => updateSW(true),
-      },
-    });
-  },
-  onOfflineReady() {
-    // Optional: keep quiet to avoid noise
-  },
-});
+// New approach: remove any previously-installed Service Worker + caches (from older PWA builds)
+// so users stop seeing stale pages after publishing.
+(async () => {
+  try {
+    const url = new URL(window.location.href);
+    const alreadyCleared = url.searchParams.get("swcleared") === "1";
 
+    if (!alreadyCleared) {
+      let didAnything = false;
 
-createRoot(document.getElementById("root")!).render(<App />);
+      if ("serviceWorker" in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        if (regs.length) {
+          await Promise.all(regs.map((r) => r.unregister()));
+          didAnything = true;
+        }
+      }
+
+      if ("caches" in window) {
+        const keys = await caches.keys();
+        if (keys.length) {
+          await Promise.all(keys.map((k) => caches.delete(k)));
+          didAnything = true;
+        }
+      }
+
+      if (didAnything) {
+        url.searchParams.set("swcleared", "1");
+        url.searchParams.set("v", String(Date.now()));
+        window.location.replace(url.toString());
+        return;
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  createRoot(document.getElementById("root")!).render(<App />);
+})();
 
