@@ -668,6 +668,27 @@ function CalendarContent() {
             }));
             setShowNewAppt(true);
           }}
+          onStatusChange={async (apptId, newStatus) => {
+            try {
+              const { error } = await supabase
+                .from('appointments')
+                .update({ status: newStatus })
+                .eq('id', apptId);
+              
+              if (error) throw error;
+              
+              // Update local state
+              setAppointments(prev => 
+                prev.map(a => a.id === apptId ? { ...a, status: newStatus } : a)
+              );
+              
+              toast.success(`Appointment ${newStatus}`);
+            } catch (error) {
+              console.error('Error updating appointment status:', error);
+              toast.error('Failed to update status');
+              throw error;
+            }
+          }}
         />
         
         {/* Edit Appointment Dialog - Also available on mobile */}
