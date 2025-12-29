@@ -10,6 +10,7 @@ import { TierProvider } from "@/hooks/useTier";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import RequireTier from "@/components/auth/RequireTier";
 import { FloatingMusicPlayer } from "@/components/ui/FloatingMusicPlayer";
+import { OfflineBanner } from "@/components/ui/OfflineBanner";
 
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -61,6 +62,7 @@ const App = () => (
           <AuthProvider>
             <TierProvider>
               <TooltipProvider>
+                <OfflineBanner />
                 <Toaster />
                 <Sonner />
                 <BrowserRouter>

@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { CRMLayout } from '@/components/crm/CRMLayout';
 import { PullToRefreshContainer } from '@/components/ui/PullToRefreshContainer';
+import { QuickPatientSearch } from '@/components/crm/QuickPatientSearch';
 import { toast } from 'sonner';
 
 interface DashboardStats {
@@ -97,27 +98,32 @@ export default function CRMDashboard() {
       <PullToRefreshContainer onRefresh={handleRefresh} className="min-h-full">
         <div className="space-y-4 md:space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-xl md:text-2xl font-display font-semibold">Dashboard</h1>
-            <p className="text-sm text-muted-foreground">
-              Welcome back! Here's your clinic overview for {format(new Date(), 'EEEE, MMMM d')}
-            </p>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-xl md:text-2xl font-display font-semibold">Dashboard</h1>
+              <p className="text-sm text-muted-foreground">
+                Welcome back! Here's your clinic overview for {format(new Date(), 'EEEE, MMMM d')}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button asChild variant="outline" size="sm" className="flex-1 sm:flex-none">
+                <Link to="/crm/patients/new">
+                  <Plus className="h-4 w-4 mr-2" />
+                  <span className="hidden xs:inline">New</span> Patient
+                </Link>
+              </Button>
+              <Button asChild size="sm" className="bg-jade hover:bg-jade/90 flex-1 sm:flex-none">
+                <Link to="/crm/calendar">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Schedule
+                </Link>
+              </Button>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <Button asChild variant="outline" size="sm" className="flex-1 sm:flex-none">
-              <Link to="/crm/patients/new">
-                <Plus className="h-4 w-4 mr-2" />
-                <span className="hidden xs:inline">New</span> Patient
-              </Link>
-            </Button>
-            <Button asChild size="sm" className="bg-jade hover:bg-jade/90 flex-1 sm:flex-none">
-              <Link to="/crm/calendar">
-                <Calendar className="h-4 w-4 mr-2" />
-                Schedule
-              </Link>
-            </Button>
-          </div>
+          
+          {/* Quick Patient Search */}
+          <QuickPatientSearch className="max-w-md" />
         </div>
 
         {/* Stats Grid - Mobile Optimized */}
