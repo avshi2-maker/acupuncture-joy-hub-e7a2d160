@@ -31,6 +31,7 @@ import {
 import { parsePointReferences } from '@/components/acupuncture/BodyFigureSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { TTSButton } from '@/components/audio/TTSButton';
+import { GenerateMP3Button } from '@/components/audio/GenerateMP3Button';
 
 interface AIResponseDisplayProps {
   isLoading: boolean;
@@ -738,6 +739,16 @@ export function AIResponseDisplay({
                 className="gap-1.5 text-xs"
                 showLabel
                 label="Listen"
+              />
+            )}
+
+            {/* Generate MP3 & Share */}
+            {content && !isLoading && (
+              <GenerateMP3Button
+                text={content}
+                title="TCM Report"
+                size="sm"
+                variant="outline"
               />
             )}
 
