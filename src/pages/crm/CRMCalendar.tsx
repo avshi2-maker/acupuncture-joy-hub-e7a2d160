@@ -93,6 +93,10 @@ function CalendarContent() {
   const [showNewAppt, setShowNewAppt] = useState(false);
   const [editingAppt, setEditingAppt] = useState<Appointment | null>(null);
   const [conflictWarning, setConflictWarning] = useState<string | null>(null);
+  const [showQuickPatient, setShowQuickPatient] = useState(false);
+  const [quickPatientName, setQuickPatientName] = useState('');
+  const [quickPatientPhone, setQuickPatientPhone] = useState('');
+  const [creatingPatient, setCreatingPatient] = useState(false);
   
   // Drag state
   const [dragState, setDragState] = useState<DragState | null>(null);
@@ -178,6 +182,48 @@ function CalendarContent() {
       console.error('Error fetching calendar data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Quick patient creation
+  const handleCreateQuickPatient = async () => {
+    if (!quickPatientName.trim() || !quickPatientPhone.trim()) {
+      toast.error('שם וטלפון נדרשים');
+      return;
+    }
+
+    setCreatingPatient(true);
+    try {
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (!userId) {
+        toast.error('User not authenticated');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('patients')
+        .insert({
+          full_name: quickPatientName.trim(),
+          phone: quickPatientPhone.trim(),
+          therapist_id: userId,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Add to patients list and select the new patient
+      setPatients([...patients, { id: data.id, full_name: data.full_name, phone: data.phone }]);
+      setNewAppt({ ...newAppt, patient_id: data.id, title: data.full_name });
+      setShowQuickPatient(false);
+      setQuickPatientName('');
+      setQuickPatientPhone('');
+      toast.success('מטופל נוצר בהצלחה');
+    } catch (error: any) {
+      console.error('Error creating patient:', error);
+      toast.error(error.message || 'שגיאה ביצירת מטופל');
+    } finally {
+      setCreatingPatient(false);
     }
   };
 
@@ -544,22 +590,74 @@ function CalendarContent() {
                   )}
                   
                   <div className="space-y-2">
-                    <Label>Patient</Label>
-                    <Select
-                      value={newAppt.patient_id}
-                      onValueChange={(v) => setNewAppt({ ...newAppt, patient_id: v })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select patient" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {patients.map((p) => (
-                          <SelectItem key={p.id} value={p.id}>
-                            {p.full_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="flex items-center justify-between">
+                      <Label>Patient</Label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs text-jade hover:text-jade/80"
+                        onClick={() => setShowQuickPatient(!showQuickPatient)}
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        {showQuickPatient ? 'Cancel' : 'New Patient'}
+                      </Button>
+                    </div>
+                    
+                    {showQuickPatient ? (
+                      <div className="space-y-3 p-3 border border-dashed border-jade/30 rounded-lg bg-jade/5">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Name *</Label>
+                          <Input
+                            value={quickPatientName}
+                            onChange={(e) => setQuickPatientName(e.target.value)}
+                            placeholder="Full name"
+                            className="h-9"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Phone *</Label>
+                          <Input
+                            value={quickPatientPhone}
+                            onChange={(e) => setQuickPatientPhone(e.target.value)}
+                            placeholder="Phone number"
+                            className="h-9"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="w-full bg-jade hover:bg-jade/90"
+                          onClick={handleCreateQuickPatient}
+                          disabled={creatingPatient}
+                        >
+                          {creatingPatient ? 'Creating...' : 'Create & Select'}
+                        </Button>
+                      </div>
+                    ) : (
+                      <Select
+                        value={newAppt.patient_id}
+                        onValueChange={(v) => {
+                          const patient = patients.find(p => p.id === v);
+                          setNewAppt({ 
+                            ...newAppt, 
+                            patient_id: v,
+                            title: patient?.full_name || newAppt.title 
+                          });
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select patient" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {patients.map((p) => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.full_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
 
                   <div className="space-y-2">
