@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useTier } from '@/hooks/useTier';
 import { TierBadge } from '@/components/layout/TierBadge';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
@@ -21,13 +22,97 @@ import {
   FileCheck,
   Clock,
   UserCheck,
-  UserPlus
+  UserPlus,
+  Bell,
+  Search,
+  X
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import calendarBg from '@/assets/calendar-bg.png';
 import deskBg from '@/assets/desk-bg.png';
 import brainBg from '@/assets/brain-bg.png';
 import knowledgeBg from '@/assets/knowledge-bg.png';
+
+// Phosphor-style glowing clock component
+function PhosphorClock() {
+  const [time, setTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const hours = time.getHours() % 12;
+  const minutes = time.getMinutes();
+  const seconds = time.getSeconds();
+
+  const hourDeg = (hours * 30) + (minutes * 0.5);
+  const minuteDeg = minutes * 6;
+  const secondDeg = seconds * 6;
+
+  return (
+    <div className="relative w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm border border-jade/30 flex items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+      {/* Clock face glow */}
+      <div className="absolute inset-0 rounded-full bg-jade/5" />
+      
+      {/* Hour markers */}
+      {[0, 90, 180, 270].map((deg) => (
+        <div
+          key={deg}
+          className="absolute w-0.5 h-1 bg-jade/40 rounded-full"
+          style={{
+            transform: `rotate(${deg}deg) translateY(-14px)`,
+            transformOrigin: 'center center',
+          }}
+        />
+      ))}
+      
+      {/* Hour hand */}
+      <div
+        className="absolute w-0.5 h-2.5 bg-jade rounded-full origin-bottom shadow-[0_0_4px_rgba(34,197,94,0.6)]"
+        style={{
+          transform: `rotate(${hourDeg}deg)`,
+          bottom: '50%',
+        }}
+      />
+      
+      {/* Minute hand */}
+      <div
+        className="absolute w-0.5 h-3 bg-jade/80 rounded-full origin-bottom shadow-[0_0_4px_rgba(34,197,94,0.5)]"
+        style={{
+          transform: `rotate(${minuteDeg}deg)`,
+          bottom: '50%',
+        }}
+      />
+      
+      {/* Second hand */}
+      <div
+        className="absolute w-px h-3.5 bg-emerald-400 rounded-full origin-bottom shadow-[0_0_6px_rgba(52,211,153,0.8)] transition-transform duration-100"
+        style={{
+          transform: `rotate(${secondDeg}deg)`,
+          bottom: '50%',
+        }}
+      />
+      
+      {/* Center dot */}
+      <div className="absolute w-1 h-1 bg-jade rounded-full shadow-[0_0_4px_rgba(34,197,94,0.8)]" />
+    </div>
+  );
+}
+
+interface Notification {
+  id: string;
+  type: 'follow_up' | 'appointment';
+  title: string;
+  time?: string;
+  patientName?: string;
+}
+
 
 interface FeatureCardProps {
   title: string;
@@ -113,6 +198,100 @@ export default function Dashboard() {
     sessionsThisWeek: 0,
   });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Array<{ id: string; full_name: string; phone: string | null }>>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+
+  // Fetch notifications (pending follow-ups and today's appointments)
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const today = new Date();
+      const startOfDay = new Date(new Date(today).setHours(0, 0, 0, 0)).toISOString();
+      const endOfDay = new Date(new Date(today).setHours(23, 59, 59, 999)).toISOString();
+
+      // Fetch pending follow-ups
+      const { data: followUps } = await supabase
+        .from('follow_ups')
+        .select('id, scheduled_date, reason, patients(full_name)')
+        .eq('status', 'pending')
+        .lte('scheduled_date', today.toISOString().split('T')[0])
+        .limit(10);
+
+      // Fetch today's appointments
+      const { data: appointments } = await supabase
+        .from('appointments')
+        .select('id, start_time, title, patients(full_name)')
+        .gte('start_time', startOfDay)
+        .lte('start_time', endOfDay)
+        .order('start_time', { ascending: true })
+        .limit(10);
+
+      const notifs: Notification[] = [];
+
+      followUps?.forEach((fu: any) => {
+        notifs.push({
+          id: fu.id,
+          type: 'follow_up',
+          title: fu.reason || 'מעקב',
+          patientName: fu.patients?.full_name,
+        });
+      });
+
+      appointments?.forEach((apt: any) => {
+        notifs.push({
+          id: apt.id,
+          type: 'appointment',
+          title: apt.title,
+          time: new Date(apt.start_time).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+          patientName: apt.patients?.full_name,
+        });
+      });
+
+      setNotifications(notifs);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  }, []);
+
+  // Search patients
+  const searchPatients = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const { data } = await supabase
+        .from('patients')
+        .select('id, full_name, phone')
+        .or(`full_name.ilike.%${query}%,phone.ilike.%${query}%`)
+        .limit(5);
+
+      setSearchResults(data || []);
+      setShowSearchResults(true);
+    } catch (error) {
+      console.error('Error searching patients:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      searchPatients(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, searchPatients]);
+
+  // Fetch notifications on mount
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
 
   // Fetch dashboard statistics
   const fetchStats = useCallback(async () => {
@@ -306,7 +485,126 @@ export default function Dashboard() {
               <p className="text-sm text-muted-foreground">קליניקה ברפואה סינית משלימה</p>
             </div>
           </Link>
-          <div className="flex items-center gap-3 opacity-0 animate-fade-in" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
+
+          {/* Search Bar */}
+          <div className="hidden md:flex flex-1 max-w-md mx-8 relative opacity-0 animate-fade-in" style={{ animationDelay: '180ms', animationFillMode: 'forwards' }}>
+            <div className="relative w-full">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="חיפוש מטופל לפי שם או טלפון..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pr-10 pl-8 bg-muted/50 border-border/50 focus:bg-background"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setShowSearchResults(false);
+                  }}
+                  className="absolute left-3 top-1/2 -translate-y-1/2"
+                >
+                  <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                </button>
+              )}
+            </div>
+            
+            {/* Search Results Dropdown */}
+            {showSearchResults && searchResults.length > 0 && (
+              <div className="absolute top-full mt-2 w-full bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden">
+                {searchResults.map((patient) => (
+                  <Link
+                    key={patient.id}
+                    to={`/crm/patients/${patient.id}`}
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors border-b border-border/50 last:border-b-0"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setShowSearchResults(false);
+                    }}
+                  >
+                    <Users className="h-4 w-4 text-jade" />
+                    <div>
+                      <p className="font-medium text-sm">{patient.full_name}</p>
+                      {patient.phone && (
+                        <p className="text-xs text-muted-foreground">{patient.phone}</p>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+            {showSearchResults && searchResults.length === 0 && searchQuery && !isSearching && (
+              <div className="absolute top-full mt-2 w-full bg-card border border-border rounded-lg shadow-lg z-50 p-4 text-center text-muted-foreground text-sm">
+                לא נמצאו תוצאות
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 sm:gap-3 opacity-0 animate-fade-in" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
+            {/* Phosphor Clock */}
+            <PhosphorClock />
+            
+            {/* Notifications Bell */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="h-5 w-5" />
+                  {notifications.length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium animate-pulse">
+                      {notifications.length > 9 ? '9+' : notifications.length}
+                    </span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-80 p-0" dir="rtl">
+                <div className="p-3 border-b border-border">
+                  <h3 className="font-medium">התראות</h3>
+                </div>
+                <div className="max-h-80 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-4 text-center text-muted-foreground text-sm">
+                      אין התראות חדשות
+                    </div>
+                  ) : (
+                    notifications.map((notif) => (
+                      <Link
+                        key={notif.id}
+                        to={notif.type === 'appointment' ? '/crm/calendar' : '/crm/patients'}
+                        className="flex items-start gap-3 p-3 hover:bg-muted/50 transition-colors border-b border-border/50 last:border-b-0"
+                      >
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                          notif.type === 'appointment' ? 'bg-blue-500/10' : 'bg-amber-500/10'
+                        }`}>
+                          {notif.type === 'appointment' ? (
+                            <Calendar className="h-4 w-4 text-blue-500" />
+                          ) : (
+                            <Clock className="h-4 w-4 text-amber-500" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{notif.title}</p>
+                          {notif.patientName && (
+                            <p className="text-xs text-muted-foreground truncate">{notif.patientName}</p>
+                          )}
+                          {notif.time && (
+                            <p className="text-xs text-jade mt-0.5">{notif.time}</p>
+                          )}
+                        </div>
+                      </Link>
+                    ))
+                  )}
+                </div>
+                {notifications.length > 0 && (
+                  <div className="p-2 border-t border-border">
+                    <Button variant="ghost" size="sm" className="w-full text-jade" asChild>
+                      <Link to="/crm/calendar">צפה בכל התורים</Link>
+                    </Button>
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
+            
             <TierBadge />
             <LanguageSwitcher variant="ghost" isScrolled={true} />
             <Button variant="ghost" size="sm" onClick={handleLogout}>
