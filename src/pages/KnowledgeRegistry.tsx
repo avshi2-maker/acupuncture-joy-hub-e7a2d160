@@ -116,6 +116,13 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'tcm_theory',
     defaultLanguage: 'en',
   },
+  {
+    id: 'diet-nutrition-intake',
+    label: 'diet-nutrition-intake.csv',
+    path: '/knowledge-assets/diet-nutrition-intake.csv',
+    defaultCategory: 'general_health',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 type QueueItemStatus = 'pending' | 'importing' | 'done' | 'error';

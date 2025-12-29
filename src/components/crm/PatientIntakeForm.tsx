@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { User, Heart, Baby, Activity, Utensils, Moon, Brain, AlertTriangle, FileSignature, PenTool } from 'lucide-react';
 import { SignaturePad } from './SignaturePad';
 import { MedicalDocumentUpload } from './MedicalDocumentUpload';
+import { DietNutritionSelect } from './DietNutritionSelect';
 
 // Base patient schema
 const basePatientSchema = z.object({
@@ -129,6 +130,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
   const [pregnancyAnswers, setPregnancyAnswers] = useState<Record<string, string>>({});
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
   const [medicalDocuments, setMedicalDocuments] = useState<File[]>([]);
+  const [dietHabits, setDietHabits] = useState<string[]>([]);
 
   const form = useForm<PatientFormData>({
     resolver: zodResolver(basePatientSchema),
@@ -250,6 +252,12 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
         });
       }
 
+      // Add diet habits
+      if (dietHabits.length > 0) {
+        compiledNotes += '\n\n--- Diet & Nutrition Habits ---\n';
+        compiledNotes += dietHabits.join('\n');
+      }
+
       const patientData = {
         id_number: data.id_number,
         full_name: data.full_name,
@@ -266,7 +274,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
         allergies: data.allergies || null,
         medications: data.medications || null,
         chief_complaint: data.chief_complaint,
-        diet_notes: data.diet_notes || null,
+        diet_notes: [dietHabits.join('; '), data.diet_notes].filter(Boolean).join('\n\n') || null,
         sleep_quality: data.sleep_quality || null,
         stress_level: data.stress_level || null,
         exercise_frequency: data.exercise_frequency || null,
@@ -824,18 +832,27 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
               />
             </div>
 
+            {/* Diet & Nutrition Multi-Select */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Utensils className="h-4 w-4" />
+                Diet & Nutrition
+              </Label>
+              <DietNutritionSelect
+                value={dietHabits}
+                onChange={setDietHabits}
+              />
+            </div>
+
             <FormField
               control={form.control}
               name="diet_notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    <Utensils className="h-4 w-4" />
-                    Diet & Nutrition
-                  </FormLabel>
+                  <FormLabel>Additional Diet Notes</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="Dietary habits, restrictions, typical meals..." 
+                      placeholder="Any additional dietary notes, restrictions, allergies..." 
                       {...field} 
                     />
                   </FormControl>

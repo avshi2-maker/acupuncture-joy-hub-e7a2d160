@@ -1,0 +1,104 @@
+﻿Category,Diet_Habit,Western_Perspective,TCM_Perspective,Estimated_Calories_Per_Day
+Meal Pattern,Three regular meals per day,"Standard meal pattern, supports stable blood sugar","Supports spleen qi, regular transformation and transportation",1800-2400
+Meal Pattern,Two meals per day (intermittent fasting),"May support weight loss, autophagy, insulin sensitivity","May weaken spleen qi if deficient, suitable for excess patterns",1600-2200
+Meal Pattern,5-6 small meals per day (grazing),"Stabilizes blood sugar, may support metabolism","May overwork spleen, disrupts digestive rhythm",1800-2400
+Meal Pattern,One meal per day (OMAD),"Extreme calorie restriction, autophagy benefits","Depletes qi and blood over time, damages spleen yang",1200-2000
+Meal Pattern,Irregular eating times,"Disrupts circadian rhythm, metabolic confusion",Severely damages spleen and stomach harmony,Variable
+Meal Pattern,Skipping breakfast,May affect morning energy and metabolism,"Weakens spleen qi, reduces yang qi production for day",1400-2000
+Meal Pattern,"Large dinner, light breakfast/lunch","May interfere with sleep, evening metabolism slower","Creates dampness, weakens spleen, stomach qi descends poorly",1800-2400
+Meal Pattern,Eating largest meal at lunch,Aligns with peak metabolic activity,Optimal - supports spleen-stomach when qi strongest (earth time),1800-2400
+Dietary Approach,Standard Western diet,"Mixed macros, processed foods, high sugar and fat","Creates dampness, phlegm, heat; depletes spleen qi",2000-3000
+Dietary Approach,Mediterranean diet,"Heart-healthy fats, whole grains, anti-inflammatory","Balanced, nourishes yin and blood, gentle on spleen",1800-2500
+Dietary Approach,Vegetarian diet,"High fiber, lower saturated fat, requires B12 supplementation","Cooling nature, may deplete yang qi and blood over time",1600-2200
+Dietary Approach,Vegan diet,"Plant-based, requires B12, iron, omega-3 attention","Very cooling, depletes blood and yang, weakens kidney",1400-2000
+Dietary Approach,Ketogenic diet,"Very low carb, high fat, ketosis for energy","Warming, drying, may deplete yin and blood long-term",1500-2200
+Dietary Approach,Paleo diet,"Whole foods, no grains/dairy, hunter-gatherer model","Warming, supports yang, may be too drying for some",1800-2400
+Dietary Approach,Raw food diet,"Preserves enzymes, high nutrient density","Extremely damaging to spleen yang, creates cold dampness",1200-1800
+Dietary Approach,Macrobiotic diet,"Whole grains, vegetables, Japanese-inspired","Balanced approach, supports spleen, harmonizes yin-yang",1600-2200
+Dietary Approach,DASH diet (blood pressure),"Low sodium, high potassium, heart health focus","Clears heat, nourishes yin, benefits kidney and heart",1600-2400
+Dietary Approach,Carnivore diet,"All animal products, controversial, limited research","Extremely warming and drying, generates heat and dryness",1800-2800
+Dietary Approach,Gluten-free diet,"Essential for celiac, trendy for others, may lack fiber",Reduces dampness if gluten creates phlegm for individual,1800-2400
+Dietary Approach,Low FODMAP diet,"Reduces IBS symptoms, eliminates fermentable carbs",Reduces fermentation (dampness-heat in intestines),1600-2200
+Grain Consumption,White rice daily,"High glycemic, low fiber, quick energy","Neutral, tonifies spleen and stomach qi, easily digested",200-400 from rice
+Grain Consumption,Brown rice daily,"Higher fiber, B vitamins, slower digestion","Slightly cooling, tonifies qi, more difficult to digest",200-400 from rice
+Grain Consumption,Wheat/bread products daily,"Staple carb source, refined vs whole grain matters","Cooling, nourishes heart, may create dampness if excess",300-600 from wheat
+Grain Consumption,Oats regularly,"Soluble fiber, heart health, sustained energy","Sweet, warming, tonifies spleen, benefits qi and blood",150-300 from oats
+Grain Consumption,No grains (grain-free),"Low carb approach, may lack B vitamins and fiber","Deprives spleen of natural tonification, may weaken qi",Variable
+Protein Source,Red meat 4+ times/week,"High protein, iron, B12, saturated fat concerns","Very warming, tonifies qi and blood, nourishes kidney yang",400-800 from meat
+Protein Source,Poultry as main protein,"Lean protein, lower saturated fat than red meat","Warming, tonifies qi, chicken benefits spleen",300-600 from poultry
+Protein Source,Fish/seafood regularly (3+ times/week),"Omega-3 fatty acids, lean protein, heart healthy","Neutral to cooling, nourishes yin and blood, benefits kidney",250-500 from seafood
+Protein Source,Legumes as primary protein,"Plant protein, fiber, low fat, may cause gas","Mostly neutral, tonifies spleen, may create dampness",300-600 from legumes
+Protein Source,Eggs daily,"Complete protein, cholesterol concerns debated, nutrient-dense","Neutral, nourishes yin and blood, moistens dryness",140-280 from eggs
+Protein Source,Dairy products daily,"Calcium, protein, vitamin D, lactose intolerance common","Cooling, creates dampness and phlegm, weakens spleen",200-500 from dairy
+Protein Source,Protein supplements/powders,"Concentrated protein, convenient, various sources available","Difficult to classify, often too concentrated for spleen",100-400 from supplements
+Vegetable Intake,5+ servings vegetables daily,"High fiber, vitamins, minerals, antioxidants, disease prevention","Generally cooling, nourishes yin and blood if cooked",100-300 from vegetables
+Vegetable Intake,Mostly cooked vegetables,"Easier digestion, some nutrient loss, increased lycopene","Optimal - warms nature, easier for spleen to transform",100-300 from vegetables
+Vegetable Intake,Mostly raw vegetables/salads,Maximum enzyme and vitamin C content,"Damages spleen yang, creates cold dampness, difficult to digest",80-250 from vegetables
+Vegetable Intake,Minimal vegetables (1-2 servings/day),"Fiber deficiency, vitamin/mineral insufficiency","May lack yin nourishment, depends on other foods",25-100 from vegetables
+Fruit Intake,3+ servings fruit daily,"Vitamins, fiber, antioxidants, natural sugars","Mostly cooling, nourishes yin and fluids, clears heat",180-360 from fruit
+Fruit Intake,Tropical fruits regularly,"Vitamin C, enzymes (papaya, pineapple), high sugar","Very cooling and dampening, weakens spleen in excess",150-300 from fruit
+Fruit Intake,Dried fruits regularly,"Concentrated sugars, dense calories, some nutrients preserved","Warming when dried, tonifies qi and blood (dates, longan)",200-400 from dried fruit
+Fruit Intake,Low fruit intake (avoiding sugar),"Reduces sugar intake, may lack certain vitamins",May lack yin nourishment and fluid generation,30-100 from fruit
+Beverage,Water as primary beverage (8+ cups),"Optimal hydration, supports all body functions","Neutral, supports kidney, generates fluids, avoid iced",0
+Beverage,Coffee daily (1-3 cups),"Caffeine stimulant, antioxidants, may affect sleep","Warming, stimulates heart, depletes kidney yin long-term",0-150 (with additions)
+Beverage,Coffee daily (4+ cups),"High caffeine, anxiety, insomnia risk, dependency","Severely depletes kidney yin, creates internal heat",0-200 (with additions)
+Beverage,Green tea daily,"Antioxidants, moderate caffeine, metabolic benefits","Cooling, clears heat, benefits liver, drains dampness",0-20
+Beverage,Black tea daily,"More caffeine than green tea, antioxidants","Warming, stimulates qi, may dry fluids",0-30
+Beverage,Herbal teas regularly,"Caffeine-free, various health benefits depending on herbs","Varies by herb - can tonify, clear, warm, or cool",0-10
+Beverage,Alcohol regularly (daily or most days),"Liver stress, empty calories, health risks","Generates damp-heat, damages liver and spleen",150-500 from alcohol
+Beverage,Alcohol moderately (1-3 times/week),"Cardiovascular benefits debated, moderation key","Small amounts move qi and blood, excess creates damp-heat",100-300 from alcohol
+Beverage,Sugary drinks/soda regularly,"High sugar, weight gain, diabetes risk, dental issues","Creates severe dampness and phlegm, weakens spleen",200-600 from sugary drinks
+Beverage,Fruit juice daily,"Concentrated sugars, lacks fiber, vitamin source","Cooling, dampening, weakens spleen if excessive",120-300 from juice
+Beverage,Energy drinks regularly,"High caffeine and sugar, heart concerns, dependency","Extremely heating, depletes kidney essence and yin",100-300 from energy drinks
+Beverage,Milk/plant milk daily,"Calcium, protein (cow milk), fortified nutrients",Cow milk creates dampness; plant milks vary by base,80-200 from milk
+Beverage,Smoothies regularly,"Nutrient-dense, fiber intact, easy to overconsume calories","Cold and dampening if raw/iced, bypasses chewing",200-500 from smoothies
+Beverage,Bone broth regularly,"Collagen, minerals, amino acids, gut health","Warming, tonifies kidney essence, nourishes blood and marrow",40-100 from broth
+Eating Behavior,"Eating slowly, chewing thoroughly","Improves digestion, satiety signals, mindful eating","Optimal - supports spleen transformation, proper qi extraction",N/A - behavior
+Eating Behavior,"Eating quickly, poor chewing","Overeating, poor digestion, gas and bloating","Damages spleen, food stagnation, disrupts qi flow",N/A - behavior
+Eating Behavior,"Eating while distracted (TV, phone, work)","Mindless overeating, poor food awareness","Disrupts spleen-stomach harmony, qi becomes scattered",N/A - behavior
+Eating Behavior,Eating until very full,"Overeating, weight gain, metabolic stress","Severely damages spleen, creates food stagnation and dampness",Often excessive
+Eating Behavior,Eating until 80% full (Hara Hachi Bu),"Supports healthy weight, longevity, proper digestion","Ideal - preserves spleen qi, prevents stagnation",Appropriate amounts
+Eating Behavior,Late night eating (after 8-9pm),"May disrupt sleep, circadian rhythm, metabolism","Weakens spleen yang, creates dampness, interferes with organ rest",Variable timing
+Eating Behavior,Emotional eating,"Using food for comfort, stress eating, weight issues","Liver qi stagnation affecting spleen, disrupts harmony",Often excessive
+Eating Behavior,Restrictive eating/dieting cycles,"Yo-yo effect, metabolic adaptation, psychological stress","Depletes qi and blood, weakens spleen and kidney",Often inadequate
+Food Temperature,Mostly warm/cooked foods,"Easier digestion, kills pathogens, some nutrient loss","Optimal - supports spleen yang, easy transformation",Variable
+Food Temperature,Cold/iced foods and drinks regularly,"Refreshing, may slow digestion temporarily","Severely damages spleen yang, creates cold dampness",Variable
+Food Temperature,Room temperature foods preferred,"Neutral approach, less digestive shock",Acceptable but less supportive than warm foods,Variable
+Preparation Method,Steamed and boiled foods primarily,"Low fat, preserves nutrients, gentle cooking","Gentle, moistening, easy on spleen, nourishes yin",Variable
+Preparation Method,Stir-fried foods regularly,"Quick cooking, preserves texture, added oil","Warming, tonifies yang, moves qi",Variable
+Preparation Method,Deep-fried foods regularly,"High calories, trans fats, oxidized oils, health risks","Extremely heating, creates damp-heat and phlegm",Often excessive
+Preparation Method,Grilled/roasted foods frequently,"Flavorful, lower added fat, possible carcinogens if charred","Very warming and drying, may create heat",Variable
+Preparation Method,Slow-cooked soups and stews,"Tender, easy to digest, nutrient extraction into liquid","Optimal - tonifies qi, easy to digest, nourishes essence",Variable
+Preparation Method,Microwaved meals regularly,"Convenient, uneven heating, often processed foods","Disrupts food qi, difficult for spleen to process",Variable
+Flavor Preference,Sweet flavor dominant,"Sugar cravings, blood sugar issues, dental concerns","Tonifies spleen in moderation, creates dampness in excess",Often excessive
+Flavor Preference,Salty flavor dominant,"High sodium, blood pressure concerns, fluid retention","Enters kidney, softens hardness, excess damages kidney",Variable
+Flavor Preference,Spicy/pungent foods regularly,"Capsaicin benefits, may irritate GI tract, metabolism boost","Disperses and moves qi, warming, depletes yin if excessive",Variable
+Flavor Preference,Sour flavor preference,"Acids, fermented foods, may benefit digestion","Astringes, gathers qi, enters liver, supports yin",Variable
+Flavor Preference,Bitter flavor foods,"Often nutrient-dense vegetables, acquired taste","Clears heat, drains dampness, enters heart, dries if excessive",Variable
+Snacking,Frequent snacking throughout day,May support blood sugar but can lead to overconsumption,"Overworks spleen, no rest for digestion, creates dampness",300-800 from snacks
+Snacking,No snacking between meals,"May help with calorie control, intermittent digestive rest",Optimal - allows spleen to rest and complete transformation,0 from snacks
+Snacking,Nuts and seeds regularly,"Healthy fats, protein, minerals, calorie-dense","Warming, tonifies kidney and lung, moistens dryness",200-400 from nuts
+Snacking,Chips/crackers/processed snacks,"High sodium, refined carbs, trans fats, low nutrients","Creates dampness and heat, depletes spleen qi",300-700 from snacks
+Sweet Foods,Dessert daily,"Added sugars, weight gain, diabetes risk","Creates dampness and phlegm, weakens spleen",200-500 from desserts
+Sweet Foods,Refined sugar avoidance,"Reduces inflammation, weight management, stable energy",Prevents dampness and phlegm accumulation,Minimal from sugar
+Sweet Foods,"Natural sweeteners (honey, maple syrup)","Less processed, some minerals, still high in sugars","Honey tonifies spleen, moistens lung; maple neutral-warming",60-200 from sweeteners
+Sweet Foods,Artificial sweeteners use,"Zero calories, controversial health effects, gut microbiome impact","No traditional use, disrupts spleen's sweet taste recognition",0-20
+Processed Foods,Highly processed foods daily,"High sodium, additives, preservatives, low nutrients","No vitality (qi), creates dampness, difficult to transform",800-1500 from processed
+Processed Foods,"Mostly whole, unprocessed foods","Nutrient-dense, higher fiber, better health outcomes","Optimal - preserves food qi, easy to transform, nourishing",Variable
+Processed Foods,Fast food regularly (3+ times/week),"High calories, sodium, unhealthy fats, weight gain","Creates severe damp-heat and phlegm, damages spleen",800-1500 from fast food
+Processed Foods,Frozen meals regularly,"Convenient, often high sodium, variable nutrition quality","Depleted qi from freezing, difficult to warm and transform",300-700 from frozen meals
+Processed Foods,Home-cooked meals primarily,"Control over ingredients, usually healthier, cost-effective","Optimal - fresh qi, prepared with intention, balanced",Variable
+Special Foods,"Fermented foods regularly (kimchi, sauerkraut)","Probiotics, digestive health, immune support","Sour flavor gathers qi, aids transformation, some are warming",20-100 from fermented
+Special Foods,Probiotic supplements,"Gut health support, immune function, strain-specific effects",Supports spleen transformation function indirectly,0-10
+Special Foods,Supplements and vitamins daily,"Fill nutritional gaps, therapeutic doses for deficiencies",May support but doesn't replace food qi and essence,0-50
+Special Foods,Protein bars/meal replacements,"Convenient, portion-controlled, processed ingredients","Lacks proper food qi, difficult for spleen, unbalanced",200-400 from bars
+Special Foods,"Superfoods focus (chia, goji, spirulina)","Nutrient-dense, antioxidants, trendy health foods","Goji tonifies liver-kidney, chia cooling-moistening; context matters",50-200 from superfoods
+Special Foods,Organic foods exclusively,"Lower pesticide exposure, environmental benefits, cost higher","Cleaner qi, less toxic accumulation, more vitality",Variable
+Hydration,Adequate hydration (clear urine),"Optimal cellular function, detoxification, energy","Supports kidney, generates fluids, proper qi transformation",0
+Hydration,Insufficient water intake,"Dehydration, fatigue, kidney strain, constipation","Depletes kidney yin and fluids, dries body",0
+Hydration,Excessive water intake (water intoxication risk),"Electrolyte imbalance, hyponatremia, rare but dangerous","Weakens spleen yang, creates dampness, dilutes qi",0
+Activity Level Context,"Sedentary lifestyle (desk job, minimal exercise)","Lower caloric needs, health risks, metabolic slowdown","Qi and blood stagnation, spleen function weakens",1400-2000 total
+Activity Level Context,Lightly active (1-3 days exercise/week),"Moderate caloric needs, some health benefits",Adequate qi and blood circulation,1800-2400 total
+Activity Level Context,Moderately active (3-5 days exercise/week),"Increased caloric needs, good fitness level","Good qi and blood flow, supports yang",2000-2800 total
+Activity Level Context,Very active (6-7 days intense exercise/week),"High caloric needs, athlete level, recovery important",May deplete yin and essence if inadequate nourishment,2400-3500 total
+Activity Level Context,Physical labor job,"High energy expenditure, increased protein needs","Depletes qi and blood, requires substantial tonification",2500-3500 total
