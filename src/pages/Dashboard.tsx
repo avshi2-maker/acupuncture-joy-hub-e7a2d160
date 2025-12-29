@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +20,8 @@ import {
   CheckCircle2,
   FileCheck,
   Clock,
-  UserCheck
+  UserCheck,
+  UserPlus
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import calendarBg from '@/assets/calendar-bg.png';
@@ -114,68 +115,90 @@ export default function Dashboard() {
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
   // Fetch dashboard statistics
-  useEffect(() => {
-    const fetchStats = async () => {
-      setIsLoadingStats(true);
-      try {
-        // Get today's date range
-        const today = new Date();
-        const startOfDay = new Date(new Date(today).setHours(0, 0, 0, 0)).toISOString();
-        const endOfDay = new Date(new Date(today).setHours(23, 59, 59, 999)).toISOString();
+  const fetchStats = useCallback(async () => {
+    setIsLoadingStats(true);
+    try {
+      // Get today's date range
+      const today = new Date();
+      const startOfDay = new Date(new Date(today).setHours(0, 0, 0, 0)).toISOString();
+      const endOfDay = new Date(new Date(today).setHours(23, 59, 59, 999)).toISOString();
 
-        // Get start of week (Sunday)
-        const startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - today.getDay());
-        startOfWeek.setHours(0, 0, 0, 0);
+      // Get start of week (Sunday)
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
 
-        // Fetch patients
-        const { data: patients } = await supabase
-          .from('patients')
-          .select('id, consent_signed');
+      // Fetch patients
+      const { data: patients } = await supabase
+        .from('patients')
+        .select('id, consent_signed');
 
-        // Fetch today's appointments with patient info
-        const { data: appointments } = await supabase
-          .from('appointments')
-          .select('id, patient_id')
-          .gte('start_time', startOfDay)
-          .lte('start_time', endOfDay);
+      // Fetch today's appointments with patient info
+      const { data: appointments } = await supabase
+        .from('appointments')
+        .select('id, patient_id')
+        .gte('start_time', startOfDay)
+        .lte('start_time', endOfDay);
 
-        // Fetch this week's completed video sessions
-        const { data: sessions } = await supabase
-          .from('video_sessions')
-          .select('id')
-          .gte('started_at', startOfWeek.toISOString())
-          .not('ended_at', 'is', null);
+      // Fetch this week's completed video sessions
+      const { data: sessions } = await supabase
+        .from('video_sessions')
+        .select('id')
+        .gte('started_at', startOfWeek.toISOString())
+        .not('ended_at', 'is', null);
 
-        const totalPatients = patients?.length || 0;
-        const patientsWithConsent = patients?.filter(p => p.consent_signed).length || 0;
-        const pendingConsents = totalPatients - patientsWithConsent;
-        const appointmentsToday = appointments?.length || 0;
-        const sessionsThisWeek = sessions?.length || 0;
+      const totalPatients = patients?.length || 0;
+      const patientsWithConsent = patients?.filter(p => p.consent_signed).length || 0;
+      const pendingConsents = totalPatients - patientsWithConsent;
+      const appointmentsToday = appointments?.length || 0;
+      const sessionsThisWeek = sessions?.length || 0;
 
-        // Check if any appointment today has a patient with consent
-        const patientIds = appointments?.map(a => a.patient_id).filter(Boolean) || [];
-        const hasAppointmentWithConsent = patients?.some(
-          p => p.consent_signed && patientIds.includes(p.id)
-        ) || false;
+      // Check if any appointment today has a patient with consent
+      const patientIds = appointments?.map(a => a.patient_id).filter(Boolean) || [];
+      const hasAppointmentWithConsent = patients?.some(
+        p => p.consent_signed && patientIds.includes(p.id)
+      ) || false;
 
-        setStats({
-          totalPatients,
-          appointmentsToday,
-          patientsWithConsent,
-          pendingConsents,
-          hasAppointmentWithConsent,
-          sessionsThisWeek,
-        });
-      } catch (error) {
-        console.error('Error fetching stats:', error);
-      } finally {
-        setIsLoadingStats(false);
-      }
-    };
-
-    fetchStats();
+      setStats({
+        totalPatients,
+        appointmentsToday,
+        patientsWithConsent,
+        pendingConsents,
+        hasAppointmentWithConsent,
+        sessionsThisWeek,
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setIsLoadingStats(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchStats();
+
+    // Set up real-time subscriptions for stats updates
+    const patientsChannel = supabase
+      .channel('dashboard-patients')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'patients' }, fetchStats)
+      .subscribe();
+
+    const appointmentsChannel = supabase
+      .channel('dashboard-appointments')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, fetchStats)
+      .subscribe();
+
+    const sessionsChannel = supabase
+      .channel('dashboard-sessions')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'video_sessions' }, fetchStats)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(patientsChannel);
+      supabase.removeChannel(appointmentsChannel);
+      supabase.removeChannel(sessionsChannel);
+    };
+  }, [fetchStats]);
 
   useEffect(() => {
     if (!tier) {
@@ -266,8 +289,8 @@ export default function Dashboard() {
   return (
     <>
       <Helmet>
-        <title>דשבורד מטפל | TCM Clinic</title>
-        <meta name="description" content="דשבורד ניהול למטפלים ברפואה סינית" />
+        <title>מסך ראשי לניהול קליניקה | קליניקה ברפואה סינית משלימה</title>
+        <meta name="description" content="מסך ראשי לניהול קליניקה ברפואה סינית משלימה" />
       </Helmet>
 
       <div className="min-h-screen bg-background" dir="rtl">
@@ -279,8 +302,8 @@ export default function Dashboard() {
               <Leaf className="h-5 w-5 text-jade" />
             </div>
             <div className="opacity-0 animate-fade-in" style={{ animationDelay: '150ms', animationFillMode: 'forwards' }}>
-              <h1 className="font-display text-xl">TCM Clinic</h1>
-              <p className="text-sm text-muted-foreground">דשבורד מטפל</p>
+              <h1 className="font-display text-xl">CM Clinic</h1>
+              <p className="text-sm text-muted-foreground">קליניקה ברפואה סינית משלימה</p>
             </div>
           </Link>
           <div className="flex items-center gap-3 opacity-0 animate-fade-in" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
@@ -296,15 +319,23 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Welcome Section */}
-        <div className="mb-8">
-          <h2 className="font-display text-3xl mb-2 opacity-0 animate-fade-in" style={{ animationDelay: '250ms', animationFillMode: 'forwards' }}>שלום וברוכים הבאים!</h2>
-          <p className="text-muted-foreground opacity-0 animate-fade-in" style={{ animationDelay: '350ms', animationFillMode: 'forwards' }}>
-            {tier === 'trial' && daysRemaining !== null && (
-              <>נותרו לכם {daysRemaining} ימי ניסיון. <Link to="/pricing" className="text-jade hover:underline">שדרגו עכשיו</Link></>
-            )}
-            {tier === 'standard' && 'אתם בתוכנית סטנדרט. כל הכלים הבסיסיים זמינים עבורכם.'}
-            {tier === 'premium' && 'אתם בתוכנית פרימיום. כל הפיצ׳רים זמינים עבורכם!'}
-          </p>
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 className="font-display text-3xl mb-2 opacity-0 animate-fade-in" style={{ animationDelay: '250ms', animationFillMode: 'forwards' }}>שלום וברוכים הבאים!</h2>
+            <p className="text-muted-foreground opacity-0 animate-fade-in" style={{ animationDelay: '350ms', animationFillMode: 'forwards' }}>
+              {tier === 'trial' && daysRemaining !== null && (
+                <>נותרו לכם {daysRemaining} ימי ניסיון. <Link to="/pricing" className="text-jade hover:underline">שדרגו עכשיו</Link></>
+              )}
+              {tier === 'standard' && 'אתם בתוכנית סטנדרט. כל הכלים הבסיסיים זמינים עבורכם.'}
+              {tier === 'premium' && 'אתם בתוכנית פרימיום. כל הפיצ׳רים זמינים עבורכם!'}
+            </p>
+          </div>
+          <Button asChild className="opacity-0 animate-fade-in shrink-0" style={{ animationDelay: '350ms', animationFillMode: 'forwards' }}>
+            <Link to="/crm/patients/new">
+              <UserPlus className="h-4 w-4 ml-2" />
+              הוספת מטופל חדש
+            </Link>
+          </Button>
         </div>
 
         {/* Workflow Stepper Guide */}
