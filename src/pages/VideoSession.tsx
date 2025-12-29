@@ -81,6 +81,7 @@ import { AutoSaveIndicator } from '@/components/video/AutoSaveIndicator';
 import { VoiceCommandSystem } from '@/components/video/VoiceCommandSystem';
 import { SessionPresets } from '@/components/video/SessionPresets';
 import { useThreeFingerTap } from '@/hooks/useThreeFingerTap';
+import { PatientHistoryPanel } from '@/components/video/PatientHistoryPanel';
 import { cn } from '@/lib/utils';
 import aiGeneratorBg from '@/assets/ai-generator-bg.png';
 import animatedMicGif from '@/assets/mic-animated.gif';
@@ -938,13 +939,13 @@ export default function VideoSession() {
               Diagnosis
             </Button>
           </div>
-          {/* Second Row - Main Actions - Responsive sizing */}
-          <div className="flex flex-wrap gap-1.5 md:gap-2 mt-3">
+          {/* Second Row - Main Actions - Compact sizing for mobile */}
+          <div className="grid grid-cols-4 gap-1 md:flex md:flex-wrap md:gap-2 mt-2 md:mt-3">
             {/* Animated AI Query Button */}
             <button
               onClick={() => setActiveAiQuery(activeAiQuery ? null : 'nutrition')}
-              className="relative overflow-hidden rounded-lg px-2.5 py-1.5 md:px-4 md:py-2 text-white font-medium shadow-lg 
-                         hover:scale-105 transition-all duration-300 animate-pulse-slow group text-xs md:text-sm"
+              className="relative overflow-hidden rounded-md px-1.5 py-1 md:px-4 md:py-2 text-white font-medium shadow-lg 
+                         hover:scale-105 transition-all duration-300 animate-pulse-slow group text-[10px] md:text-sm h-7 md:h-auto"
               style={{
                 background: `linear-gradient(135deg, rgba(22, 163, 74, 0.9), rgba(6, 95, 70, 0.95))`,
               }}
@@ -957,11 +958,9 @@ export default function VideoSession() {
                   backgroundPosition: 'center',
                 }}
               />
-              <div className="relative flex items-center gap-1 md:gap-2">
-                <Sparkles className="h-3.5 w-3.5 md:h-5 md:w-5 animate-bounce" />
-                <span className="hidden xs:inline">Ask AI</span>
-                <span className="xs:hidden">AI</span>
-                <Brain className="h-3 w-3 md:h-4 md:w-4" />
+              <div className="relative flex items-center justify-center gap-0.5 md:gap-2">
+                <Sparkles className="h-3 w-3 md:h-5 md:w-5 animate-bounce" />
+                <span className="truncate">AI</span>
               </div>
             </button>
             
@@ -969,34 +968,39 @@ export default function VideoSession() {
               variant="outline" 
               size="sm" 
               onClick={() => setShowAnxietyQA(true)}
-              className="gap-1 md:gap-1.5 bg-rose-100 hover:bg-rose-200 text-rose-800 border-rose-300 text-xs md:text-sm px-2 md:px-3 h-8 md:h-9"
+              className="gap-0.5 md:gap-1.5 bg-rose-100 hover:bg-rose-200 text-rose-800 border-rose-300 text-[10px] md:text-sm px-1 md:px-3 h-7 md:h-9"
             >
-              <Heart className="h-3.5 w-3.5 md:h-4 md:w-4" />
-              <span className="hidden xs:inline">Anxiety</span>
-              <span className="xs:hidden">Q&A</span>
+              <Heart className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+              <span className="truncate">Q&A</span>
             </Button>
             <Button 
               variant="outline" 
               size="sm" 
               onClick={() => navigate('/cm-brain-questions')}
-              className="gap-1 md:gap-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 border-blue-300 text-xs md:text-sm px-2 md:px-3 h-8 md:h-9"
+              className="gap-0.5 md:gap-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 border-blue-300 text-[10px] md:text-sm px-1 md:px-3 h-7 md:h-9"
             >
-              <Brain className="h-3.5 w-3.5 md:h-4 md:w-4" />
-              <span>CM</span>
-              <span className="hidden md:inline ms-1 text-[11px] opacity-80">(150)</span>
+              <Brain className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+              <span className="truncate">CM</span>
             </Button>
             <Button 
               variant="outline" 
               size="sm" 
               onClick={() => setShowSessionReport(true)}
               disabled={!selectedPatientId || !sessionNotes}
-              className="gap-1 md:gap-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-800 border-indigo-300 text-xs md:text-sm px-2 md:px-3 h-8 md:h-9"
+              className="gap-0.5 md:gap-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-800 border-indigo-300 text-[10px] md:text-sm px-1 md:px-3 h-7 md:h-9"
               title="Generate AI summary report of the session notes"
             >
-              <FileText className="h-3.5 w-3.5 md:h-4 md:w-4" />
-              <span className="hidden xs:inline">AI Report</span>
-              <span className="xs:hidden">Report</span>
+              <FileText className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+              <span className="truncate">Report</span>
             </Button>
+          </div>
+
+          {/* Patient History Panel - Mobile only */}
+          <div className="md:hidden mt-2">
+            <PatientHistoryPanel 
+              patientId={selectedPatientId} 
+              patientName={selectedPatientName} 
+            />
           </div>
         </div>
 
@@ -1273,6 +1277,12 @@ export default function VideoSession() {
                 </CardContent>
               </Card>
 
+              {/* Patient History Panel - Desktop */}
+              <PatientHistoryPanel 
+                patientId={selectedPatientId} 
+                patientName={selectedPatientName}
+              />
+
               {/* Session Controls */}
               <Card className="border-jade/30">
                 <CardHeader className="pb-2 pt-3">
@@ -1380,34 +1390,34 @@ export default function VideoSession() {
                 <CardHeader className="pb-2 pt-3">
                   <CardTitle className="text-sm">כלים מהירים</CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-2 gap-1.5 pb-3">
-                  <Button variant="outline" size="sm" onClick={() => setShowFollowUpPlan(true)} className="gap-1 bg-jade/10 hover:bg-jade/20 text-jade border-jade/30 h-8 text-xs">
-                    <ClipboardList className="h-3 w-3" />
-                    תוכנית המשך
+                <CardContent className="grid grid-cols-2 gap-1 pb-3">
+                  <Button variant="outline" size="sm" onClick={() => setShowFollowUpPlan(true)} className="gap-0.5 bg-jade/10 hover:bg-jade/20 text-jade border-jade/30 h-7 text-[10px] px-1.5">
+                    <ClipboardList className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">המשך</span>
                   </Button>
-                  <Button variant="secondary" size="sm" onClick={() => setShowAnxietyQA(true)} className="gap-1 h-8 text-xs">
-                    <Sparkles className="h-3 w-3" />
-                    שאלון חרדה
+                  <Button variant="secondary" size="sm" onClick={() => setShowAnxietyQA(true)} className="gap-0.5 h-7 text-[10px] px-1.5">
+                    <Sparkles className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">חרדה</span>
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => setShowVoiceDictation(true)} className="gap-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200 h-8 text-xs">
+                  <Button variant="outline" size="sm" onClick={() => setShowVoiceDictation(true)} className="gap-0.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200 h-7 text-[10px] px-1.5">
                     <AnimatedMic size="sm" />
-                    הקלטה קולית
+                    <span className="truncate">הקלטה</span>
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => setShowQuickAppointment(true)} className="gap-1 h-8 text-xs">
-                    <Calendar className="h-3 w-3" />
-                    קביעת תור
+                  <Button variant="outline" size="sm" onClick={() => setShowQuickAppointment(true)} className="gap-0.5 h-7 text-[10px] px-1.5">
+                    <Calendar className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">תור</span>
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => setShowCalendarInvite(true)} className="gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 h-8 text-xs">
-                    <CalendarPlus className="h-3 w-3" />
-                    הזמנה + יומן
+                  <Button variant="outline" size="sm" onClick={() => setShowCalendarInvite(true)} className="gap-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 h-7 text-[10px] px-1.5">
+                    <CalendarPlus className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">יומן</span>
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => setShowZoomInvite(true)} className="gap-1 h-8 text-xs">
-                    <VideoIcon className="h-3 w-3" />
-                    הזמנת Zoom
+                  <Button variant="outline" size="sm" onClick={() => setShowZoomInvite(true)} className="gap-0.5 h-7 text-[10px] px-1.5">
+                    <VideoIcon className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">Zoom</span>
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => setShowSessionReport(true)} disabled={!selectedPatientId || !sessionNotes} className="gap-1 col-span-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 h-8 text-xs">
-                    <Sparkles className="h-3 w-3" />
-                    דו"ח AI + MP3
+                  <Button variant="outline" size="sm" onClick={() => setShowSessionReport(true)} disabled={!selectedPatientId || !sessionNotes} className="gap-0.5 col-span-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 h-7 text-[10px] px-1.5">
+                    <Sparkles className="h-3 w-3 flex-shrink-0" />
+                    <span className="truncate">דו"ח AI + MP3</span>
                   </Button>
                 </CardContent>
               </Card>
