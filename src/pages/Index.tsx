@@ -315,9 +315,9 @@ const Index = () => {
             <span>CM Digital Encyclopedia</span>
           </Link>
           
-          {/* Install App Button */}
+          {/* Install App Button with hover explanation */}
           {showInstallBanner && (
-            <div className="relative animate-fade-in">
+            <div className="relative animate-fade-in group">
               <Link 
                 to="/install"
                 className="flex items-center gap-2 bg-jade hover:bg-jade/90 text-white px-4 py-3 rounded-full transition-all shadow-lg hover:shadow-xl hover:scale-105 font-medium text-sm animate-[pulse_2.5s_ease-in-out_infinite]"
@@ -325,6 +325,27 @@ const Index = () => {
                 <Smartphone className="h-4 w-4" />
                 <span>Install App</span>
               </Link>
+              
+              {/* Hover tooltip with install instructions */}
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-40">
+                <div className="bg-foreground/95 text-cream rounded-lg p-3 shadow-xl min-w-[220px] text-xs">
+                  <p className="font-semibold mb-2 text-gold">📱 Install on your phone:</p>
+                  <div className="space-y-2">
+                    <div>
+                      <p className="font-medium text-cream/90">🍎 iPhone/iPad:</p>
+                      <p className="text-cream/70">Share → Add to Home Screen</p>
+                    </div>
+                    <div>
+                      <p className="font-medium text-cream/90">🤖 Android:</p>
+                      <p className="text-cream/70">Menu ⋮ → Install App</p>
+                    </div>
+                  </div>
+                  <p className="mt-2 text-cream/50 italic">Click for detailed instructions</p>
+                  {/* Arrow */}
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-foreground/95" />
+                </div>
+              </div>
+              
               <button 
                 onClick={(e) => { e.preventDefault(); setShowInstallBanner(false); }}
                 className="absolute -top-2 -right-2 bg-foreground/80 hover:bg-foreground text-cream rounded-full p-1 transition-colors"
