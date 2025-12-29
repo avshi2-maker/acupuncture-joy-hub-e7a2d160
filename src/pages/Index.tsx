@@ -1,4 +1,6 @@
 import { Helmet } from "react-helmet-async";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import heroBg from "@/assets/hero-meridian-bg.png";
 
 const Index = () => {
@@ -36,9 +38,11 @@ const Index = () => {
               to help you achieve optimal health and vitality.
             </p>
 
-            <p className="mt-8 text-sm text-muted-foreground/70">
-              Therapist access only
-            </p>
+            <div className="mt-8">
+              <Button asChild size="lg" variant="hero">
+                <Link to="/gate">Therapist Login</Link>
+              </Button>
+            </div>
           </div>
         </section>
       </main>
