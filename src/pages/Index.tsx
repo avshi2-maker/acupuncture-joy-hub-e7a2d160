@@ -223,15 +223,15 @@ const Index = () => {
               <Volume2 className="h-4 w-4 text-cream/60 group-hover:text-gold transition-colors" />
             </div>
             
-            {/* Audio player popup - positioned ABOVE the name, draggable, fully opaque */}
+            {/* Audio player popup - fixed to the RIGHT side (won't cover the name), draggable */}
             {showAudioPlayer && (
               <div
-                className="fixed bg-cream rounded-lg p-4 shadow-2xl z-50 animate-fade-in min-w-[300px] border-2 border-gold"
+                className="fixed bg-cream rounded-lg p-4 shadow-2xl z-50 animate-fade-in w-[340px] max-w-[calc(100vw-32px)] border-2 border-gold"
                 style={{
-                  left: `${24 + playerPosition.x}px`,
-                  top: `${88 + playerPosition.y}px`,
-                  transform: 'none',
-                  cursor: isDragging ? 'grabbing' : 'default',
+                  right: "16px",
+                  top: "112px",
+                  transform: `translate(${playerPosition.x}px, ${playerPosition.y}px)`,
+                  cursor: isDragging ? "grabbing" : "default",
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
