@@ -67,20 +67,22 @@ function FeatureCard({ title, description, icon, available, href, highlighted, b
         <CardDescription className={`text-sm ${backgroundImage ? 'text-white/80' : ''}`}>
           {isLocked ? (lockMessage || 'שדרגו לתוכנית גבוהה יותר') : description}
         </CardDescription>
+        {locked && (
+          <Link 
+            to="/crm/calendar" 
+            className={`inline-flex items-center gap-1 mt-3 text-sm font-medium transition-colors ${backgroundImage ? 'text-jade-light hover:text-white' : 'text-jade hover:text-jade-dark'}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Calendar className="h-4 w-4" />
+            עבור ליומן התורים
+          </Link>
+        )}
       </CardContent>
     </Card>
   );
 
   if (!isLocked && href) {
     return <Link to={href}>{content}</Link>;
-  }
-
-  if (isLocked) {
-    return (
-      <div onClick={() => toast.info(lockMessage || 'שדרגו את התוכנית שלכם לגישה לפיצ׳ר זה')}>
-        {content}
-      </div>
-    );
   }
 
   return content;
