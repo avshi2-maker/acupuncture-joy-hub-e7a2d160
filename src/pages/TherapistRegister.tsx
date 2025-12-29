@@ -10,9 +10,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Leaf, ArrowLeft, MessageCircle, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { Leaf, ArrowLeft, MessageCircle, CheckCircle2, XCircle, Loader2, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { WhatsAppWithTemplates, REGISTRATION_TEMPLATES } from '@/components/ui/WhatsAppTemplates';
+import { validateIsraeliId, looksLikeIsraeliId } from '@/utils/israeliIdValidation';
 
 const registerSchema = z.object({
   idNumber: z.string().min(5, 'מספר ת.ז. חייב להכיל לפחות 5 ספרות').max(15, 'מספר ת.ז. ארוך מדי'),
@@ -26,8 +27,9 @@ type RegisterForm = z.infer<typeof registerSchema>;
 export default function TherapistRegister() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const [idCheckStatus, setIdCheckStatus] = useState<'idle' | 'checking' | 'valid' | 'duplicate'>('idle');
+  const [idCheckStatus, setIdCheckStatus] = useState<'idle' | 'checking' | 'valid' | 'duplicate' | 'invalid_checksum'>('idle');
   const [isIdDuplicate, setIsIdDuplicate] = useState(false);
+  const [idChecksumError, setIdChecksumError] = useState<string | null>(null);
 
   const form = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
@@ -39,14 +41,27 @@ export default function TherapistRegister() {
     },
   });
 
-  // Function to check if ID number is unique
+  // Function to check if ID number is unique and valid
   const checkIdUniqueness = async (idNumber: string) => {
     if (!idNumber || idNumber.length < 5) {
       setIdCheckStatus('idle');
       setIsIdDuplicate(false);
+      setIdChecksumError(null);
       return;
     }
 
+    // First validate checksum if it looks like an Israeli ID
+    if (looksLikeIsraeliId(idNumber)) {
+      const checksumResult = validateIsraeliId(idNumber);
+      if (!checksumResult.valid) {
+        setIdCheckStatus('invalid_checksum');
+        setIdChecksumError(checksumResult.error || 'ספרת ביקורת שגויה');
+        setIsIdDuplicate(false);
+        return;
+      }
+    }
+
+    setIdChecksumError(null);
     setIdCheckStatus('checking');
     
     try {
@@ -173,12 +188,15 @@ export default function TherapistRegister() {
                           {idCheckStatus === 'duplicate' && (
                             <XCircle className="h-4 w-4 text-destructive" />
                           )}
+                          {idCheckStatus === 'invalid_checksum' && (
+                            <XCircle className="h-4 w-4 text-amber-500" />
+                          )}
                         </FormLabel>
                         <FormControl>
                           <Input 
                             placeholder="123456789" 
                             {...field}
-                            className={isIdDuplicate ? 'border-destructive focus-visible:ring-destructive' : ''}
+                            className={(isIdDuplicate || idCheckStatus === 'invalid_checksum') ? 'border-destructive focus-visible:ring-destructive' : ''}
                             onBlur={(e) => {
                               field.onBlur();
                               checkIdUniqueness(e.target.value);
@@ -189,6 +207,12 @@ export default function TherapistRegister() {
                           <div className="text-sm text-destructive font-medium flex items-center gap-1">
                             <XCircle className="h-4 w-4" />
                             מספר ת.ז. כבר רשום במערכת!
+                          </div>
+                        )}
+                        {idChecksumError && (
+                          <div className="text-sm text-amber-600 font-medium flex items-center gap-1">
+                            <AlertTriangle className="h-4 w-4" />
+                            {idChecksumError}
                           </div>
                         )}
                         <FormMessage />

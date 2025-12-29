@@ -21,6 +21,7 @@ import { User, Heart, Baby, Activity, Utensils, Moon, Brain, AlertTriangle, File
 import { SignaturePad } from './SignaturePad';
 import { MedicalDocumentUpload } from './MedicalDocumentUpload';
 import { DietNutritionSelect } from './DietNutritionSelect';
+import { validateIsraeliId, looksLikeIsraeliId } from '@/utils/israeliIdValidation';
 
 // Base patient schema
 const basePatientSchema = z.object({
@@ -133,17 +134,31 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
   const [dietHabits, setDietHabits] = useState<string[]>([]);
   
   // ID Number validation state
-  const [idCheckStatus, setIdCheckStatus] = useState<'idle' | 'checking' | 'valid' | 'duplicate'>('idle');
+  const [idCheckStatus, setIdCheckStatus] = useState<'idle' | 'checking' | 'valid' | 'duplicate' | 'invalid_checksum'>('idle');
   const [isIdDuplicate, setIsIdDuplicate] = useState(false);
+  const [idChecksumError, setIdChecksumError] = useState<string | null>(null);
 
-  // Function to check if ID number is unique
+  // Function to check if ID number is unique and valid
   const checkIdUniqueness = async (idNumber: string) => {
     if (!idNumber || idNumber.length < 5) {
       setIdCheckStatus('idle');
       setIsIdDuplicate(false);
+      setIdChecksumError(null);
       return;
     }
 
+    // First validate checksum if it looks like an Israeli ID
+    if (looksLikeIsraeliId(idNumber)) {
+      const checksumResult = validateIsraeliId(idNumber);
+      if (!checksumResult.valid) {
+        setIdCheckStatus('invalid_checksum');
+        setIdChecksumError(checksumResult.error || 'Invalid ID checksum');
+        setIsIdDuplicate(false);
+        return;
+      }
+    }
+    
+    setIdChecksumError(null);
     setIdCheckStatus('checking');
     
     try {
@@ -404,12 +419,15 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                     {idCheckStatus === 'duplicate' && (
                       <XCircle className="h-4 w-4 text-destructive" />
                     )}
+                    {idCheckStatus === 'invalid_checksum' && (
+                      <XCircle className="h-4 w-4 text-amber-500" />
+                    )}
                   </FormLabel>
                   <FormControl>
                     <Input 
                       placeholder="Enter ID number" 
                       {...field}
-                      className={isIdDuplicate ? 'border-destructive focus-visible:ring-destructive' : ''}
+                      className={(isIdDuplicate || idCheckStatus === 'invalid_checksum') ? 'border-destructive focus-visible:ring-destructive' : ''}
                       onBlur={(e) => {
                         field.onBlur();
                         checkIdUniqueness(e.target.value);
@@ -420,6 +438,12 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                     <div className="text-sm text-destructive font-medium flex items-center gap-1">
                       <XCircle className="h-4 w-4" />
                       מספר ת.ז. כבר קיים במערכת! / ID number already exists!
+                    </div>
+                  )}
+                  {idChecksumError && (
+                    <div className="text-sm text-amber-600 font-medium flex items-center gap-1">
+                      <AlertTriangle className="h-4 w-4" />
+                      {idChecksumError}
                     </div>
                   )}
                   <FormMessage />
