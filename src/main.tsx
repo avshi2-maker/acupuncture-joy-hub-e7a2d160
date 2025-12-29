@@ -7,6 +7,10 @@ import "./index.css";
 // Ensure published updates reliably reach users (especially installed PWA)
 const updateSW = registerSW({
   immediate: true,
+  onRegisteredSW(_swUrl, registration) {
+    // Proactively check for an update on load
+    registration?.update().catch(() => undefined);
+  },
   onNeedRefresh() {
     toast("New version available", {
       description: "Tap Reload to update.",
@@ -21,6 +25,7 @@ const updateSW = registerSW({
     // Optional: keep quiet to avoid noise
   },
 });
+
 
 createRoot(document.getElementById("root")!).render(<App />);
 
