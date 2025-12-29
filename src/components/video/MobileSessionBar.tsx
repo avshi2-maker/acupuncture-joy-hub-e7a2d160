@@ -5,11 +5,15 @@ import {
   Square, 
   UserPlus, 
   Calendar, 
-  MessageCircle,
   Video,
   Clock,
-  RotateCcw
+  RotateCcw,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
+import { useHapticFeedback } from '@/hooks/useHapticFeedback';
+import { useSwipeGesture } from '@/hooks/useSwipeGesture';
+import { toast } from 'sonner';
 
 interface MobileSessionBarProps {
   sessionStatus: 'idle' | 'running' | 'paused' | 'ended';
@@ -42,14 +46,102 @@ export function MobileSessionBar({
   onZoomInvite,
   zoomTimeRemaining,
 }: MobileSessionBarProps) {
+  const haptic = useHapticFeedback();
+
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Swipe handlers with haptic feedback
+  const handleSwipeRight = () => {
+    if (sessionStatus === 'idle' || sessionStatus === 'ended') {
+      haptic.success();
+      onStart();
+      toast.success('🎬 Session started', { duration: 2000 });
+    } else if (sessionStatus === 'paused') {
+      haptic.medium();
+      onResume();
+      toast.info('▶️ Session resumed', { duration: 2000 });
+    }
+  };
+
+  const handleSwipeLeft = () => {
+    if (sessionStatus === 'running') {
+      haptic.medium();
+      onPause();
+      toast.info('⏸️ Session paused', { duration: 2000 });
+    } else if (sessionStatus === 'paused') {
+      haptic.warning();
+      onEnd();
+      toast.success('✅ Session ended', { duration: 2000 });
+    }
+  };
+
+  const swipeHandlers = useSwipeGesture({
+    onSwipeRight: handleSwipeRight,
+    onSwipeLeft: handleSwipeLeft,
+  }, { threshold: 60 });
+
+  // Wrap button handlers with haptic
+  const handleStart = () => {
+    haptic.success();
+    onStart();
+  };
+
+  const handlePause = () => {
+    haptic.medium();
+    onPause();
+  };
+
+  const handleResume = () => {
+    haptic.medium();
+    onResume();
+  };
+
+  const handleEnd = () => {
+    haptic.heavy();
+    onEnd();
+  };
+
+  const handleReset = () => {
+    haptic.warning();
+    onReset();
+  };
+
+  const handleQuickPatient = () => {
+    haptic.light();
+    onQuickPatient();
+  };
+
+  const handleQuickAppointment = () => {
+    haptic.light();
+    onQuickAppointment();
+  };
+
+  const handleZoomInvite = () => {
+    haptic.light();
+    onZoomInvite();
+  };
+
+  // Get swipe hint text
+  const getSwipeHint = () => {
+    if (sessionStatus === 'idle' || sessionStatus === 'ended') {
+      return 'Swipe → to start';
+    } else if (sessionStatus === 'running') {
+      return 'Swipe ← to pause';
+    } else if (sessionStatus === 'paused') {
+      return '← End | Resume →';
+    }
+    return null;
+  };
+
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-t border-border safe-area-inset-bottom">
+    <div 
+      className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-t border-border safe-area-inset-bottom"
+      {...swipeHandlers}
+    >
       {/* Session Status Bar */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-border/50">
         <div className="flex items-center gap-2">
@@ -57,11 +149,17 @@ export function MobileSessionBar({
             sessionStatus === 'running' ? 'bg-green-500 animate-pulse' : 
             sessionStatus === 'paused' ? 'bg-amber-500' : 'bg-muted'
           }`} />
-          <span className="text-sm font-medium">
+          <span className="text-sm font-medium truncate max-w-[120px]">
             {selectedPatientName || 'No patient'}
           </span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          {/* Swipe hint */}
+          <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+            <ChevronLeft className="h-3 w-3" />
+            {getSwipeHint()}
+            <ChevronRight className="h-3 w-3" />
+          </span>
           <span className={`text-lg font-mono font-bold ${
             sessionStatus === 'running' ? 'text-jade' : 'text-muted-foreground'
           }`}>
@@ -83,7 +181,7 @@ export function MobileSessionBar({
         {/* Session Control */}
         {sessionStatus === 'idle' || sessionStatus === 'ended' ? (
           <Button
-            onClick={onStart}
+            onClick={handleStart}
             size="lg"
             className="flex-1 h-12 gap-2 bg-jade hover:bg-jade/90 text-white touch-manipulation active:scale-95"
           >
@@ -93,7 +191,7 @@ export function MobileSessionBar({
         ) : sessionStatus === 'running' ? (
           <>
             <Button
-              onClick={onPause}
+              onClick={handlePause}
               variant="outline"
               size="lg"
               className="flex-1 h-12 gap-2 touch-manipulation active:scale-95"
@@ -102,7 +200,7 @@ export function MobileSessionBar({
               Pause
             </Button>
             <Button
-              onClick={onEnd}
+              onClick={handleEnd}
               variant="destructive"
               size="lg"
               className="flex-1 h-12 gap-2 touch-manipulation active:scale-95"
@@ -114,7 +212,7 @@ export function MobileSessionBar({
         ) : sessionStatus === 'paused' ? (
           <>
             <Button
-              onClick={onResume}
+              onClick={handleResume}
               size="lg"
               className="flex-1 h-12 gap-2 bg-jade hover:bg-jade/90 touch-manipulation active:scale-95"
             >
@@ -122,7 +220,7 @@ export function MobileSessionBar({
               Resume
             </Button>
             <Button
-              onClick={onEnd}
+              onClick={handleEnd}
               variant="destructive"
               size="lg"
               className="flex-1 h-12 gap-2 touch-manipulation active:scale-95"
@@ -137,7 +235,7 @@ export function MobileSessionBar({
         {(sessionStatus === 'idle' || sessionStatus === 'ended') && (
           <>
             <Button
-              onClick={onQuickPatient}
+              onClick={handleQuickPatient}
               variant="outline"
               size="icon"
               className="h-12 w-12 shrink-0 touch-manipulation active:scale-95"
@@ -145,7 +243,7 @@ export function MobileSessionBar({
               <UserPlus className="h-5 w-5" />
             </Button>
             <Button
-              onClick={onQuickAppointment}
+              onClick={handleQuickAppointment}
               variant="outline"
               size="icon"
               className="h-12 w-12 shrink-0 touch-manipulation active:scale-95"
@@ -153,7 +251,7 @@ export function MobileSessionBar({
               <Calendar className="h-5 w-5" />
             </Button>
             <Button
-              onClick={onZoomInvite}
+              onClick={handleZoomInvite}
               variant="outline"
               size="icon"
               className="h-12 w-12 shrink-0 touch-manipulation active:scale-95"
@@ -166,7 +264,7 @@ export function MobileSessionBar({
         {/* Reset button - only when session is running or paused */}
         {(sessionStatus === 'running' || sessionStatus === 'paused') && (
           <Button
-            onClick={onReset}
+            onClick={handleReset}
             variant="outline"
             size="icon"
             className="h-12 w-12 shrink-0 touch-manipulation active:scale-95"
