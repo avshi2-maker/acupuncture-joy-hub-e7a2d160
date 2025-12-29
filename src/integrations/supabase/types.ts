@@ -1250,6 +1250,7 @@ export type Database = {
           valid: boolean
         }[]
       }
+      validate_israeli_id: { Args: { id_number: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "therapist" | "patient"
