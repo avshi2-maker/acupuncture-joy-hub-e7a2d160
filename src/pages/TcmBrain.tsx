@@ -1308,7 +1308,30 @@ export default function TcmBrain() {
         <div className="flex-1 flex relative z-10">
           {/* Main Area */}
           <main className="flex-1 flex flex-col max-w-6xl mx-auto w-full">
-            {/* Disclaimer removed - only shown during therapist registration */}
+            {/* Disclaimer Banner - Show when not signed */}
+            {!disclaimerStatus.signed && (
+              <div className="mx-4 mt-4 p-4 bg-amber-500/20 border border-amber-500/50 rounded-lg flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0" />
+                  <div>
+                    <p className="font-medium text-foreground">
+                      {disclaimerStatus.expired ? 'Disclaimer Expired' : 'Disclaimer Required'}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {disclaimerStatus.expired 
+                        ? 'Your professional disclaimer has expired. Please sign again to continue using AI features.'
+                        : 'Please sign the professional disclaimer before using AI features.'}
+                    </p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => navigate('/therapist-disclaimer')}
+                  className="bg-amber-500 hover:bg-amber-600 text-white shrink-0"
+                >
+                  Sign Disclaimer
+                </Button>
+              </div>
+            )}
 
             {/* Feature tabs header */}
             {!showDetailedView && (
