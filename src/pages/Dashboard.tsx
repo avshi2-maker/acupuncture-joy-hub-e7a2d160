@@ -120,7 +120,7 @@ export default function Dashboard() {
     },
   ];
 
-  // Row 2: Video Session, TCM Brain, Body Map
+  // Row 2: Video Session, Standard Session
   const row2Features = [
     {
       id: 'video_sessions',
@@ -134,21 +134,12 @@ export default function Dashboard() {
     },
     {
       id: 'cm_brain',
-      title: 'CM Brain',
-      description: 'מאגר ידע מקיף ברפואה סינית',
+      title: 'Standard Session',
+      description: 'AI Brain & Body Figures',
       icon: <Brain className="h-6 w-6 text-white" />,
       feature: 'tcm_brain' as const,
       href: '/tcm-brain',
       backgroundImage: brainBg,
-    },
-    {
-      id: 'body_map',
-      title: 'מפת גוף',
-      description: 'מפה אינטראקטיבית לאבחון',
-      icon: <MapPin className="h-6 w-6 text-white" />,
-      feature: 'body_map' as const,
-      href: '/tcm-brain',
-      backgroundImage: deskBg,
     },
   ];
 
