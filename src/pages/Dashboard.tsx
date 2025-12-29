@@ -97,6 +97,7 @@ interface DashboardStats {
   patientsWithConsent: number;
   pendingConsents: number;
   hasAppointmentWithConsent: boolean;
+  sessionsThisWeek: number;
 }
 
 export default function Dashboard() {
@@ -108,6 +109,7 @@ export default function Dashboard() {
     patientsWithConsent: 0,
     pendingConsents: 0,
     hasAppointmentWithConsent: false,
+    sessionsThisWeek: 0,
   });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
@@ -118,8 +120,13 @@ export default function Dashboard() {
       try {
         // Get today's date range
         const today = new Date();
-        const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
-        const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString();
+        const startOfDay = new Date(new Date(today).setHours(0, 0, 0, 0)).toISOString();
+        const endOfDay = new Date(new Date(today).setHours(23, 59, 59, 999)).toISOString();
+
+        // Get start of week (Sunday)
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - today.getDay());
+        startOfWeek.setHours(0, 0, 0, 0);
 
         // Fetch patients
         const { data: patients } = await supabase
@@ -133,10 +140,18 @@ export default function Dashboard() {
           .gte('start_time', startOfDay)
           .lte('start_time', endOfDay);
 
+        // Fetch this week's completed video sessions
+        const { data: sessions } = await supabase
+          .from('video_sessions')
+          .select('id')
+          .gte('started_at', startOfWeek.toISOString())
+          .not('ended_at', 'is', null);
+
         const totalPatients = patients?.length || 0;
         const patientsWithConsent = patients?.filter(p => p.consent_signed).length || 0;
         const pendingConsents = totalPatients - patientsWithConsent;
         const appointmentsToday = appointments?.length || 0;
+        const sessionsThisWeek = sessions?.length || 0;
 
         // Check if any appointment today has a patient with consent
         const patientIds = appointments?.map(a => a.patient_id).filter(Boolean) || [];
@@ -150,6 +165,7 @@ export default function Dashboard() {
           patientsWithConsent,
           pendingConsents,
           hasAppointmentWithConsent,
+          sessionsThisWeek,
         });
       } catch (error) {
         console.error('Error fetching stats:', error);
@@ -372,62 +388,86 @@ export default function Dashboard() {
         </Card>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8 opacity-0 animate-fade-in" style={{ animationDelay: '450ms', animationFillMode: 'forwards' }}>
-          <Card className="border-border/50">
-            <CardContent className="pt-4 pb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-jade/10 flex items-center justify-center">
-                  <Users className="h-5 w-5 text-jade" />
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-8 opacity-0 animate-fade-in" style={{ animationDelay: '450ms', animationFillMode: 'forwards' }}>
+          <Link to="/crm/patients" className="block">
+            <Card className="border-border/50 hover:border-jade/50 hover:shadow-md transition-all cursor-pointer h-full">
+              <CardContent className="pt-4 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-jade/10 flex items-center justify-center">
+                    <Users className="h-5 w-5 text-jade" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{isLoadingStats ? '-' : stats.totalPatients}</p>
+                    <p className="text-xs text-muted-foreground">סה״כ מטופלים</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{isLoadingStats ? '-' : stats.totalPatients}</p>
-                  <p className="text-xs text-muted-foreground">סה״כ מטופלים</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
           
-          <Card className="border-border/50">
-            <CardContent className="pt-4 pb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                  <Clock className="h-5 w-5 text-blue-500" />
+          <Link to="/crm/calendar" className="block">
+            <Card className="border-border/50 hover:border-blue-500/50 hover:shadow-md transition-all cursor-pointer h-full">
+              <CardContent className="pt-4 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <Clock className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{isLoadingStats ? '-' : stats.appointmentsToday}</p>
+                    <p className="text-xs text-muted-foreground">תורים היום</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{isLoadingStats ? '-' : stats.appointmentsToday}</p>
-                  <p className="text-xs text-muted-foreground">תורים היום</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
           
-          <Card className="border-border/50">
-            <CardContent className="pt-4 pb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                  <UserCheck className="h-5 w-5 text-emerald-500" />
+          <Link to="/crm/patients" className="block">
+            <Card className="border-border/50 hover:border-emerald-500/50 hover:shadow-md transition-all cursor-pointer h-full">
+              <CardContent className="pt-4 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                    <UserCheck className="h-5 w-5 text-emerald-500" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{isLoadingStats ? '-' : stats.patientsWithConsent}</p>
+                    <p className="text-xs text-muted-foreground">חתמו הסכמה</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{isLoadingStats ? '-' : stats.patientsWithConsent}</p>
-                  <p className="text-xs text-muted-foreground">חתמו הסכמה</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
           
-          <Card className="border-border/50">
-            <CardContent className="pt-4 pb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                  <FileCheck className="h-5 w-5 text-amber-500" />
+          <Link to="/crm/patients" className="block">
+            <Card className="border-border/50 hover:border-amber-500/50 hover:shadow-md transition-all cursor-pointer h-full">
+              <CardContent className="pt-4 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                    <FileCheck className="h-5 w-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{isLoadingStats ? '-' : stats.pendingConsents}</p>
+                    <p className="text-xs text-muted-foreground">ממתינים לחתימה</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{isLoadingStats ? '-' : stats.pendingConsents}</p>
-                  <p className="text-xs text-muted-foreground">ממתינים לחתימה</p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/crm/calendar" className="block">
+            <Card className="border-border/50 hover:border-purple-500/50 hover:shadow-md transition-all cursor-pointer h-full">
+              <CardContent className="pt-4 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                    <Video className="h-5 w-5 text-purple-500" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{isLoadingStats ? '-' : stats.sessionsThisWeek}</p>
+                    <p className="text-xs text-muted-foreground">טיפולים השבוע</p>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
         {/* Row 1: Calendar, Patient Management, Reminders */}
