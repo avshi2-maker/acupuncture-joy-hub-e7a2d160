@@ -1023,7 +1023,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
               render={({ field }) => (
                 <FormItem className="md:col-span-2">
                   <FormLabel>Constitution Type</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value ?? undefined}>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select constitution type..." />
