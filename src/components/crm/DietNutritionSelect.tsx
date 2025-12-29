@@ -163,12 +163,13 @@ export const DietNutritionSelect = memo(function DietNutritionSelect({
   const [isOpen, setIsOpen] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
 
-  const toggleCategory = useCallback((category: string) => {
-    setExpandedCategories(prev =>
-      prev.includes(category)
-        ? prev.filter(c => c !== category)
-        : [...prev, category]
-    );
+  const setCategoryOpen = useCallback((category: string, open: boolean) => {
+    setExpandedCategories((prev) => {
+      const isExpanded = prev.includes(category);
+      if (open && !isExpanded) return [...prev, category];
+      if (!open && isExpanded) return prev.filter((c) => c !== category);
+      return prev;
+    });
   }, []);
 
   const toggleOption = useCallback((option: string) => {
@@ -225,7 +226,7 @@ export const DietNutritionSelect = memo(function DietNutritionSelect({
                   <Collapsible
                     key={category}
                     open={expandedCategories.includes(category)}
-                    onOpenChange={() => toggleCategory(category)}
+                    onOpenChange={(open) => setCategoryOpen(category, open)}
                   >
                     <CollapsibleTrigger asChild>
                       <Button
