@@ -38,6 +38,7 @@ import {
   MessageCircle,
   Play,
   Timer,
+  FileText,
 } from 'lucide-react';
 import { WhatsAppReminderButton } from '@/components/crm/WhatsAppReminderButton';
 import { useSessionTimer } from '@/contexts/SessionTimerContext';
@@ -1045,6 +1046,21 @@ function CalendarContent() {
                 )}
                 
                 <div className="flex flex-col gap-3 pt-4">
+                  {/* View Patient History - if patient is linked */}
+                  {editingAppt.patient_id && (
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-jade/30 text-jade hover:bg-jade/10"
+                      onClick={() => {
+                        setEditingAppt(null);
+                        window.location.href = `/crm/patients/${editingAppt.patient_id}`;
+                      }}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      View Patient History & Reports
+                    </Button>
+                  )}
+                  
                   {/* Start Session Button - Prominent */}
                   {timerStatus === 'idle' && (
                     <Button 
