@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { User, Heart, Baby, Activity, Utensils, Moon, Brain, AlertTriangle, FileSignature, PenTool } from 'lucide-react';
+import { User, Heart, Baby, Activity, Utensils, Moon, Brain, AlertTriangle, FileSignature, PenTool, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { SignaturePad } from './SignaturePad';
 import { MedicalDocumentUpload } from './MedicalDocumentUpload';
 import { DietNutritionSelect } from './DietNutritionSelect';
@@ -131,6 +131,41 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
   const [medicalDocuments, setMedicalDocuments] = useState<File[]>([]);
   const [dietHabits, setDietHabits] = useState<string[]>([]);
+  
+  // ID Number validation state
+  const [idCheckStatus, setIdCheckStatus] = useState<'idle' | 'checking' | 'valid' | 'duplicate'>('idle');
+  const [isIdDuplicate, setIsIdDuplicate] = useState(false);
+
+  // Function to check if ID number is unique
+  const checkIdUniqueness = async (idNumber: string) => {
+    if (!idNumber || idNumber.length < 5) {
+      setIdCheckStatus('idle');
+      setIsIdDuplicate(false);
+      return;
+    }
+
+    setIdCheckStatus('checking');
+    
+    try {
+      const { data: existingPatient } = await supabase
+        .from('patients')
+        .select('id')
+        .eq('id_number', idNumber)
+        .neq('id', patientId || '')
+        .maybeSingle();
+
+      if (existingPatient) {
+        setIdCheckStatus('duplicate');
+        setIsIdDuplicate(true);
+      } else {
+        setIdCheckStatus('valid');
+        setIsIdDuplicate(false);
+      }
+    } catch (error) {
+      setIdCheckStatus('idle');
+      setIsIdDuplicate(false);
+    }
+  };
 
   const form = useForm<PatientFormData>({
     resolver: zodResolver(basePatientSchema),
@@ -215,9 +250,15 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
       return;
     }
 
+    // Block submission if we already know ID is duplicate
+    if (isIdDuplicate) {
+      toast.error('מספר ת.ז. כבר קיים במערכת! לא ניתן לשמור. / ID number already exists!');
+      return;
+    }
+
     setLoading(true);
     try {
-      // Check for duplicate ID number
+      // Double-check for duplicate ID number at submission time
       const { data: existingPatient, error: checkError } = await supabase
         .from('patients')
         .select('id')
@@ -226,7 +267,9 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
         .maybeSingle();
 
       if (existingPatient) {
-        toast.error('מספר ת.ז. כבר קיים במערכת. אנא בדקו שוב.');
+        setIsIdDuplicate(true);
+        setIdCheckStatus('duplicate');
+        toast.error('מספר ת.ז. כבר קיים במערכת! לא ניתן לשמור. / ID number already exists!');
         setLoading(false);
         return;
       }
@@ -348,10 +391,35 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
               name="id_number"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>ID Number (ת.ז.) *</FormLabel>
+                  <FormLabel className="flex items-center gap-2">
+                    ID Number (ת.ז.) *
+                    {idCheckStatus === 'checking' && (
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                    {idCheckStatus === 'valid' && (
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    )}
+                    {idCheckStatus === 'duplicate' && (
+                      <XCircle className="h-4 w-4 text-destructive" />
+                    )}
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter ID number" {...field} />
+                    <Input 
+                      placeholder="Enter ID number" 
+                      {...field}
+                      className={isIdDuplicate ? 'border-destructive focus-visible:ring-destructive' : ''}
+                      onBlur={(e) => {
+                        field.onBlur();
+                        checkIdUniqueness(e.target.value);
+                      }}
+                    />
                   </FormControl>
+                  {isIdDuplicate && (
+                    <div className="text-sm text-destructive font-medium flex items-center gap-1">
+                      <XCircle className="h-4 w-4" />
+                      מספר ת.ז. כבר קיים במערכת! / ID number already exists!
+                    </div>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}

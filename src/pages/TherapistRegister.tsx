@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Leaf, ArrowLeft, MessageCircle } from 'lucide-react';
+import { Leaf, ArrowLeft, MessageCircle, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { WhatsAppWithTemplates, REGISTRATION_TEMPLATES } from '@/components/ui/WhatsAppTemplates';
 
@@ -26,6 +26,8 @@ type RegisterForm = z.infer<typeof registerSchema>;
 export default function TherapistRegister() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [idCheckStatus, setIdCheckStatus] = useState<'idle' | 'checking' | 'valid' | 'duplicate'>('idle');
+  const [isIdDuplicate, setIsIdDuplicate] = useState(false);
 
   const form = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
@@ -37,10 +39,46 @@ export default function TherapistRegister() {
     },
   });
 
+  // Function to check if ID number is unique
+  const checkIdUniqueness = async (idNumber: string) => {
+    if (!idNumber || idNumber.length < 5) {
+      setIdCheckStatus('idle');
+      setIsIdDuplicate(false);
+      return;
+    }
+
+    setIdCheckStatus('checking');
+    
+    try {
+      const { data: existingTherapist } = await supabase
+        .from('therapist_registrations')
+        .select('id')
+        .eq('id_number', idNumber)
+        .maybeSingle();
+
+      if (existingTherapist) {
+        setIdCheckStatus('duplicate');
+        setIsIdDuplicate(true);
+      } else {
+        setIdCheckStatus('valid');
+        setIsIdDuplicate(false);
+      }
+    } catch (error) {
+      setIdCheckStatus('idle');
+      setIsIdDuplicate(false);
+    }
+  };
+
   const onSubmit = async (data: RegisterForm) => {
+    // Block submission if we already know ID is duplicate
+    if (isIdDuplicate) {
+      toast.error('מספר ת.ז. כבר רשום במערכת!');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // Check for duplicate ID number
+      // Double-check for duplicate ID number at submission
       const { data: existingTherapist } = await supabase
         .from('therapist_registrations')
         .select('id')
@@ -48,7 +86,9 @@ export default function TherapistRegister() {
         .maybeSingle();
 
       if (existingTherapist) {
-        toast.error('מספר ת.ז. כבר רשום במערכת');
+        setIsIdDuplicate(true);
+        setIdCheckStatus('duplicate');
+        toast.error('מספר ת.ז. כבר רשום במערכת!');
         setIsLoading(false);
         return;
       }
@@ -122,10 +162,35 @@ export default function TherapistRegister() {
                     name="idNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>מספר ת.ז. *</FormLabel>
+                        <FormLabel className="flex items-center gap-2">
+                          מספר ת.ז. *
+                          {idCheckStatus === 'checking' && (
+                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                          )}
+                          {idCheckStatus === 'valid' && (
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                          )}
+                          {idCheckStatus === 'duplicate' && (
+                            <XCircle className="h-4 w-4 text-destructive" />
+                          )}
+                        </FormLabel>
                         <FormControl>
-                          <Input placeholder="123456789" {...field} />
+                          <Input 
+                            placeholder="123456789" 
+                            {...field}
+                            className={isIdDuplicate ? 'border-destructive focus-visible:ring-destructive' : ''}
+                            onBlur={(e) => {
+                              field.onBlur();
+                              checkIdUniqueness(e.target.value);
+                            }}
+                          />
                         </FormControl>
+                        {isIdDuplicate && (
+                          <div className="text-sm text-destructive font-medium flex items-center gap-1">
+                            <XCircle className="h-4 w-4" />
+                            מספר ת.ז. כבר רשום במערכת!
+                          </div>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
