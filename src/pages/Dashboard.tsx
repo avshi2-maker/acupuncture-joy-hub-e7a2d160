@@ -97,7 +97,7 @@ export default function Dashboard() {
     navigate('/');
   };
 
-  // Row 1: Calendar, Patient Management, Reminders
+  // Row 1: Calendar, Patient Management
   const row1Features = [
     {
       id: 'calendar',
@@ -115,15 +115,6 @@ export default function Dashboard() {
       icon: <Users className="h-6 w-6 text-white" />,
       feature: 'crm' as const,
       href: '/crm/patients',
-      backgroundImage: calendarBg,
-    },
-    {
-      id: 'email_reminders',
-      title: 'תזכורות',
-      description: 'שליחת תזכורות Email / WhatsApp',
-      icon: <MessageSquare className="h-6 w-6 text-white" />,
-      feature: 'email_reminders' as const,
-      href: '/crm/calendar',
       backgroundImage: calendarBg,
     },
   ];
@@ -160,7 +151,7 @@ export default function Dashboard() {
     },
   ];
 
-  // Row 3: Knowledge Registry + 2 more for balance
+  // Row 3: Knowledge Registry + Treatment Planner
   const row3Features = [
     {
       id: 'knowledge_registry',
@@ -168,15 +159,6 @@ export default function Dashboard() {
       description: 'העלאת וניהול קבצי ידע CSV',
       icon: <Database className="h-6 w-6 text-jade" />,
       href: '/knowledge-registry',
-      alwaysAvailable: true,
-      backgroundImage: knowledgeBg,
-    },
-    {
-      id: 'symptom_checker',
-      title: 'בודק סימפטומים',
-      description: 'ניתוח סימפטומים וזיהוי דפוסים',
-      icon: <Brain className="h-6 w-6 text-jade" />,
-      href: '/symptom-checker',
       alwaysAvailable: true,
       backgroundImage: knowledgeBg,
     },
