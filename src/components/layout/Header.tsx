@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Menu, X, Leaf, Code, Volume2, VolumeX } from "lucide-react";
+import { Menu, X, Leaf, Code, Volume2, VolumeX, LogOut, LayoutDashboard } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { WhatsAppCTA } from "@/components/ui/WhatsAppCTA";
+import { useTier } from "@/hooks/useTier";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -21,13 +22,15 @@ const Header = () => {
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const location = useLocation();
+  const navigate = useNavigate();
   const { t } = useLanguage();
+  const { tier, daysRemaining, setTier, setExpiresAt } = useTier();
 
-  const isDevMode = window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1' ||
-    window.location.hostname.includes('lovableproject.com');
+  // Dev mode bypass: only enabled with explicit query param ?devmode=true
+  const isDevMode = typeof window !== "undefined" && window.location.search.includes("devmode=true");
 
   const isHomePage = location.pathname === "/";
+  const isTierActive = Boolean(tier) && (daysRemaining === null || daysRemaining > 0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -42,15 +45,15 @@ const Header = () => {
     if (analyserRef.current && isPlayingBio) {
       const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
       analyserRef.current.getByteFrequencyData(dataArray);
-      
+
       // Sample 4 frequency bands for our 4 bars
       const bands = [
-        dataArray.slice(0, 4).reduce((a, b) => a + b, 0) / 4,      // Low
-        dataArray.slice(4, 8).reduce((a, b) => a + b, 0) / 4,      // Low-mid
-        dataArray.slice(8, 16).reduce((a, b) => a + b, 0) / 8,     // Mid
-        dataArray.slice(16, 32).reduce((a, b) => a + b, 0) / 16,   // High
-      ].map(v => Math.min(1, v / 180)); // Normalize to 0-1
-      
+        dataArray.slice(0, 4).reduce((a, b) => a + b, 0) / 4, // Low
+        dataArray.slice(4, 8).reduce((a, b) => a + b, 0) / 4, // Low-mid
+        dataArray.slice(8, 16).reduce((a, b) => a + b, 0) / 8, // Mid
+        dataArray.slice(16, 32).reduce((a, b) => a + b, 0) / 16, // High
+      ].map((v) => Math.min(1, v / 180)); // Normalize to 0-1
+
       setFrequencyData(bands);
       animationFrameRef.current = requestAnimationFrame(updateFrequencyData);
     }
@@ -69,7 +72,7 @@ const Header = () => {
 
   const handleBioToggle = () => {
     if (!bioAudioRef.current) {
-      bioAudioRef.current = new Audio('/audio/roni_bio.mp3');
+      bioAudioRef.current = new Audio("/audio/roni_bio.mp3");
       bioAudioRef.current.crossOrigin = "anonymous";
       bioAudioRef.current.volume = bioVolume / 100;
       bioAudioRef.current.onended = () => {
@@ -90,7 +93,7 @@ const Header = () => {
         }
       };
     }
-    
+
     // Setup Web Audio API for frequency analysis
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -100,7 +103,7 @@ const Header = () => {
       sourceRef.current.connect(analyserRef.current);
       analyserRef.current.connect(audioContextRef.current.destination);
     }
-    
+
     if (isPlayingBio) {
       bioAudioRef.current.pause();
       bioAudioRef.current.currentTime = 0;
@@ -111,7 +114,7 @@ const Header = () => {
     } else {
       bioAudioRef.current.currentTime = 0;
       bioAudioRef.current.volume = bioVolume / 100;
-      if (audioContextRef.current?.state === 'suspended') {
+      if (audioContextRef.current?.state === "suspended") {
         audioContextRef.current.resume();
       }
       bioAudioRef.current.play().then(() => {
@@ -127,26 +130,41 @@ const Header = () => {
     }
   };
 
-  // Removed auto-play on hover - user requested click-only playback
+  const handleLogout = () => {
+    setTier(null);
+    setExpiresAt(null);
+    setIsMobileMenuOpen(false);
+    navigate("/");
+  };
 
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        isScrolled || !isHomePage
-          ? "bg-background/95 backdrop-blur-md shadow-soft py-3"
-          : "bg-transparent py-5"
+        isScrolled || !isHomePage ? "bg-background/95 backdrop-blur-md shadow-soft py-3" : "bg-transparent py-5"
       }`}
     >
       <div className="container mx-auto px-4 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 group flex-shrink-0">
-          <div className={`p-2 rounded-full transition-all duration-300 flex-shrink-0 ${isScrolled || !isHomePage ? 'bg-jade/10' : 'bg-primary-foreground/10'}`}>
-            <Leaf className={`w-6 h-6 transition-colors duration-300 ${isScrolled || !isHomePage ? 'text-jade' : 'text-primary-foreground'}`} />
+          <div
+            className={`p-2 rounded-full transition-all duration-300 flex-shrink-0 ${
+              isScrolled || !isHomePage ? "bg-jade/10" : "bg-primary-foreground/10"
+            }`}
+          >
+            <Leaf
+              className={`w-6 h-6 transition-colors duration-300 ${
+                isScrolled || !isHomePage ? "text-jade" : "text-primary-foreground"
+              }`}
+            />
           </div>
-          <div className={`font-display tracking-wide transition-colors duration-300 ${isScrolled || !isHomePage ? 'text-foreground' : 'text-primary-foreground'} hidden sm:flex flex-col leading-tight`}>
+          <div
+            className={`font-display tracking-wide transition-colors duration-300 ${
+              isScrolled || !isHomePage ? "text-foreground" : "text-primary-foreground"
+            } hidden sm:flex flex-col leading-tight`}
+          >
             <div className="relative inline-block">
               <div className="flex items-center gap-1">
-                <button 
+                <button
                   type="button"
                   onClick={(e) => {
                     e.preventDefault();
@@ -160,15 +178,18 @@ const Header = () => {
                   {isPlayingBio ? (
                     <span className="relative inline-flex items-center justify-center w-7 h-7">
                       {/* Glow effect */}
-                      <span 
+                      <span
                         className="absolute inset-0 rounded-full blur-md transition-opacity duration-300"
-                        style={{ 
-                          backgroundColor: 'hsl(var(--gold))',
-                          opacity: 0.4 + (frequencyData.reduce((a, b) => a + b, 0) / 4) * 0.4
+                        style={{
+                          backgroundColor: "hsl(var(--gold))",
+                          opacity: 0.4 + (frequencyData.reduce((a, b) => a + b, 0) / 4) * 0.4,
                         }}
                       />
                       {/* Circular progress ring with glow */}
-                      <svg className="absolute inset-0 w-7 h-7 -rotate-90 drop-shadow-[0_0_6px_hsl(var(--gold))]" viewBox="0 0 28 28">
+                      <svg
+                        className="absolute inset-0 w-7 h-7 -rotate-90 drop-shadow-[0_0_6px_hsl(var(--gold))]"
+                        viewBox="0 0 28 28"
+                      >
                         <circle
                           cx="14"
                           cy="14"
@@ -189,18 +210,18 @@ const Header = () => {
                           strokeDasharray={2 * Math.PI * 12}
                           strokeDashoffset={2 * Math.PI * 12 * (1 - bioProgress / 100)}
                           className="transition-all duration-150 ease-linear"
-                          style={{ filter: 'drop-shadow(0 0 3px hsl(var(--gold)))' }}
+                          style={{ filter: "drop-shadow(0 0 3px hsl(var(--gold)))" }}
                         />
                       </svg>
                       {/* Real frequency waveform inside */}
                       <span className="inline-flex items-end justify-center gap-0.5 h-3 z-10">
                         {frequencyData.map((level, i) => (
-                          <span 
+                          <span
                             key={i}
                             className="w-0.5 bg-gold rounded-full transition-all duration-75"
-                            style={{ 
+                            style={{
                               height: `${Math.max(20, level * 100)}%`,
-                              boxShadow: level > 0.3 ? '0 0 4px hsl(var(--gold))' : 'none'
+                              boxShadow: level > 0.3 ? "0 0 4px hsl(var(--gold))" : "none",
                             }}
                           />
                         ))}
@@ -233,7 +254,7 @@ const Header = () => {
 
                     {/* Volume Slider Dropdown */}
                     {showVolumeControl && (
-                      <div 
+                      <div
                         className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-background/95 backdrop-blur-md rounded-lg shadow-lg p-3 z-50 min-w-[120px] animate-fade-in"
                         onClick={(e) => e.stopPropagation()}
                       >
@@ -264,16 +285,13 @@ const Header = () => {
         {/* Dev Mode Badge */}
         {isDevMode && (
           <div className="hidden sm:flex items-center gap-2">
-            <Badge variant="outline" className="flex items-center gap-1 border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-mono">
+            <Badge
+              variant="outline"
+              className="flex items-center gap-1 border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-mono"
+            >
               <Code className="w-3 h-3" />
               DEV MODE
             </Badge>
-            <Button asChild variant="ghost" size="sm" className="text-amber-600 dark:text-amber-400 hover:bg-amber-500/10">
-              <Link to="/tcm-brain">TCM Brain</Link>
-            </Button>
-            <Button asChild variant="ghost" size="sm" className="text-amber-600 dark:text-amber-400 hover:bg-amber-500/10">
-              <Link to="/admin/knowledge">Knowledge</Link>
-            </Button>
           </div>
         )}
 
@@ -281,17 +299,27 @@ const Header = () => {
         <nav className="hidden lg:flex items-center gap-4">
           {/* Language Switcher */}
           <LanguageSwitcher isScrolled={isScrolled || !isHomePage} />
-          
+
           {/* WhatsApp Button */}
-          <WhatsAppCTA 
-            variant="minimal"
-            phoneNumber="972544634923"
-            message="שלום! אשמח לשמוע עוד על הטיפולים שלכם"
-          />
-          
-          <Button asChild variant={isScrolled || !isHomePage ? "hero" : "heroOutline"} size="lg">
-            <Link to="/gate">{t("therapistLogin")}</Link>
-          </Button>
+          <WhatsAppCTA variant="minimal" phoneNumber="972544634923" message="שלום! אשמח לשמוע עוד על הטיפולים שלכם" />
+
+          {isTierActive ? (
+            <div className="flex items-center gap-2">
+              <Button asChild variant={isScrolled || !isHomePage ? "hero" : "heroOutline"} size="lg" className="gap-2">
+                <Link to="/dashboard">
+                  <LayoutDashboard className="h-4 w-4" />
+                  Dashboard
+                </Link>
+              </Button>
+              <Button variant="ghost" size="icon" onClick={handleLogout} aria-label="Logout">
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <Button asChild variant={isScrolled || !isHomePage ? "hero" : "heroOutline"} size="lg">
+              <Link to="/gate">{t("therapistLogin")}</Link>
+            </Button>
+          )}
         </nav>
 
         {/* Mobile Menu Button */}
@@ -299,7 +327,7 @@ const Header = () => {
           <LanguageSwitcher isScrolled={isScrolled || !isHomePage} />
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className={`p-2 transition-colors ${isScrolled || !isHomePage ? 'text-foreground' : 'text-primary-foreground'}`}
+            className={`p-2 transition-colors ${isScrolled || !isHomePage ? "text-foreground" : "text-primary-foreground"}`}
             aria-label="Toggle menu"
           >
             {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -315,18 +343,28 @@ const Header = () => {
       >
         <nav className="container mx-auto px-4 py-6 flex flex-col gap-4">
           {/* WhatsApp Button */}
-          <WhatsAppCTA 
-            variant="minimal"
-            phoneNumber="972544634923"
-            message="שלום! אשמח לשמוע עוד על הטיפולים שלכם"
-          />
-          
-          {/* Therapist Login - Main CTA */}
-          <Button asChild variant="hero" size="lg" className="w-full">
-            <Link to="/gate" onClick={() => setIsMobileMenuOpen(false)}>
-              {t("therapistLogin")}
-            </Link>
-          </Button>
+          <WhatsAppCTA variant="minimal" phoneNumber="972544634923" message="שלום! אשמח לשמוע עוד על הטיפולים שלכם" />
+
+          {isTierActive ? (
+            <>
+              <Button asChild variant="hero" size="lg" className="w-full gap-2" onClick={() => setIsMobileMenuOpen(false)}>
+                <Link to="/dashboard">
+                  <LayoutDashboard className="h-4 w-4" />
+                  Dashboard
+                </Link>
+              </Button>
+              <Button variant="outline" size="lg" className="w-full gap-2" onClick={handleLogout}>
+                <LogOut className="h-4 w-4" />
+                Logout
+              </Button>
+            </>
+          ) : (
+            <Button asChild variant="hero" size="lg" className="w-full">
+              <Link to="/gate" onClick={() => setIsMobileMenuOpen(false)}>
+                {t("therapistLogin")}
+              </Link>
+            </Button>
+          )}
         </nav>
       </div>
     </header>
@@ -334,3 +372,4 @@ const Header = () => {
 };
 
 export default Header;
+

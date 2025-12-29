@@ -8,6 +8,8 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/hooks/useAuth";
 import { TierProvider } from "@/hooks/useTier";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import RequireTier from "@/components/auth/RequireTier";
+
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import TherapistRegister from "./pages/TherapistRegister";
@@ -19,7 +21,6 @@ import Dashboard from "./pages/Dashboard";
 import VideoSession from "./pages/VideoSession";
 import Auth from "./pages/Auth";
 import TcmBrain from "./pages/TcmBrain";
-import CRM from "./pages/CRM";
 import CRMDashboard from "./pages/crm/CRMDashboard";
 import CRMCalendar from "./pages/crm/CRMCalendar";
 import CRMPatients from "./pages/crm/CRMPatients";
@@ -56,53 +57,61 @@ const App = () => (
         <LanguageProvider>
           <AuthProvider>
             <TierProvider>
-                <TooltipProvider>
-                  <Toaster />
-                  <Sonner />
-                  <BrowserRouter>
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/therapist-register" element={<TherapistRegister />} />
-                      <Route path="/pricing" element={<Pricing />} />
-                      <Route path="/payment-instructions" element={<PaymentInstructions />} />
-                      <Route path="/gate" element={<Gate />} />
-                      <Route path="/admin" element={<Admin />} />
-                      <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/video-session" element={<VideoSession />} />
-                      <Route path="/auth" element={<Auth />} />
-                      <Route path="/tcm-brain" element={<TcmBrain />} />
-                      <Route path="/therapist-disclaimer" element={<TherapistDisclaimer />} />
-                      <Route path="/crm" element={<CRMDashboard />} />
-                      <Route path="/crm/dashboard" element={<CRMDashboard />} />
-                      <Route path="/crm/calendar" element={<CRMCalendar />} />
-                      <Route path="/crm/patients" element={<CRMPatients />} />
-                      <Route path="/crm/patients/new" element={<CRMPatientNew />} />
-                      <Route path="/crm/patients/:id" element={<CRMPatientDetail />} />
-                      <Route path="/crm/patients/:id/edit" element={<CRMPatientEdit />} />
-                      <Route path="/crm/rooms" element={<CRMRooms />} />
-                      <Route path="/crm/patients/:patientId/consent" element={<PatientConsentForm />} />
-                      <Route path="/confirm" element={<AppointmentConfirm />} />
-                      <Route path="/therapist-profile" element={<TherapistProfile />} />
-                      <Route path="/install" element={<InstallApp />} />
-                      <Route path="/admin/feedback" element={<AdminFeedback />} />
-                      <Route path="/admin/knowledge" element={<KnowledgeRegistry />} />
-                      <Route path="/admin/disclaimers" element={<AdminDisclaimers />} />
-                      <Route path="/knowledge-registry" element={<KnowledgeRegistry />} />
-                      <Route path="/bazi-calculator" element={<BaziCalculator />} />
-                      <Route path="/legal-report" element={<LegalReport />} />
-                      <Route path="/symptom-checker" element={<SymptomChecker />} />
-                      <Route path="/treatment-planner" element={<TreatmentPlanner />} />
-                      <Route path="/qa-testing" element={<QATesting />} />
-                      <Route path="/encyclopedia" element={<EncyclopediaLanding />} />
-                      <Route path="/developers" element={<Developers />} />
-                      <Route path="/scenarios" element={<ScenariosDashboard />} />
-                      <Route path="/cm-brain-questions" element={<CMBrainQuestions />} />
-                      <Route path="/point-editor" element={<PointCoordinateEditor />} />
-                      <Route path="/contact" element={<Contact />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </BrowserRouter>
-                </TooltipProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <Routes>
+                    {/* Public */}
+                    <Route path="/" element={<Index />} />
+                    <Route path="/therapist-register" element={<TherapistRegister />} />
+                    <Route path="/pricing" element={<Pricing />} />
+                    <Route path="/payment-instructions" element={<PaymentInstructions />} />
+                    <Route path="/gate" element={<Gate />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/confirm" element={<AppointmentConfirm />} />
+                    <Route path="/install" element={<InstallApp />} />
+                    <Route path="/contact" element={<Contact />} />
+
+                    {/* Protected (requires tier) */}
+                    <Route path="/dashboard" element={<RequireTier><Dashboard /></RequireTier>} />
+                    <Route path="/video-session" element={<RequireTier><VideoSession /></RequireTier>} />
+                    <Route path="/tcm-brain" element={<RequireTier><TcmBrain /></RequireTier>} />
+
+                    <Route path="/crm" element={<RequireTier><CRMDashboard /></RequireTier>} />
+                    <Route path="/crm/dashboard" element={<RequireTier><CRMDashboard /></RequireTier>} />
+                    <Route path="/crm/calendar" element={<RequireTier><CRMCalendar /></RequireTier>} />
+                    <Route path="/crm/patients" element={<RequireTier><CRMPatients /></RequireTier>} />
+                    <Route path="/crm/patients/new" element={<RequireTier><CRMPatientNew /></RequireTier>} />
+                    <Route path="/crm/patients/:id" element={<RequireTier><CRMPatientDetail /></RequireTier>} />
+                    <Route path="/crm/patients/:id/edit" element={<RequireTier><CRMPatientEdit /></RequireTier>} />
+                    <Route path="/crm/rooms" element={<RequireTier><CRMRooms /></RequireTier>} />
+                    <Route path="/crm/patients/:patientId/consent" element={<RequireTier><PatientConsentForm /></RequireTier>} />
+
+                    <Route path="/therapist-profile" element={<RequireTier><TherapistProfile /></RequireTier>} />
+                    <Route path="/therapist-disclaimer" element={<RequireTier><TherapistDisclaimer /></RequireTier>} />
+
+                    <Route path="/admin" element={<RequireTier><Admin /></RequireTier>} />
+                    <Route path="/admin/feedback" element={<RequireTier><AdminFeedback /></RequireTier>} />
+                    <Route path="/admin/knowledge" element={<RequireTier><KnowledgeRegistry /></RequireTier>} />
+                    <Route path="/admin/disclaimers" element={<RequireTier><AdminDisclaimers /></RequireTier>} />
+
+                    <Route path="/knowledge-registry" element={<RequireTier><KnowledgeRegistry /></RequireTier>} />
+                    <Route path="/bazi-calculator" element={<RequireTier><BaziCalculator /></RequireTier>} />
+                    <Route path="/legal-report" element={<RequireTier><LegalReport /></RequireTier>} />
+                    <Route path="/symptom-checker" element={<RequireTier><SymptomChecker /></RequireTier>} />
+                    <Route path="/treatment-planner" element={<RequireTier><TreatmentPlanner /></RequireTier>} />
+                    <Route path="/qa-testing" element={<RequireTier><QATesting /></RequireTier>} />
+                    <Route path="/encyclopedia" element={<RequireTier><EncyclopediaLanding /></RequireTier>} />
+                    <Route path="/developers" element={<RequireTier><Developers /></RequireTier>} />
+                    <Route path="/scenarios" element={<RequireTier><ScenariosDashboard /></RequireTier>} />
+                    <Route path="/cm-brain-questions" element={<RequireTier><CMBrainQuestions /></RequireTier>} />
+                    <Route path="/point-editor" element={<RequireTier><PointCoordinateEditor /></RequireTier>} />
+
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </BrowserRouter>
+              </TooltipProvider>
             </TierProvider>
           </AuthProvider>
         </LanguageProvider>
@@ -112,3 +121,4 @@ const App = () => (
 );
 
 export default App;
+
