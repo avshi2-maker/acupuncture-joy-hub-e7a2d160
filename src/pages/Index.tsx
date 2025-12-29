@@ -161,9 +161,26 @@ const Index = () => {
               <Volume2 className="h-4 w-4 text-cream/60 group-hover:text-gold transition-colors" />
             </div>
             
-            {/* Audio player popup */}
+            {/* Audio player popup - positioned ABOVE the name */}
             {showAudioPlayer && (
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-foreground/95 backdrop-blur-sm rounded-lg p-4 shadow-xl z-20 animate-fade-in min-w-[280px]">
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-amber-100/95 backdrop-blur-sm rounded-lg p-4 shadow-xl z-20 animate-fade-in min-w-[280px] border border-gold/30">
+                {/* Close button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (audioRef.current) {
+                      audioRef.current.pause();
+                      audioRef.current.currentTime = 0;
+                    }
+                    setIsPlaying(false);
+                    setAudioProgress(0);
+                    setShowAudioPlayer(false);
+                  }}
+                  className="absolute top-2 right-2 w-6 h-6 rounded-full bg-foreground/80 hover:bg-foreground flex items-center justify-center transition-colors"
+                >
+                  <X className="h-4 w-4 text-cream" />
+                </button>
+                
                 <audio 
                   ref={audioRef} 
                   src="/audio/roni_bio.mp3"
@@ -185,10 +202,10 @@ const Index = () => {
                     )}
                   </button>
                   <div className="flex-1">
-                    <p className="text-cream text-xs font-medium">
+                    <p className="text-foreground text-xs font-medium">
                       {language === "he" ? "ביוגרפיה קולית" : "Voice Bio"}
                     </p>
-                    <p className="text-cream/60 text-xs">Dr. Roni Sapir</p>
+                    <p className="text-foreground/70 text-xs">Dr. Roni Sapir</p>
                   </div>
                   
                   {/* Volume control */}
@@ -199,7 +216,7 @@ const Index = () => {
                   >
                     <button 
                       onClick={() => setAudioVolume(audioVolume > 0 ? 0 : 0.7)}
-                      className="text-cream/70 hover:text-cream transition-colors p-1"
+                      className="text-foreground/70 hover:text-foreground transition-colors p-1"
                     >
                       {getVolumeIcon()}
                     </button>
@@ -221,7 +238,7 @@ const Index = () => {
                   </div>
                   
                   {isPlaying && (
-                    <div className="flex gap-0.5">
+                    <div className="flex gap-0.5 mr-4">
                       {[1,2,3].map((i) => (
                         <div 
                           key={i} 
@@ -238,7 +255,7 @@ const Index = () => {
                 
                 {/* Progress bar */}
                 <div 
-                  className="h-1.5 bg-cream/20 rounded-full cursor-pointer group"
+                  className="h-1.5 bg-foreground/20 rounded-full cursor-pointer group"
                   onClick={handleProgressClick}
                 >
                   <div 
@@ -250,7 +267,7 @@ const Index = () => {
                 </div>
                 
                 {/* Time display */}
-                <div className="flex justify-between mt-1 text-cream/50 text-xs">
+                <div className="flex justify-between mt-1 text-foreground/60 text-xs">
                   <span>{formatTime(audioProgress)}</span>
                   <span>{formatTime(audioDuration)}</span>
                 </div>
