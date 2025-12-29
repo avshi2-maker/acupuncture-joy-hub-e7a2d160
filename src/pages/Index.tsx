@@ -223,13 +223,13 @@ const Index = () => {
               <Volume2 className="h-4 w-4 text-cream/60 group-hover:text-gold transition-colors" />
             </div>
             
-            {/* Audio player popup - positioned ABOVE the name, draggable */}
+            {/* Audio player popup - positioned ABOVE the name, draggable, fully opaque */}
             {showAudioPlayer && (
               <div
-                className="fixed bg-cream/95 backdrop-blur-sm rounded-lg p-4 shadow-xl z-50 animate-fade-in min-w-[300px] border-2 border-gold/50"
+                className="fixed bg-cream rounded-lg p-4 shadow-2xl z-50 animate-fade-in min-w-[300px] border-2 border-gold"
                 style={{
                   left: `calc(50% + ${playerPosition.x}px)`,
-                  top: `calc(30% + ${playerPosition.y}px)`,
+                  top: `calc(20% + ${playerPosition.y}px)`,
                   transform: 'translate(-50%, -50%)',
                   cursor: isDragging ? 'grabbing' : 'default',
                 }}
@@ -237,11 +237,11 @@ const Index = () => {
               >
                 {/* Drag handle */}
                 <div 
-                  className="absolute top-0 left-0 right-0 h-8 bg-gold/20 rounded-t-lg cursor-grab flex items-center justify-center"
+                  className="absolute top-0 left-0 right-0 h-8 bg-gold/30 rounded-t-lg cursor-grab flex items-center justify-center"
                   onMouseDown={handleDragStart}
                 >
                   <div className="flex gap-1">
-                    <div className="w-8 h-1 bg-foreground/30 rounded-full" />
+                    <div className="w-8 h-1 bg-foreground/40 rounded-full" />
                   </div>
                 </div>
                 
