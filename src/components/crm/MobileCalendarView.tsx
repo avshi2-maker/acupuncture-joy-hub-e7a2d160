@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { SwipeableAppointmentCard } from './SwipeableAppointmentCard';
 import {
   ChevronLeft,
   ChevronRight,
@@ -59,6 +60,7 @@ interface MobileCalendarViewProps {
   onStartSession?: (appt: Appointment) => void;
   onRefresh?: () => Promise<void>;
   onQuickCreate?: (date: Date, hour: number) => void;
+  onStatusChange?: (apptId: string, newStatus: string) => Promise<void>;
 }
 
 export function MobileCalendarView({
@@ -70,6 +72,7 @@ export function MobileCalendarView({
   onStartSession,
   onRefresh,
   onQuickCreate,
+  onStatusChange,
 }: MobileCalendarViewProps) {
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
   const [showTimeSlots, setShowTimeSlots] = useState(false);
@@ -374,107 +377,16 @@ export function MobileCalendarView({
           ) : (
             todayAppointments.map((appt) => {
               const room = getRoom(appt.room_id);
-              const startTime = new Date(appt.start_time);
-              const endTime = new Date(appt.end_time);
-              const duration = differenceInMinutes(endTime, startTime);
               
               return (
-                <Card 
+                <SwipeableAppointmentCard
                   key={appt.id}
-                  className={cn(
-                    'border-l-4 overflow-hidden active:scale-[0.98] transition-transform',
-                    'border-border/50'
-                  )}
-                  style={{ borderLeftColor: room?.color || appt.color || '#3B82F6' }}
-                  onClick={() => onAppointmentClick(appt)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        {/* Patient/Title */}
-                        <div className="flex items-center gap-2 mb-1">
-                          <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          <span className="font-semibold truncate">
-                            {appt.patients?.full_name || appt.title}
-                          </span>
-                          {appt.is_recurring && (
-                            <Repeat className="h-3 w-3 text-purple-500 flex-shrink-0" />
-                          )}
-                        </div>
-                        
-                        {/* Time */}
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                          <Clock className="h-3.5 w-3.5" />
-                          <span>
-                            {format(startTime, 'h:mm a')} - {format(endTime, 'h:mm a')}
-                          </span>
-                          <Badge variant="outline" className="text-[10px] h-5">
-                            {duration} min
-                          </Badge>
-                        </div>
-                        
-                        {/* Room */}
-                        {room && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-                            <div className="flex items-center gap-1.5">
-                              <div 
-                                className="w-2 h-2 rounded-full" 
-                                style={{ backgroundColor: room.color }}
-                              />
-                              <span className="text-muted-foreground">{room.name}</span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Status & Actions */}
-                      <div className="flex flex-col items-end gap-2">
-                        <Badge className={cn('text-[10px]', getStatusColor(appt.status))}>
-                          {appt.status}
-                        </Badge>
-                        
-                        {appt.status === 'scheduled' && onStartSession && (
-                          <Button
-                            size="sm"
-                            className="h-8 px-3 bg-jade hover:bg-jade/90"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onStartSession(appt);
-                            }}
-                          >
-                            <Play className="h-3 w-3 mr-1" />
-                            Start
-                          </Button>
-                        )}
-                        
-                        {appt.patients?.phone && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 w-8 p-0 border-green-500/30 text-green-600"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const message = encodeURIComponent(
-                                `שלום ${appt.patients?.full_name}, תזכורת לתור שלך היום בשעה ${format(startTime, 'HH:mm')}`
-                              );
-                              window.open(`https://wa.me/${appt.patients?.phone?.replace(/\D/g, '')}?text=${message}`, '_blank');
-                            }}
-                          >
-                            <MessageCircle className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* Notes preview */}
-                    {appt.notes && (
-                      <p className="text-xs text-muted-foreground mt-2 line-clamp-2 bg-muted/30 rounded p-2">
-                        {appt.notes}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
+                  appointment={appt}
+                  room={room}
+                  onAppointmentClick={onAppointmentClick}
+                  onStartSession={onStartSession}
+                  onStatusChange={onStatusChange}
+                />
               );
             })
           )}
