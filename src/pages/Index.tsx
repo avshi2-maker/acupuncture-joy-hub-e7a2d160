@@ -1,9 +1,24 @@
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
-import { Volume2, VolumeX, Play, Pause, Volume1 } from "lucide-react";
+import {
+  Leaf,
+  MessageCircle,
+  Smartphone,
+  X,
+  Play as PlayIcon,
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  Home,
+  Volume2,
+  VolumeX,
+  Play,
+  Pause,
+  Volume1,
+  Info,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Leaf, MessageCircle, Smartphone, X, Play as PlayIcon, BookOpen, ChevronLeft, ChevronRight, Home } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import heroBg from "@/assets/hero-meridian-bg.png";
@@ -19,6 +34,7 @@ const promoVideos = [
 const Index = () => {
   const { t, language } = useLanguage();
   const [showInstallBanner, setShowInstallBanner] = useState(true);
+  const [showInstallTooltip, setShowInstallTooltip] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [showAudioPlayer, setShowAudioPlayer] = useState(false);
@@ -147,13 +163,15 @@ const Index = () => {
 
         {/* Text container - no background box */}
         <section className="relative z-10 w-full max-w-2xl text-center p-8 md:p-12">
-          {/* Dr. Sapir name with hover audio player */}
-          <div 
+          
+          {/* Dr. Sapir name with hover/click audio player */}
+          
+          <div
             className="relative inline-block group"
             onMouseEnter={() => setShowAudioPlayer(true)}
-            onMouseLeave={() => !isPlaying && setShowAudioPlayer(false)}
+            onClick={() => setShowAudioPlayer((v) => !v)}
           >
-            <div className="flex items-center justify-center gap-2 mb-1 cursor-pointer">
+            <div className="flex items-center justify-center gap-2 mb-1 cursor-pointer select-none">
               <Leaf className="h-6 w-6 text-cream" />
               <p className="text-lg md:text-xl font-display text-cream group-hover:text-gold transition-colors">
                 {t("drRoniSapir")}
@@ -163,7 +181,10 @@ const Index = () => {
             
             {/* Audio player popup - positioned ABOVE the name */}
             {showAudioPlayer && (
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-amber-100/95 backdrop-blur-sm rounded-lg p-4 shadow-xl z-20 animate-fade-in min-w-[280px] border border-gold/30">
+              <div
+                className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-cream/95 backdrop-blur-sm rounded-lg p-4 shadow-xl z-20 animate-fade-in min-w-[280px] border border-gold/30"
+                onClick={(e) => e.stopPropagation()}
+              >
                 {/* Close button */}
                 <button
                   onClick={(e) => {
@@ -296,58 +317,78 @@ const Index = () => {
         {/* Bottom buttons row - all three in one line */}
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3">
           {/* Watch Video Button */}
-          <button 
+          <button
             onClick={() => setShowVideoModal(true)}
             className="flex items-center gap-3 bg-foreground/80 hover:bg-foreground/90 backdrop-blur-sm text-cream px-4 py-3 rounded-full transition-all shadow-lg hover:shadow-xl hover:scale-105 group"
           >
             <div className="w-8 h-8 rounded-full bg-gold flex items-center justify-center animate-[pulse_2s_ease-in-out_infinite]">
               <PlayIcon className="h-4 w-4 text-foreground fill-foreground" />
             </div>
-            <span className="text-sm font-medium pr-2">Watch Short Video Clinic Presentation</span>
+            <span className="text-sm font-medium pr-2">{t("watchVideoCta")}</span>
           </button>
-          
+
           {/* CM Digital Encyclopedia Button */}
-          <Link 
+          <Link
             to="/encyclopedia"
             className="flex items-center gap-2 bg-gradient-to-r from-gold to-gold/80 hover:from-gold/90 hover:to-gold/70 text-foreground px-6 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl hover:scale-105 font-medium animate-[pulse_3s_ease-in-out_infinite]"
           >
             <BookOpen className="h-5 w-5" />
-            <span>CM Digital Encyclopedia</span>
+            <span>{t("encyclopediaCta")}</span>
           </Link>
-          
-          {/* Install App Button with hover explanation */}
+
+          {/* Install App Button with touch-friendly help */}
           {showInstallBanner && (
-            <div className="relative animate-fade-in group">
-              <Link 
+            <div className="relative animate-fade-in group flex items-center">
+              <Link
                 to="/install"
-                className="flex items-center gap-2 bg-jade hover:bg-jade/90 text-white px-4 py-3 rounded-full transition-all shadow-lg hover:shadow-xl hover:scale-105 font-medium text-sm animate-[pulse_2.5s_ease-in-out_infinite]"
+                className="flex items-center gap-2 bg-jade hover:bg-jade/90 text-cream px-4 py-3 rounded-full transition-all shadow-lg hover:shadow-xl hover:scale-105 font-medium text-sm animate-[pulse_2.5s_ease-in-out_infinite]"
               >
                 <Smartphone className="h-4 w-4" />
-                <span>Install App</span>
+                <span>{t("installAppCta")}</span>
               </Link>
-              
-              {/* Hover tooltip with install instructions */}
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-40">
+
+              {/* Help button (tap-friendly) */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowInstallTooltip((v) => !v);
+                }}
+                className="ml-2 w-10 h-10 rounded-full bg-foreground/70 hover:bg-foreground text-cream flex items-center justify-center transition-colors"
+                aria-label={t("installHelpAria")}
+              >
+                <Info className="h-5 w-5" />
+              </button>
+
+              {/* Tooltip: shows on hover (desktop) AND on tap via help button */}
+              <div
+                className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-3 transition-opacity duration-200 z-40 group-hover:opacity-100 group-hover:pointer-events-auto ${showInstallTooltip ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+              >
                 <div className="bg-foreground/95 text-cream rounded-lg p-3 shadow-xl min-w-[220px] text-xs">
-                  <p className="font-semibold mb-2 text-gold">📱 Install on your phone:</p>
+                  <p className="font-semibold mb-2 text-gold">{t("installTooltipTitle")}</p>
                   <div className="space-y-2">
                     <div>
-                      <p className="font-medium text-cream/90">🍎 iPhone/iPad:</p>
-                      <p className="text-cream/70">Share → Add to Home Screen</p>
+                      <p className="font-medium text-cream/90">{t("installTooltipIOS")}</p>
+                      <p className="text-cream/70">{t("installTooltipIOSStep")}</p>
                     </div>
                     <div>
-                      <p className="font-medium text-cream/90">🤖 Android:</p>
-                      <p className="text-cream/70">Menu ⋮ → Install App</p>
+                      <p className="font-medium text-cream/90">{t("installTooltipAndroid")}</p>
+                      <p className="text-cream/70">{t("installTooltipAndroidStep")}</p>
                     </div>
                   </div>
-                  <p className="mt-2 text-cream/50 italic">Click for detailed instructions</p>
+                  <p className="mt-2 text-cream/50 italic">{t("installTooltipFooter")}</p>
                   {/* Arrow */}
                   <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-foreground/95" />
                 </div>
               </div>
-              
-              <button 
-                onClick={(e) => { e.preventDefault(); setShowInstallBanner(false); }}
+
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowInstallTooltip(false);
+                  setShowInstallBanner(false);
+                }}
                 className="absolute -top-2 -right-2 bg-foreground/80 hover:bg-foreground text-cream rounded-full p-1 transition-colors"
                 aria-label="Close"
               >
@@ -372,10 +413,10 @@ const Index = () => {
             <button 
               onClick={() => setShowVideoModal(false)}
               className="absolute top-3 left-3 z-10 bg-white/20 hover:bg-white/30 text-white rounded-full px-3 py-2 transition-colors flex items-center gap-2"
-              aria-label="Back to main page"
+              aria-label={t("back")}
             >
               <Home className="h-4 w-4" />
-              <span className="text-sm">{language === "he" ? "חזרה" : "Back"}</span>
+              <span className="text-sm">{t("back")}</span>
             </button>
 
             {/* Close button */}

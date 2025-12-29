@@ -22,8 +22,39 @@ export const translations: Translations = {
   therapistRegister: { en: "Therapist Registration", he: "הרשמה למטפלים", ru: "Регистрация терапевта" },
   therapistLogin: { en: "Therapist Login", he: "כניסת מטפלים", ru: "Вход для терапевтов" },
   dashboard: { en: "Dashboard", he: "לוח בקרה", ru: "Панель управления" },
-  
-  // Clinic branding
+  back: { en: "Back", he: "חזרה", ru: "Назад" },
+
+  // Home page quick actions
+  watchVideoCta: {
+    en: "Watch Short Video Clinic Presentation",
+    he: "צפו בסרטון קצר על הקליניקה",
+    ru: "Смотреть короткое видео о клинике",
+  },
+  encyclopediaCta: {
+    en: "CM Digital Encyclopedia",
+    he: "אנציקלופדיה דיגיטלית לרפואה סינית",
+    ru: "Цифровая энциклопедия ТКМ",
+  },
+  installAppCta: { en: "Install App", he: "התקן אפליקציה", ru: "Установить приложение" },
+  installHelpAria: { en: "Install help", he: "עזרה בהתקנה", ru: "Помощь с установкой" },
+  installTooltipTitle: { en: "Install on your phone:", he: "התקנה לטלפון:", ru: "Установка на телефон:" },
+  installTooltipIOS: { en: "iPhone/iPad:", he: "אייפון/אייפד:", ru: "iPhone/iPad:" },
+  installTooltipIOSStep: {
+    en: "Share → Add to Home Screen",
+    he: "שיתוף → הוסף למסך הבית",
+    ru: "Поделиться → На экран «Домой»",
+  },
+  installTooltipAndroid: { en: "Android:", he: "אנדרואיד:", ru: "Android:" },
+  installTooltipAndroidStep: {
+    en: "Menu ⋮ → Install App",
+    he: "תפריט ⋮ → התקן אפליקציה",
+    ru: "Меню ⋮ → Установить приложение",
+  },
+  installTooltipFooter: {
+    en: "Tap for detailed instructions",
+    he: "לחץ להוראות מפורטות",
+    ru: "Нажмите для подробных инструкций",
+  },
   drRoniSapir: { en: "Dr Roni Sapir", he: "ד״ר רוני ספיר", ru: "Др. Рони Сапир" },
   clinicSubtitle: { en: "Complementary Medicine - Acupuncture Clinic", he: "רפואה משלימה - מרפאת דיקור", ru: "Комплементарная медицина - Клиника акупунктуры" },
   clinicTagline: { en: "Healing Through Balance with AI", he: "ריפוי דרך איזון עם AI", ru: "Исцеление через баланс с ИИ" },
