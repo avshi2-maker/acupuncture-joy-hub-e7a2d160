@@ -1,8 +1,9 @@
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { Volume2, VolumeX, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Leaf, MessageCircle, Smartphone, X, Play, BookOpen, ChevronLeft, ChevronRight, Home } from "lucide-react";
+import { Leaf, MessageCircle, Smartphone, X, Play as PlayIcon, BookOpen, ChevronLeft, ChevronRight, Home } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import heroBg from "@/assets/hero-meridian-bg.png";
@@ -20,6 +21,20 @@ const Index = () => {
   const [showInstallBanner, setShowInstallBanner] = useState(true);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [showAudioPlayer, setShowAudioPlayer] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  const toggleAudio = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
 
   const handleWhatsApp = () => {
     window.open("https://wa.me/972544634923", "_blank");
@@ -89,9 +104,62 @@ const Index = () => {
 
         {/* Text container - no background box */}
         <section className="relative z-10 w-full max-w-2xl text-center p-8 md:p-12">
-          <div className="flex items-center justify-center gap-2 mb-1">
-            <Leaf className="h-6 w-6 text-cream" />
-            <p className="text-lg md:text-xl font-display text-cream">{t("drRoniSapir")}</p>
+          {/* Dr. Sapir name with hover audio player */}
+          <div 
+            className="relative inline-block group"
+            onMouseEnter={() => setShowAudioPlayer(true)}
+            onMouseLeave={() => !isPlaying && setShowAudioPlayer(false)}
+          >
+            <div className="flex items-center justify-center gap-2 mb-1 cursor-pointer">
+              <Leaf className="h-6 w-6 text-cream" />
+              <p className="text-lg md:text-xl font-display text-cream group-hover:text-gold transition-colors">
+                {t("drRoniSapir")}
+              </p>
+              <Volume2 className="h-4 w-4 text-cream/60 group-hover:text-gold transition-colors" />
+            </div>
+            
+            {/* Audio player popup */}
+            {showAudioPlayer && (
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-foreground/90 backdrop-blur-sm rounded-lg p-3 shadow-xl z-20 animate-fade-in min-w-[200px]">
+                <audio 
+                  ref={audioRef} 
+                  src="/audio/roni_bio.mp3"
+                  onEnded={() => setIsPlaying(false)}
+                />
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={toggleAudio}
+                    className="w-10 h-10 rounded-full bg-gold hover:bg-gold/80 flex items-center justify-center transition-colors"
+                  >
+                    {isPlaying ? (
+                      <Pause className="h-5 w-5 text-foreground" />
+                    ) : (
+                      <Play className="h-5 w-5 text-foreground ml-0.5" />
+                    )}
+                  </button>
+                  <div className="flex-1">
+                    <p className="text-cream text-xs font-medium">
+                      {language === "he" ? "ביוגרפיה קולית" : "Voice Bio"}
+                    </p>
+                    <p className="text-cream/60 text-xs">Dr. Roni Sapir</p>
+                  </div>
+                  {isPlaying && (
+                    <div className="flex gap-0.5">
+                      {[1,2,3].map((i) => (
+                        <div 
+                          key={i} 
+                          className="w-1 bg-gold rounded-full animate-pulse"
+                          style={{ 
+                            height: `${8 + i * 4}px`,
+                            animationDelay: `${i * 0.15}s`
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
           <p className="text-sm md:text-base text-cream/80">
             {t("clinicSubtitle")}
@@ -130,7 +198,7 @@ const Index = () => {
             className="flex items-center gap-3 bg-foreground/80 hover:bg-foreground/90 backdrop-blur-sm text-cream px-4 py-3 rounded-full transition-all shadow-lg hover:shadow-xl hover:scale-105 group"
           >
             <div className="w-8 h-8 rounded-full bg-gold flex items-center justify-center animate-[pulse_2s_ease-in-out_infinite]">
-              <Play className="h-4 w-4 text-foreground fill-foreground" />
+              <PlayIcon className="h-4 w-4 text-foreground fill-foreground" />
             </div>
             <span className="text-sm font-medium pr-2">Watch Short Video Clinic Presentation</span>
           </button>
