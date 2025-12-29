@@ -49,7 +49,7 @@ import AdminDisclaimers from "./pages/AdminDisclaimers";
 import CMBrainQuestions from "./pages/CMBrainQuestions";
 import PointCoordinateEditor from "./pages/PointCoordinateEditor";
 import Contact from "./pages/Contact";
-
+import AdminPasswordGenerator from "./pages/AdminPasswordGenerator";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -99,6 +99,7 @@ const App = () => (
                     <Route path="/admin/feedback" element={<RequireTier><AdminFeedback /></RequireTier>} />
                     <Route path="/admin/knowledge" element={<RequireTier><KnowledgeRegistry /></RequireTier>} />
                     <Route path="/admin/disclaimers" element={<RequireTier><AdminDisclaimers /></RequireTier>} />
+                    <Route path="/admin/passwords" element={<RequireTier><AdminPasswordGenerator /></RequireTier>} />
 
                     <Route path="/knowledge-registry" element={<RequireTier><KnowledgeRegistry /></RequireTier>} />
                     <Route path="/bazi-calculator" element={<RequireTier><BaziCalculator /></RequireTier>} />
