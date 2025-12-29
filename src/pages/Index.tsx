@@ -6,9 +6,8 @@ import Header from "@/components/layout/Header";
 import Hero from "@/components/sections/Hero";
 import TherapistTeaser from "@/components/sections/TherapistTeaser";
 import TcmBrainPreview from "@/components/sections/TcmBrainPreview";
-import EnglishQASection from "@/components/sections/EnglishQASection";
 import BodyFiguresGallery from "@/components/sections/BodyFiguresGallery";
-import Contact from "@/components/sections/Contact";
+import HealingCTA from "@/components/sections/HealingCTA";
 import Footer from "@/components/layout/Footer";
 import InstallBanner from "@/components/pwa/InstallBanner";
 import { FloatingWhatsApp } from "@/components/ui/FloatingWhatsApp";
@@ -44,9 +43,8 @@ const Index = () => {
           <Hero />
           <TherapistTeaser />
           <BodyFiguresGallery />
-          <EnglishQASection />
           <TcmBrainPreview />
-          <Contact />
+          <HealingCTA />
         </main>
         <Footer />
         <InstallBanner />
