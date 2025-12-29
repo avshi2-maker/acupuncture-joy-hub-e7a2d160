@@ -9,6 +9,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { TierProvider } from "@/hooks/useTier";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import RequireTier from "@/components/auth/RequireTier";
+import { FloatingMusicPlayer } from "@/components/ui/FloatingMusicPlayer";
 
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -115,6 +116,7 @@ const App = () => (
 
                     <Route path="*" element={<NotFound />} />
                   </Routes>
+                  <FloatingMusicPlayer />
                 </BrowserRouter>
               </TooltipProvider>
             </TierProvider>

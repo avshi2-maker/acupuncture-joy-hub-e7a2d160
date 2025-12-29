@@ -41,7 +41,7 @@ import calendarBg from '@/assets/calendar-bg.png';
 import deskBg from '@/assets/desk-bg.png';
 import brainBg from '@/assets/brain-bg.png';
 import knowledgeBg from '@/assets/knowledge-bg.png';
-import { FloatingMusicPlayer } from '@/components/ui/FloatingMusicPlayer';
+
 
 // Phosphor-style glowing clock component
 function PhosphorClock() {
@@ -986,7 +986,6 @@ export default function Dashboard() {
           </Card>
         )}
       </main>
-      <FloatingMusicPlayer />
     </div>
     </>
   );
