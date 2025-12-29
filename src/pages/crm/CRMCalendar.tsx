@@ -44,6 +44,8 @@ import {
 } from 'lucide-react';
 import { WhatsAppReminderButton } from '@/components/crm/WhatsAppReminderButton';
 import { useSessionTimer } from '@/contexts/SessionTimerContext';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileCalendarView } from '@/components/crm/MobileCalendarView';
 
 interface Room {
   id: string;
@@ -86,6 +88,7 @@ const SLOT_HEIGHT = 60; // pixels per hour
 
 function CalendarContent() {
   const { startTimer, status: timerStatus } = useSessionTimer();
+  const isMobile = useIsMobile();
   
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'week'>('week');
@@ -644,6 +647,192 @@ function CalendarContent() {
     );
   };
 
+  // Mobile View - Vertical list with swipe navigation
+  if (isMobile) {
+    return (
+      <>
+        <MobileCalendarView
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
+          appointments={appointments}
+          rooms={rooms}
+          onAppointmentClick={setEditingAppt}
+          onStartSession={handleStartSession}
+        />
+        
+        {/* Edit Appointment Dialog - Also available on mobile */}
+        <Dialog open={!!editingAppt} onOpenChange={(open) => !open && setEditingAppt(null)}>
+          <DialogContent className="max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Appointment Details</DialogTitle>
+            </DialogHeader>
+            {editingAppt && (
+              <div className="space-y-4 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-jade/10 flex items-center justify-center">
+                    <User className="h-5 w-5 text-jade" />
+                  </div>
+                  <div>
+                    <p className="font-medium">{editingAppt.patients?.full_name || editingAppt.title}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {format(new Date(editingAppt.start_time), 'EEEE, MMMM d, yyyy')}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Time</p>
+                    <p className="font-medium">
+                      {format(new Date(editingAppt.start_time), 'h:mm a')} - {format(new Date(editingAppt.end_time), 'h:mm a')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Room</p>
+                    <p className="font-medium">
+                      {rooms.find(r => r.id === editingAppt.room_id)?.name || 'No room assigned'}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col gap-2">
+                  <Button
+                    className="w-full bg-jade hover:bg-jade/90"
+                    onClick={() => handleStartSession(editingAppt)}
+                  >
+                    <Play className="h-4 w-4 mr-2" />
+                    Start Session
+                  </Button>
+                  
+                  <Button
+                    variant="destructive"
+                    className="w-full"
+                    onClick={() => handleDeleteAppointment(editingAppt.id)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Add Appointment FAB */}
+        <Dialog open={showNewAppt} onOpenChange={setShowNewAppt}>
+          <DialogTrigger asChild>
+            <Button
+              size="icon"
+              className="fixed bottom-20 right-4 h-14 w-14 rounded-full bg-jade hover:bg-jade/90 shadow-lg z-50"
+            >
+              <Plus className="h-6 w-6" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>New Appointment</DialogTitle>
+            </DialogHeader>
+            {/* Mobile new appointment form - simplified */}
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Patient</Label>
+                <Select
+                  value={newAppt.patient_id}
+                  onValueChange={(v) => {
+                    const patient = patients.find(p => p.id === v);
+                    setNewAppt({ 
+                      ...newAppt, 
+                      patient_id: v,
+                      title: patient?.full_name || newAppt.title 
+                    });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select patient" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {patients.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.full_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start">
+                        <CalendarIcon className="h-4 w-4 mr-2" />
+                        {format(newAppt.date, 'MMM d')}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={newAppt.date}
+                        onSelect={(d) => d && setNewAppt({ ...newAppt, date: d })}
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Time</Label>
+                  <Select
+                    value={String(newAppt.start_hour)}
+                    onValueChange={(v) => setNewAppt({ ...newAppt, start_hour: parseInt(v) })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {HOURS.map((h) => (
+                        <SelectItem key={h} value={String(h)}>
+                          {format(setHours(new Date(), h), 'h a')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Duration</Label>
+                <Select
+                  value={String(newAppt.duration)}
+                  onValueChange={(v) => setNewAppt({ ...newAppt, duration: parseInt(v) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="30">30 min</SelectItem>
+                    <SelectItem value="45">45 min</SelectItem>
+                    <SelectItem value="60">1 hour</SelectItem>
+                    <SelectItem value="90">1.5 hours</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button
+                className="w-full bg-jade hover:bg-jade/90"
+                onClick={handleCreateAppointment}
+              >
+                Create Appointment
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
+
+  // Desktop View - Grid layout
   return (
     <div className="space-y-4 w-full">
         {/* Header */}
