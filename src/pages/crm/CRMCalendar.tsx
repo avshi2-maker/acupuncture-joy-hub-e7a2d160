@@ -658,6 +658,7 @@ function CalendarContent() {
           rooms={rooms}
           onAppointmentClick={setEditingAppt}
           onStartSession={handleStartSession}
+          onRefresh={fetchData}
         />
         
         {/* Edit Appointment Dialog - Also available on mobile */}
