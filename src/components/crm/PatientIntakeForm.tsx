@@ -974,20 +974,24 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
               control={form.control}
               name="consent_signed"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-4 border rounded-lg">
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-4 border border-destructive/30 rounded-lg bg-destructive/5">
                   <FormControl>
                     <Checkbox
                       checked={field.value}
                       onCheckedChange={field.onChange}
+                      className="border-destructive data-[state=checked]:bg-destructive"
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel className="text-base">
+                    <FormLabel className="text-base text-destructive font-semibold">
                       I have read and agree to the terms above *
                     </FormLabel>
-                    <FormDescription>
+                    <FormDescription className="text-destructive/80">
                       By checking this box, I acknowledge that I have read, understood, and agree to the informed consent.
                     </FormDescription>
+                    <p className="text-xs text-destructive font-medium mt-2 flex items-center gap-1">
+                      ⚠️ All patient data is saved exclusively on the Therapist's secure files – never stored on this application.
+                    </p>
                   </div>
                   <FormMessage />
                 </FormItem>
