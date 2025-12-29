@@ -2,10 +2,11 @@ import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Leaf, MessageCircle, Smartphone, X, Play, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
+import { Leaf, MessageCircle, Smartphone, X, Play, BookOpen, ChevronLeft, ChevronRight, Home } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import heroBg from "@/assets/hero-meridian-bg.png";
+import tcmClock from "@/assets/tcm-organ-clock.png";
 
 const promoVideos = [
   { src: "/videos/promo-1.mp4", titleHe: "הקליניקה שלנו - סיור וירטואלי", titleEn: "Our Clinic - Virtual Tour" },
@@ -52,6 +53,17 @@ const Index = () => {
         {/* Overlay for better text readability */}
         <div className="absolute inset-0 bg-jade/40" />
 
+        {/* Top left - Home button */}
+        <div className="absolute top-4 left-4 md:top-6 md:left-6 z-20">
+          <Link 
+            to="/"
+            className="flex items-center justify-center w-10 h-10 bg-cream/10 hover:bg-cream/20 backdrop-blur-sm rounded-full transition-all border border-cream/30"
+            aria-label="Home"
+          >
+            <Home className="h-5 w-5 text-cream" />
+          </Link>
+        </div>
+
         {/* Top right navigation */}
         <nav className="absolute top-4 right-4 md:top-6 md:right-6 z-20 flex items-center gap-3">
           <LanguageSwitcher />
@@ -64,9 +76,24 @@ const Index = () => {
             <span>WhatsApp</span>
           </button>
           
-          <Button asChild variant="outline" size="sm" className="border-cream/50 text-cream hover:bg-cream/10 hover:text-cream">
-            <Link to="/gate">{t("therapistLogin")}</Link>
-          </Button>
+          {/* Therapist Login with spinning clock background */}
+          <div className="relative group">
+            {/* Spinning TCM clock behind the button */}
+            <img 
+              src={tcmClock} 
+              alt="" 
+              className="absolute -inset-4 w-20 h-20 object-contain opacity-60 group-hover:opacity-90 animate-[spin_20s_linear_infinite] pointer-events-none"
+              style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
+            />
+            <Button 
+              asChild 
+              variant="outline" 
+              size="sm" 
+              className="relative z-10 border-gold bg-foreground/80 text-gold hover:bg-gold hover:text-foreground font-bold text-sm shadow-lg hover:shadow-xl transition-all hover:scale-110 animate-[pulse_2s_ease-in-out_infinite]"
+            >
+              <Link to="/gate">{t("therapistLogin")}</Link>
+            </Button>
+          </div>
         </nav>
 
         {/* Text container - no background box */}
