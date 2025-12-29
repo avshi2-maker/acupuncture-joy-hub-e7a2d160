@@ -1018,101 +1018,113 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                   <FormField
                     control={form.control}
                     name="sleep_quality"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <Moon className="h-4 w-4" />
-                          Sleep Quality
-                        </FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select..." />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="excellent">Excellent</SelectItem>
-                            <SelectItem value="good">Good</SelectItem>
-                            <SelectItem value="fair">Fair</SelectItem>
-                            <SelectItem value="poor">Poor</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Input
-                          placeholder="Additional details..."
-                          className="mt-2"
-                          value={customNotes.sleep_quality}
-                          onChange={(e) => setCustomNotes(prev => ({ ...prev, sleep_quality: e.target.value }))}
-                        />
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    render={({ field }) => {
+                      const labels: Record<string, string> = { excellent: 'Excellent', good: 'Good', fair: 'Fair', poor: 'Poor' };
+                      const hint = field.value ? `Selected: ${labels[field.value]}. Add notes...` : 'Additional details...';
+                      return (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <Moon className="h-4 w-4" />
+                            Sleep Quality
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select..." />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="excellent">Excellent</SelectItem>
+                              <SelectItem value="good">Good</SelectItem>
+                              <SelectItem value="fair">Fair</SelectItem>
+                              <SelectItem value="poor">Poor</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Input
+                            placeholder={hint}
+                            className="mt-2"
+                            value={customNotes.sleep_quality}
+                            onChange={(e) => setCustomNotes(prev => ({ ...prev, sleep_quality: e.target.value }))}
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
 
                   <FormField
                     control={form.control}
                     name="stress_level"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <Brain className="h-4 w-4" />
-                          Stress Level
-                        </FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select..." />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="low">Low</SelectItem>
-                            <SelectItem value="moderate">Moderate</SelectItem>
-                            <SelectItem value="high">High</SelectItem>
-                            <SelectItem value="severe">Severe</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Input
-                          placeholder="Additional details..."
-                          className="mt-2"
-                          value={customNotes.stress_level}
-                          onChange={(e) => setCustomNotes(prev => ({ ...prev, stress_level: e.target.value }))}
-                        />
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    render={({ field }) => {
+                      const labels: Record<string, string> = { low: 'Low', moderate: 'Moderate', high: 'High', severe: 'Severe' };
+                      const hint = field.value ? `Selected: ${labels[field.value]}. Add notes...` : 'Additional details...';
+                      return (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <Brain className="h-4 w-4" />
+                            Stress Level
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select..." />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="low">Low</SelectItem>
+                              <SelectItem value="moderate">Moderate</SelectItem>
+                              <SelectItem value="high">High</SelectItem>
+                              <SelectItem value="severe">Severe</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Input
+                            placeholder={hint}
+                            className="mt-2"
+                            value={customNotes.stress_level}
+                            onChange={(e) => setCustomNotes(prev => ({ ...prev, stress_level: e.target.value }))}
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
 
                   <FormField
                     control={form.control}
                     name="exercise_frequency"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <Activity className="h-4 w-4" />
-                          Exercise Frequency
-                        </FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select..." />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="daily">Daily</SelectItem>
-                            <SelectItem value="weekly">Weekly</SelectItem>
-                            <SelectItem value="occasionally">Occasionally</SelectItem>
-                            <SelectItem value="rarely">Rarely</SelectItem>
-                            <SelectItem value="never">Never</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Input
-                          placeholder="Additional details..."
-                          className="mt-2"
-                          value={customNotes.exercise_frequency}
-                          onChange={(e) => setCustomNotes(prev => ({ ...prev, exercise_frequency: e.target.value }))}
-                        />
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    render={({ field }) => {
+                      const labels: Record<string, string> = { daily: 'Daily', weekly: 'Weekly', occasionally: 'Occasionally', rarely: 'Rarely', never: 'Never' };
+                      const hint = field.value ? `Selected: ${labels[field.value]}. Add notes...` : 'Additional details...';
+                      return (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <Activity className="h-4 w-4" />
+                            Exercise Frequency
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select..." />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="daily">Daily</SelectItem>
+                              <SelectItem value="weekly">Weekly</SelectItem>
+                              <SelectItem value="occasionally">Occasionally</SelectItem>
+                              <SelectItem value="rarely">Rarely</SelectItem>
+                              <SelectItem value="never">Never</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Input
+                            placeholder={hint}
+                            className="mt-2"
+                            value={customNotes.exercise_frequency}
+                            onChange={(e) => setCustomNotes(prev => ({ ...prev, exercise_frequency: e.target.value }))}
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
                 </div>
 
@@ -1210,36 +1222,50 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                 <FormField
                   control={form.control}
                   name="constitution_type"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-2">
-                      <FormLabel>Constitution Type</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select constitution type..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="balanced">Balanced (平和)</SelectItem>
-                          <SelectItem value="qi_deficiency">Qi Deficiency (气虚)</SelectItem>
-                          <SelectItem value="yang_deficiency">Yang Deficiency (阳虚)</SelectItem>
-                          <SelectItem value="yin_deficiency">Yin Deficiency (阴虚)</SelectItem>
-                          <SelectItem value="phlegm_dampness">Phlegm-Dampness (痰湿)</SelectItem>
-                          <SelectItem value="damp_heat">Damp-Heat (湿热)</SelectItem>
-                          <SelectItem value="blood_stasis">Blood Stasis (血瘀)</SelectItem>
-                          <SelectItem value="qi_stagnation">Qi Stagnation (气郁)</SelectItem>
-                          <SelectItem value="special">Special Constitution (特禀)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Input
-                        placeholder="Additional notes about constitution..."
-                        className="mt-2"
-                        value={customNotes.constitution_type}
-                        onChange={(e) => setCustomNotes(prev => ({ ...prev, constitution_type: e.target.value }))}
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const labels: Record<string, string> = {
+                      balanced: 'Balanced',
+                      qi_deficiency: 'Qi Deficiency',
+                      yang_deficiency: 'Yang Deficiency',
+                      yin_deficiency: 'Yin Deficiency',
+                      phlegm_dampness: 'Phlegm-Dampness',
+                      damp_heat: 'Damp-Heat',
+                      blood_stasis: 'Blood Stasis',
+                      qi_stagnation: 'Qi Stagnation',
+                      special: 'Special Constitution',
+                    };
+                    const hint = field.value ? `Selected: ${labels[field.value]}. Add notes...` : 'Additional notes about constitution...';
+                    return (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>Constitution Type</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select constitution type..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="balanced">Balanced (平和)</SelectItem>
+                            <SelectItem value="qi_deficiency">Qi Deficiency (气虚)</SelectItem>
+                            <SelectItem value="yang_deficiency">Yang Deficiency (阳虚)</SelectItem>
+                            <SelectItem value="yin_deficiency">Yin Deficiency (阴虚)</SelectItem>
+                            <SelectItem value="phlegm_dampness">Phlegm-Dampness (痰湿)</SelectItem>
+                            <SelectItem value="damp_heat">Damp-Heat (湿热)</SelectItem>
+                            <SelectItem value="blood_stasis">Blood Stasis (血瘀)</SelectItem>
+                            <SelectItem value="qi_stagnation">Qi Stagnation (气郁)</SelectItem>
+                            <SelectItem value="special">Special Constitution (特禀)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          placeholder={hint}
+                          className="mt-2"
+                          value={customNotes.constitution_type}
+                          onChange={(e) => setCustomNotes(prev => ({ ...prev, constitution_type: e.target.value }))}
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
               </CardContent>
             </Card>
