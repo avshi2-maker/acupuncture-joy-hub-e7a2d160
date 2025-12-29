@@ -754,13 +754,25 @@ export default function Dashboard() {
         {/* Workflow Stepper Guide */}
         <Card className="mb-8 border-jade/20 bg-gradient-to-l from-jade/5 to-transparent opacity-0 animate-fade-in" style={{ animationDelay: '400ms', animationFillMode: 'forwards' }}>
           <CardContent className="py-6">
+            {/* Onboarding tip */}
+            <div className="text-center mb-4 text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-1 bg-jade/10 px-3 py-1 rounded-full">
+                💡 עקבו אחר 3 השלבים להתחלת טיפול מוצלח
+              </span>
+            </div>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-0">
               {/* Step 1: Schedule */}
-              <Link to="/crm/calendar" className="flex flex-col items-center group cursor-pointer">
+              <Link to="/crm/calendar" className="flex flex-col items-center group cursor-pointer relative">
+                {/* Current step indicator */}
+                {stats.appointmentsToday === 0 && (
+                  <div className="absolute -top-2 -right-2 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center animate-bounce">
+                    <span className="text-white text-xs font-bold">!</span>
+                  </div>
+                )}
                 <div className={`w-14 h-14 rounded-full border-2 flex items-center justify-center group-hover:scale-110 transition-all duration-300 ${
                   stats.appointmentsToday > 0 
                     ? 'bg-jade border-jade' 
-                    : 'bg-jade/10 border-jade group-hover:bg-jade'
+                    : 'bg-jade/10 border-jade group-hover:bg-jade ring-2 ring-amber-400 ring-offset-2'
                 }`}>
                   {stats.appointmentsToday > 0 ? (
                     <CheckCircle2 className="h-6 w-6 text-white" />
@@ -772,7 +784,7 @@ export default function Dashboard() {
                   1. קביעת תור
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {stats.appointmentsToday > 0 ? `${stats.appointmentsToday} תורים היום` : 'ביומן'}
+                  {stats.appointmentsToday > 0 ? `${stats.appointmentsToday} תורים היום ✓` : 'התחילו כאן →'}
                 </span>
               </Link>
 
@@ -784,11 +796,19 @@ export default function Dashboard() {
               <div className={`sm:hidden h-6 w-0.5 ${stats.appointmentsToday > 0 ? 'bg-jade' : 'bg-gradient-to-b from-jade/60 to-jade/20'}`}></div>
 
               {/* Step 2: Patient Consent */}
-              <Link to="/crm/patients" className="flex flex-col items-center group cursor-pointer">
+              <Link to="/crm/patients" className="flex flex-col items-center group cursor-pointer relative">
+                {/* Current step indicator */}
+                {stats.appointmentsToday > 0 && !stats.hasAppointmentWithConsent && (
+                  <div className="absolute -top-2 -right-2 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center animate-bounce">
+                    <span className="text-white text-xs font-bold">!</span>
+                  </div>
+                )}
                 <div className={`w-14 h-14 rounded-full border-2 flex items-center justify-center group-hover:scale-110 transition-all duration-300 ${
                   stats.hasAppointmentWithConsent 
                     ? 'bg-jade border-jade' 
-                    : 'bg-jade/10 border-jade/60 group-hover:bg-jade group-hover:border-jade'
+                    : stats.appointmentsToday > 0
+                      ? 'bg-jade/10 border-jade group-hover:bg-jade ring-2 ring-amber-400 ring-offset-2'
+                      : 'bg-jade/10 border-jade/60 group-hover:bg-jade group-hover:border-jade'
                 }`}>
                   {stats.hasAppointmentWithConsent ? (
                     <CheckCircle2 className="h-6 w-6 text-white" />
@@ -800,7 +820,7 @@ export default function Dashboard() {
                   2. הסכמת מטופל
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {stats.hasAppointmentWithConsent ? 'מוכן לטיפול ✓' : 'חתימה על טופס'}
+                  {stats.hasAppointmentWithConsent ? 'מוכן לטיפול ✓' : stats.appointmentsToday > 0 ? 'השלב הבא →' : 'חתימה על טופס'}
                 </span>
               </Link>
 
@@ -812,10 +832,16 @@ export default function Dashboard() {
               <div className={`sm:hidden h-6 w-0.5 ${stats.hasAppointmentWithConsent ? 'bg-jade' : 'bg-gradient-to-b from-jade/60 to-jade/20'}`}></div>
 
               {/* Step 3: Start Session */}
-              <Link to="/crm/calendar" className={`flex flex-col items-center ${stats.hasAppointmentWithConsent ? 'group cursor-pointer' : ''}`}>
+              <Link to="/crm/calendar" className={`flex flex-col items-center relative ${stats.hasAppointmentWithConsent ? 'group cursor-pointer' : ''}`}>
+                {/* Current step indicator */}
+                {stats.hasAppointmentWithConsent && (
+                  <div className="absolute -top-2 -right-2 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center animate-bounce">
+                    <span className="text-white text-xs font-bold">!</span>
+                  </div>
+                )}
                 <div className={`w-14 h-14 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
                   stats.hasAppointmentWithConsent 
-                    ? 'bg-jade/10 border-jade group-hover:bg-jade group-hover:scale-110' 
+                    ? 'bg-jade/10 border-jade group-hover:bg-jade group-hover:scale-110 ring-2 ring-amber-400 ring-offset-2' 
                     : 'bg-jade/10 border-jade/40'
                 }`}>
                   <Video className={`h-6 w-6 transition-colors ${stats.hasAppointmentWithConsent ? 'text-jade group-hover:text-white' : 'text-jade/60'}`} />
@@ -824,7 +850,7 @@ export default function Dashboard() {
                   3. התחלת טיפול
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {stats.hasAppointmentWithConsent ? 'לחץ להתחלה' : 'מהיומן'}
+                  {stats.hasAppointmentWithConsent ? 'לחץ להתחלה! 🎉' : 'מהיומן'}
                 </span>
               </Link>
             </div>
