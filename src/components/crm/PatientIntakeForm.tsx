@@ -12,13 +12,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { User, Heart, Baby, Activity, Utensils, Moon, Brain, AlertTriangle, FileSignature, PenTool, CheckCircle2, XCircle, Loader2, Calendar, BrainCircuit, Save } from 'lucide-react';
+import { User, Heart, Baby, Activity, Utensils, Moon, Brain, AlertTriangle, FileSignature, PenTool, CheckCircle2, XCircle, Loader2, Calendar, BrainCircuit, Save, ChevronLeft, ChevronRight } from 'lucide-react';
 import { SignaturePad } from './SignaturePad';
 import { MedicalDocumentUpload } from './MedicalDocumentUpload';
 import { DietNutritionSelect } from './DietNutritionSelect';
@@ -70,6 +70,21 @@ const basePatientSchema = z.object({
 });
 
 type PatientFormData = z.infer<typeof basePatientSchema>;
+
+// Step-specific field validation
+const stepFields: Record<number, (keyof PatientFormData)[]> = {
+  0: ['id_number', 'full_name', 'phone', 'date_of_birth', 'gender'],
+  1: ['chief_complaint'],
+  2: [], // Lifestyle is all optional
+  3: ['consent_signed'],
+};
+
+const stepTitles = [
+  { title: 'Personal Info', icon: User },
+  { title: 'Medical History', icon: Heart },
+  { title: 'Lifestyle', icon: Activity },
+  { title: 'Consent', icon: FileSignature },
+];
 
 // Age-specific questions
 const ageGroupQuestions = {
@@ -127,6 +142,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
   const [ageGroup, setAgeGroup] = useState<'child' | 'teen' | 'adult' | 'senior' | null>(null);
   const [ageSpecificAnswers, setAgeSpecificAnswers] = useState<Record<string, string>>({});
   const [pregnancyAnswers, setPregnancyAnswers] = useState<Record<string, string>>({});
@@ -142,6 +158,9 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
   const [idCheckStatus, setIdCheckStatus] = useState<'idle' | 'checking' | 'valid' | 'duplicate' | 'invalid_checksum'>('idle');
   const [isIdDuplicate, setIsIdDuplicate] = useState(false);
   const [idChecksumError, setIdChecksumError] = useState<string | null>(null);
+
+  const totalSteps = stepTitles.length;
+  const progress = ((currentStep + 1) / totalSteps) * 100;
 
   // Function to check if ID number is unique and valid
   const checkIdUniqueness = async (idNumber: string) => {
@@ -219,6 +238,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
       obstetric_history: '',
       consent_signed: false,
     },
+    mode: 'onChange', // Validate on change for better UX
   });
 
   const watchDob = form.watch('date_of_birth');
@@ -263,6 +283,49 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
         exercise_frequency: (data.exercise_frequency ?? undefined) as any,
         constitution_type: (data.constitution_type ?? undefined) as any,
       });
+    }
+  };
+
+  // Validate current step before proceeding
+  const validateCurrentStep = async (): Promise<boolean> => {
+    const fieldsToValidate = stepFields[currentStep];
+    
+    if (fieldsToValidate.length === 0) {
+      return true; // No required fields in this step
+    }
+
+    // Trigger validation for only the current step's fields
+    const result = await form.trigger(fieldsToValidate);
+    
+    if (!result) {
+      const errors = form.formState.errors;
+      const firstErrorField = fieldsToValidate.find(field => errors[field]);
+      if (firstErrorField && errors[firstErrorField]) {
+        toast.error(`Please fix: ${errors[firstErrorField]?.message}`);
+      }
+    }
+
+    // Additional check for ID duplicate
+    if (currentStep === 0 && isIdDuplicate) {
+      toast.error('ID number already exists in system');
+      return false;
+    }
+
+    return result;
+  };
+
+  const handleNext = async () => {
+    const isValid = await validateCurrentStep();
+    if (isValid && currentStep < totalSteps - 1) {
+      setCurrentStep(prev => prev + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentStep > 0) {
+      setCurrentStep(prev => prev - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -413,756 +476,834 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit, handleFormErrors)} className="space-y-8 scroll-smooth">
-        {/* Basic Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5 text-jade" />
-              Basic Information
-            </CardTitle>
-            <CardDescription>Patient personal details and contact information</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-6 md:grid-cols-2">
-            <FormField
-              control={form.control}
-              name="id_number"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    ID Number (ת.ז.) *
-                    {idCheckStatus === 'checking' && (
-                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    )}
-                    {idCheckStatus === 'valid' && (
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                    )}
-                    {idCheckStatus === 'duplicate' && (
-                      <XCircle className="h-4 w-4 text-destructive" />
-                    )}
-                    {idCheckStatus === 'invalid_checksum' && (
-                      <XCircle className="h-4 w-4 text-amber-500" />
-                    )}
-                  </FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="Enter ID number" 
-                      {...field}
-                      className={(isIdDuplicate || idCheckStatus === 'invalid_checksum') ? 'border-destructive focus-visible:ring-destructive' : ''}
-                      onBlur={(e) => {
-                        field.onBlur();
-                        checkIdUniqueness(e.target.value);
-                      }}
-                    />
-                  </FormControl>
-                  {isIdDuplicate && (
-                    <div className="text-sm text-destructive font-medium flex items-center gap-1">
-                      <XCircle className="h-4 w-4" />
-                      מספר ת.ז. כבר קיים במערכת! / ID number already exists!
-                    </div>
-                  )}
-                  {idChecksumError && (
-                    <div className="text-sm text-amber-600 font-medium flex items-center gap-1">
-                      <AlertTriangle className="h-4 w-4" />
-                      {idChecksumError}
-                    </div>
-                  )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="full_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Name *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter full name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="date_of_birth"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Date of Birth *</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  {ageGroup && (
-                    <FormDescription>
-                      Age Group: <span className="font-medium capitalize text-jade">{ageGroup}</span>
-                    </FormDescription>
-                  )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="gender"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Gender *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="female">Female</SelectItem>
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="+1 234 567 8900" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="email@example.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="occupation"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Occupation</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Teacher, Engineer" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem className="md:col-span-2">
-                  <FormLabel>Address</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Full address" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Emergency Contact */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-gold" />
-              Emergency Contact
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-6 md:grid-cols-2">
-            <FormField
-              control={form.control}
-              name="emergency_contact"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Contact Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Emergency contact name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="emergency_phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Contact Phone</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Emergency contact phone" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Medical History */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Heart className="h-5 w-5 text-destructive" />
-              Medical History
-            </CardTitle>
-            <CardDescription>Important medical information for treatment planning</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <FormField
-              control={form.control}
-              name="chief_complaint"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Chief Complaint *</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="What brings you in today? Main symptoms and concerns..." 
-                      className="min-h-[100px]"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid gap-6 md:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="medical_history"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Past Medical History</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Previous illnesses, surgeries, hospitalizations..." 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="allergies"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Allergies</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Food, medication, environmental allergies..." 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      <form onSubmit={form.handleSubmit(onSubmit, handleFormErrors)} className="space-y-6">
+        {/* Progress Bar & Step Indicator */}
+        <div className="sticky top-0 z-20 -mx-4 px-4 py-4 bg-background/95 backdrop-blur border-b">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">
+                Step {currentStep + 1} of {totalSteps}
+              </span>
+              <span className="font-medium flex items-center gap-2">
+                {(() => {
+                  const StepIcon = stepTitles[currentStep].icon;
+                  return <StepIcon className="h-4 w-4 text-jade" />;
+                })()}
+                {stepTitles[currentStep].title}
+              </span>
             </div>
+            <Progress value={progress} className="h-2" />
+            <div className="flex justify-between">
+              {stepTitles.map((step, index) => {
+                const StepIcon = step.icon;
+                const isCompleted = index < currentStep;
+                const isCurrent = index === currentStep;
+                return (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => {
+                      if (index < currentStep) {
+                        setCurrentStep(index);
+                      }
+                    }}
+                    disabled={index > currentStep}
+                    className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full transition-colors ${
+                      isCurrent 
+                        ? 'bg-jade/20 text-jade font-medium' 
+                        : isCompleted 
+                          ? 'text-jade cursor-pointer hover:bg-jade/10' 
+                          : 'text-muted-foreground cursor-not-allowed'
+                    }`}
+                  >
+                    {isCompleted ? (
+                      <CheckCircle2 className="h-3 w-3" />
+                    ) : (
+                      <StepIcon className="h-3 w-3" />
+                    )}
+                    <span className="hidden sm:inline">{step.title}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
 
-            <FormField
-              control={form.control}
-              name="medications"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Current Medications & Supplements</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="List all current medications, vitamins, and supplements with dosages..." 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        {/* Step 0: Basic Information */}
+        {currentStep === 0 && (
+          <>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5 text-jade" />
+                  Basic Information
+                </CardTitle>
+                <CardDescription>Patient personal details and contact information</CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-6 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="id_number"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        ID Number (ת.ז.) *
+                        {idCheckStatus === 'checking' && (
+                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        )}
+                        {idCheckStatus === 'valid' && (
+                          <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        )}
+                        {idCheckStatus === 'duplicate' && (
+                          <XCircle className="h-4 w-4 text-destructive" />
+                        )}
+                        {idCheckStatus === 'invalid_checksum' && (
+                          <XCircle className="h-4 w-4 text-amber-500" />
+                        )}
+                      </FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter ID number" 
+                          {...field}
+                          className={(isIdDuplicate || idCheckStatus === 'invalid_checksum') ? 'border-destructive focus-visible:ring-destructive' : ''}
+                          onBlur={(e) => {
+                            field.onBlur();
+                            checkIdUniqueness(e.target.value);
+                          }}
+                        />
+                      </FormControl>
+                      {isIdDuplicate && (
+                        <div className="text-sm text-destructive font-medium flex items-center gap-1">
+                          <XCircle className="h-4 w-4" />
+                          מספר ת.ז. כבר קיים במערכת! / ID number already exists!
+                        </div>
+                      )}
+                      {idChecksumError && (
+                        <div className="text-sm text-amber-600 font-medium flex items-center gap-1">
+                          <AlertTriangle className="h-4 w-4" />
+                          {idChecksumError}
+                        </div>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <Separator className="my-4" />
+                <FormField
+                  control={form.control}
+                  name="full_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter full name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            {/* Medical Document Upload */}
-            <MedicalDocumentUpload
-              maxFiles={5}
-              onFilesChange={setMedicalDocuments}
-            />
-          </CardContent>
-        </Card>
+                <FormField
+                  control={form.control}
+                  name="date_of_birth"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Date of Birth *</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      {ageGroup && (
+                        <FormDescription>
+                          Age Group: <span className="font-medium capitalize text-jade">{ageGroup}</span>
+                        </FormDescription>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-        {/* Pregnancy Section (conditional) */}
-        {watchGender === 'female' && (
-          <Card className="border-pink-200 bg-pink-50/30 dark:bg-pink-950/10">
+                <FormField
+                  control={form.control}
+                  name="gender"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Gender *</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select gender" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="female">Female</SelectItem>
+                          <SelectItem value="male">Male</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="+1 234 567 8900" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="email@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="occupation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Occupation</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Teacher, Engineer" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Address</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Full address" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Emergency Contact */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-gold" />
+                  Emergency Contact
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-6 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="emergency_contact"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contact Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Emergency contact name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="emergency_phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contact Phone</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Emergency contact phone" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        {/* Step 1: Medical History */}
+        {currentStep === 1 && (
+          <>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Heart className="h-5 w-5 text-destructive" />
+                  Medical History
+                </CardTitle>
+                <CardDescription>Important medical information for treatment planning</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="chief_complaint"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Chief Complaint *</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="What brings you in today? Main symptoms and concerns..." 
+                          className="min-h-[100px]"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid gap-6 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="medical_history"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Past Medical History</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Previous illnesses, surgeries, hospitalizations..." 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="allergies"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Allergies</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Food, medication, environmental allergies..." 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="medications"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Current Medications & Supplements</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="List all current medications, vitamins, and supplements with dosages..." 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Separator className="my-4" />
+
+                {/* Medical Document Upload */}
+                <MedicalDocumentUpload
+                  maxFiles={5}
+                  onFilesChange={setMedicalDocuments}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Pregnancy Section (conditional) */}
+            {watchGender === 'female' && (
+              <Card className="border-pink-200 bg-pink-50/30 dark:bg-pink-950/10">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Baby className="h-5 w-5 text-pink-500" />
+                    Pregnancy Information
+                  </CardTitle>
+                  <CardDescription>This section is important for treatment safety</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="is_pregnant"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Currently Pregnant</FormLabel>
+                          <FormDescription>
+                            Check this box if you are currently pregnant
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  {showPregnancySection && (
+                    <>
+                      <Separator />
+                      
+                      <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
+                        <p className="text-sm text-amber-800 dark:text-amber-200 flex items-center gap-2">
+                          <AlertTriangle className="h-4 w-4" />
+                          <strong>Important:</strong> Certain acupuncture points and herbs are contraindicated during pregnancy. Your practitioner will review this information carefully.
+                        </p>
+                      </div>
+
+                      <div className="grid gap-6 md:grid-cols-2">
+                        <FormField
+                          control={form.control}
+                          name="pregnancy_weeks"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Weeks Pregnant</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number" 
+                                  min={1} 
+                                  max={42}
+                                  placeholder="e.g., 12"
+                                  {...field}
+                                  value={field.value ?? ''}
+                                  onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="due_date"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Expected Due Date</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="date" 
+                                  {...field}
+                                  value={field.value ?? ''}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      {/* Pregnancy-specific questions */}
+                      <div className="space-y-4">
+                        {pregnancyQuestions.map((q) => (
+                          q.type !== 'info' && (
+                            <div key={q.id} className="space-y-2">
+                              <Label htmlFor={q.id}>{q.label}</Label>
+                              <Textarea
+                                id={q.id}
+                                placeholder={q.placeholder}
+                                value={pregnancyAnswers[q.id] || ''}
+                                onChange={(e) => setPregnancyAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
+                              />
+                            </div>
+                          )
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Age-Specific Questions (conditional) */}
+            {ageGroup && currentAgeQuestions.length > 0 && (
+              <Card className="border-blue-200 bg-blue-50/30 dark:bg-blue-950/10">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5 text-blue-500" />
+                    {ageGroup === 'child' && 'Child-Specific Assessment'}
+                    {ageGroup === 'teen' && 'Teen-Specific Assessment'}
+                    {ageGroup === 'adult' && 'Adult Health Assessment'}
+                    {ageGroup === 'senior' && 'Senior Health Assessment'}
+                  </CardTitle>
+                  <CardDescription>
+                    Questions tailored for the {ageGroup} age group
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {currentAgeQuestions.map((q) => (
+                    <div key={q.id} className="space-y-2">
+                      <Label htmlFor={`age-${q.id}`}>{q.label}</Label>
+                      <Textarea
+                        id={`age-${q.id}`}
+                        placeholder={q.placeholder}
+                        value={ageSpecificAnswers[q.id] || ''}
+                        onChange={(e) => setAgeSpecificAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
+                      />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+          </>
+        )}
+
+        {/* Step 2: Lifestyle */}
+        {currentStep === 2 && (
+          <>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-bamboo" />
+                  Lifestyle Assessment
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-6 md:grid-cols-3">
+                  <FormField
+                    control={form.control}
+                    name="sleep_quality"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Moon className="h-4 w-4" />
+                          Sleep Quality
+                        </FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="excellent">Excellent</SelectItem>
+                            <SelectItem value="good">Good</SelectItem>
+                            <SelectItem value="fair">Fair</SelectItem>
+                            <SelectItem value="poor">Poor</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="stress_level"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Brain className="h-4 w-4" />
+                          Stress Level
+                        </FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="low">Low</SelectItem>
+                            <SelectItem value="moderate">Moderate</SelectItem>
+                            <SelectItem value="high">High</SelectItem>
+                            <SelectItem value="severe">Severe</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="exercise_frequency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Activity className="h-4 w-4" />
+                          Exercise Frequency
+                        </FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="daily">Daily</SelectItem>
+                            <SelectItem value="weekly">Weekly</SelectItem>
+                            <SelectItem value="occasionally">Occasionally</SelectItem>
+                            <SelectItem value="rarely">Rarely</SelectItem>
+                            <SelectItem value="never">Never</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Diet & Nutrition Multi-Select */}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Utensils className="h-4 w-4" />
+                    Diet & Nutrition
+                  </Label>
+                  <DietNutritionSelect
+                    value={dietHabits}
+                    onChange={setDietHabits}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="diet_notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Additional Diet Notes</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Any additional dietary notes, restrictions, allergies..." 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="lifestyle_notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Additional Lifestyle Notes</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Any other relevant lifestyle information..." 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            {/* TCM Assessment */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-jade">
+                  TCM Assessment
+                </CardTitle>
+                <CardDescription>Traditional Chinese Medicine diagnostic notes (for practitioner use)</CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-6 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="tongue_notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tongue Diagnosis</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Color, coating, shape, moisture..." 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="pulse_notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Pulse Diagnosis</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Rate, rhythm, quality, position..." 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="constitution_type"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Constitution Type</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select constitution type..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="balanced">Balanced (平和)</SelectItem>
+                          <SelectItem value="qi_deficiency">Qi Deficiency (气虚)</SelectItem>
+                          <SelectItem value="yang_deficiency">Yang Deficiency (阳虚)</SelectItem>
+                          <SelectItem value="yin_deficiency">Yin Deficiency (阴虚)</SelectItem>
+                          <SelectItem value="phlegm_dampness">Phlegm-Dampness (痰湿)</SelectItem>
+                          <SelectItem value="damp_heat">Damp-Heat (湿热)</SelectItem>
+                          <SelectItem value="blood_stasis">Blood Stasis (血瘀)</SelectItem>
+                          <SelectItem value="qi_stagnation">Qi Stagnation (气郁)</SelectItem>
+                          <SelectItem value="special">Special Constitution (特禀)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+          </>
+        )}
+
+        {/* Step 3: Consent */}
+        {currentStep === 3 && (
+          <Card className="border-jade/30 bg-jade/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Baby className="h-5 w-5 text-pink-500" />
-                Pregnancy Information
+                <FileSignature className="h-5 w-5 text-jade" />
+                Informed Consent
               </CardTitle>
-              <CardDescription>This section is important for treatment safety</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4">
+              <div className="p-4 rounded-lg bg-background/80 border text-sm space-y-3">
+                <p><strong>Treatment Consent:</strong> I understand that Traditional Chinese Medicine (TCM), including acupuncture, cupping, moxibustion, and herbal medicine, are forms of healthcare that may provide benefits but also carry certain risks.</p>
+                <p><strong>Acupuncture:</strong> May cause minor bruising, bleeding, or temporary discomfort. Rare risks include infection or nerve damage.</p>
+                <p><strong>Herbal Medicine:</strong> May interact with medications or cause allergic reactions. I agree to inform my practitioner of all medications and supplements I take.</p>
+                <p><strong>Privacy:</strong> I consent to the collection and storage of my health information for treatment purposes, in accordance with privacy regulations.</p>
+              </div>
+
               <FormField
                 control={form.control}
-                name="is_pregnant"
+                name="consent_signed"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-4 border border-destructive/30 rounded-lg bg-destructive/5">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
                         onCheckedChange={field.onChange}
+                        className="border-destructive data-[state=checked]:bg-destructive"
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel>Currently Pregnant</FormLabel>
-                      <FormDescription>
-                        Check this box if you are currently pregnant
-                      </FormDescription>
+                      <FormLabel className="text-base font-medium">
+                        I agree to the terms above and consent to treatment *
+                      </FormLabel>
+                      <p className="text-sm text-muted-foreground" dir="rtl">
+                        אני מסכים/ה לתנאים לעיל ומאשר/ת טיפול
+                      </p>
+                      <div className="text-xs text-destructive/80 mt-2 font-medium">
+                        ⚠️ All patient data is saved exclusively on the Therapist's secure files – never stored on this application.
+                      </div>
                     </div>
-                  </FormItem>
-                )}
-              />
-
-              {showPregnancySection && (
-                <>
-                  <Separator />
-                  
-                  <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
-                    <p className="text-sm text-amber-800 dark:text-amber-200 flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4" />
-                      <strong>Important:</strong> Certain acupuncture points and herbs are contraindicated during pregnancy. Your practitioner will review this information carefully.
-                    </p>
-                  </div>
-
-                  <div className="grid gap-6 md:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="pregnancy_weeks"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Weeks Pregnant</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              min={1} 
-                              max={42}
-                              placeholder="e.g., 12"
-                              {...field}
-                              value={field.value ?? ''}
-                              onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="due_date"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Expected Due Date</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="date" 
-                              {...field}
-                              value={field.value ?? ''}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  {/* Pregnancy-specific questions */}
-                  <div className="space-y-4">
-                    {pregnancyQuestions.map((q) => (
-                      q.type !== 'info' && (
-                        <div key={q.id} className="space-y-2">
-                          <Label htmlFor={q.id}>{q.label}</Label>
-                          <Textarea
-                            id={q.id}
-                            placeholder={q.placeholder}
-                            value={pregnancyAnswers[q.id] || ''}
-                            onChange={(e) => setPregnancyAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
-                          />
-                        </div>
-                      )
-                    ))}
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Age-Specific Questions (conditional) */}
-        {ageGroup && currentAgeQuestions.length > 0 && (
-          <Card className="border-blue-200 bg-blue-50/30 dark:bg-blue-950/10">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5 text-blue-500" />
-                {ageGroup === 'child' && 'Child-Specific Assessment'}
-                {ageGroup === 'teen' && 'Teen-Specific Assessment'}
-                {ageGroup === 'adult' && 'Adult Health Assessment'}
-                {ageGroup === 'senior' && 'Senior Health Assessment'}
-              </CardTitle>
-              <CardDescription>
-                Questions tailored for the {ageGroup} age group
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {currentAgeQuestions.map((q) => (
-                <div key={q.id} className="space-y-2">
-                  <Label htmlFor={`age-${q.id}`}>{q.label}</Label>
-                  <Textarea
-                    id={`age-${q.id}`}
-                    placeholder={q.placeholder}
-                    value={ageSpecificAnswers[q.id] || ''}
-                    onChange={(e) => setAgeSpecificAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
-                  />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Lifestyle */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-bamboo" />
-              Lifestyle Assessment
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-3">
-              <FormField
-                control={form.control}
-                name="sleep_quality"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Moon className="h-4 w-4" />
-                      Sleep Quality
-                    </FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select..." />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="excellent">Excellent</SelectItem>
-                        <SelectItem value="good">Good</SelectItem>
-                        <SelectItem value="fair">Fair</SelectItem>
-                        <SelectItem value="poor">Poor</SelectItem>
-                      </SelectContent>
-                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="stress_level"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Brain className="h-4 w-4" />
-                      Stress Level
-                    </FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select..." />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="moderate">Moderate</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="severe">Severe</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="exercise_frequency"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Activity className="h-4 w-4" />
-                      Exercise Frequency
-                    </FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select..." />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="daily">Daily</SelectItem>
-                        <SelectItem value="weekly">Weekly</SelectItem>
-                        <SelectItem value="occasionally">Occasionally</SelectItem>
-                        <SelectItem value="rarely">Rarely</SelectItem>
-                        <SelectItem value="never">Never</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Diet & Nutrition Multi-Select */}
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <Utensils className="h-4 w-4" />
-                Diet & Nutrition
-              </Label>
-              <DietNutritionSelect
-                value={dietHabits}
-                onChange={setDietHabits}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="diet_notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Additional Diet Notes</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Any additional dietary notes, restrictions, allergies..." 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="lifestyle_notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Additional Lifestyle Notes</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Any other relevant lifestyle information..." 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
-
-        {/* TCM Assessment */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-jade">
-              TCM Assessment
-            </CardTitle>
-            <CardDescription>Traditional Chinese Medicine diagnostic notes (for practitioner use)</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-6 md:grid-cols-2">
-            <FormField
-              control={form.control}
-              name="tongue_notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tongue Diagnosis</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Color, coating, shape, moisture..." 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="pulse_notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Pulse Diagnosis</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Rate, rhythm, quality, position..." 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="constitution_type"
-              render={({ field }) => (
-                <FormItem className="md:col-span-2">
-                  <FormLabel>Constitution Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select constitution type..." />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="balanced">Balanced (平和)</SelectItem>
-                      <SelectItem value="qi_deficiency">Qi Deficiency (气虚)</SelectItem>
-                      <SelectItem value="yang_deficiency">Yang Deficiency (阳虚)</SelectItem>
-                      <SelectItem value="yin_deficiency">Yin Deficiency (阴虚)</SelectItem>
-                      <SelectItem value="phlegm_dampness">Phlegm-Dampness (痰湿)</SelectItem>
-                      <SelectItem value="damp_heat">Damp-Heat (湿热)</SelectItem>
-                      <SelectItem value="blood_stasis">Blood Stasis (血瘀)</SelectItem>
-                      <SelectItem value="qi_stagnation">Qi Stagnation (气郁)</SelectItem>
-                      <SelectItem value="special">Special Constitution (特禀)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Consent */}
-        <Card className="border-jade/30 bg-jade/5">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileSignature className="h-5 w-5 text-jade" />
-              Informed Consent
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="p-4 rounded-lg bg-background/80 border text-sm space-y-3">
-              <p><strong>Treatment Consent:</strong> I understand that Traditional Chinese Medicine (TCM), including acupuncture, cupping, moxibustion, and herbal medicine, are forms of healthcare that may provide benefits but also carry certain risks.</p>
-              <p><strong>Acupuncture:</strong> May cause minor bruising, bleeding, or temporary discomfort. Rare risks include infection or nerve damage.</p>
-              <p><strong>Herbal Medicine:</strong> May interact with medications or cause allergic reactions. I agree to inform my practitioner of all medications and supplements I take.</p>
-              <p><strong>Privacy:</strong> I consent to the collection and storage of my health information for treatment purposes, in accordance with privacy regulations.</p>
-            </div>
-
-            <FormField
-              control={form.control}
-              name="consent_signed"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-4 border border-destructive/30 rounded-lg bg-destructive/5">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      className="border-destructive data-[state=checked]:bg-destructive"
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel className="text-base text-destructive font-semibold">
-                      I have read and agree to the terms above *
-                    </FormLabel>
-                    <FormDescription className="text-destructive/80">
-                      By checking this box, I acknowledge that I have read, understood, and agree to the informed consent.
-                    </FormDescription>
-                    <p className="text-xs text-destructive font-medium mt-2 flex items-center gap-1">
-                      ⚠️ All patient data is saved exclusively on the Therapist's secure files – never stored on this application.
-                    </p>
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Signature Pad */}
-            <Separator className="my-4" />
-            
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <PenTool className="h-4 w-4 text-jade" />
-                <Label className="text-base font-medium">Patient Signature</Label>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Please sign below to confirm your consent to treatment
-              </p>
+              {/* Signature Pad */}
+              <Separator className="my-4" />
               
-              {/* Privacy Notice */}
-              <div className="p-3 rounded-lg border border-destructive/30 bg-destructive/5">
-                <p className="text-xs text-destructive font-medium flex items-center gap-1">
-                  ⚠️ Signature is saved exclusively on the Therapist's secure files – never stored on this application.
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <PenTool className="h-4 w-4 text-jade" />
+                  <Label className="text-base font-medium">Patient Signature</Label>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Please sign below to confirm your consent to treatment
                 </p>
-                <p className="text-xs text-destructive/80 mt-1" dir="rtl">
-                  החתימה נשמרת בתיק המטפל בלבד – לעולם לא מאוחסנת באפליקציה זו.
-                </p>
+                
+                {/* Privacy Notice */}
+                <div className="p-3 rounded-lg border border-destructive/30 bg-destructive/5">
+                  <p className="text-xs text-destructive font-medium flex items-center gap-1">
+                    ⚠️ Signature is saved exclusively on the Therapist's secure files – never stored on this application.
+                  </p>
+                  <p className="text-xs text-destructive/80 mt-1" dir="rtl">
+                    החתימה נשמרת בתיק המטפל בלבד – לעולם לא מאוחסנת באפליקציה זו.
+                  </p>
+                </div>
+
+                <SignaturePad
+                  onSave={(dataUrl) => {
+                    setSignatureDataUrl(dataUrl);
+                    toast.success('Signature captured');
+                  }}
+                  onClear={() => setSignatureDataUrl(null)}
+                  disabled={loading}
+                />
+                {signatureDataUrl && (
+                  <p className="text-sm text-jade flex items-center gap-2">
+                    ✓ Signature captured successfully
+                  </p>
+                )}
               </div>
+            </CardContent>
+          </Card>
+        )}
 
-              <SignaturePad
-                onSave={(dataUrl) => {
-                  setSignatureDataUrl(dataUrl);
-                  toast.success('Signature captured');
-                }}
-                onClear={() => setSignatureDataUrl(null)}
-                disabled={loading}
-              />
-              {signatureDataUrl && (
-                <p className="text-sm text-jade flex items-center gap-2">
-                  ✓ Signature captured successfully
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Sticky Save Bar */}
+        {/* Navigation Bar */}
         <div className="sticky bottom-0 z-10 -mx-4 px-4 py-4 bg-background/95 backdrop-blur border-t shadow-lg">
           <div className="flex items-center justify-between gap-4">
             <Button 
               type="button" 
               variant="outline" 
-              onClick={() => navigate('/crm/patients')}
+              onClick={currentStep === 0 ? () => navigate('/crm/patients') : handlePrevious}
+              className="gap-2"
             >
-              Cancel
+              <ChevronLeft className="h-4 w-4" />
+              {currentStep === 0 ? 'Cancel' : 'Previous'}
             </Button>
-            <div className="flex items-center gap-2">
+            
+            {currentStep < totalSteps - 1 ? (
+              <Button 
+                type="button"
+                onClick={handleNext}
+                className="bg-jade hover:bg-jade/90 gap-2"
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            ) : (
               <Button 
                 type="submit" 
                 disabled={loading}
@@ -1171,7 +1312,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                 <Save className="h-4 w-4" />
                 {loading ? 'Saving...' : patientId ? 'Update & Choose Next' : 'Save & Choose Next'}
               </Button>
-            </div>
+            )}
           </div>
         </div>
       </form>
