@@ -6,7 +6,7 @@ import { Leaf, MessageCircle, Smartphone, X, Play, BookOpen, ChevronLeft, Chevro
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import heroBg from "@/assets/hero-meridian-bg.png";
-import tcmClock from "@/assets/tcm-organ-clock.png";
+// tcm-organ-clock image removed
 
 const promoVideos = [
   { src: "/videos/promo-1.mp4", titleHe: "הקליניקה שלנו - סיור וירטואלי", titleEn: "Our Clinic - Virtual Tour" },
@@ -76,24 +76,15 @@ const Index = () => {
             <span>WhatsApp</span>
           </button>
           
-          {/* Therapist Login with spinning clock background */}
-          <div className="relative group">
-            {/* Spinning TCM clock behind the button */}
-            <img 
-              src={tcmClock} 
-              alt="" 
-              className="absolute -inset-4 w-20 h-20 object-contain opacity-60 group-hover:opacity-90 animate-[spin_20s_linear_infinite] pointer-events-none"
-              style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
-            />
-            <Button 
-              asChild 
-              variant="outline" 
-              size="sm" 
-              className="relative z-10 border-gold bg-foreground/80 text-gold hover:bg-gold hover:text-foreground font-bold text-sm shadow-lg hover:shadow-xl transition-all hover:scale-110 animate-[pulse_2s_ease-in-out_infinite]"
-            >
-              <Link to="/gate">{t("therapistLogin")}</Link>
-            </Button>
-          </div>
+          {/* Therapist Login Button with pulsing animation */}
+          <Button 
+            asChild 
+            variant="outline" 
+            size="sm" 
+            className="border-gold bg-foreground/80 text-gold hover:bg-gold hover:text-foreground font-bold text-sm shadow-lg hover:shadow-xl transition-all hover:scale-110 animate-[pulse_2s_ease-in-out_infinite]"
+          >
+            <Link to="/gate">{t("therapistLogin")}</Link>
+          </Button>
         </nav>
 
         {/* Text container - no background box */}
@@ -178,6 +169,16 @@ const Index = () => {
             className="relative w-full max-w-4xl bg-black rounded-xl overflow-hidden shadow-2xl animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Back button */}
+            <button 
+              onClick={() => setShowVideoModal(false)}
+              className="absolute top-3 left-3 z-10 bg-white/20 hover:bg-white/30 text-white rounded-full px-3 py-2 transition-colors flex items-center gap-2"
+              aria-label="Back to main page"
+            >
+              <Home className="h-4 w-4" />
+              <span className="text-sm">{language === "he" ? "חזרה" : "Back"}</span>
+            </button>
+
             {/* Close button */}
             <button 
               onClick={() => setShowVideoModal(false)}
@@ -188,7 +189,7 @@ const Index = () => {
             </button>
 
             {/* Video title - show both Hebrew and English */}
-            <div className="absolute top-3 left-3 z-10 bg-black/60 backdrop-blur-sm px-4 py-2 rounded-lg">
+            <div className="absolute top-14 left-3 z-10 bg-black/60 backdrop-blur-sm px-4 py-2 rounded-lg">
               <p className="text-white font-medium text-sm md:text-base" dir="rtl">
                 {currentVideo.titleHe}
               </p>
