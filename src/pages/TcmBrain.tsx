@@ -68,9 +68,11 @@ import {
   Square,
   Download,
   Mail,
-  FileDown
+  FileDown,
+  Save
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Link } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { useTcmSessionHistory, TcmSession, VoiceNoteData } from '@/hooks/useTcmSessionHistory';
@@ -489,6 +491,46 @@ export default function TcmBrain() {
       totalResponses: messages.filter(m => m.role === 'assistant').length
     };
     openWhatsAppWithSession(sessionData);
+  };
+
+  // Manual save session
+  const manualSaveSession = () => {
+    if (messages.length === 0) {
+      toast.error('No session data to save');
+      return;
+    }
+    
+    const voiceNoteData = voiceNotes.map(vn => ({
+      id: vn.id,
+      transcription: vn.transcription,
+      duration: vn.duration,
+      timestamp: vn.timestamp
+    }));
+    
+    const sessionData: TcmSession = {
+      id: `TCM-${sessionStartTime?.getTime() || Date.now()}`,
+      startTime: sessionStartTime?.toISOString() || new Date().toISOString(),
+      endTime: new Date().toISOString(),
+      duration: formatSessionTime(sessionSeconds),
+      durationSeconds: sessionSeconds,
+      questionsAsked: questionsAsked,
+      conversationHistory: messages.map(m => ({
+        role: m.role,
+        content: m.content,
+        timestamp: new Date().toISOString()
+      })),
+      totalQuestions: questionsAsked.length,
+      totalResponses: messages.filter(m => m.role === 'assistant').length,
+      patientName: selectedPatient?.name,
+      patientEmail: selectedPatient?.email,
+      patientPhone: selectedPatient?.phone,
+      voiceNotes: voiceNoteData,
+      templateUsed: activeTemplate || undefined
+    };
+    
+    saveSession(sessionData);
+    setLastAutoSave(new Date());
+    toast.success('Session saved');
   };
 
   const [disclaimerStatus, setDisclaimerStatus] = useState<DisclaimerStatus>(() => {
@@ -1162,28 +1204,87 @@ export default function TcmBrain() {
                   </div>
                 )}
                 
-                {/* Auto-save indicator */}
-                {lastAutoSave && isSessionRunning && (
-                  <div className="flex items-center gap-1 ml-1 border-l border-border/50 pl-1.5" title={`Last saved: ${lastAutoSave.toLocaleTimeString()}`}>
-                    <div className="w-1.5 h-1.5 rounded-full bg-jade animate-pulse" />
-                    <span className="text-[9px] text-muted-foreground">
-                      Saved {lastAutoSave.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
+                {/* Auto-save indicator with manual save */}
+                {isSessionRunning && (
+                  <div className="flex items-center gap-1 ml-1 border-l border-border/50 pl-1.5">
+                    {lastAutoSave && (
+                      <>
+                        <div className="w-1.5 h-1.5 rounded-full bg-jade animate-pulse" />
+                        <span className="text-[9px] text-muted-foreground" title={`Last saved: ${lastAutoSave.toLocaleTimeString()}`}>
+                          {lastAutoSave.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-5 w-5 p-0"
+                      onClick={manualSaveSession}
+                      title="Save session now"
+                    >
+                      <Save className="h-3 w-3 text-jade" />
+                    </Button>
                   </div>
                 )}
               </div>
               
-              {/* Patient History Preview - show when patient selected */}
+              {/* Patient History Preview with Popover - show when patient selected */}
               {selectedPatient && patientSessions.length > 0 && (
-                <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded bg-muted/30 border border-border/30">
-                  <History className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-[10px] text-muted-foreground">
-                    {patientSessions.length} past session{patientSessions.length !== 1 ? 's' : ''}
-                  </span>
-                  <span className="text-[10px] text-jade">
-                    Last: {new Date(patientSessions[0].startTime).toLocaleDateString()}
-                  </span>
-                </div>
+                <HoverCard openDelay={200}>
+                  <HoverCardTrigger asChild>
+                    <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded bg-muted/30 border border-border/30 cursor-pointer hover:bg-muted/50 transition-colors">
+                      <History className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-[10px] text-muted-foreground">
+                        {patientSessions.length} past session{patientSessions.length !== 1 ? 's' : ''}
+                      </span>
+                      <span className="text-[10px] text-jade">
+                        Last: {new Date(patientSessions[0].startTime).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </HoverCardTrigger>
+                  <HoverCardContent className="w-80 p-0" align="start">
+                    <div className="p-3 border-b border-border/50">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-jade" />
+                        <span className="font-medium text-sm">{selectedPatient.name}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">Past session history</p>
+                    </div>
+                    <ScrollArea className="max-h-64">
+                      <div className="p-2 space-y-2">
+                        {patientSessions.map((session, idx) => (
+                          <div key={session.id} className="p-2 rounded bg-muted/30 border border-border/30">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs font-medium">
+                                {new Date(session.startTime).toLocaleDateString()}
+                              </span>
+                              <Badge variant="outline" className="text-[9px] h-4">
+                                {session.duration}
+                              </Badge>
+                            </div>
+                            <div className="text-[10px] text-muted-foreground">
+                              {session.questionsAsked.length} questions • {session.totalResponses} responses
+                            </div>
+                            {session.questionsAsked.length > 0 && (
+                              <div className="mt-1.5 space-y-0.5">
+                                {session.questionsAsked.slice(0, 3).map((q, i) => (
+                                  <div key={i} className="text-[9px] text-foreground/70 truncate">
+                                    • {q}
+                                  </div>
+                                ))}
+                                {session.questionsAsked.length > 3 && (
+                                  <div className="text-[9px] text-jade">
+                                    +{session.questionsAsked.length - 3} more questions
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </HoverCardContent>
+                </HoverCard>
               )}
               
               {/* Patient Selection Dropdown */}
