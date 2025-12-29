@@ -329,6 +329,7 @@ export type Database = {
           booking_contact_phone: string | null
           created_at: string
           email: string | null
+          general_instructions: string | null
           id: string
           name: string
           owner_id: string
@@ -342,6 +343,7 @@ export type Database = {
           booking_contact_phone?: string | null
           created_at?: string
           email?: string | null
+          general_instructions?: string | null
           id?: string
           name: string
           owner_id: string
@@ -355,6 +357,7 @@ export type Database = {
           booking_contact_phone?: string | null
           created_at?: string
           email?: string | null
+          general_instructions?: string | null
           id?: string
           name?: string
           owner_id?: string
@@ -866,6 +869,7 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          special_instructions: string | null
           updated_at: string
         }
         Insert: {
@@ -877,6 +881,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          special_instructions?: string | null
           updated_at?: string
         }
         Update: {
@@ -888,6 +893,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          special_instructions?: string | null
           updated_at?: string
         }
         Relationships: [

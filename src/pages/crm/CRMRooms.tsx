@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Plus, DoorOpen, Edit, Trash2 } from 'lucide-react';
+import { Plus, DoorOpen, Edit, Trash2, FileText, Settings2 } from 'lucide-react';
 
 interface Room {
   id: string;
@@ -17,6 +17,13 @@ interface Room {
   capacity: number;
   color: string;
   is_active: boolean;
+  special_instructions: string | null;
+}
+
+interface Clinic {
+  id: string;
+  name: string;
+  general_instructions: string | null;
 }
 
 const ROOM_COLORS = [
@@ -25,19 +32,41 @@ const ROOM_COLORS = [
 
 export default function CRMRooms() {
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [clinic, setClinic] = useState<Clinic | null>(null);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [showGeneralInstructions, setShowGeneralInstructions] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+  const [generalInstructions, setGeneralInstructions] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     capacity: 1,
     color: '#10B981',
+    special_instructions: '',
   });
 
   useEffect(() => {
     fetchRooms();
+    fetchClinic();
   }, []);
+
+  const fetchClinic = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('clinics')
+        .select('id, name, general_instructions')
+        .limit(1)
+        .single();
+      
+      if (!error && data) {
+        setClinic(data);
+        setGeneralInstructions(data.general_instructions || '');
+      }
+    } catch (error) {
+      console.error('Error fetching clinic:', error);
+    }
+  };
 
   const fetchRooms = async () => {
     setLoading(true);
@@ -56,6 +85,23 @@ export default function CRMRooms() {
     }
   };
 
+  const handleSaveGeneralInstructions = async () => {
+    if (!clinic) return;
+    try {
+      const { error } = await supabase
+        .from('clinics')
+        .update({ general_instructions: generalInstructions })
+        .eq('id', clinic.id);
+      
+      if (error) throw error;
+      toast.success('General instructions saved');
+      setShowGeneralInstructions(false);
+    } catch (error) {
+      console.error('Error saving instructions:', error);
+      toast.error('Failed to save instructions');
+    }
+  };
+
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
       toast.error('Room name is required');
@@ -63,12 +109,12 @@ export default function CRMRooms() {
     }
 
     try {
-      // Get a clinic_id if available (for now, create without clinic)
       const payload = {
         name: formData.name,
         description: formData.description || null,
         capacity: formData.capacity,
         color: formData.color,
+        special_instructions: formData.special_instructions || null,
         is_active: true,
       };
 
@@ -114,7 +160,7 @@ export default function CRMRooms() {
 
       setShowForm(false);
       setEditingRoom(null);
-      setFormData({ name: '', description: '', capacity: 1, color: '#10B981' });
+      setFormData({ name: '', description: '', capacity: 1, color: '#10B981', special_instructions: '' });
       fetchRooms();
     } catch (error) {
       console.error('Error saving room:', error);
@@ -129,6 +175,7 @@ export default function CRMRooms() {
       description: room.description || '',
       capacity: room.capacity,
       color: room.color,
+      special_instructions: room.special_instructions || '',
     });
     setShowForm(true);
   };
@@ -151,20 +198,48 @@ export default function CRMRooms() {
     <CRMLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-display font-semibold">Treatment Rooms</h1>
             <p className="text-sm text-muted-foreground">
               Manage your clinic's treatment rooms for scheduling
             </p>
           </div>
-          <Dialog open={showForm} onOpenChange={setShowForm}>
+          <div className="flex gap-2">
+            <Dialog open={showGeneralInstructions} onOpenChange={setShowGeneralInstructions}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Settings2 className="h-4 w-4" />
+                  General Instructions
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>General Instructions</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <p className="text-sm text-muted-foreground">
+                    These instructions apply to all rooms and will be shown to staff.
+                  </p>
+                  <Textarea
+                    value={generalInstructions}
+                    onChange={(e) => setGeneralInstructions(e.target.value)}
+                    placeholder="Enter general clinic instructions..."
+                    rows={6}
+                  />
+                  <Button onClick={handleSaveGeneralInstructions} className="w-full bg-jade hover:bg-jade/90">
+                    Save Instructions
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Dialog open={showForm} onOpenChange={setShowForm}>
             <DialogTrigger asChild>
               <Button
                 className="bg-jade hover:bg-jade/90"
                 onClick={() => {
                   setEditingRoom(null);
-                  setFormData({ name: '', description: '', capacity: 1, color: '#10B981' });
+                  setFormData({ name: '', description: '', capacity: 1, color: '#10B981', special_instructions: '' });
                 }}
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -222,13 +297,41 @@ export default function CRMRooms() {
                   </div>
                 </div>
 
+                <div className="space-y-2">
+                  <Label>Special Instructions</Label>
+                  <Textarea
+                    value={formData.special_instructions}
+                    onChange={(e) => setFormData({ ...formData, special_instructions: e.target.value })}
+                    placeholder="Any special instructions for this room..."
+                    rows={3}
+                  />
+                </div>
+
                 <Button onClick={handleSubmit} className="w-full bg-jade hover:bg-jade/90">
                   {editingRoom ? 'Update Room' : 'Create Room'}
                 </Button>
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
+
+        {/* General Instructions Card */}
+        {clinic?.general_instructions && (
+          <Card className="border-jade/30 bg-jade/5">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <FileText className="h-5 w-5 text-jade mt-0.5" />
+                <div>
+                  <h3 className="font-medium text-sm text-foreground">General Instructions</h3>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-1">
+                    {clinic.general_instructions}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Rooms Grid */}
         {loading ? (
@@ -284,6 +387,16 @@ export default function CRMRooms() {
                   </div>
                   {room.description && (
                     <p className="text-sm text-muted-foreground mt-3">{room.description}</p>
+                  )}
+                  {room.special_instructions && (
+                    <div className="mt-3 pt-3 border-t border-border/50">
+                      <div className="flex items-start gap-2">
+                        <FileText className="h-4 w-4 text-jade mt-0.5 shrink-0" />
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                          {room.special_instructions}
+                        </p>
+                      </div>
+                    </div>
                   )}
                 </CardContent>
               </Card>
