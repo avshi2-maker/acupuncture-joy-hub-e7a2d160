@@ -1,10 +1,14 @@
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Leaf } from "lucide-react";
+import { Leaf, Globe, MessageCircle } from "lucide-react";
 import heroBg from "@/assets/hero-meridian-bg.png";
 
 const Index = () => {
+  const handleWhatsApp = () => {
+    window.open("https://wa.me/972544634923", "_blank");
+  };
+
   return (
     <>
       <Helmet>
@@ -22,6 +26,26 @@ const Index = () => {
       >
         {/* Overlay for better text readability */}
         <div className="absolute inset-0 bg-jade/40" />
+
+        {/* Top right navigation */}
+        <nav className="absolute top-4 right-4 md:top-6 md:right-6 z-20 flex items-center gap-3">
+          <button className="flex items-center gap-1.5 text-cream/90 hover:text-cream text-sm transition-colors">
+            <Globe className="h-4 w-4" />
+            <span>English</span>
+          </button>
+          
+          <button 
+            onClick={handleWhatsApp}
+            className="flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors"
+          >
+            <MessageCircle className="h-4 w-4" />
+            <span>WhatsApp</span>
+          </button>
+          
+          <Button asChild variant="outline" size="sm" className="border-cream/50 text-cream hover:bg-cream/10 hover:text-cream">
+            <Link to="/gate">Therapist Login</Link>
+          </Button>
+        </nav>
 
         {/* Text container - no background box */}
         <section className="relative z-10 w-full max-w-2xl text-center p-8 md:p-12">
