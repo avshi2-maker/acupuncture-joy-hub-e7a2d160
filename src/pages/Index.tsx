@@ -2,19 +2,37 @@ import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Leaf, MessageCircle, Smartphone, X, Play, BookOpen } from "lucide-react";
+import { Leaf, MessageCircle, Smartphone, X, Play, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import heroBg from "@/assets/hero-meridian-bg.png";
 
+const promoVideos = [
+  { src: "/videos/promo-1.mp4", titleHe: "הקליניקה שלנו - סיור וירטואלי", titleEn: "Our Clinic - Virtual Tour" },
+  { src: "/videos/promo-2.mp4", titleHe: "טיפולי דיקור סיני מסורתי", titleEn: "Traditional Acupuncture Treatments" },
+  { src: "/videos/promo-3.mp4", titleHe: "רפואה סינית לכאבים כרוניים", titleEn: "Chinese Medicine for Chronic Pain" },
+  { src: "/videos/promo-4.mp4", titleHe: "המלצות מטופלים מרוצים", titleEn: "Happy Patient Testimonials" },
+];
+
 const Index = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [showInstallBanner, setShowInstallBanner] = useState(true);
   const [showVideoModal, setShowVideoModal] = useState(false);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
 
   const handleWhatsApp = () => {
     window.open("https://wa.me/972544634923", "_blank");
   };
+
+  const nextVideo = () => {
+    setCurrentVideoIndex((prev) => (prev + 1) % promoVideos.length);
+  };
+
+  const prevVideo = () => {
+    setCurrentVideoIndex((prev) => (prev - 1 + promoVideos.length) % promoVideos.length);
+  };
+
+  const currentVideo = promoVideos[currentVideoIndex];
 
   return (
     <>
@@ -126,13 +144,14 @@ const Index = () => {
       {/* Video Modal */}
       {showVideoModal && (
         <div 
-          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 animate-fade-in"
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 animate-fade-in"
           onClick={() => setShowVideoModal(false)}
         >
           <div 
             className="relative w-full max-w-4xl bg-black rounded-xl overflow-hidden shadow-2xl animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Close button */}
             <button 
               onClick={() => setShowVideoModal(false)}
               className="absolute top-3 right-3 z-10 bg-white/20 hover:bg-white/30 text-white rounded-full p-2 transition-colors"
@@ -140,15 +159,59 @@ const Index = () => {
             >
               <X className="h-5 w-5" />
             </button>
+
+            {/* Video title */}
+            <div className="absolute top-3 left-3 z-10 bg-black/60 backdrop-blur-sm px-4 py-2 rounded-lg">
+              <p className="text-white font-medium text-sm md:text-base" dir={language === "he" ? "rtl" : "ltr"}>
+                {language === "he" ? currentVideo.titleHe : currentVideo.titleEn}
+              </p>
+            </div>
+
+            {/* Previous button */}
+            <button
+              onClick={prevVideo}
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 text-white rounded-full p-2 transition-colors"
+              aria-label="Previous video"
+            >
+              <ChevronLeft className="h-6 w-6" />
+            </button>
+
+            {/* Next button */}
+            <button
+              onClick={nextVideo}
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-10 bg-white/20 hover:bg-white/40 text-white rounded-full p-2 transition-colors"
+              aria-label="Next video"
+            >
+              <ChevronRight className="h-6 w-6" />
+            </button>
+
+            {/* Video player */}
             <video 
+              key={currentVideo.src}
               className="w-full aspect-video"
               controls
               autoPlay
               poster="/videos/poster-default.jpg"
             >
-              <source src="/videos/promo-1.mp4" type="video/mp4" />
+              <source src={currentVideo.src} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
+
+            {/* Video indicators/thumbnails */}
+            <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10 flex gap-2">
+              {promoVideos.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentVideoIndex(index)}
+                  className={`w-3 h-3 rounded-full transition-all ${
+                    index === currentVideoIndex 
+                      ? "bg-gold scale-125" 
+                      : "bg-white/50 hover:bg-white/80"
+                  }`}
+                  aria-label={`Go to video ${index + 1}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       )}
