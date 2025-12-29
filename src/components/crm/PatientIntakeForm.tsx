@@ -1009,6 +1009,17 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
               <p className="text-sm text-muted-foreground">
                 Please sign below to confirm your consent to treatment
               </p>
+              
+              {/* Privacy Notice */}
+              <div className="p-3 rounded-lg border border-destructive/30 bg-destructive/5">
+                <p className="text-xs text-destructive font-medium flex items-center gap-1">
+                  ⚠️ Signature is saved exclusively on the Therapist's secure files – never stored on this application.
+                </p>
+                <p className="text-xs text-destructive/80 mt-1" dir="rtl">
+                  החתימה נשמרת בתיק המטפל בלבד – לעולם לא מאוחסנת באפליקציה זו.
+                </p>
+              </div>
+
               <SignaturePad
                 onSave={(dataUrl) => {
                   setSignatureDataUrl(dataUrl);
