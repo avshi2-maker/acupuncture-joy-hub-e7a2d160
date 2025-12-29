@@ -10,6 +10,8 @@ import { TierBadge } from '@/components/layout/TierBadge';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { WorkflowTutorial } from '@/components/onboarding/WorkflowTutorial';
+import { useWorkflowProgress } from '@/hooks/useWorkflowProgress';
 import { 
   Brain, 
   Calendar, 
@@ -210,6 +212,7 @@ export default function Dashboard() {
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const { progress, hasProgress, resetProgress } = useWorkflowProgress();
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -760,6 +763,28 @@ export default function Dashboard() {
                 💡 עקבו אחר 3 השלבים להתחלת טיפול מוצלח
               </span>
             </div>
+            
+            {/* Progress persistence indicator */}
+            {hasProgress && (
+              <div className="text-center mb-4">
+                <div className="inline-flex items-center gap-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-3 py-1.5 rounded-full text-sm">
+                  <span>📍</span>
+                  <span>
+                    {progress.selectedPatientName 
+                      ? `מטופל נבחר: ${progress.selectedPatientName}` 
+                      : progress.selectedDate 
+                        ? `תאריך נבחר: ${new Date(progress.selectedDate).toLocaleDateString('he-IL')}` 
+                        : `אתם בשלב ${progress.currentStep}`}
+                  </span>
+                  <button 
+                    onClick={resetProgress}
+                    className="mr-2 text-xs underline hover:no-underline"
+                  >
+                    איפוס
+                  </button>
+                </div>
+              </div>
+            )}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-0">
               {/* Step 1: Schedule */}
               <Link to="/crm/calendar" className="flex flex-col items-center group cursor-pointer relative">
@@ -1006,6 +1031,9 @@ export default function Dashboard() {
           </Card>
         )}
       </main>
+      
+      {/* First-time tutorial overlay */}
+      <WorkflowTutorial />
     </div>
     </>
   );
