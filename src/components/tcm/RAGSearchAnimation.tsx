@@ -32,7 +32,7 @@ const RAG_ASSETS = [
   'sport-performance-recovery.csv',
   'womens-health-tcm.csv',
   'work-stress-burnout.csv',
-  'extreme-weather-climate.csv',
+  'extreme_weather_climate_conditions_qa_100.csv',
   'skin_disease_qa_100.csv',
 ];
 
