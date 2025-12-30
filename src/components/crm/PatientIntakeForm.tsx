@@ -800,12 +800,10 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Chief Complaint *</FormLabel>
-                      <FormControl>
-                        <ChiefComplaintSelect
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        />
-                      </FormControl>
+                      <ChiefComplaintSelect
+                        value={field.value || ''}
+                        onValueChange={field.onChange}
+                      />
                       <VoiceTextarea 
                         placeholder="Additional details about symptoms and concerns..." 
                         className="min-h-[80px] mt-2"
