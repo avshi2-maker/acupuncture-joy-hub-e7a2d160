@@ -97,7 +97,8 @@ import {
   astroQuestions,
   traumaQuestions,
   pediatricQuestions,
-  crisisQuestions
+  crisisQuestions,
+  womensHealthQuestions
 } from '@/data/tcmBrainQuestions';
 
 interface Message {
@@ -116,6 +117,7 @@ const featureTabs = [
   { id: 'trauma', icon: FileText, label: 'Trauma' },
   { id: 'pediatric', icon: Heart, label: 'Pediatric' },
   { id: 'crisis', icon: AlertTriangle, label: 'Crisis' },
+  { id: 'womens-health', icon: Heart, label: "Women's" },
   { id: 'herbs', icon: Leaf, label: 'Herbs' },
   { id: 'points', icon: MapPin, label: 'Points' },
   { id: 'conditions', icon: Stethoscope, label: 'Conditions' },
@@ -574,6 +576,7 @@ export default function TcmBrain() {
   const [selectedTraumaQuestion, setSelectedTraumaQuestion] = useState('');
   const [selectedPediatricQuestion, setSelectedPediatricQuestion] = useState('');
   const [selectedCrisisQuestion, setSelectedCrisisQuestion] = useState('');
+  const [selectedWomensHealthQuestion, setSelectedWomensHealthQuestion] = useState('');
   const [showDetailedView, setShowDetailedView] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [showInlineChat, setShowInlineChat] = useState(false);
@@ -2201,6 +2204,16 @@ Include:
                   crisisQuestions,
                   selectedCrisisQuestion,
                   setSelectedCrisisQuestion
+                )}
+              </TabsContent>
+
+              {/* Women's Health Tab */}
+              <TabsContent value="womens-health" className="flex-1 overflow-auto">
+                {renderQASection(
+                  "Women's Health TCM",
+                  womensHealthQuestions,
+                  selectedWomensHealthQuestion,
+                  setSelectedWomensHealthQuestion
                 )}
               </TabsContent>
 
