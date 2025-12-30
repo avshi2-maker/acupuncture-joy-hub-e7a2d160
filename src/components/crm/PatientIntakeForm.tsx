@@ -20,8 +20,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { User, Heart, Baby, Activity, Utensils, Moon, Brain, AlertTriangle, FileSignature, PenTool, CheckCircle2, XCircle, Loader2, Calendar, BrainCircuit, ChevronLeft, ChevronRight, CloudOff, Save } from 'lucide-react';
-import { AutoSaveIndicator } from '@/components/video/AutoSaveIndicator';
+import { User, Heart, Baby, Activity, Utensils, Moon, Brain, AlertTriangle, FileSignature, PenTool, CheckCircle2, XCircle, Loader2, Calendar, BrainCircuit, ChevronLeft, ChevronRight } from 'lucide-react';
 import { SignaturePad } from './SignaturePad';
 import { MedicalDocumentUpload } from './MedicalDocumentUpload';
 import { DietNutritionSelect } from './DietNutritionSelect';
@@ -32,7 +31,6 @@ import { TongueDiagnosisSelect } from './TongueDiagnosisSelect';
 import { ConstitutionTypeSelect } from './ConstitutionTypeSelect';
 import { ChiefComplaintSelect } from './ChiefComplaintSelect';
 import { validateIsraeliId, looksLikeIsraeliId } from '@/utils/israeliIdValidation';
-import { useIntakeDraftAutosave } from '@/hooks/useIntakeDraftAutosave';
 
 // Base patient schema
 const basePatientSchema = z.object({
@@ -271,57 +269,6 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
   const watchGender = form.watch('gender');
   const watchIsPregnant = form.watch('is_pregnant');
 
-  // Draft autosave hook
-  const {
-    lastSaved,
-    isSaving,
-    hasDraft,
-    saveDraft,
-    clearDraft,
-    restoreDraft,
-  } = useIntakeDraftAutosave({
-    form,
-    customNotes,
-    selectedAllergies,
-    selectedMedications,
-    dietHabits,
-    pulseFindings,
-    tongueFindings,
-    ageSpecificAnswers,
-    pregnancyAnswers,
-    currentStep,
-    patientId,
-  });
-
-  // Manual save handler
-  const handleManualSave = () => {
-    saveDraft();
-    toast.success('Draft saved');
-  };
-
-  // Handle draft restore
-  const handleRestoreDraft = () => {
-    const draft = restoreDraft();
-    if (draft && typeof draft === 'object') {
-      // Restore additional state
-      setCustomNotes(draft.customNotes || {});
-      setSelectedAllergies(draft.selectedAllergies || []);
-      setSelectedMedications(draft.selectedMedications || []);
-      setDietHabits(draft.dietHabits || []);
-      setPulseFindings(draft.pulseFindings || []);
-      setTongueFindings(draft.tongueFindings || []);
-      setAgeSpecificAnswers(draft.ageSpecificAnswers || {});
-      setPregnancyAnswers(draft.pregnancyAnswers || {});
-      setCurrentStep(draft.currentStep || 0);
-      form.clearErrors();
-      toast.success('Draft restored successfully');
-    }
-  };
-
-  const handleDiscardDraft = () => {
-    clearDraft();
-    toast.info('Draft discarded');
-  };
 
   // Update age group when DOB changes
   useEffect(() => {
@@ -543,7 +490,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
         if (error) throw error;
         resultPatientId = insertedPatient?.id;
         toast.success('Patient created successfully');
-        clearDraft(); // Clear the autosaved draft on successful save
+        // Patient saved successfully
       }
 
       onSuccess?.();
@@ -573,54 +520,8 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit, handleFormErrors)} className="space-y-6">
-        {/* Draft Recovery Banner */}
-        {hasDraft && !patientId && (
-          <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/20">
-            <CloudOff className="h-4 w-4 text-amber-600" />
-            <AlertDescription className="flex items-center justify-between">
-              <span className="text-sm">
-                You have an unsaved draft from a previous session.
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDiscardDraft}
-                >
-                  Discard
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={handleRestoreDraft}
-                >
-                  Restore Draft
-                </Button>
-              </div>
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Progress Bar & Step Indicator (sticky header includes autosave) */}
+        {/* Progress Bar & Step Indicator */}
         <div className="sticky top-0 z-20 -mx-4 px-4 py-4 bg-background/95 backdrop-blur border-b space-y-3">
-          {/* Autosave indicator + manual save - now inside sticky header */}
-          {!patientId && (
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <AutoSaveIndicator isSaving={isSaving} lastSaved={lastSaved} />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleManualSave}
-                disabled={isSaving}
-                className="gap-1.5"
-              >
-                <Save className="h-4 w-4" />
-                Save draft now
-              </Button>
-            </div>
-          )}
           <div className="space-y-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">
@@ -1172,7 +1073,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                             <Moon className="h-4 w-4" />
                             Sleep Quality
                           </FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value || undefined}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select..." />
@@ -1209,7 +1110,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                             <Brain className="h-4 w-4" />
                             Stress Level
                           </FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value || undefined}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select..." />
@@ -1246,7 +1147,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                             <Activity className="h-4 w-4" />
                             Exercise Frequency
                           </FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value || undefined}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select..." />
