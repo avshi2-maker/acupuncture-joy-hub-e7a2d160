@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Settings, Video, Save, Bell, Shield, Clock, Fingerprint, EyeOff } from 'lucide-react';
+import { Settings, Video, Save, Bell, Shield, Clock, Fingerprint, EyeOff, Smartphone } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSessionLock } from '@/contexts/SessionLockContext';
 import { usePinAuth } from '@/hooks/usePinAuth';
@@ -33,6 +33,8 @@ export const THERAPIST_NAME_KEY = 'therapist_display_name';
 export const AUDIO_ALERTS_ENABLED_KEY = 'therapist_audio_alerts_enabled';
 export const BIOMETRIC_ENABLED_KEY = 'therapist_biometric_enabled';
 export const LOCK_ON_TAB_SWITCH_KEY = 'therapist_lock_on_tab_switch';
+export const LOCK_ON_SCREEN_WAKE_KEY = 'therapist_lock_on_screen_wake';
+export const SCREEN_WAKE_GRACE_PERIOD_KEY = 'therapist_screen_wake_grace_period';
 
 export function getAudioAlertsEnabled(): boolean {
   try {
@@ -55,9 +57,27 @@ export function getBiometricEnabled(): boolean {
 export function getLockOnTabSwitch(): boolean {
   try {
     const saved = localStorage.getItem(LOCK_ON_TAB_SWITCH_KEY);
-    return saved === 'true'; // Default to disabled
+    return saved === 'true';
   } catch {
     return false;
+  }
+}
+
+export function getLockOnScreenWake(): boolean {
+  try {
+    const saved = localStorage.getItem(LOCK_ON_SCREEN_WAKE_KEY);
+    return saved === 'true';
+  } catch {
+    return false;
+  }
+}
+
+export function getScreenWakeGracePeriod(): number {
+  try {
+    const saved = localStorage.getItem(SCREEN_WAKE_GRACE_PERIOD_KEY);
+    return saved ? parseInt(saved, 10) : 30; // Default 30 seconds
+  } catch {
+    return 30;
   }
 }
 
@@ -77,6 +97,8 @@ export function TherapistSettingsDialog({
   const [audioAlertsEnabled, setAudioAlertsEnabled] = useState(true);
   const [biometricEnabled, setBiometricEnabled] = useState(true);
   const [lockOnTabSwitch, setLockOnTabSwitch] = useState(false);
+  const [lockOnScreenWake, setLockOnScreenWake] = useState(false);
+  const [screenWakeGracePeriod, setScreenWakeGracePeriod] = useState('30');
   const [selectedTimeout, setSelectedTimeout] = useState('15');
   
   const { timeoutMinutes, setTimeoutMinutes } = useSessionLock();
@@ -90,11 +112,15 @@ export function TherapistSettingsDialog({
       const savedAudioAlerts = getAudioAlertsEnabled();
       const savedBiometric = getBiometricEnabled();
       const savedLockOnTabSwitch = getLockOnTabSwitch();
+      const savedLockOnScreenWake = getLockOnScreenWake();
+      const savedGracePeriod = getScreenWakeGracePeriod();
       setZoomLink(savedLink);
       setDisplayName(savedName);
       setAudioAlertsEnabled(savedAudioAlerts);
       setBiometricEnabled(savedBiometric);
       setLockOnTabSwitch(savedLockOnTabSwitch);
+      setLockOnScreenWake(savedLockOnScreenWake);
+      setScreenWakeGracePeriod(savedGracePeriod.toString());
       setSelectedTimeout(timeoutMinutes.toString());
     }
   }, [open, timeoutMinutes]);
@@ -105,6 +131,8 @@ export function TherapistSettingsDialog({
     localStorage.setItem(AUDIO_ALERTS_ENABLED_KEY, audioAlertsEnabled.toString());
     localStorage.setItem(BIOMETRIC_ENABLED_KEY, biometricEnabled.toString());
     localStorage.setItem(LOCK_ON_TAB_SWITCH_KEY, lockOnTabSwitch.toString());
+    localStorage.setItem(LOCK_ON_SCREEN_WAKE_KEY, lockOnScreenWake.toString());
+    localStorage.setItem(SCREEN_WAKE_GRACE_PERIOD_KEY, screenWakeGracePeriod);
     setTimeoutMinutes(parseInt(selectedTimeout, 10));
     toast.success('ההגדרות נשמרו בהצלחה');
     onOpenChange(false);
@@ -233,6 +261,42 @@ export function TherapistSettingsDialog({
                   checked={lockOnTabSwitch}
                   onCheckedChange={setLockOnTabSwitch}
                 />
+              </div>
+
+              {/* Lock on Screen Wake (Mobile) */}
+              <div className="pt-2 border-t border-border/50 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Smartphone className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <span className="text-sm">נעילה בחזרה מהרקע</span>
+                      <p className="text-xs text-muted-foreground">
+                        למובייל - נעל כשהמסך נכבה
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={lockOnScreenWake}
+                    onCheckedChange={setLockOnScreenWake}
+                  />
+                </div>
+                
+                {lockOnScreenWake && (
+                  <div className="flex items-center justify-between pr-6">
+                    <span className="text-xs text-muted-foreground">זמן חסד לפני נעילה</span>
+                    <Select value={screenWakeGracePeriod} onValueChange={setScreenWakeGracePeriod}>
+                      <SelectTrigger className="w-24 h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">מיידי</SelectItem>
+                        <SelectItem value="10">10 שניות</SelectItem>
+                        <SelectItem value="30">30 שניות</SelectItem>
+                        <SelectItem value="60">דקה</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
 
               <p className="text-xs text-muted-foreground">
