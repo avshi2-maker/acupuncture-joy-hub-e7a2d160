@@ -27,6 +27,7 @@ import { PulseDiagnosisSelect } from './PulseDiagnosisSelect';
 import { AllergiesSelect } from './AllergiesSelect';
 import { MedicationsSupplementsSelect } from './MedicationsSupplementsSelect';
 import { TongueDiagnosisSelect } from './TongueDiagnosisSelect';
+import { ConstitutionTypeSelect } from './ConstitutionTypeSelect';
 import { validateIsraeliId, looksLikeIsraeliId } from '@/utils/israeliIdValidation';
 
 // Base patient schema
@@ -1292,50 +1293,24 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                 <FormField
                   control={form.control}
                   name="constitution_type"
-                  render={({ field }) => {
-                    const labels: Record<string, string> = {
-                      balanced: 'Balanced',
-                      qi_deficiency: 'Qi Deficiency',
-                      yang_deficiency: 'Yang Deficiency',
-                      yin_deficiency: 'Yin Deficiency',
-                      phlegm_dampness: 'Phlegm-Dampness',
-                      damp_heat: 'Damp-Heat',
-                      blood_stasis: 'Blood Stasis',
-                      qi_stagnation: 'Qi Stagnation',
-                      special: 'Special Constitution',
-                    };
-                    const hint = field.value ? `Selected: ${labels[field.value]}. Add notes...` : 'Additional notes about constitution...';
-                    return (
-                      <FormItem className="md:col-span-2">
-                        <FormLabel>Constitution Type</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select constitution type..." />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="balanced">Balanced (平和)</SelectItem>
-                            <SelectItem value="qi_deficiency">Qi Deficiency (气虚)</SelectItem>
-                            <SelectItem value="yang_deficiency">Yang Deficiency (阳虚)</SelectItem>
-                            <SelectItem value="yin_deficiency">Yin Deficiency (阴虚)</SelectItem>
-                            <SelectItem value="phlegm_dampness">Phlegm-Dampness (痰湿)</SelectItem>
-                            <SelectItem value="damp_heat">Damp-Heat (湿热)</SelectItem>
-                            <SelectItem value="blood_stasis">Blood Stasis (血瘀)</SelectItem>
-                            <SelectItem value="qi_stagnation">Qi Stagnation (气郁)</SelectItem>
-                            <SelectItem value="special">Special Constitution (特禀)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Input
-                          placeholder={hint}
-                          className="mt-2"
-                          value={customNotes.constitution_type}
-                          onChange={(e) => setCustomNotes(prev => ({ ...prev, constitution_type: e.target.value }))}
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Constitution Type</FormLabel>
+                      <FormControl>
+                        <ConstitutionTypeSelect
+                          value={field.value}
+                          onValueChange={field.onChange}
                         />
-                        <FormMessage />
-                      </FormItem>
-                    );
-                  }}
+                      </FormControl>
+                      <VoiceInput
+                        placeholder="Additional notes about constitution..."
+                        className="mt-2"
+                        value={customNotes.constitution_type}
+                        onChange={(e) => setCustomNotes(prev => ({ ...prev, constitution_type: e.target.value }))}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </CardContent>
             </Card>
