@@ -229,6 +229,13 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'tcm_theory',
     defaultLanguage: 'en',
   },
+  {
+    id: 'chief-complaints-tcm',
+    label: 'chief-complaints-tcm.csv',
+    path: '/knowledge-assets/chief-complaints-tcm.csv',
+    defaultCategory: 'general_health',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 type QueueItemStatus = 'pending' | 'importing' | 'done' | 'error';

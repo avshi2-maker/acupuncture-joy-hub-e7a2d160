@@ -24,6 +24,7 @@ const EXPECTED_KNOWLEDGE_FILES = [
   { name: 'work-stress-burnout.csv', aliases: ['Work_Stress_Burnout', 'stress', 'burnout'] },
   { name: 'extreme-weather-climate.csv', aliases: ['extreme_weather', 'climate', 'weather'] },
   { name: 'nine-constitutions-qa.csv', aliases: ['nine_constitutions', 'constitution', 'constitutions'] },
+  { name: 'chief-complaints-tcm.csv', aliases: ['chief_complaints', 'complaints', 'chief'] },
 ];
 
 interface RAGVerificationPanelProps {
