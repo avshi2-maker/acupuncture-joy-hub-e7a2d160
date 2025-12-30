@@ -24,6 +24,7 @@ import { MedicalDocumentUpload } from './MedicalDocumentUpload';
 import { DietNutritionSelect } from './DietNutritionSelect';
 import { PulseDiagnosisSelect } from './PulseDiagnosisSelect';
 import { AllergiesSelect } from './AllergiesSelect';
+import { MedicationsSupplementsSelect } from './MedicationsSupplementsSelect';
 import { validateIsraeliId, looksLikeIsraeliId } from '@/utils/israeliIdValidation';
 
 // Base patient schema
