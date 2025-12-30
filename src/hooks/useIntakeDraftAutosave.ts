@@ -46,6 +46,7 @@ export function useIntakeDraftAutosave({
   patientId,
 }: UseIntakeDraftAutosaveOptions) {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [hasDraft, setHasDraft] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -74,6 +75,7 @@ export function useIntakeDraftAutosave({
   const saveDraft = useCallback(() => {
     if (patientId) return; // Don't save draft when editing existing patient
 
+    setIsSaving(true);
     try {
       const formData = form.getValues();
       const draft: DraftData = {
@@ -93,6 +95,8 @@ export function useIntakeDraftAutosave({
       setLastSaved(new Date());
     } catch (e) {
       console.error('Error saving draft:', e);
+    } finally {
+      setIsSaving(false);
     }
   }, [
     form,
@@ -184,6 +188,7 @@ export function useIntakeDraftAutosave({
 
   return {
     lastSaved,
+    isSaving,
     hasDraft,
     saveDraft,
     loadDraft,

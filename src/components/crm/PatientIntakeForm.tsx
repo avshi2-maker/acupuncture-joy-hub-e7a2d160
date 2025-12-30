@@ -20,7 +20,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { User, Heart, Baby, Activity, Utensils, Moon, Brain, AlertTriangle, FileSignature, PenTool, CheckCircle2, XCircle, Loader2, Calendar, BrainCircuit, Save, ChevronLeft, ChevronRight, CloudOff } from 'lucide-react';
+import { User, Heart, Baby, Activity, Utensils, Moon, Brain, AlertTriangle, FileSignature, PenTool, CheckCircle2, XCircle, Loader2, Calendar, BrainCircuit, ChevronLeft, ChevronRight, CloudOff } from 'lucide-react';
+import { AutoSaveIndicator } from '@/components/video/AutoSaveIndicator';
 import { SignaturePad } from './SignaturePad';
 import { MedicalDocumentUpload } from './MedicalDocumentUpload';
 import { DietNutritionSelect } from './DietNutritionSelect';
@@ -273,6 +274,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
   // Draft autosave hook
   const {
     lastSaved,
+    isSaving,
     hasDraft,
     clearDraft,
     restoreDraft,
@@ -591,11 +593,8 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
         )}
 
         {/* Autosave indicator */}
-        {lastSaved && !patientId && (
-          <div className="text-xs text-muted-foreground flex items-center gap-1">
-            <Save className="h-3 w-3" />
-            Draft saved {lastSaved.toLocaleTimeString()}
-          </div>
+        {!patientId && (
+          <AutoSaveIndicator isSaving={isSaving} lastSaved={lastSaved} />
         )}
         {/* Progress Bar & Step Indicator */}
         <div className="sticky top-0 z-20 -mx-4 px-4 py-4 bg-background/95 backdrop-blur border-b">
@@ -1532,7 +1531,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                   disabled={loading}
                   className="bg-jade hover:bg-jade/90 gap-2"
                 >
-                  <Save className="h-4 w-4" />
+                  <CheckCircle2 className="h-4 w-4" />
                   {loading ? 'Saving...' : patientId ? 'Update & Choose Next' : 'Save & Choose Next'}
                 </Button>
               )}
