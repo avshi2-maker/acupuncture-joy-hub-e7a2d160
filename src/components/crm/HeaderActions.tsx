@@ -22,7 +22,11 @@ interface Notification {
   type: 'appointment' | 'reminder' | 'system';
 }
 
-export function HeaderActions() {
+interface HeaderActionsProps {
+  onHelpClick?: () => void;
+}
+
+export function HeaderActions({ onHelpClick }: HeaderActionsProps) {
   const navigate = useNavigate();
   const { language } = useLanguage();
   const isHebrew = language === 'he';
@@ -68,16 +72,27 @@ export function HeaderActions() {
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1">
+      {/* Help Button */}
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        onClick={onHelpClick}
+        className="bg-gradient-to-br from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-amber-900 h-8 w-8"
+        title="עזרה / Help (Alt+?)"
+      >
+        <HelpCircle className="h-4 w-4" />
+      </Button>
+
       {/* Notifications */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
+          <Button variant="ghost" size="icon" className="relative h-8 w-8">
+            <Bell className="h-4 w-4" />
             {unreadCount > 0 && (
               <Badge 
                 variant="destructive" 
-                className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]"
               >
                 {unreadCount}
               </Badge>
@@ -125,8 +140,8 @@ export function HeaderActions() {
       {/* Settings */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon">
-            <Settings className="h-5 w-5" />
+          <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Settings className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56 bg-background border border-border shadow-lg z-50">
@@ -158,7 +173,7 @@ export function HeaderActions() {
           
           <DropdownMenuSeparator />
           
-          <DropdownMenuItem className="cursor-pointer">
+          <DropdownMenuItem onClick={onHelpClick} className="cursor-pointer">
             <HelpCircle className="mr-2 h-4 w-4" />
             {isHebrew ? 'עזרה ותמיכה' : 'Help & Support'}
           </DropdownMenuItem>

@@ -153,8 +153,24 @@ const CATEGORIES = [...new Set(HELP_ITEMS.map(item => item.category))];
 const SHORTCUT_CATEGORIES = [...new Set(KEYBOARD_SHORTCUTS.map(s => s.category))];
 const TIP_CATEGORIES = [...new Set(QUICK_TIPS.map(t => t.category))];
 
-export function FloatingHelpGuide() {
-  const [isOpen, setIsOpen] = useState(false);
+interface FloatingHelpGuideProps {
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function FloatingHelpGuide({ isOpen: controlledIsOpen, onOpenChange }: FloatingHelpGuideProps = {}) {
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  
+  // Use controlled state if provided, otherwise internal
+  const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
+  const setIsOpen = (open: boolean) => {
+    if (onOpenChange) {
+      onOpenChange(open);
+    } else {
+      setInternalIsOpen(open);
+    }
+  };
+  
   const [activeTab, setActiveTab] = useState('features');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
@@ -172,7 +188,7 @@ export function FloatingHelpGuide() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.altKey && (e.key === '?' || e.key === '/')) {
         e.preventDefault();
-        setIsOpen(prev => !prev);
+        setIsOpen(!isOpen);
       }
       if (e.key === 'Escape' && isOpen) {
         setIsOpen(false);
@@ -180,7 +196,7 @@ export function FloatingHelpGuide() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
+  }, [isOpen, setIsOpen]);
 
   // Keyboard navigation within the panel
   const handleKeyboardNav = useCallback((e: React.KeyboardEvent, items: any[], onSelect: (item: any) => void) => {
@@ -335,27 +351,32 @@ export function FloatingHelpGuide() {
     }
   };
 
+  // Only show floating button when not controlled externally
+  const showFloatingButton = controlledIsOpen === undefined;
+
   return (
     <>
-      {/* Floating Help Button - Animated Yellow - positioned top-right */}
-      <Button
-        onClick={() => setIsOpen(true)}
-        className={cn(
-          'fixed top-20 right-4 z-40 h-12 w-12 rounded-full shadow-lg',
-          'bg-gradient-to-br from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600',
-          'transition-all duration-300 hover:scale-110',
-          'animate-pulse hover:animate-none',
-          isOpen && 'hidden'
-        )}
-        size="icon"
-        title="עזרה / Help (Alt+?)"
-      >
-        <HelpCircle className="h-6 w-6 text-amber-900" />
-      </Button>
+      {/* Floating Help Button - only show when not controlled from header */}
+      {showFloatingButton && (
+        <Button
+          onClick={() => setIsOpen(true)}
+          className={cn(
+            'fixed top-20 right-4 z-40 h-12 w-12 rounded-full shadow-lg',
+            'bg-gradient-to-br from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600',
+            'transition-all duration-300 hover:scale-110',
+            'animate-pulse hover:animate-none',
+            isOpen && 'hidden'
+          )}
+          size="icon"
+          title="עזרה / Help (Alt+?)"
+        >
+          <HelpCircle className="h-6 w-6 text-amber-900" />
+        </Button>
+      )}
 
       {/* Help Panel */}
       {isOpen && (
-        <div className="fixed inset-4 md:inset-auto md:top-24 md:right-4 md:w-[480px] md:max-h-[700px] z-50 animate-fade-in-up">
+        <div className="fixed inset-4 md:inset-auto md:top-16 md:right-4 md:w-[480px] md:max-h-[80vh] z-50 animate-fade-in">
           <div className="bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col h-full md:h-auto">
             {/* Header */}
             <div className="flex items-center justify-between p-4 bg-gradient-to-r from-amber-400/20 to-yellow-400/10 border-b border-border/50">
