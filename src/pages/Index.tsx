@@ -178,10 +178,10 @@ const Index = () => {
   return (
     <>
       <Helmet>
-        <title>TCM Clinic | Traditional Chinese Medicine</title>
+        <title>CM Clinic | Chinese Medicine</title>
         <meta
           name="description"
-          content="Experience the transformative power of Traditional Chinese Medicine. Restore balance and renew life."
+          content="Experience the transformative power of Chinese Medicine. Restore balance and renew life."
         />
         <link rel="canonical" href={typeof window !== "undefined" ? window.location.origin + "/" : "/"} />
       </Helmet>

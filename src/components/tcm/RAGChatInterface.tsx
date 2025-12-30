@@ -99,7 +99,7 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
             <BookOpen className="w-5 h-5" />
-            Dr. Sapir's TCM Knowledge Base
+            Dr. Sapir's CM Knowledge Base
           </CardTitle>
           <Button
             type="button"
@@ -121,7 +121,7 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
               <BookOpen className="w-12 h-12 mb-4 opacity-50" />
-              <p>Ask any question about TCM diagnosis, acupuncture points, or herbal formulas.</p>
+              <p>Ask any question about CM diagnosis, acupuncture points, or herbal formulas.</p>
               <p className="text-xs mt-2">All answers are sourced from Dr. Sapir's materials with citations.</p>
             </div>
           ) : (
@@ -186,7 +186,7 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask about TCM patterns, acupoints, formulas..."
+              placeholder="Ask about CM patterns, acupoints, formulas..."
               disabled={isLoading}
               className="flex-1"
             />

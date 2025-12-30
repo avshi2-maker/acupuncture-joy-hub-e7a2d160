@@ -61,6 +61,7 @@ interface MobileCalendarViewProps {
   onRefresh?: () => Promise<void>;
   onQuickCreate?: (date: Date, hour: number) => void;
   onStatusChange?: (apptId: string, newStatus: string) => Promise<void>;
+  compactMode?: boolean;
 }
 
 export function MobileCalendarView({
@@ -73,6 +74,7 @@ export function MobileCalendarView({
   onRefresh,
   onQuickCreate,
   onStatusChange,
+  compactMode = false,
 }: MobileCalendarViewProps) {
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
   const [showTimeSlots, setShowTimeSlots] = useState(false);
@@ -163,39 +165,51 @@ export function MobileCalendarView({
   return (
     <div className="flex flex-col h-full w-full max-w-full overflow-x-hidden" {...swipeHandlers}>
       {/* Date Navigation Header */}
-      <div className="bg-card border-b border-border/50 p-3 sticky top-0 z-10">
+      <div className={cn(
+        "bg-card border-b border-border/50 sticky top-0 z-10",
+        compactMode ? "p-2" : "p-3"
+      )}>
         {/* Main date display */}
-        <div className="flex items-center justify-between mb-3">
+        <div className={cn(
+          "flex items-center justify-between",
+          compactMode ? "mb-2" : "mb-3"
+        )}>
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10"
+            className={compactMode ? "h-8 w-8" : "h-10 w-10"}
             onClick={() => navigateDay(-1)}
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className={compactMode ? "h-4 w-4" : "h-5 w-5"} />
           </Button>
           
           <div className="text-center">
-            <p className="text-lg font-semibold">
-              {format(selectedDate, 'EEEE')}
+            <p className={cn(
+              "font-semibold",
+              compactMode ? "text-base" : "text-lg"
+            )}>
+              {format(selectedDate, compactMode ? 'EEE' : 'EEEE')}
             </p>
-            <p className="text-sm text-muted-foreground">
-              {format(selectedDate, 'MMMM d, yyyy')}
+            <p className={cn(
+              "text-muted-foreground",
+              compactMode ? "text-xs" : "text-sm"
+            )}>
+              {format(selectedDate, compactMode ? 'MMM d' : 'MMMM d, yyyy')}
             </p>
           </div>
           
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10"
+            className={compactMode ? "h-8 w-8" : "h-10 w-10"}
             onClick={() => navigateDay(1)}
           >
-            <ChevronRight className="h-5 w-5" />
+            <ChevronRight className={compactMode ? "h-4 w-4" : "h-5 w-5"} />
           </Button>
         </div>
 
         {/* Quick date pills */}
-        <div className="flex w-full max-w-full gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <div className="flex w-full max-w-full gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
           {dateRange.map((date) => {
             const isSelected = isSameDay(date, selectedDate);
             const isDateToday = isSameDay(date, new Date());
@@ -206,7 +220,8 @@ export function MobileCalendarView({
                 key={date.toISOString()}
                 onClick={() => onDateChange(date)}
                 className={cn(
-                  'flex-shrink-0 flex flex-col items-center py-2 px-3 rounded-lg transition-all min-w-[52px]',
+                  'flex-shrink-0 flex flex-col items-center rounded-lg transition-all',
+                  compactMode ? 'py-1 px-2 min-w-[40px]' : 'py-2 px-3 min-w-[52px]',
                   isSelected 
                     ? 'bg-jade text-white' 
                     : isDateToday
@@ -214,79 +229,90 @@ export function MobileCalendarView({
                     : 'bg-muted/50 text-muted-foreground hover:bg-muted'
                 )}
               >
-                <span className="text-[10px] uppercase font-medium">
+                <span className={cn(
+                  "uppercase font-medium",
+                  compactMode ? "text-[8px]" : "text-[10px]"
+                )}>
                   {format(date, 'EEE')}
                 </span>
-                <span className="text-lg font-bold">
+                <span className={cn(
+                  "font-bold",
+                  compactMode ? "text-sm" : "text-lg"
+                )}>
                   {format(date, 'd')}
                 </span>
                 {hasAppointments && !isSelected && (
-                  <div className="w-1.5 h-1.5 rounded-full bg-jade mt-0.5" />
+                  <div className={cn(
+                    "rounded-full bg-jade",
+                    compactMode ? "w-1 h-1" : "w-1.5 h-1.5 mt-0.5"
+                  )} />
                 )}
               </button>
             );
           })}
         </div>
 
-        {/* Week Overview Strip - Appointment density */}
-        <div className="mt-3 pt-3 border-t border-border/30">
-          <p className="text-[10px] uppercase text-muted-foreground mb-2 font-medium">Week Overview</p>
-          <div className="flex gap-1">
-            {weekAppointmentData.map(({ date, count, completed, cancelled, scheduled }) => {
-              const isSelected = isSameDay(date, selectedDate);
-              const heightPercent = count > 0 ? Math.max((count / maxAppointments) * 100, 20) : 8;
-              
-              // Determine bar color based on status breakdown
-              const getBarColor = () => {
-                if (count === 0) return 'bg-muted';
-                if (isSelected) return 'bg-jade';
-                if (cancelled > 0 && cancelled === count) return 'bg-destructive/60';
-                if (completed > 0 && completed === count) return 'bg-jade/80';
-                if (completed > scheduled) return 'bg-jade/60';
-                return 'bg-primary/50';
-              };
-              
-              return (
-                <button
-                  key={date.toISOString()}
-                  onClick={() => {
-                    haptic.light();
-                    onDateChange(date);
-                  }}
-                  className={cn(
-                    'flex-1 flex flex-col items-center gap-1 py-1 rounded transition-all',
-                    isSelected && 'bg-jade/10'
-                  )}
-                >
-                  <div className="h-8 w-full flex items-end justify-center gap-[1px]">
-                    {/* Stacked status dots */}
-                    {count > 0 ? (
-                      <div className="flex flex-col items-center gap-[2px]">
-                        {completed > 0 && (
-                          <div className="w-2 h-2 rounded-full bg-jade" title={`${completed} completed`} />
-                        )}
-                        {scheduled > 0 && (
-                          <div className="w-2 h-2 rounded-full bg-primary/60" title={`${scheduled} scheduled`} />
-                        )}
-                        {cancelled > 0 && (
-                          <div className="w-2 h-2 rounded-full bg-destructive/60" title={`${cancelled} cancelled`} />
-                        )}
-                      </div>
-                    ) : (
-                      <div className="w-2 h-2 rounded-full bg-muted" />
+        {/* Week Overview Strip - Hidden in compact mode */}
+        {!compactMode && (
+          <div className="mt-3 pt-3 border-t border-border/30">
+            <p className="text-[10px] uppercase text-muted-foreground mb-2 font-medium">Week Overview</p>
+            <div className="flex gap-1">
+              {weekAppointmentData.map(({ date, count, completed, cancelled, scheduled }) => {
+                const isSelected = isSameDay(date, selectedDate);
+                const heightPercent = count > 0 ? Math.max((count / maxAppointments) * 100, 20) : 8;
+                
+                // Determine bar color based on status breakdown
+                const getBarColor = () => {
+                  if (count === 0) return 'bg-muted';
+                  if (isSelected) return 'bg-jade';
+                  if (cancelled > 0 && cancelled === count) return 'bg-destructive/60';
+                  if (completed > 0 && completed === count) return 'bg-jade/80';
+                  if (completed > scheduled) return 'bg-jade/60';
+                  return 'bg-primary/50';
+                };
+                
+                return (
+                  <button
+                    key={date.toISOString()}
+                    onClick={() => {
+                      haptic.light();
+                      onDateChange(date);
+                    }}
+                    className={cn(
+                      'flex-1 flex flex-col items-center gap-1 py-1 rounded transition-all',
+                      isSelected && 'bg-jade/10'
                     )}
-                  </div>
-                  <span className={cn(
-                    'text-[9px]',
-                    isSelected ? 'text-jade font-semibold' : 'text-muted-foreground'
-                  )}>
-                    {format(date, 'EEE')[0]}
-                  </span>
-                </button>
-              );
-            })}
+                  >
+                    <div className="h-8 w-full flex items-end justify-center gap-[1px]">
+                      {/* Stacked status dots */}
+                      {count > 0 ? (
+                        <div className="flex flex-col items-center gap-[2px]">
+                          {completed > 0 && (
+                            <div className="w-2 h-2 rounded-full bg-jade" title={`${completed} completed`} />
+                          )}
+                          {scheduled > 0 && (
+                            <div className="w-2 h-2 rounded-full bg-primary/60" title={`${scheduled} scheduled`} />
+                          )}
+                          {cancelled > 0 && (
+                            <div className="w-2 h-2 rounded-full bg-destructive/60" title={`${cancelled} cancelled`} />
+                          )}
+                        </div>
+                      ) : (
+                        <div className="w-2 h-2 rounded-full bg-muted" />
+                      )}
+                    </div>
+                    <span className={cn(
+                      'text-[9px]',
+                      isSelected ? 'text-jade font-semibold' : 'text-muted-foreground'
+                    )}>
+                      {format(date, 'EEE')[0]}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Pull to refresh indicator */}

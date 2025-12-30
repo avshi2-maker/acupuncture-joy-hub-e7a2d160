@@ -48,7 +48,7 @@ const VOICE_COMMANDS: Record<string, VoiceCommand> = {
 export function VoiceCommandSystem({ 
   onCommand, 
   isSessionActive,
-  wakeWord = 'hey tcm' 
+  wakeWord = 'hey cm' 
 }: VoiceCommandSystemProps) {
   const [isListening, setIsListening] = useState(false);
   const [isAwake, setIsAwake] = useState(false);
@@ -155,7 +155,7 @@ export function VoiceCommandSystem({
       recognitionRef.current.start();
       setIsListening(true);
       haptic.light();
-      toast.success('🎙️ Voice commands active - Say "Hey TCM"', { duration: 3000 });
+      toast.success('🎙️ Voice commands active - Say "Hey CM"', { duration: 3000 });
     } catch (error) {
       console.error('Error starting speech recognition:', error);
       toast.error('Failed to start voice commands');
@@ -220,7 +220,7 @@ export function VoiceCommandSystem({
             'text-[10px] px-2 py-0.5 rounded-full',
             isAwake ? 'bg-jade text-white' : 'bg-muted text-muted-foreground'
           )}>
-            {isAwake ? 'Listening...' : 'Say "Hey TCM"'}
+            {isAwake ? 'Listening...' : 'Say "Hey CM"'}
           </span>
         </div>
       )}

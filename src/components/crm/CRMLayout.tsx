@@ -29,7 +29,7 @@ function MobileHeader() {
         <div className="w-7 h-7 rounded-lg bg-jade flex items-center justify-center">
           <Building2 className="h-3.5 w-3.5 text-white" />
         </div>
-        <span className="font-display font-semibold">TCM Clinic</span>
+        <span className="font-display font-semibold">CM Clinic</span>
       </div>
     </header>
   );
