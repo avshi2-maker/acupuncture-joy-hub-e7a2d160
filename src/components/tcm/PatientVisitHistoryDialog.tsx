@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 import { 
   History, 
   FileText, 
@@ -17,7 +18,8 @@ import {
   ClipboardList,
   Sparkles,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  RotateCcw
 } from 'lucide-react';
 
 interface Visit {
@@ -35,16 +37,24 @@ interface Visit {
   pulse_diagnosis: string | null;
 }
 
+export interface WorkflowData {
+  symptomsData: string;
+  diagnosisData: string;
+  treatmentData: string;
+}
+
 interface PatientVisitHistoryDialogProps {
   patientId: string | null;
   patientName: string | null;
   trigger?: React.ReactNode;
+  onLoadWorkflow?: (data: WorkflowData) => void;
 }
 
 export function PatientVisitHistoryDialog({ 
   patientId, 
   patientName,
-  trigger 
+  trigger,
+  onLoadWorkflow
 }: PatientVisitHistoryDialogProps) {
   const [visits, setVisits] = useState<Visit[]>([]);
   const [loading, setLoading] = useState(false);
@@ -85,6 +95,31 @@ export function PatientVisitHistoryDialog({
 
   const isAutoChainWorkflow = (complaint: string | null) => {
     return complaint?.includes('[Auto-Chain Workflow]');
+  };
+
+  const handleLoadWorkflow = (visit: Visit) => {
+    if (!onLoadWorkflow) return;
+
+    // Extract workflow data from the visit
+    // For auto-chain visits, the notes contain the full workflow
+    // For regular visits, we construct from available fields
+    const symptomsData = visit.chief_complaint?.replace('[Auto-Chain Workflow]\n', '') || '';
+    const diagnosisData = visit.tcm_pattern || '';
+    const treatmentData = visit.treatment_principle || '';
+
+    onLoadWorkflow({
+      symptomsData,
+      diagnosisData,
+      treatmentData,
+    });
+
+    setOpen(false);
+    toast.success('Workflow loaded from previous visit');
+  };
+
+  const canLoadWorkflow = (visit: Visit) => {
+    // Can load if visit has any meaningful data
+    return !!(visit.chief_complaint || visit.tcm_pattern || visit.treatment_principle);
   };
 
   return (
@@ -278,6 +313,21 @@ export function PatientVisitHistoryDialog({
                               <p className="text-foreground whitespace-pre-wrap text-xs bg-muted/50 p-2 rounded max-h-40 overflow-y-auto">
                                 {visit.notes}
                               </p>
+                            </div>
+                          )}
+
+                          {/* Load into Workflow Button */}
+                          {onLoadWorkflow && canLoadWorkflow(visit) && (
+                            <div className="pt-2 border-t">
+                              <Button
+                                onClick={() => handleLoadWorkflow(visit)}
+                                size="sm"
+                                variant="outline"
+                                className="w-full gap-2 text-jade border-jade/40 hover:bg-jade/10"
+                              >
+                                <RotateCcw className="h-3.5 w-3.5" />
+                                Load into Auto-Chain Workflow
+                              </Button>
                             </div>
                           )}
                         </div>

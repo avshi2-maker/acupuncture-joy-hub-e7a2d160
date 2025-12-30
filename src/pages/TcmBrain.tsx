@@ -1696,6 +1696,17 @@ Based on this framework, provide a complete treatment protocol:
               <PatientVisitHistoryDialog
                 patientId={selectedPatient?.id || null}
                 patientName={selectedPatient?.name || null}
+                onLoadWorkflow={(data) => {
+                  setChainedWorkflow({
+                    isActive: true,
+                    currentPhase: 'complete',
+                    symptomsData: data.symptomsData,
+                    diagnosisData: data.diagnosisData,
+                    treatmentData: data.treatmentData,
+                  });
+                  setInput(data.symptomsData);
+                  setWorkflowSavedToPatient(true); // Mark as already saved since it came from a saved visit
+                }}
               />
               
               {/* Session Templates Button */}
