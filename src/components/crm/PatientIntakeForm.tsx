@@ -23,6 +23,7 @@ import { SignaturePad } from './SignaturePad';
 import { MedicalDocumentUpload } from './MedicalDocumentUpload';
 import { DietNutritionSelect } from './DietNutritionSelect';
 import { PulseDiagnosisSelect } from './PulseDiagnosisSelect';
+import { AllergiesSelect } from './AllergiesSelect';
 import { validateIsraeliId, looksLikeIsraeliId } from '@/utils/israeliIdValidation';
 
 // Base patient schema
@@ -154,6 +155,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
   const [medicalDocuments, setMedicalDocuments] = useState<File[]>([]);
   const [dietHabits, setDietHabits] = useState<string[]>([]);
   const [pulseFindings, setPulseFindings] = useState<string[]>([]);
+  const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
   
   // Post-save navigation dialog
   const [showNavigationDialog, setShowNavigationDialog] = useState(false);
@@ -826,10 +828,24 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Allergies</FormLabel>
+                        <AllergiesSelect
+                          value={selectedAllergies}
+                          onChange={(newAllergies) => {
+                            setSelectedAllergies(newAllergies);
+                            const existingNotes = field.value || '';
+                            const selectedText = newAllergies.join('; ');
+                            field.onChange(selectedText + (existingNotes && !existingNotes.startsWith(selectedText) ? '\n\nNotes: ' + existingNotes : ''));
+                          }}
+                        />
                         <FormControl>
                           <Textarea 
-                            placeholder="Food, medication, environmental allergies..." 
-                            {...field} 
+                            placeholder="Additional allergy notes, reactions, severity details..." 
+                            className="mt-2"
+                            value={field.value?.includes('\n\nNotes: ') ? field.value.split('\n\nNotes: ')[1] : (selectedAllergies.length === 0 ? field.value : '')}
+                            onChange={(e) => {
+                              const selectedText = selectedAllergies.join('; ');
+                              field.onChange(selectedText ? selectedText + (e.target.value ? '\n\nNotes: ' + e.target.value : '') : e.target.value);
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
