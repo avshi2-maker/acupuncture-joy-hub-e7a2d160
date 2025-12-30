@@ -19,6 +19,7 @@ import {
   Loader2,
   MapPin,
   Moon,
+  Printer,
   Scale,
   Sparkles,
   Star,
@@ -32,6 +33,7 @@ import { parsePointReferences } from '@/components/acupuncture/BodyFigureSelecto
 import { supabase } from '@/integrations/supabase/client';
 import { TTSButton } from '@/components/audio/TTSButton';
 import { GenerateMP3Button } from '@/components/audio/GenerateMP3Button';
+import { usePrintContent } from '@/hooks/usePrintContent';
 
 interface AIResponseDisplayProps {
   isLoading: boolean;
@@ -39,6 +41,7 @@ interface AIResponseDisplayProps {
   query: string;
   onViewBodyMap: (points: string[]) => void;
   loadingStartTime?: number;
+  language?: 'he' | 'en' | 'ru';
 }
 
 interface PointInfo {
@@ -64,12 +67,13 @@ interface HerbInfo {
   indications: string[] | null;
 }
 
-// TCM-CAF: TCM Clinical Asset Framework - Full 15 Asset Categories
+// TCM-CAF: TCM Clinical Asset Framework - Full 15 Asset Categories with emojis
 const SECTION_CONFIG = {
   diagnosis: {
     headings: ['Pattern', 'Diagnosis', 'Pattern / Diagnosis', 'Dx'],
     icon: Stethoscope,
     label: 'Diagnosis',
+    emoji: '🩺',
     color: 'text-purple-500',
     bgColor: 'bg-purple-500/10',
     borderColor: 'border-purple-500/30',
@@ -78,6 +82,7 @@ const SECTION_CONFIG = {
     headings: ['Treatment Principle', 'Principle', 'Tx Principle'],
     icon: Target,
     label: 'Treatment',
+    emoji: '🎯',
     color: 'text-blue-500',
     bgColor: 'bg-blue-500/10',
     borderColor: 'border-blue-500/30',
@@ -86,6 +91,7 @@ const SECTION_CONFIG = {
     headings: ['Acupuncture Points', 'Points', 'Acupuncture'],
     icon: MapPin,
     label: 'Points',
+    emoji: '📍',
     color: 'text-destructive',
     bgColor: 'bg-destructive/10',
     borderColor: 'border-destructive/30',
@@ -94,6 +100,7 @@ const SECTION_CONFIG = {
     headings: ['Herbal Formula', 'Herbs', 'Chinese Herbs', 'Formula'],
     icon: Leaf,
     label: 'Herbal Formula',
+    emoji: '🌿',
     color: 'text-primary',
     bgColor: 'bg-primary/10',
     borderColor: 'border-primary/30',
@@ -102,6 +109,7 @@ const SECTION_CONFIG = {
     headings: ['Nutrition', 'Nutrition Recommendations', 'Diet', 'Dietary', 'Foods'],
     icon: Apple,
     label: 'Nutrition',
+    emoji: '🍎',
     color: 'text-orange-500',
     bgColor: 'bg-orange-500/10',
     borderColor: 'border-orange-500/30',
@@ -110,6 +118,7 @@ const SECTION_CONFIG = {
     headings: ['Lifestyle', 'Lifestyle & Wellness'],
     icon: Activity,
     label: 'Lifestyle',
+    emoji: '💪',
     color: 'text-green-500',
     bgColor: 'bg-green-500/10',
     borderColor: 'border-green-500/30',
@@ -118,6 +127,7 @@ const SECTION_CONFIG = {
     headings: ['Exercise', 'Exercise & Movement', 'Movement', 'Sport'],
     icon: Dumbbell,
     label: 'Exercise',
+    emoji: '🏃',
     color: 'text-cyan-500',
     bgColor: 'bg-cyan-500/10',
     borderColor: 'border-cyan-500/30',
@@ -126,6 +136,7 @@ const SECTION_CONFIG = {
     headings: ['Wellness', 'Wellness Practices', 'Self-Care'],
     icon: Heart,
     label: 'Wellness',
+    emoji: '💖',
     color: 'text-pink-500',
     bgColor: 'bg-pink-500/10',
     borderColor: 'border-pink-500/30',
@@ -134,6 +145,7 @@ const SECTION_CONFIG = {
     headings: ['Safety', 'Safety & Contraindications', 'Contraindications', 'Precautions'],
     icon: AlertTriangle,
     label: 'Safety',
+    emoji: '⚠️',
     color: 'text-yellow-500',
     bgColor: 'bg-yellow-500/10',
     borderColor: 'border-yellow-500/30',
@@ -142,6 +154,7 @@ const SECTION_CONFIG = {
     headings: ['Mental', 'Mental & Emotional', 'Emotional', 'Shen', 'Mind'],
     icon: Brain,
     label: 'Mental & Emotional',
+    emoji: '🧠',
     color: 'text-indigo-500',
     bgColor: 'bg-indigo-500/10',
     borderColor: 'border-indigo-500/30',
@@ -150,6 +163,7 @@ const SECTION_CONFIG = {
     headings: ['Sleep', 'Sleep Optimization', 'Rest', 'Sleep Quality'],
     icon: Moon,
     label: 'Sleep',
+    emoji: '🌙',
     color: 'text-slate-500',
     bgColor: 'bg-slate-500/10',
     borderColor: 'border-slate-500/30',
@@ -158,6 +172,7 @@ const SECTION_CONFIG = {
     headings: ['Condition', 'Condition Management', 'Management', 'Prognosis'],
     icon: TrendingUp,
     label: 'Condition Mgmt',
+    emoji: '📈',
     color: 'text-teal-500',
     bgColor: 'bg-teal-500/10',
     borderColor: 'border-teal-500/30',
@@ -166,6 +181,7 @@ const SECTION_CONFIG = {
     headings: ['Constitutional', 'Constitutional Balance', 'Constitution', 'Body Type'],
     icon: Scale,
     label: 'Constitution',
+    emoji: '⚖️',
     color: 'text-amber-500',
     bgColor: 'bg-amber-500/10',
     borderColor: 'border-amber-500/30',
@@ -174,6 +190,7 @@ const SECTION_CONFIG = {
     headings: ['Chinese Astrology', 'Astrology', 'Celestial', 'Timing'],
     icon: Star,
     label: 'Astrology',
+    emoji: '⭐',
     color: 'text-violet-500',
     bgColor: 'bg-violet-500/10',
     borderColor: 'border-violet-500/30',
@@ -182,6 +199,7 @@ const SECTION_CONFIG = {
     headings: ['BaZi', 'BaZi Considerations', 'Four Pillars', 'Birth Chart'],
     icon: Compass,
     label: 'BaZi',
+    emoji: '🧭',
     color: 'text-rose-500',
     bgColor: 'bg-rose-500/10',
     borderColor: 'border-rose-500/30',
@@ -307,7 +325,10 @@ export function AIResponseDisplay({
   query,
   onViewBodyMap,
   loadingStartTime,
+  language = 'he',
 }: AIResponseDisplayProps) {
+  const { printContent } = usePrintContent();
+  const printRef = useRef<HTMLDivElement>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [showBrief, setShowBrief] = useState(false);
   const [showFullReport, setShowFullReport] = useState(false);
@@ -595,7 +616,7 @@ export function AIResponseDisplay({
       >
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <Icon className={`h-4 w-4 ${config.color}`} />
+            <span className="text-base">{config.emoji}</span>
             <span className="text-sm font-medium">{config.label}</span>
             <Badge variant="secondary" className="h-5 text-[10px] px-1.5">{itemCount}</Badge>
           </div>
@@ -679,8 +700,12 @@ export function AIResponseDisplay({
     );
   };
 
+  // Determine text direction based on language
+  const isRtl = language === 'he';
+  const textAlign = isRtl ? 'text-right' : 'text-left';
+
   return (
-    <Card className="border-border/60 bg-card shadow-sm">
+    <Card className="border-border/60 bg-card shadow-sm" dir={isRtl ? 'rtl' : 'ltr'}>
       <CardHeader className="py-3 border-b border-border/50">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2 min-w-0">
@@ -752,6 +777,19 @@ export function AIResponseDisplay({
               />
             )}
 
+            {/* Print Button */}
+            {content && !isLoading && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => printContent(printRef.current, { title: 'TCM AI Report' })}
+              >
+                <Printer className="h-3 w-3" />
+                Print
+              </Button>
+            )}
+
             {isLoading && (
               <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary gap-1">
                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -780,7 +818,7 @@ export function AIResponseDisplay({
         )}
 
         {content && (
-          <div className="space-y-4">
+          <div ref={printRef} className={`space-y-4 ${textAlign}`}>
             {/* Brief View */}
             {showBrief && (
               <div className="rounded-md border border-primary/30 bg-primary/5 p-4 space-y-3">
@@ -804,9 +842,10 @@ export function AIResponseDisplay({
             )}
 
             {/* Full Report View */}
+            {/* Full Report View */}
             {showFullReport && (
               <ScrollArea className="h-[500px] rounded-md border border-border/60 bg-background/40">
-                <div className="p-4 whitespace-pre-wrap text-sm leading-relaxed">
+                <div className={`p-4 whitespace-pre-wrap text-sm leading-relaxed ${textAlign}`}>
                   {content}
                   {isLoading && (
                     <span className="inline-block w-2 h-4 bg-primary/60 animate-pulse ml-1 align-text-bottom" />
