@@ -257,6 +257,45 @@ export type Database = {
           },
         ]
       }
+      bug_reports: {
+        Row: {
+          created_at: string
+          description: string
+          device_info: Json | null
+          id: string
+          notes: string | null
+          page_name: string | null
+          page_url: string
+          resolved_at: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          device_info?: Json | null
+          id?: string
+          notes?: string | null
+          page_name?: string | null
+          page_url: string
+          resolved_at?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          device_info?: Json | null
+          id?: string
+          notes?: string | null
+          page_name?: string | null
+          page_url?: string
+          resolved_at?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       chat_feedback: {
         Row: {
           created_at: string

@@ -659,6 +659,7 @@ function CalendarContent() {
           onAppointmentClick={setEditingAppt}
           onStartSession={handleStartSession}
           onRefresh={fetchData}
+          compactMode={true}
           onQuickCreate={(date, hour) => {
             setNewAppt(prev => ({
               ...prev,

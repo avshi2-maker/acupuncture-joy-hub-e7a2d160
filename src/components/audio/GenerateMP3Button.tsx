@@ -106,9 +106,9 @@ export function GenerateMP3Button({
   const shareToWhatsApp = () => {
     // Since we can't directly attach files to WhatsApp web, we provide instructions
     const message = encodeURIComponent(
-      `🎧 *TCM Brain Audio Report*\n\n` +
+      `🎧 *CM Brain Audio Report*\n\n` +
       `📅 Date: ${new Date().toLocaleDateString()}\n\n` +
-      `I've generated an audio version of my TCM consultation report.\n\n` +
+      `I've generated an audio version of my CM consultation report.\n\n` +
       `_Note: The MP3 file has been downloaded to your device. You can share it as an attachment._`
     );
     

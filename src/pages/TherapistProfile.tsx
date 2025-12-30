@@ -95,7 +95,7 @@ export default function TherapistProfile() {
   return (
     <>
       <Helmet>
-        <title>השלמת פרופיל מטפל | TCM Clinic</title>
+        <title>השלמת פרופיל מטפל | CM Clinic</title>
         <meta name="description" content="השלימו את פרטי הפרופיל שלכם" />
       </Helmet>
 

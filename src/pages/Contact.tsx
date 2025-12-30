@@ -7,10 +7,10 @@ const Contact = () => {
   return (
     <>
       <Helmet>
-        <title>Contact Us | TCM Clinic</title>
+        <title>Contact Us | CM Clinic</title>
         <meta
           name="description"
-          content="Contact Dr Roni Sapir's Traditional Chinese Medicine Clinic. Book appointments, ask questions, or get directions via WhatsApp."
+          content="Contact Dr Roni Sapir's Chinese Medicine Clinic. Book appointments, ask questions, or get directions via WhatsApp."
         />
       </Helmet>
 

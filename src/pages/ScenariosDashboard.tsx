@@ -318,7 +318,7 @@ export default function ScenariosDashboard() {
   return (
     <>
       <Helmet>
-        <title>Scenarios Dashboard | TCM Brain</title>
+        <title>Scenarios Dashboard | CM Brain</title>
         <meta name="description" content="Manage all your saved ROI scenarios in one place" />
       </Helmet>
 
