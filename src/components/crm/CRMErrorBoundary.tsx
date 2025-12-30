@@ -1,7 +1,8 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import ForceRefreshButton from '@/components/pwa/ForceRefreshButton';
 
 interface Props {
   children: ReactNode;
@@ -51,9 +52,7 @@ export class CRMErrorBoundary extends Component<Props, State> {
                 <AlertTriangle className="h-8 w-8 text-destructive" />
               </div>
               <CardTitle className="text-xl">Something went wrong</CardTitle>
-              <CardDescription>
-                An error occurred in the CRM module. Your data is safe.
-              </CardDescription>
+              <CardDescription>An error occurred in the CRM module. Your data is safe.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {this.state.error && (
@@ -80,8 +79,12 @@ export class CRMErrorBoundary extends Component<Props, State> {
                 </div>
               </div>
 
+              <div className="flex justify-center">
+                <ForceRefreshButton />
+              </div>
+
               <p className="text-xs text-center text-muted-foreground">
-                If this keeps happening, try clearing your browser cache or contact support.
+                If this keeps happening, click “Force refresh” to clear cached files and load the latest version.
               </p>
             </CardContent>
           </Card>
@@ -92,3 +95,4 @@ export class CRMErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 }
+
