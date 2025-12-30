@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, X, Languages, Copy, Check } from 'lucide-react';
+import { Mic, MicOff, X, Languages, Copy, Check, ClipboardPaste } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
@@ -9,6 +9,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface FloatingVoiceButtonProps {
   className?: string;
@@ -239,25 +244,69 @@ export function FloatingVoiceButton({ className }: FloatingVoiceButtonProps) {
 
             {/* Controls */}
             <div className="p-3 border-t border-border/50 bg-muted/30 flex items-center justify-between">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 {transcript && (
                   <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={copyToClipboard}
-                      className="h-8 text-xs gap-1"
-                    >
-                      {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                      העתק
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={copyToClipboard}
+                          className="h-8 px-2 text-xs gap-1"
+                        >
+                          {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>העתק ללוח</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => {
+                            // Find the currently focused input/textarea and paste
+                            const activeElement = document.activeElement;
+                            if (activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement) {
+                              const start = activeElement.selectionStart || 0;
+                              const end = activeElement.selectionEnd || 0;
+                              const currentValue = activeElement.value;
+                              const newValue = currentValue.slice(0, start) + transcript + currentValue.slice(end);
+                              
+                              // Create and dispatch input event
+                              const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+                                activeElement instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype,
+                                'value'
+                              )?.set;
+                              
+                              if (nativeInputValueSetter) {
+                                nativeInputValueSetter.call(activeElement, newValue);
+                                activeElement.dispatchEvent(new Event('input', { bubbles: true }));
+                              }
+                              
+                              toast.success('הודבק בהצלחה');
+                            } else {
+                              // Copy to clipboard if no input is focused
+                              navigator.clipboard.writeText(transcript);
+                              toast.info('הועתק ללוח - לחץ על שדה טקסט והדבק');
+                            }
+                          }}
+                          className="h-8 px-2 text-xs gap-1 bg-jade hover:bg-jade/90"
+                        >
+                          <ClipboardPaste className="h-3 w-3" />
+                          הדבק
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>הדבק לשדה הנוכחי</TooltipContent>
+                    </Tooltip>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={clearTranscript}
-                      className="h-8 text-xs text-muted-foreground"
+                      className="h-8 px-2 text-xs text-muted-foreground"
                     >
-                      נקה
+                      <X className="h-3 w-3" />
                     </Button>
                   </>
                 )}

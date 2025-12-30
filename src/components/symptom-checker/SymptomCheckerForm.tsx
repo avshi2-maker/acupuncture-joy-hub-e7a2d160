@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Stethoscope, User, Loader2, Printer } from 'lucide-react';
-import { VoiceInputButton } from '@/components/ui/VoiceInputButton';
+import { BrowserVoiceInput } from '@/components/ui/BrowserVoiceInput';
 import { usePrintContent } from '@/hooks/usePrintContent';
 
 interface PatientInfo {
@@ -24,6 +24,7 @@ interface SymptomCheckerFormProps {
 export function SymptomCheckerForm({ onSubmit, isLoading }: SymptomCheckerFormProps) {
   const [symptoms, setSymptoms] = useState('');
   const [showPatientInfo, setShowPatientInfo] = useState(false);
+  const [voiceLang, setVoiceLang] = useState('he-IL');
   const [patientInfo, setPatientInfo] = useState<PatientInfo>({
     ageGroup: '',
     gender: '',
@@ -85,12 +86,27 @@ export function SymptomCheckerForm({ onSubmit, isLoading }: SymptomCheckerFormPr
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="symptoms">Symptoms Description *</Label>
-              <VoiceInputButton
-                onTranscription={handleVoiceTranscription}
-                disabled={isLoading}
-                size="sm"
-                className="no-print"
-              />
+              <div className="flex items-center gap-2 no-print">
+                <Select value={voiceLang} onValueChange={setVoiceLang}>
+                  <SelectTrigger className="h-8 w-20 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="he-IL">🇮🇱 עברית</SelectItem>
+                    <SelectItem value="en-US">🇺🇸 English</SelectItem>
+                    <SelectItem value="ru-RU">🇷🇺 Русский</SelectItem>
+                    <SelectItem value="ar-SA">🇸🇦 العربية</SelectItem>
+                    <SelectItem value="zh-CN">🇨🇳 中文</SelectItem>
+                  </SelectContent>
+                </Select>
+                <BrowserVoiceInput
+                  onTranscription={handleVoiceTranscription}
+                  disabled={isLoading}
+                  size="sm"
+                  language={voiceLang}
+                  continuous
+                />
+              </div>
             </div>
             <Textarea
               id="symptoms"
