@@ -1,11 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Users, Clock, TrendingUp, Plus, ArrowRight, Video } from 'lucide-react';
+import { Calendar, Users, Clock, TrendingUp, Plus, ArrowRight, Video, FileText, Trash2 } from 'lucide-react';
 import { WhatsAppReminderButton } from '@/components/crm/WhatsAppReminderButton';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { CRMLayout } from '@/components/crm/CRMLayout';
 import { PullToRefreshContainer } from '@/components/ui/PullToRefreshContainer';
 import { QuickPatientSearch } from '@/components/crm/QuickPatientSearch';
@@ -18,7 +18,30 @@ interface DashboardStats {
   weeklyVisits: number;
 }
 
+const DRAFT_KEY = 'patient_intake_draft';
+
+interface DraftInfo {
+  savedAt: number;
+  currentStep: number;
+  formData: { full_name?: string };
+}
+
+function getDraftInfo(): DraftInfo | null {
+  try {
+    const saved = localStorage.getItem(DRAFT_KEY);
+    if (!saved) return null;
+    const draft = JSON.parse(saved) as DraftInfo;
+    // Only show if less than 24 hours old
+    const hoursSinceSave = (Date.now() - draft.savedAt) / (1000 * 60 * 60);
+    if (hoursSinceSave < 24) return draft;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export default function CRMDashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     totalPatients: 0,
     todayAppointments: 0,
@@ -27,10 +50,22 @@ export default function CRMDashboard() {
   });
   const [todayAppts, setTodayAppts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [draftInfo, setDraftInfo] = useState<DraftInfo | null>(null);
 
   useEffect(() => {
     fetchDashboardData();
+    setDraftInfo(getDraftInfo());
   }, []);
+
+  const handleDiscardDraft = () => {
+    localStorage.removeItem(DRAFT_KEY);
+    setDraftInfo(null);
+    toast.info('Draft discarded');
+  };
+
+  const handleContinueDraft = () => {
+    navigate('/crm/patients/new');
+  };
 
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
@@ -125,6 +160,46 @@ export default function CRMDashboard() {
           {/* Quick Patient Search */}
           <QuickPatientSearch className="max-w-md" />
         </div>
+
+        {/* Draft Recovery Card */}
+        {draftInfo && (
+          <Card className="border-amber-500/50 bg-amber-500/5">
+            <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-amber-500/10">
+                  <FileText className="h-5 w-5 text-amber-500" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">Unsaved Patient Intake Draft</p>
+                  <p className="text-xs text-muted-foreground">
+                    {draftInfo.formData?.full_name ? `"${draftInfo.formData.full_name}"` : 'Unnamed patient'} 
+                    {' · '}Saved {formatDistanceToNow(draftInfo.savedAt, { addSuffix: true })}
+                    {' · '}Step {(draftInfo.currentStep || 0) + 1}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDiscardDraft}
+                  className="flex-1 sm:flex-none gap-1.5 text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Discard
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleContinueDraft}
+                  className="flex-1 sm:flex-none gap-1.5 bg-amber-500 hover:bg-amber-600 text-white"
+                >
+                  <ArrowRight className="h-4 w-4" />
+                  Continue
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Stats Grid - Mobile Optimized */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">

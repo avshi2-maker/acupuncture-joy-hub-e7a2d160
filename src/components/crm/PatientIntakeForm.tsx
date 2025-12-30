@@ -599,25 +599,25 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
           </Alert>
         )}
 
-        {/* Autosave indicator + manual save */}
-        {!patientId && (
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <AutoSaveIndicator isSaving={isSaving} lastSaved={lastSaved} />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleManualSave}
-              disabled={isSaving}
-              className="gap-1.5"
-            >
-              <Save className="h-4 w-4" />
-              Save draft now
-            </Button>
-          </div>
-        )}
-        {/* Progress Bar & Step Indicator */}
-        <div className="sticky top-0 z-20 -mx-4 px-4 py-4 bg-background/95 backdrop-blur border-b">
+        {/* Progress Bar & Step Indicator (sticky header includes autosave) */}
+        <div className="sticky top-0 z-20 -mx-4 px-4 py-4 bg-background/95 backdrop-blur border-b space-y-3">
+          {/* Autosave indicator + manual save - now inside sticky header */}
+          {!patientId && (
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <AutoSaveIndicator isSaving={isSaving} lastSaved={lastSaved} />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleManualSave}
+                disabled={isSaving}
+                className="gap-1.5"
+              >
+                <Save className="h-4 w-4" />
+                Save draft now
+              </Button>
+            </div>
+          )}
           <div className="space-y-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">
