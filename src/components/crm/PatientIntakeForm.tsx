@@ -808,6 +808,15 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                         value={field.value || ''}
                         onValueChange={field.onChange}
                       />
+                      <Input
+                        placeholder="Or type chief complaint here..."
+                        className="mt-1 border-dashed border-amber-400"
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            field.onChange(e.target.value);
+                          }
+                        }}
+                      />
                       <VoiceTextarea 
                         placeholder="Additional details about symptoms and concerns..." 
                         className="min-h-[80px] mt-2"
@@ -851,6 +860,16 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                             const existingNotes = field.value || '';
                             const selectedText = newAllergies.join('; ');
                             field.onChange(selectedText + (existingNotes && !existingNotes.startsWith(selectedText) ? '\n\nNotes: ' + existingNotes : ''));
+                          }}
+                        />
+                        <Input
+                          placeholder="Or type allergies here..."
+                          className="mt-1 border-dashed border-amber-400"
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              setSelectedAllergies([e.target.value]);
+                              field.onChange(e.target.value);
+                            }
                           }}
                         />
                         <FormControl>
@@ -1184,6 +1203,15 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                     value={dietHabits}
                     onChange={setDietHabits}
                   />
+                  <Input
+                    placeholder="Or type diet notes here to bypass dropdown..."
+                    className="mt-1 border-dashed border-amber-400"
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setDietHabits([e.target.value]);
+                      }
+                    }}
+                  />
                 </div>
 
                 <FormField
@@ -1249,6 +1277,16 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                         }}
                         maxSelections={5}
                       />
+                      <Input
+                        placeholder="Or type tongue findings here..."
+                        className="mt-1 border-dashed border-amber-400"
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            setTongueFindings([e.target.value]);
+                            field.onChange(e.target.value);
+                          }
+                        }}
+                      />
                       <FormControl>
                         <VoiceTextarea 
                           placeholder="Additional tongue notes (color, coating, moisture, shape)..." 
@@ -1275,12 +1313,21 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                         value={pulseFindings}
                         onChange={(newFindings) => {
                           setPulseFindings(newFindings);
-                          // Update the form field with selected findings
                           const existingNotes = field.value || '';
                           const selectedText = newFindings.join('; ');
                           field.onChange(selectedText + (existingNotes && !existingNotes.startsWith(selectedText) ? '\n\nNotes: ' + existingNotes : ''));
                         }}
                         maxSelections={5}
+                      />
+                      <Input
+                        placeholder="Or type pulse findings here..."
+                        className="mt-1 border-dashed border-amber-400"
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            setPulseFindings([e.target.value]);
+                            field.onChange(e.target.value);
+                          }
+                        }}
                       />
                       <FormControl>
                         <VoiceTextarea 
@@ -1308,6 +1355,15 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                         <ConstitutionTypeSelect
                           value={field.value}
                           onValueChange={field.onChange}
+                        />
+                        <Input
+                          placeholder="Or type constitution here..."
+                          className="mt-1 border-dashed border-amber-400"
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              field.onChange(e.target.value);
+                            }
+                          }}
                         />
                       </FormControl>
                       <VoiceInput
