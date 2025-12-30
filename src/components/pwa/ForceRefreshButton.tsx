@@ -2,6 +2,7 @@ import { useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 async function clearServiceWorkersAndCaches() {
   // Unregister service workers (PWA)
@@ -17,7 +18,11 @@ async function clearServiceWorkersAndCaches() {
   }
 }
 
-export default function ForceRefreshButton() {
+type ForceRefreshButtonProps = {
+  className?: string;
+};
+
+export default function ForceRefreshButton({ className }: ForceRefreshButtonProps) {
   const [busy, setBusy] = useState(false);
 
   const handleForceRefresh = async () => {
@@ -44,7 +49,7 @@ export default function ForceRefreshButton() {
       type="button"
       variant="link"
       size="sm"
-      className="h-auto px-0 text-primary-foreground/70 hover:text-primary-foreground"
+      className={cn("h-auto px-0 text-muted-foreground hover:text-foreground", className)}
       onClick={handleForceRefresh}
       disabled={busy}
     >
@@ -55,3 +60,4 @@ export default function ForceRefreshButton() {
     </Button>
   );
 }
+
