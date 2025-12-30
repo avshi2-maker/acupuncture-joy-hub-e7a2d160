@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, Smartphone, Apple, Chrome, Share, Plus, MoreVertical, Check, Loader2 } from 'lucide-react';
+import { Download, Smartphone, Apple, Chrome, Share, Share2, Plus, MoreVertical, Check, Loader2, Copy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Progress } from '@/components/ui/progress';
 import { Confetti } from '@/components/ui/Confetti';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
+import { toast } from 'sonner';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -170,9 +171,46 @@ export default function InstallApp() {
                 <p className="text-muted-foreground text-sm mb-4">
                   You can now access CM Clinic from your home screen
                 </p>
-                <Button asChild className="bg-jade hover:bg-jade/90">
-                  <Link to="/">Open App</Link>
-                </Button>
+                
+                <div className="flex flex-col gap-3">
+                  <Button asChild className="bg-jade hover:bg-jade/90">
+                    <Link to="/">Open App</Link>
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    onClick={async () => {
+                      haptic.light();
+                      const shareUrl = window.location.origin + '/install';
+                      const shareData = {
+                        title: 'CM Clinic App',
+                        text: 'Check out CM Clinic - a powerful clinic management app!',
+                        url: shareUrl,
+                      };
+                      
+                      if (navigator.share && navigator.canShare?.(shareData)) {
+                        try {
+                          await navigator.share(shareData);
+                          haptic.success();
+                        } catch (err) {
+                          // User cancelled or share failed
+                          if ((err as Error).name !== 'AbortError') {
+                            console.error('Share failed:', err);
+                          }
+                        }
+                      } else {
+                        // Fallback: copy to clipboard
+                        await navigator.clipboard.writeText(shareUrl);
+                        haptic.success();
+                        toast.success('Link copied to clipboard!');
+                      }
+                    }}
+                    className="gap-2"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    Share App with Others
+                  </Button>
+                </div>
               </div>
             ) : (
               <>
