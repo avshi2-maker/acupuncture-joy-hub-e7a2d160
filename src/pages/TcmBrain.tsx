@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { AnimatedMic } from '@/components/ui/AnimatedMic';
+import { BrowserVoiceInput } from '@/components/ui/BrowserVoiceInput';
 import acupunctureRoomBg from '@/assets/acupuncture-room-bg.png';
 import clockImg from '@/assets/clock.png';
 import { 
@@ -324,6 +325,7 @@ export default function TcmBrain() {
   const [voiceNotes, setVoiceNotes] = useState<VoiceNote[]>([]);
   const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
   const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
+  const [voiceLang, setVoiceLang] = useState<string>('he-IL'); // Voice language for browser recognition
   
   // Session history hook
   const { sessions, saveSession, exportSessionAsPDF, openGmailWithSession, openWhatsAppWithSession } = useTcmSessionHistory();
@@ -1933,19 +1935,28 @@ export default function TcmBrain() {
                               placeholder="Ask any TCM question..."
                               disabled={isLoading}
                               autoFocus
-                              className="text-left pr-12 h-12 rounded-xl border-jade/30 focus:border-jade transition-colors"
+                              className="text-left pr-24 h-12 rounded-xl border-jade/30 focus:border-jade transition-colors"
                             />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={toggleRecording}
-                              className={`absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 rounded-lg ${
-                                isRecording ? 'text-red-500 bg-red-500/10' : 'text-muted-foreground'
-                              }`}
-                            >
-                              {isRecording ? <MicOff className="h-5 w-5" /> : <AnimatedMic size="sm" isRecording={isRecording} />}
-                            </Button>
+                            <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                              {/* Language selector */}
+                              <Select value={voiceLang} onValueChange={setVoiceLang}>
+                                <SelectTrigger className="h-8 w-14 text-xs border-0 bg-transparent px-1">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="he-IL">🇮🇱 HE</SelectItem>
+                                  <SelectItem value="en-US">🇺🇸 EN</SelectItem>
+                                  <SelectItem value="ru-RU">🇷🇺 RU</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              {/* Browser Voice Input */}
+                              <BrowserVoiceInput
+                                onTranscription={(text) => setInput(prev => prev ? `${prev} ${text}` : text)}
+                                language={voiceLang}
+                                size="sm"
+                                disabled={isLoading}
+                              />
+                            </div>
                           </div>
                           <Button 
                             type="submit" 
@@ -2093,19 +2104,28 @@ export default function TcmBrain() {
                       onBlur={() => setIsInputFocused(false)}
                       placeholder="Ask a TCM question..."
                       disabled={isLoading}
-                      className="text-left pr-12 h-12 rounded-xl border-border/80 focus:border-jade transition-colors"
+                      className="text-left pr-24 h-12 rounded-xl border-border/80 focus:border-jade transition-colors"
                     />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={toggleRecording}
-                      className={`absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 rounded-lg ${
-                        isRecording ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20' : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      {isRecording ? <MicOff className="h-4 w-4" /> : <AnimatedMic size="sm" isRecording={isRecording} />}
-                    </Button>
+                    <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                      {/* Language selector */}
+                      <Select value={voiceLang} onValueChange={setVoiceLang}>
+                        <SelectTrigger className="h-8 w-14 text-xs border-0 bg-transparent px-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="he-IL">🇮🇱 HE</SelectItem>
+                          <SelectItem value="en-US">🇺🇸 EN</SelectItem>
+                          <SelectItem value="ru-RU">🇷🇺 RU</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {/* Browser Voice Input */}
+                      <BrowserVoiceInput
+                        onTranscription={(text) => setInput(prev => prev ? `${prev} ${text}` : text)}
+                        language={voiceLang}
+                        size="sm"
+                        disabled={isLoading}
+                      />
+                    </div>
                   </div>
                   <Button 
                     type="submit" 
