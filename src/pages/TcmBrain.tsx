@@ -94,7 +94,8 @@ import {
   baziQuestions,
   wellnessQuestions,
   sportsQuestions,
-  astroQuestions
+  astroQuestions,
+  cafQuestions
 } from '@/data/tcmBrainQuestions';
 
 interface Message {
@@ -110,6 +111,7 @@ const featureTabs = [
   { id: 'symptom-checker', icon: Stethoscope, label: 'AI Symptom Checker', isLink: true, href: '/symptom-checker' },
   { id: 'treatment-planner', icon: ClipboardList, label: 'AI Treatment Planner', isLink: true, href: '/treatment-planner' },
   { id: 'bodymap', icon: User, label: 'Body Map' },
+  { id: 'caf', icon: FileText, label: 'CAF' },
   { id: 'herbs', icon: Leaf, label: 'Herbs' },
   { id: 'points', icon: MapPin, label: 'Points' },
   { id: 'conditions', icon: Stethoscope, label: 'Conditions' },
@@ -565,6 +567,7 @@ export default function TcmBrain() {
   const [selectedWellnessQuestion, setSelectedWellnessQuestion] = useState('');
   const [selectedSportsQuestion, setSelectedSportsQuestion] = useState('');
   const [selectedAstroQuestion, setSelectedAstroQuestion] = useState('');
+  const [selectedCafQuestion, setSelectedCafQuestion] = useState('');
   const [showDetailedView, setShowDetailedView] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [showInlineChat, setShowInlineChat] = useState(false);
@@ -2163,6 +2166,16 @@ Include:
                     setActiveFeatureTab('chat');
                   }}
                 />
+              </TabsContent>
+
+              {/* CAF Tab - Clinical Assessment Framework */}
+              <TabsContent value="caf" className="flex-1 overflow-auto">
+                {renderQASection(
+                  'Clinical Assessment Framework',
+                  cafQuestions,
+                  selectedCafQuestion,
+                  setSelectedCafQuestion
+                )}
               </TabsContent>
 
               {/* Herbs Tab */}
