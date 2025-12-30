@@ -14,7 +14,6 @@ import RequireTier from "@/components/auth/RequireTier";
 import { FloatingMusicPlayer } from "@/components/ui/FloatingMusicPlayer";
 import { OfflineBanner } from "@/components/ui/OfflineBanner";
 import { AccessibilityPanel } from "@/components/ui/AccessibilityPanel";
-import { BugReportButton } from "@/components/ui/BugReportButton";
 import { FloatingVoiceButton } from "@/components/ui/FloatingVoiceButton";
 
 import Index from "./pages/Index";
@@ -128,7 +127,6 @@ const App = () => (
                     </Routes>
                     <FloatingMusicPlayer />
                     <AccessibilityPanel />
-                    <BugReportButton />
                     <FloatingVoiceButton />
                   </BrowserRouter>
                   </TooltipProvider>

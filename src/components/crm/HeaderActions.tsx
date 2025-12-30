@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Bell, Settings, User, Palette, Shield, LogOut, HelpCircle, Moon, Sun } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Bell, Settings, User, Palette, Shield, LogOut, HelpCircle, Moon, Sun, Bug, X, Send, Loader2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +11,50 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+function getDeviceInfo() {
+  const ua = navigator.userAgent;
+  let browser = 'Unknown';
+  if (ua.includes('Firefox')) browser = 'Firefox';
+  else if (ua.includes('SamsungBrowser')) browser = 'Samsung Browser';
+  else if (ua.includes('Opera') || ua.includes('OPR')) browser = 'Opera';
+  else if (ua.includes('Edg')) browser = 'Edge';
+  else if (ua.includes('Chrome')) browser = 'Chrome';
+  else if (ua.includes('Safari')) browser = 'Safari';
+  
+  let os = 'Unknown';
+  if (ua.includes('Android')) os = 'Android';
+  else if (ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS';
+  else if (ua.includes('Windows')) os = 'Windows';
+  else if (ua.includes('Mac')) os = 'macOS';
+  else if (ua.includes('Linux')) os = 'Linux';
+  
+  let deviceType = 'Desktop';
+  if (/Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua)) {
+    deviceType = /iPad|tablet/i.test(ua) ? 'Tablet' : 'Mobile';
+  }
+  
+  return { browser, os, deviceType, userAgent: ua.substring(0, 500) };
+}
+
+function getPageName(pathname: string): string {
+  const routes: Record<string, string> = {
+    '/': 'Home', '/dashboard': 'Dashboard', '/crm': 'CRM Dashboard',
+    '/crm/dashboard': 'CRM Dashboard', '/crm/calendar': 'Calendar',
+    '/crm/patients': 'Patients', '/crm/rooms': 'Rooms', '/crm/staff': 'Staff',
+    '/crm/clinics': 'Clinics', '/tcm-brain': 'CM Brain', '/video-session': 'Video Session',
+  };
+  if (routes[pathname]) return routes[pathname];
+  for (const [route, name] of Object.entries(routes)) {
+    if (pathname.startsWith(route + '/')) return name;
+  }
+  return pathname.split('/').filter(Boolean).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' > ') || 'Unknown Page';
+}
 
 interface Notification {
   id: string;
@@ -28,9 +71,44 @@ interface HeaderActionsProps {
 
 export function HeaderActions({ onHelpClick }: HeaderActionsProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { language } = useLanguage();
   const isHebrew = language === 'he';
   const [isDark, setIsDark] = useState(document.documentElement.classList.contains('dark'));
+  
+  // Bug report state
+  const [bugDialogOpen, setBugDialogOpen] = useState(false);
+  const [bugDescription, setBugDescription] = useState('');
+  const [bugSubmitting, setBugSubmitting] = useState(false);
+  
+  const handleBugSubmit = async () => {
+    if (!bugDescription.trim()) {
+      toast.error(isHebrew ? 'נא לתאר את הבאג' : 'Please describe the bug');
+      return;
+    }
+    setBugSubmitting(true);
+    try {
+      const deviceInfo = getDeviceInfo();
+      const pageName = getPageName(location.pathname);
+      const user = (await supabase.auth.getUser()).data.user;
+      const { error } = await supabase.from('bug_reports').insert({
+        page_url: window.location.href,
+        page_name: pageName,
+        description: bugDescription.trim(),
+        device_info: deviceInfo,
+        user_id: user?.id || null,
+      });
+      if (error) throw error;
+      toast.success(isHebrew ? 'דיווח הבאג נשלח! תודה!' : 'Bug report submitted! Thank you!');
+      setBugDescription('');
+      setBugDialogOpen(false);
+    } catch (error) {
+      console.error('Error submitting bug report:', error);
+      toast.error(isHebrew ? 'שגיאה בשליחת הדיווח' : 'Failed to submit bug report');
+    } finally {
+      setBugSubmitting(false);
+    }
+  };
   
   // Mock notifications - in production these would come from database
   const [notifications, setNotifications] = useState<Notification[]>([
@@ -73,6 +151,53 @@ export function HeaderActions({ onHelpClick }: HeaderActionsProps) {
 
   return (
     <div className="flex items-center gap-1">
+      {/* Bug Report Button - with pulse animation */}
+      <Dialog open={bugDialogOpen} onOpenChange={setBugDialogOpen}>
+        <DialogTrigger asChild>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="bg-gradient-to-br from-red-400 to-red-500 hover:from-red-500 hover:to-red-600 text-white h-8 w-8 animate-pulse hover:animate-none"
+            title={isHebrew ? 'דווח על באג' : 'Report a Bug'}
+          >
+            <Bug className="h-4 w-4" />
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Bug className="h-5 w-5 text-destructive" />
+              {isHebrew ? 'דווח על באג' : 'Report a Bug'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg space-y-1">
+              <p><strong>{isHebrew ? 'עמוד:' : 'Page:'}</strong> {getPageName(location.pathname)}</p>
+              <p><strong>{isHebrew ? 'מכשיר:' : 'Device:'}</strong> {getDeviceInfo().deviceType} • {getDeviceInfo().os} • {getDeviceInfo().browser}</p>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{isHebrew ? 'מה קרה?' : 'What went wrong?'}</label>
+              <Textarea
+                value={bugDescription}
+                onChange={(e) => setBugDescription(e.target.value)}
+                placeholder={isHebrew ? 'תאר את הבאג שנתקלת בו...' : 'Describe the bug you encountered...'}
+                rows={4}
+                className="resize-none"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setBugDialogOpen(false)} disabled={bugSubmitting}>
+                {isHebrew ? 'ביטול' : 'Cancel'}
+              </Button>
+              <Button onClick={handleBugSubmit} disabled={bugSubmitting || !bugDescription.trim()} className="bg-destructive hover:bg-destructive/90">
+                {bugSubmitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
+                {isHebrew ? 'שלח דיווח' : 'Submit Report'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Help Button - with pulse animation */}
       <Button 
         variant="ghost" 
