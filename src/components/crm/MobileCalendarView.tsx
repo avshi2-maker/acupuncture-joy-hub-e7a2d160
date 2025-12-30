@@ -161,7 +161,7 @@ export function MobileCalendarView({
   };
 
   return (
-    <div className="flex flex-col h-full" {...swipeHandlers}>
+    <div className="flex flex-col h-full w-full max-w-full overflow-x-hidden" {...swipeHandlers}>
       {/* Date Navigation Header */}
       <div className="bg-card border-b border-border/50 p-3 sticky top-0 z-10">
         {/* Main date display */}
@@ -195,7 +195,7 @@ export function MobileCalendarView({
         </div>
 
         {/* Quick date pills */}
-        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+        <div className="flex w-full max-w-full gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {dateRange.map((date) => {
             const isSelected = isSameDay(date, selectedDate);
             const isDateToday = isSameDay(date, new Date());
