@@ -84,6 +84,7 @@ import { VoiceNoteRecorder, VoiceNote } from '@/components/tcm/VoiceNoteRecorder
 import { SessionTemplates, SessionTemplate } from '@/components/tcm/SessionTemplates';
 import { MobileVoiceNotesDrawer } from '@/components/tcm/MobileVoiceNotesDrawer';
 import { PatientSelectorDropdown, SelectedPatient } from '@/components/crm/PatientSelectorDropdown';
+import { PatientVisitHistoryDialog } from '@/components/tcm/PatientVisitHistoryDialog';
 import { RAGVerificationStatus } from '@/components/tcm/RAGSearchAnimation';
 import { RAGVerificationPanel } from '@/components/tcm/RAGVerificationPanel';
 import { AuditEvidencePanel } from '@/components/tcm/AuditEvidencePanel';
@@ -1689,6 +1690,12 @@ Based on this framework, provide a complete treatment protocol:
                   };
                   fetchPatients();
                 }}
+              />
+              
+              {/* Patient Visit History Button */}
+              <PatientVisitHistoryDialog
+                patientId={selectedPatient?.id || null}
+                patientName={selectedPatient?.name || null}
               />
               
               {/* Session Templates Button */}
