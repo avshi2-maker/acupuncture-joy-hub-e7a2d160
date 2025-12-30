@@ -6,10 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
-import { Send, Loader2, BookOpen, FileText, AlertCircle, Printer, Shield, CheckCircle2, Database, Search } from 'lucide-react';
+import { Send, Loader2, BookOpen, FileText, AlertCircle, Printer, Shield, CheckCircle2, Database, ExternalLink } from 'lucide-react';
 import { VoiceInputButton } from '@/components/ui/VoiceInputButton';
 import { usePrintContent } from '@/hooks/usePrintContent';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { RAGSearchAnimation, RAGVerificationStatus } from './RAGSearchAnimation';
 
 interface Source {
   fileName: string;
@@ -22,6 +23,7 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   sources?: Source[];
+  isExternal?: boolean;
   metadata?: {
     chunksFound: number;
     documentsSearched: number;
@@ -29,6 +31,8 @@ interface Message {
     auditLogged: boolean;
   };
 }
+
+type SearchPhase = 'idle' | 'searching-rag' | 'rag-found' | 'rag-not-found' | 'external-consent' | 'external-search' | 'complete';
 
 interface RAGChatInterfaceProps {
   className?: string;
@@ -38,6 +42,13 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [searchPhase, setSearchPhase] = useState<SearchPhase>('idle');
+  const [pendingQuery, setPendingQuery] = useState<string>('');
+  const [ragResults, setRagResults] = useState<{
+    chunksFound: number;
+    documentsSearched: number;
+    sources: string[];
+  } | undefined>();
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const { printContent } = usePrintContent();
@@ -56,31 +67,65 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
     }
   }, [messages]);
 
-  const sendMessage = async () => {
-    if (!input.trim() || isLoading) return;
+  const sendMessage = async (useExternalAI: boolean = false) => {
+    const query = useExternalAI ? pendingQuery : input.trim();
+    if (!query || isLoading) return;
 
-    const userMessage: Message = { role: 'user', content: input };
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
+    if (!useExternalAI) {
+      const userMessage: Message = { role: 'user', content: query };
+      setMessages(prev => [...prev, userMessage]);
+      setInput('');
+      setPendingQuery(query);
+    }
+
     setIsLoading(true);
+    setSearchPhase('searching-rag');
+    setRagResults(undefined);
+
+    // Simulate search animation (minimum 1.5s)
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
     try {
       const { data, error } = await supabase.functions.invoke('tcm-rag-chat', {
         body: {
-          query: input,
-          messages: [...messages, userMessage].map(m => ({
+          query: query,
+          messages: messages.map(m => ({
             role: m.role,
             content: m.content
-          }))
+          })),
+          useExternalAI
         }
       });
 
       if (error) throw error;
 
+      const chunksFound = data.chunksFound || 0;
+      const sourceNames: string[] = (data.sources || []).map((s: Source) => s.fileName);
+
+      setRagResults({
+        chunksFound,
+        documentsSearched: data.documentsSearched || 0,
+        sources: [...new Set(sourceNames)]
+      });
+
+      // If no results found in RAG and not already using external AI
+      if (chunksFound === 0 && !useExternalAI) {
+        setSearchPhase('rag-not-found');
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        setSearchPhase('external-consent');
+        setIsLoading(false);
+        return;
+      }
+
+      // Results found or using external AI
+      setSearchPhase(chunksFound > 0 ? 'rag-found' : 'external-search');
+      await new Promise(resolve => setTimeout(resolve, 800));
+
       const assistantMessage: Message = {
         role: 'assistant',
         content: data.response,
         sources: data.sources,
+        isExternal: useExternalAI || chunksFound === 0,
         metadata: {
           chunksFound: data.chunksFound,
           documentsSearched: data.documentsSearched,
@@ -90,16 +135,69 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+      setSearchPhase('complete');
+      
+      setTimeout(() => setSearchPhase('idle'), 500);
 
-      if (data.chunksFound === 0) {
-        toast.info('No matching entries found in knowledge base');
-      }
     } catch (error) {
       console.error('Chat error:', error);
       toast.error('Failed to get response. Please try again.');
+      setSearchPhase('idle');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleUseExternalAI = async () => {
+    setSearchPhase('external-search');
+    setIsLoading(true);
+
+    try {
+      // Call the same function but with external AI flag
+      const { data, error } = await supabase.functions.invoke('tcm-rag-chat', {
+        body: {
+          query: pendingQuery,
+          messages: messages.map(m => ({
+            role: m.role,
+            content: m.content
+          })),
+          useExternalAI: true
+        }
+      });
+
+      if (error) throw error;
+
+      const assistantMessage: Message = {
+        role: 'assistant',
+        content: data.response,
+        sources: [],
+        isExternal: true,
+        metadata: {
+          chunksFound: 0,
+          documentsSearched: 0,
+          searchTermsUsed: data.searchTermsUsed || '',
+          auditLogged: data.auditLogged,
+        }
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+      setSearchPhase('complete');
+      setTimeout(() => setSearchPhase('idle'), 500);
+      toast.warning('Response from external AI - not from Dr. Sapir\'s verified materials');
+
+    } catch (error) {
+      console.error('External AI error:', error);
+      toast.error('Failed to get external AI response.');
+      setSearchPhase('idle');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancelExternalAI = () => {
+    setSearchPhase('idle');
+    setPendingQuery('');
+    toast.info('Staying within Dr. Sapir\'s knowledge base');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -118,6 +216,7 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
             Dr. Sapir's CM Knowledge Base
           </CardTitle>
           <div className="flex items-center gap-2">
+            <RAGVerificationStatus />
             <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
               <Shield className="w-3 h-3 mr-1" />
               Audit Logged
@@ -150,7 +249,7 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
                   <CheckCircle2 className="w-4 h-4" />
                   <span className="font-medium">RAG System Active</span>
                 </div>
-                <p>Every query searches ONLY our proprietary knowledge base. External AI knowledge is blocked. All searches are logged for legal compliance.</p>
+                <p>Every query searches ONLY our proprietary knowledge base first. If not found, you'll be offered external AI with liability disclaimer.</p>
               </div>
             </div>
           ) : (
@@ -166,9 +265,18 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
                     className={`max-w-[85%] rounded-lg px-4 py-2 ${
                       message.role === 'user'
                         ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted'
+                        : message.isExternal 
+                          ? 'bg-amber-500/10 border border-amber-500/30'
+                          : 'bg-muted'
                     }`}
                   >
+                    {message.isExternal && message.role === 'assistant' && (
+                      <div className="flex items-center gap-1 text-amber-600 text-xs mb-2 pb-2 border-b border-amber-500/30">
+                        <ExternalLink className="w-3 h-3" />
+                        <span className="font-medium">External AI Response</span>
+                        <span className="text-amber-500">• Not from Dr. Sapir's materials</span>
+                      </div>
+                    )}
                     <p className="whitespace-pre-wrap text-sm">{message.content}</p>
                   </div>
                   
@@ -209,6 +317,15 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
                               <Badge variant="destructive">No</Badge>
                             )}
                           </div>
+                          {message.isExternal && (
+                            <div className="flex items-center justify-between text-amber-600">
+                              <span className="text-muted-foreground">Source:</span>
+                              <Badge variant="outline" className="text-amber-600 border-amber-500/30">
+                                <ExternalLink className="w-3 h-3 mr-1" />
+                                External AI (Liability Waived)
+                              </Badge>
+                            </div>
+                          )}
                         </div>
                       </CollapsibleContent>
                     </Collapsible>
@@ -238,16 +355,20 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
                   )}
                 </div>
               ))}
-              
-              {isLoading && (
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="text-sm">Searching proprietary knowledge base...</span>
-                </div>
-              )}
             </div>
           )}
         </ScrollArea>
+
+        {/* RAG Search Animation */}
+        <div className="px-4">
+          <RAGSearchAnimation
+            isSearching={isLoading}
+            phase={searchPhase}
+            ragResults={ragResults}
+            onUseExternalAI={handleUseExternalAI}
+            onCancelExternalAI={handleCancelExternalAI}
+          />
+        </div>
 
         <div className="p-4 border-t no-print">
           <div className="flex gap-2">
@@ -261,10 +382,10 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Ask about CM patterns, acupoints, formulas..."
-              disabled={isLoading}
+              disabled={isLoading || searchPhase === 'external-consent'}
               className="flex-1"
             />
-            <Button onClick={sendMessage} disabled={isLoading || !input.trim()}>
+            <Button onClick={() => sendMessage()} disabled={isLoading || !input.trim() || searchPhase === 'external-consent'}>
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
