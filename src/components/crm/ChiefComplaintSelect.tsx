@@ -76,7 +76,7 @@ export const ChiefComplaintSelect = forwardRef<HTMLDivElement, ChiefComplaintSel
   };
 
   return (
-    <div className={cn("space-y-2", className)}>
+    <div ref={ref} className={cn("space-y-2", className)}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
