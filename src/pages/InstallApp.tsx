@@ -1,13 +1,22 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, Smartphone, Apple, Chrome, Share, Share2, Plus, MoreVertical, Check, Loader2, Copy } from 'lucide-react';
+import { Download, Smartphone, Apple, Chrome, Share, Share2, Plus, MoreVertical, Check, Loader2, Copy, QrCode } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Progress } from '@/components/ui/progress';
 import { Confetti } from '@/components/ui/Confetti';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { toast } from 'sonner';
+import { QRCodeSVG } from 'qrcode.react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -210,6 +219,55 @@ export default function InstallApp() {
                     <Share2 className="w-4 h-4" />
                     Share App with Others
                   </Button>
+                  
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => haptic.light()}
+                        className="gap-2 text-muted-foreground"
+                      >
+                        <QrCode className="w-4 h-4" />
+                        Show QR Code
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Share via QR Code</DialogTitle>
+                        <DialogDescription>
+                          Scan this code with a phone camera to install CM Clinic
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="flex flex-col items-center gap-4 py-4">
+                        <div className="bg-white p-4 rounded-xl shadow-inner">
+                          <QRCodeSVG 
+                            value={window.location.origin + '/install'}
+                            size={200}
+                            level="H"
+                            includeMargin={false}
+                            bgColor="#ffffff"
+                            fgColor="#1a1a1a"
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground text-center max-w-[200px]">
+                          Point your phone's camera at this code to open the install page
+                        </p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={async () => {
+                            await navigator.clipboard.writeText(window.location.origin + '/install');
+                            haptic.success();
+                            toast.success('Link copied!');
+                          }}
+                          className="gap-2"
+                        >
+                          <Copy className="w-4 h-4" />
+                          Copy Link
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
             ) : (
