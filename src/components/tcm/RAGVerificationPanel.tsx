@@ -9,19 +9,19 @@ import { CheckCircle2, XCircle, AlertTriangle, Database, FileText, Shield, Refre
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 
-// All CSV files that SHOULD be in RAG
+// All CSV files that SHOULD be in RAG (matches public/knowledge-assets)
 const EXPECTED_KNOWLEDGE_FILES = [
-  'tongue-diagnosis.csv',
-  'pulse-diagnosis.csv',
-  'diet-nutrition-intake.csv',
-  'chronic-pain-management.csv',
-  'digestive-disorders.csv',
-  'immune-resilience.csv',
-  'mental-health-tcm.csv',
-  'pediatric-acupuncture.csv',
-  'sport-performance-recovery.csv',
-  'womens-health-tcm.csv',
-  'work-stress-burnout.csv',
+  { name: 'tongue-diagnosis.csv', aliases: ['clinic_tongue_diagnosis', 'tongue'] },
+  { name: 'pulse-diagnosis.csv', aliases: ['clinic_pulse_diagnosis', 'pulse'] },
+  { name: 'diet-nutrition-intake.csv', aliases: ['tcm_clinic_diet_nutrition', 'nutrition', 'diet'] },
+  { name: 'chronic-pain-management.csv', aliases: ['chronic-pain', 'pain'] },
+  { name: 'digestive-disorders.csv', aliases: ['digestive'] },
+  { name: 'immune-resilience.csv', aliases: ['immune'] },
+  { name: 'mental-health-tcm.csv', aliases: ['mental-health', 'mental'] },
+  { name: 'pediatric-acupuncture.csv', aliases: ['pediatric', 'Pediatric_QA'] },
+  { name: 'sport-performance-recovery.csv', aliases: ['sport_performance', 'sport'] },
+  { name: 'womens-health-tcm.csv', aliases: ['womens-health', 'women'] },
+  { name: 'work-stress-burnout.csv', aliases: ['Work_Stress_Burnout', 'stress', 'burnout'] },
 ];
 
 interface RAGVerificationPanelProps {
@@ -78,20 +78,31 @@ export function RAGVerificationPanel({ showQueryLogs = false }: RAGVerificationP
     documents?.map(d => d.original_name?.toLowerCase()) || []
   );
 
-  const verificationStatus = EXPECTED_KNOWLEDGE_FILES.map(fileName => {
-    const normalizedName = fileName.toLowerCase();
+  const verificationStatus = EXPECTED_KNOWLEDGE_FILES.map(fileConfig => {
+    const normalizedName = fileConfig.name.toLowerCase();
+    const aliases = fileConfig.aliases.map(a => a.toLowerCase());
+    
+    // Check if any alias or the main name matches indexed files
     const isIndexed = indexedFileNames.has(normalizedName) || 
       indexedOriginalNames.has(normalizedName) ||
       Array.from(indexedFileNames).some(f => f.includes(normalizedName.replace('.csv', ''))) ||
-      Array.from(indexedOriginalNames).some(f => f?.includes(normalizedName.replace('.csv', '')));
+      Array.from(indexedOriginalNames).some(f => f?.includes(normalizedName.replace('.csv', ''))) ||
+      aliases.some(alias => 
+        Array.from(indexedFileNames).some(f => f.includes(alias)) ||
+        Array.from(indexedOriginalNames).some(f => f?.includes(alias))
+      );
     
     const doc = documents?.find(d => 
       d.file_name.toLowerCase().includes(normalizedName.replace('.csv', '')) ||
-      d.original_name?.toLowerCase().includes(normalizedName.replace('.csv', ''))
+      d.original_name?.toLowerCase().includes(normalizedName.replace('.csv', '')) ||
+      aliases.some(alias => 
+        d.file_name.toLowerCase().includes(alias) ||
+        d.original_name?.toLowerCase().includes(alias)
+      )
     );
     
     return {
-      fileName,
+      fileName: fileConfig.name,
       isIndexed,
       document: doc,
     };

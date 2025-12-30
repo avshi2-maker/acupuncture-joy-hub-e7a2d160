@@ -70,7 +70,9 @@ import {
   Download,
   Mail,
   FileDown,
-  Save
+  Save,
+  Shield,
+  Database
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
@@ -82,6 +84,8 @@ import { VoiceNoteRecorder, VoiceNote } from '@/components/tcm/VoiceNoteRecorder
 import { SessionTemplates, SessionTemplate } from '@/components/tcm/SessionTemplates';
 import { MobileVoiceNotesDrawer } from '@/components/tcm/MobileVoiceNotesDrawer';
 import { PatientSelectorDropdown, SelectedPatient } from '@/components/crm/PatientSelectorDropdown';
+import { RAGVerificationStatus } from '@/components/tcm/RAGSearchAnimation';
+import { RAGVerificationPanel } from '@/components/tcm/RAGVerificationPanel';
 
 import {
   herbsQuestions,
@@ -589,6 +593,7 @@ export default function TcmBrain() {
   const [showDetailedView, setShowDetailedView] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [showInlineChat, setShowInlineChat] = useState(false);
+  const [showRAGPanel, setShowRAGPanel] = useState(false);
   
   // Patient selection for session linking
   const [patients, setPatients] = useState<Array<{ id: string; full_name: string; email?: string | null; phone?: string | null }>>([]);
@@ -1362,6 +1367,9 @@ export default function TcmBrain() {
                   </Button>
                 }
               />
+              
+              {/* RAG Verification Status Badge */}
+              <RAGVerificationStatus />
             </div>
             <div className="flex items-center gap-2">
               {/* Voice Notes - Only show when session is running */}
@@ -1494,6 +1502,25 @@ export default function TcmBrain() {
                 </Button>
               </div>
             )}
+
+            {/* RAG Verification Panel - Collapsible */}
+            <div className="mx-4 mt-4">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowRAGPanel(!showRAGPanel)}
+                className="w-full justify-between text-xs h-8 mb-2"
+              >
+                <span className="flex items-center gap-2">
+                  <Shield className="h-3.5 w-3.5" />
+                  Knowledge Base Status
+                </span>
+                <RAGVerificationStatus />
+              </Button>
+              {showRAGPanel && (
+                <RAGVerificationPanel showQueryLogs={true} />
+              )}
+            </div>
 
             {/* Feature tabs header */}
             {!showDetailedView && (
