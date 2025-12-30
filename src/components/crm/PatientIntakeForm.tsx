@@ -157,6 +157,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
   const [dietHabits, setDietHabits] = useState<string[]>([]);
   const [pulseFindings, setPulseFindings] = useState<string[]>([]);
   const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
+  const [selectedMedications, setSelectedMedications] = useState<string[]>([]);
   
   // Post-save navigation dialog
   const [showNavigationDialog, setShowNavigationDialog] = useState(false);
@@ -861,10 +862,24 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Current Medications & Supplements</FormLabel>
+                      <MedicationsSupplementsSelect
+                        value={selectedMedications}
+                        onChange={(newMedications) => {
+                          setSelectedMedications(newMedications);
+                          const existingNotes = field.value || '';
+                          const selectedText = newMedications.join('; ');
+                          field.onChange(selectedText + (existingNotes && !existingNotes.startsWith(selectedText) ? '\n\nDosage Notes: ' + existingNotes : ''));
+                        }}
+                      />
                       <FormControl>
                         <Textarea 
-                          placeholder="List all current medications, vitamins, and supplements with dosages..." 
-                          {...field} 
+                          placeholder="Add dosage details, frequency, or other medication notes..." 
+                          className="mt-2"
+                          value={field.value?.includes('\n\nDosage Notes: ') ? field.value.split('\n\nDosage Notes: ')[1] : (selectedMedications.length === 0 ? field.value : '')}
+                          onChange={(e) => {
+                            const selectedText = selectedMedications.join('; ');
+                            field.onChange(selectedText ? selectedText + (e.target.value ? '\n\nDosage Notes: ' + e.target.value : '') : e.target.value);
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
