@@ -112,10 +112,7 @@ export function useIntakeDraftAutosave({
     patientId,
   ]);
 
-  // Debounced autosave on changes
-  useEffect(() => {
-    if (patientId) return;
-
+  const scheduleAutosave = useCallback(() => {
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
@@ -123,6 +120,13 @@ export function useIntakeDraftAutosave({
     saveTimeoutRef.current = setTimeout(() => {
       saveDraft();
     }, AUTOSAVE_INTERVAL);
+  }, [saveDraft]);
+
+  // Autosave when external (non-form) state changes
+  useEffect(() => {
+    if (patientId) return;
+
+    scheduleAutosave();
 
     return () => {
       if (saveTimeoutRef.current) {
@@ -130,8 +134,8 @@ export function useIntakeDraftAutosave({
       }
     };
   }, [
-    saveDraft,
     patientId,
+    scheduleAutosave,
     customNotes,
     selectedAllergies,
     selectedMedications,
@@ -142,6 +146,19 @@ export function useIntakeDraftAutosave({
     pregnancyAnswers,
     currentStep,
   ]);
+
+  // Autosave when any form field changes
+  useEffect(() => {
+    if (patientId) return;
+
+    const subscription = form.watch(() => {
+      scheduleAutosave();
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [form, patientId, scheduleAutosave]);
 
   // Load draft
   const loadDraft = useCallback((): DraftData | null => {
@@ -181,12 +198,8 @@ export function useIntakeDraftAutosave({
       // Restore form data - use reset for better reliability
       const currentValues = form.getValues();
       const mergedValues = { ...currentValues, ...draft.formData };
-      form.reset(mergedValues, { keepDefaultValues: false });
-      
-      // Also trigger validation
-      setTimeout(() => {
-        form.trigger();
-      }, 100);
+      form.reset(mergedValues, { keepDefaultValues: true });
+      form.clearErrors();
 
       setHasDraft(false);
       return draft;

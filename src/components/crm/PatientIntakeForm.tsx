@@ -313,6 +313,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
       setAgeSpecificAnswers(draft.ageSpecificAnswers || {});
       setPregnancyAnswers(draft.pregnancyAnswers || {});
       setCurrentStep(draft.currentStep || 0);
+      form.clearErrors();
       toast.success('Draft restored successfully');
     }
   };
@@ -1171,7 +1172,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                             <Moon className="h-4 w-4" />
                             Sleep Quality
                           </FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select..." />
@@ -1208,7 +1209,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                             <Brain className="h-4 w-4" />
                             Stress Level
                           </FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select..." />
@@ -1245,7 +1246,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                             <Activity className="h-4 w-4" />
                             Exercise Frequency
                           </FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select..." />
