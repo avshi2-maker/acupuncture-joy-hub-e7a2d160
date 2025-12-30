@@ -172,26 +172,29 @@ export const AllergiesSelect = memo(function AllergiesSelect({
                 const severityColor = details ? getSeverityColor(details.severity) : 'secondary';
                 return (
                   <Tooltip key={item}>
-                    <TooltipTrigger>
-                      <Badge
-                        variant={severityColor as any}
-                        className="text-xs pr-1 gap-1 cursor-pointer"
-                      >
-                        {details?.severity.toLowerCase().includes('life-threatening') && (
-                          <AlertTriangle className="h-3 w-3" />
-                        )}
-                        {item.length > 25 ? item.substring(0, 25) + '...' : item}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeOption(item);
-                          }}
-                          className="ml-1 hover:bg-muted rounded-full p-0.5"
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex">
+                        <Badge
+                          variant={severityColor as any}
+                          className="text-xs pr-1 gap-1 cursor-pointer"
                         >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
+                          {details?.severity.toLowerCase().includes('life-threatening') && (
+                            <AlertTriangle className="h-3 w-3" />
+                          )}
+                          {item.length > 25 ? item.substring(0, 25) + '...' : item}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeOption(item);
+                            }}
+                            className="ml-1 hover:bg-muted rounded-full p-0.5"
+                            aria-label={`Remove allergy ${item}`}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      </span>
                     </TooltipTrigger>
                     {details && (
                       <TooltipContent className="max-w-[300px] z-50">
