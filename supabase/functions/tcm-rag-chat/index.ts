@@ -61,13 +61,15 @@ serve(async (req) => {
       });
     }
 
-    const { query, messages, useExternalAI } = await req.json();
+    const { query, messages, useExternalAI, includeChunkDetails } = await req.json();
     const searchQuery = query || messages?.[messages.length - 1]?.content || '';
     const searchTerms = searchQuery.split(' ').slice(0, 5).join(' | ');
 
-    console.log('RAG Query:', searchQuery);
+    console.log('=== RAG TRACE START ===');
+    console.log('Query:', searchQuery);
     console.log('Search terms:', searchTerms);
     console.log('Using external AI:', useExternalAI || false);
+    console.log('Include chunk details:', includeChunkDetails || false);
 
     // Search for relevant chunks using full-text search
     const { data: chunks, error: searchError } = await supabaseClient
@@ -94,7 +96,18 @@ serve(async (req) => {
     // Build context from retrieved chunks
     let context = '';
     const sources: Array<{ fileName: string; chunkIndex: number; preview: string; category: string; documentId: string }> = [];
-    const chunksMatched: Array<{ id: string; documentId: string; chunkIndex: number; contentPreview: string }> = [];
+    const chunksMatched: Array<{ 
+      id: string; 
+      documentId: string; 
+      chunkIndex: number; 
+      contentPreview: string;
+      fileName: string;
+      question?: string;
+      answer?: string;
+      content: string;
+    }> = [];
+
+    console.log('=== CHUNK MATCHING ===');
 
     if (chunks && chunks.length > 0) {
       context = chunks.map((chunk, i) => {
@@ -102,6 +115,9 @@ serve(async (req) => {
         const fileName = doc?.original_name || doc?.file_name || 'Unknown';
         const category = doc?.category || 'general';
         const documentId = doc?.id || '';
+        
+        console.log(`Chunk ${i + 1}: ${fileName} #${chunk.chunk_index}`);
+        console.log(`  Preview: ${(chunk.question || chunk.content).substring(0, 80)}...`);
         
         sources.push({
           fileName,
@@ -111,11 +127,16 @@ serve(async (req) => {
           documentId
         });
         
+        // Include full chunk details for trace panel
         chunksMatched.push({
           id: chunk.id,
           documentId,
           chunkIndex: chunk.chunk_index,
-          contentPreview: chunk.content.substring(0, 200)
+          contentPreview: chunk.content.substring(0, 200),
+          fileName,
+          question: chunk.question || undefined,
+          answer: chunk.answer || undefined,
+          content: chunk.content
         });
         
         if (chunk.question && chunk.answer) {
@@ -128,7 +149,8 @@ ${chunk.content}`;
       }).join('\n\n---\n\n');
     }
 
-    console.log(`Found ${chunks?.length || 0} relevant chunks from ${new Set(sources.map(s => s.fileName)).size} unique documents`);
+    console.log(`=== SEARCH RESULTS ===`);
+    console.log(`Found ${chunks?.length || 0} chunks from ${new Set(sources.map(s => s.fileName)).size} unique documents`);
 
     // Build messages for AI
     let systemMessage: string;

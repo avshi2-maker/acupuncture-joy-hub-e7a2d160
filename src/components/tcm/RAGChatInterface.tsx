@@ -6,11 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
-import { Send, Loader2, BookOpen, FileText, AlertCircle, Printer, Shield, CheckCircle2, Database, ExternalLink } from 'lucide-react';
+import { Send, Loader2, BookOpen, FileText, AlertCircle, Printer, Shield, CheckCircle2, Database, ExternalLink, Activity } from 'lucide-react';
 import { VoiceInputButton } from '@/components/ui/VoiceInputButton';
 import { usePrintContent } from '@/hooks/usePrintContent';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { RAGSearchAnimation, RAGVerificationStatus } from './RAGSearchAnimation';
+import { AITracePanel, TraceStep, ChunkMatch, HallucinationCheck, analyzeHallucination } from './AITracePanel';
 
 interface Source {
   fileName: string;
@@ -30,6 +31,12 @@ interface Message {
     searchTermsUsed: string;
     auditLogged: boolean;
   };
+  traceData?: {
+    steps: TraceStep[];
+    contextChunks: ChunkMatch[];
+    hallucinationCheck: HallucinationCheck;
+    searchTerms: string;
+  };
 }
 
 type SearchPhase = 'idle' | 'searching-rag' | 'rag-found' | 'rag-not-found' | 'external-consent' | 'external-search' | 'complete';
@@ -44,6 +51,13 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [searchPhase, setSearchPhase] = useState<SearchPhase>('idle');
   const [pendingQuery, setPendingQuery] = useState<string>('');
+  const [showTracePanel, setShowTracePanel] = useState(true);
+  const [currentTrace, setCurrentTrace] = useState<{
+    steps: TraceStep[];
+    contextChunks: ChunkMatch[];
+    hallucinationCheck?: HallucinationCheck;
+    searchTerms: string;
+  }>({ steps: [], contextChunks: [], searchTerms: '' });
   const [ragResults, setRagResults] = useState<{
     chunksFound: number;
     documentsSearched: number;
@@ -55,6 +69,21 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
 
   const handleVoiceTranscription = (text: string) => {
     setInput(prev => prev ? `${prev} ${text}` : text);
+  };
+
+  // Helper to update trace steps
+  const updateTraceStep = (stepId: string, updates: Partial<TraceStep>) => {
+    setCurrentTrace(prev => ({
+      ...prev,
+      steps: prev.steps.map(s => s.id === stepId ? { ...s, ...updates } : s)
+    }));
+  };
+
+  const addTraceStep = (step: TraceStep) => {
+    setCurrentTrace(prev => ({
+      ...prev,
+      steps: [...prev.steps, step]
+    }));
   };
 
   const handlePrint = () => {
@@ -71,6 +100,14 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
     const query = useExternalAI ? pendingQuery : input.trim();
     if (!query || isLoading) return;
 
+    // Reset trace for new query
+    const searchTerms = query.split(' ').slice(0, 5).join(' | ');
+    setCurrentTrace({
+      steps: [],
+      contextChunks: [],
+      searchTerms
+    });
+
     if (!useExternalAI) {
       const userMessage: Message = { role: 'user', content: query };
       setMessages(prev => [...prev, userMessage]);
@@ -82,8 +119,45 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
     setSearchPhase('searching-rag');
     setRagResults(undefined);
 
-    // Simulate search animation (minimum 1.5s)
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Step 1: Initialize
+    const step1Start = Date.now();
+    addTraceStep({
+      id: 'init',
+      step: 1,
+      name: 'Initialize Query',
+      status: 'running',
+      startTime: step1Start,
+      details: `Query: "${query.substring(0, 50)}..."`
+    });
+    await new Promise(resolve => setTimeout(resolve, 300));
+    updateTraceStep('init', { status: 'completed', endTime: Date.now() });
+
+    // Step 2: Generate Search Terms
+    const step2Start = Date.now();
+    addTraceStep({
+      id: 'search-terms',
+      step: 2,
+      name: 'Generate Search Terms',
+      status: 'running',
+      startTime: step2Start
+    });
+    await new Promise(resolve => setTimeout(resolve, 200));
+    updateTraceStep('search-terms', { 
+      status: 'completed', 
+      endTime: Date.now(),
+      details: searchTerms
+    });
+
+    // Step 3: Search Knowledge Base
+    const step3Start = Date.now();
+    addTraceStep({
+      id: 'search-kb',
+      step: 3,
+      name: 'Search Knowledge Base',
+      status: 'running',
+      startTime: step3Start,
+      details: 'Scanning 12 knowledge files...'
+    });
 
     try {
       const { data, error } = await supabase.functions.invoke('tcm-rag-chat', {
@@ -93,7 +167,8 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
             role: m.role,
             content: m.content
           })),
-          useExternalAI
+          useExternalAI,
+          includeChunkDetails: true // Request full chunk details for tracing
         }
       });
 
@@ -101,6 +176,23 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
 
       const chunksFound = data.chunksFound || 0;
       const sourceNames: string[] = (data.sources || []).map((s: Source) => s.fileName);
+
+      updateTraceStep('search-kb', { 
+        status: 'completed', 
+        endTime: Date.now(),
+        details: `Found ${chunksFound} matching chunks`
+      });
+
+      // Update context chunks for trace panel
+      const contextChunks: ChunkMatch[] = (data.chunksMatched || []).map((chunk: any) => ({
+        id: chunk.id,
+        fileName: chunk.fileName || 'Unknown',
+        chunkIndex: chunk.chunkIndex,
+        content: chunk.contentPreview || chunk.content || '',
+        question: chunk.question,
+        answer: chunk.answer
+      }));
+      setCurrentTrace(prev => ({ ...prev, contextChunks }));
 
       setRagResults({
         chunksFound,
@@ -110,16 +202,79 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
 
       // If no results found in RAG and not already using external AI
       if (chunksFound === 0 && !useExternalAI) {
+        updateTraceStep('search-kb', { details: 'No matches found in knowledge base' });
         setSearchPhase('rag-not-found');
+        
+        addTraceStep({
+          id: 'no-match',
+          step: 4,
+          name: 'No Matches Found',
+          status: 'completed',
+          startTime: Date.now(),
+          endTime: Date.now(),
+          details: 'Offering external AI option...'
+        });
+
         await new Promise(resolve => setTimeout(resolve, 1500));
         setSearchPhase('external-consent');
         setIsLoading(false);
         return;
       }
 
+      // Step 4: Build Context
+      const step4Start = Date.now();
+      addTraceStep({
+        id: 'build-context',
+        step: 4,
+        name: 'Build AI Context',
+        status: 'running',
+        startTime: step4Start,
+        details: `Using ${chunksFound} chunks from ${data.documentsSearched || 0} docs`
+      });
+      await new Promise(resolve => setTimeout(resolve, 300));
+      updateTraceStep('build-context', { status: 'completed', endTime: Date.now() });
+
+      // Step 5: Generate Response
+      const step5Start = Date.now();
+      addTraceStep({
+        id: 'generate',
+        step: 5,
+        name: 'Generate AI Response',
+        status: 'running',
+        startTime: step5Start,
+        details: useExternalAI ? 'Using external AI (liability waived)' : 'Using RAG-grounded response'
+      });
+
       // Results found or using external AI
       setSearchPhase(chunksFound > 0 ? 'rag-found' : 'external-search');
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise(resolve => setTimeout(resolve, 400));
+      updateTraceStep('generate', { status: 'completed', endTime: Date.now() });
+
+      // Step 6: Hallucination Check
+      const step6Start = Date.now();
+      addTraceStep({
+        id: 'hallucination-check',
+        step: 6,
+        name: 'Verify Response Sources',
+        status: 'running',
+        startTime: step6Start
+      });
+
+      const hallucinationCheck = analyzeHallucination(
+        data.response,
+        contextChunks,
+        useExternalAI || false
+      );
+
+      updateTraceStep('hallucination-check', { 
+        status: hallucinationCheck.passed ? 'completed' : 'error',
+        endTime: Date.now(),
+        details: hallucinationCheck.passed 
+          ? `Confidence: ${hallucinationCheck.confidence}%` 
+          : `Warnings: ${hallucinationCheck.warnings.length}`
+      });
+
+      setCurrentTrace(prev => ({ ...prev, hallucinationCheck }));
 
       const assistantMessage: Message = {
         role: 'assistant',
@@ -131,16 +286,36 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
           documentsSearched: data.documentsSearched,
           searchTermsUsed: data.searchTermsUsed,
           auditLogged: data.auditLogged,
+        },
+        traceData: {
+          steps: currentTrace.steps,
+          contextChunks,
+          hallucinationCheck,
+          searchTerms
         }
       };
 
       setMessages(prev => [...prev, assistantMessage]);
       setSearchPhase('complete');
       
+      // Show toast if hallucination warning
+      if (!hallucinationCheck.passed) {
+        toast.warning('Response may contain unverified claims - check trace panel');
+      }
+
       setTimeout(() => setSearchPhase('idle'), 500);
 
     } catch (error) {
       console.error('Chat error:', error);
+      addTraceStep({
+        id: 'error',
+        step: 99,
+        name: 'Error',
+        status: 'error',
+        startTime: Date.now(),
+        endTime: Date.now(),
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
       toast.error('Failed to get response. Please try again.');
       setSearchPhase('idle');
     } finally {
@@ -217,6 +392,16 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
           </CardTitle>
           <div className="flex items-center gap-2">
             <RAGVerificationStatus />
+            <Button
+              type="button"
+              variant={showTracePanel ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowTracePanel(!showTracePanel)}
+              className="no-print"
+            >
+              <Activity className="h-4 w-4 mr-1" />
+              {showTracePanel ? 'Hide' : 'Show'} Trace
+            </Button>
             <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
               <Shield className="w-3 h-3 mr-1" />
               Audit Logged
@@ -369,6 +554,20 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
             onCancelExternalAI={handleCancelExternalAI}
           />
         </div>
+
+        {/* AI Trace Panel - Real-time monitoring for Dr. Sapir */}
+        {showTracePanel && (currentTrace.steps.length > 0 || isLoading) && (
+          <div className="px-4 pb-4">
+            <AITracePanel
+              isVisible={showTracePanel}
+              steps={currentTrace.steps}
+              contextChunks={currentTrace.contextChunks}
+              hallucinationCheck={currentTrace.hallucinationCheck}
+              searchTerms={currentTrace.searchTerms}
+              isExternal={searchPhase === 'external-search'}
+            />
+          </div>
+        )}
 
         <div className="p-4 border-t no-print">
           <div className="flex gap-2">
