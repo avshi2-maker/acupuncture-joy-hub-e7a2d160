@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Download, Smartphone, Apple, Chrome, Share, Plus, MoreVertical, Check, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Progress } from '@/components/ui/progress';
+import { Confetti } from '@/components/ui/Confetti';
+import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -16,11 +18,11 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const installationSteps = [
-  { label: 'Preparing installation...', duration: 400 },
-  { label: 'Downloading app assets...', duration: 600 },
-  { label: 'Configuring offline support...', duration: 500 },
-  { label: 'Setting up home screen...', duration: 400 },
-  { label: 'Finalizing installation...', duration: 300 },
+  { label: 'Preparing installation...', duration: 400, haptic: 'light' as const },
+  { label: 'Downloading app assets...', duration: 600, haptic: 'medium' as const },
+  { label: 'Configuring offline support...', duration: 500, haptic: 'light' as const },
+  { label: 'Setting up home screen...', duration: 400, haptic: 'medium' as const },
+  { label: 'Finalizing installation...', duration: 300, haptic: 'heavy' as const },
 ];
 
 export default function InstallApp() {
@@ -31,6 +33,8 @@ export default function InstallApp() {
   const [isInstalling, setIsInstalling] = useState(false);
   const [installProgress, setInstallProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const haptic = useHapticFeedback();
 
   useEffect(() => {
     // Check if app is already installed
@@ -72,6 +76,10 @@ export default function InstallApp() {
 
     for (let i = 0; i < installationSteps.length; i++) {
       setCurrentStep(i);
+      
+      // Trigger haptic feedback for each step
+      haptic.trigger(installationSteps[i].haptic);
+      
       const stepDuration = installationSteps[i].duration;
       const stepStart = elapsed;
       const stepEnd = elapsed + stepDuration;
@@ -90,11 +98,16 @@ export default function InstallApp() {
     }
 
     setInstallProgress(100);
+    // Final success haptic
+    haptic.success();
   };
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
 
+    // Initial haptic feedback on button press
+    haptic.medium();
+    
     setIsInstalling(true);
     setInstallProgress(0);
     setCurrentStep(0);
@@ -111,14 +124,21 @@ export default function InstallApp() {
 
     if (outcome === 'accepted') {
       setIsInstalled(true);
+      // Trigger confetti celebration
+      setShowConfetti(true);
+      // Strong success haptic
+      haptic.success();
     } else {
       setIsInstalling(false);
+      haptic.warning();
     }
     setDeferredPrompt(null);
   };
 
   return (
     <>
+      <Confetti isActive={showConfetti} duration={4000} />
+      
       <Helmet>
         <title>Install App | Harmony CM Clinic</title>
         <meta name="description" content="Install the Harmony CM Clinic app on your device for quick access" />
@@ -130,7 +150,7 @@ export default function InstallApp() {
             <div className="mx-auto mb-4 w-20 h-20 rounded-2xl bg-jade/10 flex items-center justify-center">
               <img 
                 src="/pwa-icons/icon-192x192.png" 
-                alt="TCM Clinic" 
+                alt="CM Clinic" 
                 className="w-16 h-16 rounded-xl"
               />
             </div>
