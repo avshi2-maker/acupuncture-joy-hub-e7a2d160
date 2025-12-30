@@ -989,12 +989,41 @@ export default function TcmBrain() {
 
   // =============================================
   // AUTO-CHAIN WORKFLOW: Symptoms → Diagnosis → Treatment
+  // with full 126-question context injection
   // =============================================
+  
+  // Build context from all curated questions for comprehensive analysis
+  const buildQuestionContext = () => {
+    const symptomQuestions = [
+      ...conditionsQuestions.map(q => `- ${q.question} (${q.category})`),
+      ...mentalQuestions.map(q => `- ${q.question} (${q.category})`),
+      ...sleepQuestions.map(q => `- ${q.question} (${q.category})`),
+      ...nutritionQuestions.map(q => `- ${q.question} (${q.category})`),
+    ].join('\n');
+    
+    const diagnosisQuestions = [
+      ...conditionsQuestions.map(q => `- ${q.question}`),
+      ...herbsQuestions.filter(q => ['Blood', 'Heat/Cold', 'Formulas'].includes(q.category)).map(q => `- ${q.question}`),
+      ...pointsQuestions.filter(q => ['Meridians', 'Techniques'].includes(q.category)).map(q => `- ${q.question}`),
+    ].join('\n');
+    
+    const treatmentQuestions = [
+      ...herbsQuestions.map(q => `- ${q.question} (${q.category})`),
+      ...pointsQuestions.map(q => `- ${q.question} (${q.category})`),
+      ...wellnessQuestions.map(q => `- ${q.question} (${q.category})`),
+      ...sportsQuestions.filter(q => q.category === 'Treatment').map(q => `- ${q.question}`),
+    ].join('\n');
+    
+    return { symptomQuestions, diagnosisQuestions, treatmentQuestions };
+  };
+  
   const runChainedWorkflow = async (symptomDescription: string) => {
     if (!session?.access_token || !disclaimerStatus.signed) {
       toast.error('Please log in and sign disclaimer first');
       return;
     }
+
+    const { symptomQuestions, diagnosisQuestions, treatmentQuestions } = buildQuestionContext();
 
     setChainedWorkflow({
       isActive: true,
@@ -1008,17 +1037,26 @@ export default function TcmBrain() {
     setLoadingStartTime(Date.now());
 
     try {
-      // PHASE 1: Symptom Analysis
-      toast.info('🔍 Phase 1/3: Analyzing symptoms...');
+      // PHASE 1: Symptom Analysis with full question context
+      toast.info('🔍 Phase 1/3: Analyzing symptoms with 126-question framework...');
       setChainedWorkflow(prev => ({ ...prev, currentPhase: 'symptoms' }));
       
-      const symptomPrompt = `Based on these patient symptoms: "${symptomDescription}"
-      
-Please provide a comprehensive TCM symptom analysis including:
-- Main symptoms identified
-- Associated symptoms
-- Onset, duration, and aggravating/relieving factors
-- Relevant tongue and pulse indicators to check`;
+      const symptomPrompt = `You are analyzing patient symptoms using a comprehensive TCM clinical framework.
+
+PATIENT PRESENTATION:
+"${symptomDescription}"
+
+CLINICAL ASSESSMENT FRAMEWORK (use these as your analysis guide):
+${symptomQuestions}
+
+Based on this framework, provide a thorough TCM symptom analysis:
+1. **Chief Complaint** - Primary symptoms identified
+2. **Associated Symptoms** - Secondary manifestations
+3. **Onset & Duration** - Timeline and progression
+4. **Aggravating/Relieving Factors** - What makes it better/worse
+5. **Tongue Indicators** - What to look for (color, coat, shape)
+6. **Pulse Indicators** - What to palpate (quality, rate, depth)
+7. **Relevant TCM Patterns** - Preliminary pattern considerations`;
 
       const symptomResponse = await fetch(RAG_CHAT_URL, {
         method: 'POST',
@@ -1040,19 +1078,26 @@ Please provide a comprehensive TCM symptom analysis including:
         { role: 'assistant', content: `## 📋 Phase 1: Symptom Analysis\n\n${symptomsResult}` }
       ]);
 
-      // PHASE 2: TCM Diagnosis (based on symptoms)
-      toast.info('🔬 Phase 2/3: Generating TCM diagnosis...');
+      // PHASE 2: TCM Diagnosis with pattern recognition framework
+      toast.info('🔬 Phase 2/3: Pattern differentiation with TCM framework...');
       setChainedWorkflow(prev => ({ ...prev, currentPhase: 'diagnosis' }));
 
-      const diagnosisPrompt = `Based on this symptom analysis:
+      const diagnosisPrompt = `You are performing TCM pattern differentiation using a comprehensive diagnostic framework.
+
+SYMPTOM ANALYSIS FROM PHASE 1:
 ${symptomsResult}
 
-Please provide a comprehensive TCM diagnosis including:
-- Primary TCM pattern/syndrome identification
-- Affected organs/meridians
-- Qi, Blood, Yin, Yang imbalances
-- Root cause vs manifestation analysis
-- Severity assessment`;
+TCM DIAGNOSTIC FRAMEWORK (consider these patterns and differentiations):
+${diagnosisQuestions}
+
+Based on this framework, provide a thorough TCM diagnosis:
+1. **Primary Pattern/Syndrome (证)** - Main TCM pattern identification with rationale
+2. **Secondary Patterns** - Contributing or complicating patterns
+3. **Affected Organs/Meridians** - Zang-Fu involvement and meridian pathways
+4. **Qi-Blood-Yin-Yang Analysis** - Specific imbalances identified
+5. **Root vs Branch (本标)** - Distinguish root cause from manifestations
+6. **Severity Assessment** - Acute/chronic, mild/moderate/severe
+7. **Differential Diagnosis** - Rule out similar patterns`;
 
       const diagnosisResponse = await fetch(RAG_CHAT_URL, {
         method: 'POST',
@@ -1077,17 +1122,45 @@ Please provide a comprehensive TCM diagnosis including:
       toast.info('💊 Phase 3/3: Creating treatment plan...');
       setChainedWorkflow(prev => ({ ...prev, currentPhase: 'treatment' }));
 
-      const treatmentPrompt = `Based on this TCM diagnosis:
+      // PHASE 3: Treatment Planning with full protocol framework
+      toast.info('💊 Phase 3/3: Building treatment protocol with full framework...');
+      setChainedWorkflow(prev => ({ ...prev, currentPhase: 'treatment' }));
+
+      const treatmentPrompt = `You are creating a comprehensive TCM treatment protocol using all available clinical knowledge.
+
+TCM DIAGNOSIS FROM PHASE 2:
 ${diagnosisResult}
 
-Please provide a comprehensive treatment plan including:
-- Treatment principle (治則)
-- Recommended acupuncture points with rationale
-- Herbal formula recommendations
-- Moxibustion, cupping, or other techniques if applicable
-- Lifestyle and dietary recommendations
-- Treatment frequency and expected duration
-- Safety precautions and contraindications`;
+TREATMENT PROTOCOL FRAMEWORK (use these as your prescription guide):
+${treatmentQuestions}
+
+Based on this framework, provide a complete treatment protocol:
+1. **Treatment Principle (治則)** - Therapeutic strategy with rationale
+2. **Acupuncture Protocol**
+   - Primary points with specific locations and functions
+   - Supporting points for pattern
+   - Needle technique (tonify/disperse/neutral)
+   - Recommended needle retention time
+3. **Herbal Formula**
+   - Recommended formula with modifications
+   - Key herbs and their roles
+   - Dosage considerations
+4. **Auxiliary Techniques**
+   - Moxibustion (if applicable): locations and method
+   - Cupping (if applicable): locations and duration
+   - Tui Na or Gua Sha recommendations
+5. **Lifestyle Prescriptions**
+   - Dietary recommendations (foods to eat/avoid)
+   - Exercise and Qi Gong suggestions
+   - Sleep and stress management
+6. **Treatment Course**
+   - Frequency of sessions
+   - Expected duration of treatment
+   - Progress markers
+7. **Safety & Contraindications**
+   - Precautions for this patient
+   - Points or herbs to avoid
+   - Warning signs to monitor`;
 
       const treatmentResponse = await fetch(RAG_CHAT_URL, {
         method: 'POST',
