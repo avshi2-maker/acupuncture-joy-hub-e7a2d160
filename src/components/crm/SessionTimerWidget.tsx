@@ -291,12 +291,6 @@ export function SessionTimerWidget({
 
           {/* Status indicator */}
           <div className={cn("w-3 h-3 rounded-full", getStatusColor())} />
-          
-          {/* Real-time clock */}
-          <div className="flex items-center gap-2 text-sm font-mono">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            <span className="font-semibold">{formatCurrentTime(currentTime)}</span>
-          </div>
 
           {/* Timer display when running */}
           {status !== 'idle' && (
