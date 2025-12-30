@@ -86,6 +86,8 @@ import { MobileVoiceNotesDrawer } from '@/components/tcm/MobileVoiceNotesDrawer'
 import { PatientSelectorDropdown, SelectedPatient } from '@/components/crm/PatientSelectorDropdown';
 import { RAGVerificationStatus } from '@/components/tcm/RAGSearchAnimation';
 import { RAGVerificationPanel } from '@/components/tcm/RAGVerificationPanel';
+import { AuditEvidencePanel } from '@/components/tcm/AuditEvidencePanel';
+import { KnowledgeCoverageDashboard } from '@/components/tcm/KnowledgeCoverageDashboard';
 
 import {
   herbsQuestions,
@@ -1521,12 +1523,12 @@ export default function TcmBrain() {
             )}
 
             {/* RAG Verification Panel - Collapsible */}
-            <div className="mx-4 mt-4">
+            <div className="mx-4 mt-4 space-y-2">
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={() => setShowRAGPanel(!showRAGPanel)}
-                className="w-full justify-between text-xs h-8 mb-2"
+                className="w-full justify-between text-xs h-8"
               >
                 <span className="flex items-center gap-2">
                   <Shield className="h-3.5 w-3.5" />
@@ -1535,7 +1537,18 @@ export default function TcmBrain() {
                 <RAGVerificationStatus liveStats={lastRagStats} />
               </Button>
               {showRAGPanel && (
-                <RAGVerificationPanel showQueryLogs={true} />
+                <div className="space-y-4">
+                  <RAGVerificationPanel showQueryLogs={true} />
+                  <KnowledgeCoverageDashboard />
+                </div>
+              )}
+              
+              {/* Audit Evidence Panel - Shows after queries */}
+              {lastRagStats.timestamp && (
+                <AuditEvidencePanel 
+                  ragMeta={lastRagStats}
+                  queryText={currentQuery}
+                />
               )}
             </div>
 

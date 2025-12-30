@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -834,9 +835,10 @@ export function AIResponseDisplay({
                  Audit log: {ragMeta.auditLogId}
                </Badge>
              )}
-           </div>
-         )
-        {isLoading && !content && (
+            </div>
+          )}
+
+          {isLoading && !content && (
           <div className="flex flex-col items-center justify-center py-10 gap-4">
             <div className="relative">
               <div className="w-16 h-16 border-4 border-primary/20 rounded-full animate-pulse" />
