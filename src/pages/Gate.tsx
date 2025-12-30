@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { supabase } from '@/integrations/supabase/client';
 import { useTier } from '@/hooks/useTier';
 import { toast } from 'sonner';
-import { Lock, ArrowLeft, Leaf, CreditCard, Upload, CheckCircle, ArrowRight, MessageCircle, Mail, Loader2 } from 'lucide-react';
+import { Lock, ArrowLeft, Leaf, CreditCard, Upload, CheckCircle, ArrowRight, MessageCircle, Mail, Loader2, Play } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { TierCard } from '@/components/pricing/TierCard';
 
@@ -286,15 +286,36 @@ export default function Gate() {
                 ))}
               </div>
 
-              {/* Already have password link */}
-              <div className="text-center">
-                <Button 
-                  variant="link" 
-                  onClick={() => setCurrentStep('password')}
-                  className="text-jade"
-                >
-                  כבר יש לי סיסמה - דלגו לכניסה
-                </Button>
+              {/* Quick Test Access for Daily Testing */}
+              <div className="text-center space-y-3">
+                <div className="flex items-center justify-center gap-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      // Set trial tier for 24 hours
+                      const tomorrow = new Date();
+                      tomorrow.setHours(23, 59, 59, 999);
+                      setTier('trial');
+                      setExpiresAt(tomorrow);
+                      toast.success('Trial access activated for today!');
+                      navigate('/tcm-brain');
+                    }}
+                    className="border-jade text-jade hover:bg-jade hover:text-white"
+                  >
+                    <Play className="h-4 w-4 ml-2" />
+                    Quick Test Access (Daily)
+                  </Button>
+                  <Button 
+                    variant="link" 
+                    onClick={() => setCurrentStep('password')}
+                    className="text-jade"
+                  >
+                    כבר יש לי סיסמה - דלגו לכניסה
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Test access expires at midnight. For full access, select a plan above.
+                </p>
               </div>
             </>
           )}
