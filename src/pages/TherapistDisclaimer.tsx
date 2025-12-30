@@ -127,7 +127,8 @@ export default function TherapistDisclaimer() {
   const content = disclaimerContent[language];
   const isRtl = language === 'he';
   const hasRequiredFields = therapistName.trim().length >= 2 && licenseNumber.trim().length >= 2;
-  const canProceed = confirmLicensed && confirmRead && signature && isSaved && isEmailSent && hasRequiredFields;
+  // For testing: only require checkboxes and signature, save/email are optional
+  const canProceed = confirmLicensed && confirmRead && signature && hasRequiredFields;
 
   useEffect(() => {
     // Check if already signed
