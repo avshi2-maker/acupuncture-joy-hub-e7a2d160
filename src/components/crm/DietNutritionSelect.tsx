@@ -168,7 +168,7 @@ export const DietNutritionSelect = memo(function DietNutritionSelect({
                 const details = getDietHabitDetails(item);
                 return (
                   <Tooltip key={item}>
-                    <TooltipTrigger asChild>
+                    <TooltipTrigger>
                       <Badge
                         variant="secondary"
                         className="text-xs pr-1 gap-1 cursor-pointer"
@@ -187,7 +187,7 @@ export const DietNutritionSelect = memo(function DietNutritionSelect({
                       </Badge>
                     </TooltipTrigger>
                     {details && (
-                      <TooltipContent className="max-w-[300px]">
+                      <TooltipContent className="max-w-[300px] z-50">
                         <div className="space-y-1 text-xs">
                           <p><strong>TCM:</strong> {details.tcmPerspective}</p>
                           <p className="text-muted-foreground italic">Click × to remove</p>
