@@ -722,3 +722,51 @@ export const workStressBurnoutQuestions = [
   { id: 'ws29', question: 'When I feel guilty for resting after work, what can I do?', category: 'Burnout' },
   { id: 'ws30', question: 'When I suspect I am burning out, what can I do?', category: 'Burnout' },
 ];
+
+// Skin Disease TCM questions
+export const skinDiseaseQuestions = [
+  { id: 'sk1', question: 'What are TCM patterns for eczema?', category: 'Eczema' },
+  { id: 'sk2', question: 'Acupuncture points for eczema treatment?', category: 'Eczema' },
+  { id: 'sk3', question: 'Herbal formulas for chronic eczema?', category: 'Eczema' },
+  { id: 'sk4', question: 'What are TCM patterns for psoriasis?', category: 'Psoriasis' },
+  { id: 'sk5', question: 'Acupuncture points for psoriasis?', category: 'Psoriasis' },
+  { id: 'sk6', question: 'Herbal treatment for psoriasis?', category: 'Psoriasis' },
+  { id: 'sk7', question: 'TCM approach to acne?', category: 'Acne' },
+  { id: 'sk8', question: 'Acupuncture points for acne treatment?', category: 'Acne' },
+  { id: 'sk9', question: 'Diet recommendations for acne in TCM?', category: 'Acne' },
+  { id: 'sk10', question: 'TCM patterns for urticaria (hives)?', category: 'Urticaria' },
+  { id: 'sk11', question: 'Herbal formulas for hives and itching?', category: 'Urticaria' },
+  { id: 'sk12', question: 'TCM treatment for dermatitis?', category: 'Dermatitis' },
+  { id: 'sk13', question: 'Wind-Heat skin conditions treatment?', category: 'Patterns' },
+  { id: 'sk14', question: 'Blood Heat skin manifestations?', category: 'Patterns' },
+  { id: 'sk15', question: 'Damp-Heat skin conditions in TCM?', category: 'Patterns' },
+  { id: 'sk16', question: 'Blood Stasis skin conditions?', category: 'Patterns' },
+  { id: 'sk17', question: 'External herbs for skin conditions?', category: 'External' },
+  { id: 'sk18', question: 'Topical treatments in TCM dermatology?', category: 'External' },
+  { id: 'sk19', question: 'Skin conditions and emotional factors?', category: 'Emotional' },
+  { id: 'sk20', question: 'Diet for skin health in TCM?', category: 'Diet' },
+];
+
+// Extreme Weather & Climate TCM questions
+export const extremeWeatherQuestions = [
+  { id: 'ew1', question: 'How to protect health during heat waves?', category: 'Heat' },
+  { id: 'ew2', question: 'TCM prevention for summer heat stroke?', category: 'Heat' },
+  { id: 'ew3', question: 'Cooling foods and herbs for hot weather?', category: 'Heat' },
+  { id: 'ew4', question: 'Acupuncture points for heat exhaustion?', category: 'Heat' },
+  { id: 'ew5', question: 'How to stay healthy during cold spells?', category: 'Cold' },
+  { id: 'ew6', question: 'TCM approach to cold weather protection?', category: 'Cold' },
+  { id: 'ew7', question: 'Warming foods and herbs for winter?', category: 'Cold' },
+  { id: 'ew8', question: 'Acupuncture for cold-related conditions?', category: 'Cold' },
+  { id: 'ew9', question: 'TCM for humidity and dampness conditions?', category: 'Dampness' },
+  { id: 'ew10', question: 'Herbs to expel dampness from weather?', category: 'Dampness' },
+  { id: 'ew11', question: 'TCM for dry climate and wind?', category: 'Dryness' },
+  { id: 'ew12', question: 'Moistening herbs for dry weather?', category: 'Dryness' },
+  { id: 'ew13', question: 'How weather changes affect chronic pain?', category: 'Adaptation' },
+  { id: 'ew14', question: 'Seasonal transition health in TCM?', category: 'Adaptation' },
+  { id: 'ew15', question: 'TCM for barometric pressure sensitivity?', category: 'Adaptation' },
+  { id: 'ew16', question: 'Climate adaptation for respiratory conditions?', category: 'Respiratory' },
+  { id: 'ew17', question: 'Protecting joints in cold wet weather?', category: 'Joints' },
+  { id: 'ew18', question: 'TCM for weather-triggered headaches?', category: 'Headache' },
+  { id: 'ew19', question: 'Seasonal diet adjustments in TCM?', category: 'Diet' },
+  { id: 'ew20', question: 'Lifestyle changes for extreme weather?', category: 'Lifestyle' },
+];

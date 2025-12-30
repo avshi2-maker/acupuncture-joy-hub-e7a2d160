@@ -105,7 +105,9 @@ import {
   womensHealthQuestions,
   immuneResilienceQuestions,
   sportPerformanceQuestions,
-  workStressBurnoutQuestions
+  workStressBurnoutQuestions,
+  skinDiseaseQuestions,
+  extremeWeatherQuestions
 } from '@/data/tcmBrainQuestions';
 
 interface Message {
@@ -128,6 +130,8 @@ const featureTabs = [
   { id: 'immune', icon: Activity, label: 'Immune' },
   { id: 'sport-recovery', icon: Dumbbell, label: 'Sport' },
   { id: 'work-stress', icon: Briefcase, label: 'Stress' },
+  { id: 'skin-disease', icon: Activity, label: 'Skin' },
+  { id: 'climate', icon: Sun, label: 'Climate' },
   { id: 'herbs', icon: Leaf, label: 'Herbs' },
   { id: 'points', icon: MapPin, label: 'Points' },
   { id: 'conditions', icon: Stethoscope, label: 'Conditions' },
@@ -590,6 +594,8 @@ export default function TcmBrain() {
   const [selectedImmuneQuestion, setSelectedImmuneQuestion] = useState('');
   const [selectedSportRecoveryQuestion, setSelectedSportRecoveryQuestion] = useState('');
   const [selectedWorkStressQuestion, setSelectedWorkStressQuestion] = useState('');
+  const [selectedSkinDiseaseQuestion, setSelectedSkinDiseaseQuestion] = useState('');
+  const [selectedClimateQuestion, setSelectedClimateQuestion] = useState('');
   const [showDetailedView, setShowDetailedView] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [showInlineChat, setShowInlineChat] = useState(false);
@@ -2280,6 +2286,26 @@ Include:
                   workStressBurnoutQuestions,
                   selectedWorkStressQuestion,
                   setSelectedWorkStressQuestion
+                )}
+              </TabsContent>
+
+              {/* Skin Disease Tab */}
+              <TabsContent value="skin-disease" className="flex-1 overflow-auto">
+                {renderQASection(
+                  'Skin Disease & Dermatology',
+                  skinDiseaseQuestions,
+                  selectedSkinDiseaseQuestion,
+                  setSelectedSkinDiseaseQuestion
+                )}
+              </TabsContent>
+
+              {/* Climate & Extreme Weather Tab */}
+              <TabsContent value="climate" className="flex-1 overflow-auto">
+                {renderQASection(
+                  'Extreme Weather & Climate',
+                  extremeWeatherQuestions,
+                  selectedClimateQuestion,
+                  setSelectedClimateQuestion
                 )}
               </TabsContent>
 
