@@ -1351,21 +1351,19 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                   render={({ field }) => (
                     <FormItem className="md:col-span-2">
                       <FormLabel>Constitution Type</FormLabel>
-                      <FormControl>
-                        <ConstitutionTypeSelect
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        />
-                        <Input
-                          placeholder="Or type constitution here..."
-                          className="mt-1 border-dashed border-amber-400"
-                          onChange={(e) => {
-                            if (e.target.value) {
-                              field.onChange(e.target.value);
-                            }
-                          }}
-                        />
-                      </FormControl>
+                      <ConstitutionTypeSelect
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      />
+                      <Input
+                        placeholder="Or type constitution here..."
+                        className="mt-1 border-dashed border-amber-400"
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            field.onChange(e.target.value);
+                          }
+                        }}
+                      />
                       <VoiceInput
                         placeholder="Additional notes about constitution..."
                         className="mt-2"
