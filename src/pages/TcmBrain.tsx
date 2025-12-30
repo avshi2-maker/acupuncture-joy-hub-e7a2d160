@@ -410,6 +410,23 @@ export default function TcmBrain() {
   // Track if workflow was saved to patient record
   const [workflowSavedToPatient, setWorkflowSavedToPatient] = useState(false);
   const [savingToPatient, setSavingToPatient] = useState(false);
+
+  // Edit mode for loaded workflow
+  const [workflowEditMode, setWorkflowEditMode] = useState(false);
+  const [editedWorkflow, setEditedWorkflow] = useState({
+    symptomsData: '',
+    diagnosisData: '',
+    treatmentData: '',
+  });
+
+  // Comparison mode - stores the previous workflow to compare against
+  const [comparisonWorkflow, setComparisonWorkflow] = useState<{
+    active: boolean;
+    visitDate: string;
+    symptomsData: string;
+    diagnosisData: string;
+    treatmentData: string;
+  } | null>(null);
   
   // Session history hook
   const { sessions, saveSession, exportSessionAsPDF, openGmailWithSession, openWhatsAppWithSession } = useTcmSessionHistory();
@@ -1704,8 +1721,24 @@ Based on this framework, provide a complete treatment protocol:
                     diagnosisData: data.diagnosisData,
                     treatmentData: data.treatmentData,
                   });
+                  setEditedWorkflow({
+                    symptomsData: data.symptomsData,
+                    diagnosisData: data.diagnosisData,
+                    treatmentData: data.treatmentData,
+                  });
                   setInput(data.symptomsData);
-                  setWorkflowSavedToPatient(true); // Mark as already saved since it came from a saved visit
+                  setWorkflowEditMode(true); // Enable edit mode for loaded workflow
+                  setWorkflowSavedToPatient(false); // Not saved yet since we're editing
+                  setComparisonWorkflow(null); // Clear comparison when loading
+                }}
+                onCompareWorkflow={(data) => {
+                  setComparisonWorkflow({
+                    active: true,
+                    visitDate: data.visitDate || '',
+                    symptomsData: data.symptomsData,
+                    diagnosisData: data.diagnosisData,
+                    treatmentData: data.treatmentData,
+                  });
                 }}
               />
               
@@ -2108,6 +2141,142 @@ Based on this framework, provide a complete treatment protocol:
                       </div>
                     )}
 
+                    {/* Edit Mode Panel - when workflow is loaded for editing */}
+                    {chainedWorkflow.currentPhase === 'complete' && workflowEditMode && (
+                      <Card className="border-amber-500/40 bg-amber-500/5">
+                        <CardHeader className="pb-2 pt-3">
+                          <CardTitle className="text-sm flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-amber-600">
+                              <FileText className="h-4 w-4" />
+                              Edit Loaded Workflow
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setWorkflowEditMode(false);
+                                // Apply edited values back to chainedWorkflow
+                                setChainedWorkflow(prev => ({
+                                  ...prev,
+                                  symptomsData: editedWorkflow.symptomsData,
+                                  diagnosisData: editedWorkflow.diagnosisData,
+                                  treatmentData: editedWorkflow.treatmentData,
+                                }));
+                                setWorkflowSavedToPatient(false);
+                              }}
+                              className="h-6 text-xs gap-1"
+                            >
+                              <X className="h-3 w-3" />
+                              Done Editing
+                            </Button>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3 pt-0">
+                          <div>
+                            <label className="text-xs font-medium text-muted-foreground">Symptoms</label>
+                            <Textarea
+                              value={editedWorkflow.symptomsData}
+                              onChange={(e) => setEditedWorkflow(prev => ({ ...prev, symptomsData: e.target.value }))}
+                              className="mt-1 text-sm min-h-[60px]"
+                              placeholder="Edit symptoms..."
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-muted-foreground">Diagnosis</label>
+                            <Textarea
+                              value={editedWorkflow.diagnosisData}
+                              onChange={(e) => setEditedWorkflow(prev => ({ ...prev, diagnosisData: e.target.value }))}
+                              className="mt-1 text-sm min-h-[80px]"
+                              placeholder="Edit diagnosis..."
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-muted-foreground">Treatment</label>
+                            <Textarea
+                              value={editedWorkflow.treatmentData}
+                              onChange={(e) => setEditedWorkflow(prev => ({ ...prev, treatmentData: e.target.value }))}
+                              className="mt-1 text-sm min-h-[80px]"
+                              placeholder="Edit treatment..."
+                            />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Comparison Panel - side by side view */}
+                    {comparisonWorkflow && chainedWorkflow.currentPhase === 'complete' && (
+                      <Card className="border-primary/40 bg-primary/5">
+                        <CardHeader className="pb-2 pt-3">
+                          <CardTitle className="text-sm flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-primary">
+                              <History className="h-4 w-4" />
+                              Comparison with Previous Visit
+                              {comparisonWorkflow.visitDate && (
+                                <Badge variant="outline" className="text-[10px]">
+                                  {new Date(comparisonWorkflow.visitDate).toLocaleDateString()}
+                                </Badge>
+                              )}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setComparisonWorkflow(null)}
+                              className="h-6 text-xs gap-1"
+                            >
+                              <X className="h-3 w-3" />
+                              Close
+                            </Button>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <div className="grid md:grid-cols-2 gap-4">
+                            {/* Current Workflow */}
+                            <div className="space-y-2">
+                              <h4 className="text-xs font-bold text-jade flex items-center gap-1">
+                                <Sparkles className="h-3 w-3" />
+                                Current Workflow
+                              </h4>
+                              <div className="text-xs space-y-2">
+                                <div>
+                                  <span className="font-medium text-muted-foreground">Symptoms:</span>
+                                  <p className="mt-0.5 line-clamp-3">{workflowEditMode ? editedWorkflow.symptomsData : chainedWorkflow.symptomsData}</p>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-muted-foreground">Diagnosis:</span>
+                                  <p className="mt-0.5 line-clamp-4">{workflowEditMode ? editedWorkflow.diagnosisData : chainedWorkflow.diagnosisData}</p>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-muted-foreground">Treatment:</span>
+                                  <p className="mt-0.5 line-clamp-4">{workflowEditMode ? editedWorkflow.treatmentData : chainedWorkflow.treatmentData}</p>
+                                </div>
+                              </div>
+                            </div>
+                            {/* Previous Workflow */}
+                            <div className="space-y-2 border-l pl-4">
+                              <h4 className="text-xs font-bold text-muted-foreground flex items-center gap-1">
+                                <History className="h-3 w-3" />
+                                Previous Visit
+                              </h4>
+                              <div className="text-xs space-y-2 opacity-80">
+                                <div>
+                                  <span className="font-medium text-muted-foreground">Symptoms:</span>
+                                  <p className="mt-0.5 line-clamp-3">{comparisonWorkflow.symptomsData || 'N/A'}</p>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-muted-foreground">Diagnosis:</span>
+                                  <p className="mt-0.5 line-clamp-4">{comparisonWorkflow.diagnosisData || 'N/A'}</p>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-muted-foreground">Treatment:</span>
+                                  <p className="mt-0.5 line-clamp-4">{comparisonWorkflow.treatmentData || 'N/A'}</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
                     {/* Save to Patient Record button - visible when complete and patient selected */}
                     {chainedWorkflow.currentPhase === 'complete' && selectedPatient && (
                       <div className="flex items-center gap-2 p-2 bg-primary/5 rounded-lg border border-primary/20">
@@ -2116,7 +2285,19 @@ Based on this framework, provide a complete treatment protocol:
                           Save to <strong>{selectedPatient.name}</strong>'s record
                         </span>
                         <Button
-                          onClick={saveWorkflowToPatient}
+                          onClick={() => {
+                            // If in edit mode, use edited values
+                            if (workflowEditMode) {
+                              setChainedWorkflow(prev => ({
+                                ...prev,
+                                symptomsData: editedWorkflow.symptomsData,
+                                diagnosisData: editedWorkflow.diagnosisData,
+                                treatmentData: editedWorkflow.treatmentData,
+                              }));
+                              setWorkflowEditMode(false);
+                            }
+                            saveWorkflowToPatient();
+                          }}
                           disabled={savingToPatient || workflowSavedToPatient}
                           size="sm"
                           variant={workflowSavedToPatient ? 'outline' : 'default'}
@@ -2135,7 +2316,7 @@ Based on this framework, provide a complete treatment protocol:
                           ) : (
                             <>
                               <Save className="h-3 w-3" />
-                              Save to CRM
+                              {workflowEditMode ? 'Save Edited' : 'Save to CRM'}
                             </>
                           )}
                         </Button>
