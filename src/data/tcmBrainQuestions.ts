@@ -273,70 +273,70 @@ export const astroQuestions = [
   { id: 'a19', question: 'Weaknesses by animal?', category: 'Health' },
 ];
 
-// CAF (Clinical Assessment Framework) Questions - based on tcm-caf-knowledge.csv
-export const cafQuestions = [
-  // Diagnosis
-  { id: 'caf1', question: 'What is Liver Qi Stagnation?', category: 'Diagnosis' },
-  { id: 'caf2', question: 'What is Blood Deficiency pattern?', category: 'Diagnosis' },
-  { id: 'caf3', question: 'What is Kidney Yang Deficiency?', category: 'Diagnosis' },
-  { id: 'caf4', question: 'What is Spleen Qi Deficiency?', category: 'Diagnosis' },
-  { id: 'caf5', question: 'What is Heart Fire pattern?', category: 'Diagnosis' },
-  // Principle
-  { id: 'caf6', question: 'Treatment principle for Liver Qi Stagnation?', category: 'Principle' },
-  { id: 'caf7', question: 'Treatment for Blood Stasis?', category: 'Principle' },
-  { id: 'caf8', question: 'How to treat Kidney Yang Deficiency?', category: 'Principle' },
-  { id: 'caf9', question: 'Treatment principle for Dampness?', category: 'Principle' },
-  { id: 'caf10', question: 'How to treat Yin Deficiency with Empty Heat?', category: 'Principle' },
-  // Points
-  { id: 'caf11', question: 'What is LI4 (Hegu) used for?', category: 'Points' },
-  { id: 'caf12', question: 'Functions of ST36 (Zusanli)?', category: 'Points' },
-  { id: 'caf13', question: 'What is SP6 (Sanyinjiao) used for?', category: 'Points' },
-  { id: 'caf14', question: 'What is LV3 (Taichong) used for?', category: 'Points' },
-  { id: 'caf15', question: 'What is PC6 (Neiguan) used for?', category: 'Points' },
-  // Herbs/Formulas
-  { id: 'caf16', question: 'What is Xiao Yao San formula?', category: 'Herbs' },
-  { id: 'caf17', question: 'What is Liu Wei Di Huang Wan?', category: 'Herbs' },
-  { id: 'caf18', question: 'What is Si Jun Zi Tang?', category: 'Herbs' },
-  { id: 'caf19', question: 'What is Gui Pi Tang used for?', category: 'Herbs' },
-  { id: 'caf20', question: 'Properties of Huang Qi?', category: 'Herbs' },
-  // Nutrition
-  { id: 'caf21', question: 'Foods that nourish Blood?', category: 'Nutrition' },
-  { id: 'caf22', question: 'Foods to avoid with Dampness?', category: 'Nutrition' },
-  { id: 'caf23', question: 'Foods that warm Yang?', category: 'Nutrition' },
-  { id: 'caf24', question: 'Foods that nourish Yin?', category: 'Nutrition' },
-  { id: 'caf25', question: 'Chinese dietary therapy principle?', category: 'Nutrition' },
-  // Lifestyle
-  { id: 'caf26', question: 'Lifestyle that supports Liver health?', category: 'Lifestyle' },
-  { id: 'caf27', question: 'How to protect Spleen Qi?', category: 'Lifestyle' },
-  { id: 'caf28', question: 'Lifestyle for Kidney deficiency?', category: 'Lifestyle' },
-  { id: 'caf29', question: 'Seasonal living guidelines?', category: 'Lifestyle' },
-  { id: 'caf30', question: 'Emotion and organ relationships?', category: 'Lifestyle' },
-  // Exercise
-  { id: 'caf31', question: 'Qi Gong exercises for Kidneys?', category: 'Exercise' },
-  { id: 'caf32', question: 'What is Ba Duan Jin?', category: 'Exercise' },
-  { id: 'caf33', question: 'Exercises for Liver Qi Stagnation?', category: 'Exercise' },
-  { id: 'caf34', question: 'Tai Chi benefits?', category: 'Exercise' },
-  { id: 'caf35', question: 'Exercises to strengthen Spleen?', category: 'Exercise' },
-  // Wellness
-  { id: 'caf36', question: 'Acupressure points for self-care?', category: 'Wellness' },
-  { id: 'caf37', question: 'How to use moxibustion at home?', category: 'Wellness' },
-  { id: 'caf38', question: 'Daily wellness routines?', category: 'Wellness' },
-  { id: 'caf39', question: 'Gua Sha self-treatment?', category: 'Wellness' },
-  { id: 'caf40', question: 'How to support Shen (Spirit)?', category: 'Wellness' },
-  // Safety
-  { id: 'caf41', question: 'Points contraindicated in pregnancy?', category: 'Safety' },
-  { id: 'caf42', question: 'Herb-drug interactions?', category: 'Safety' },
-  { id: 'caf43', question: 'When to avoid moxibustion?', category: 'Safety' },
-  { id: 'caf44', question: 'Bleeding point precautions?', category: 'Safety' },
-  { id: 'caf45', question: 'Conditions needing referral?', category: 'Safety' },
-  // Mental
-  { id: 'caf46', question: 'Shen disturbance patterns?', category: 'Mental' },
-  { id: 'caf47', question: 'How Liver affects emotions?', category: 'Mental' },
-  { id: 'caf48', question: 'TCM patterns causing anxiety?', category: 'Mental' },
-  { id: 'caf49', question: 'How to treat insomnia in TCM?', category: 'Mental' },
-  { id: 'caf50', question: 'Wood element personality?', category: 'Mental' },
-  // Sleep
-  { id: 'caf51', question: 'Optimal sleep timing in TCM?', category: 'Sleep' },
-  { id: 'caf52', question: 'Difficulty falling asleep treatment?', category: 'Sleep' },
-  { id: 'caf53', question: 'Waking at specific times meaning?', category: 'Sleep' },
+// Trauma & Casualties Questions - based on tcm_trauma_casualties_qa_100.csv
+export const traumaQuestions = [
+  // Emergency/Shock
+  { id: 'tr1', question: 'Immediate TCM approach for traumatic shock?', category: 'Emergency' },
+  { id: 'tr2', question: 'Treatment for severe blood loss (hemorrhagic shock)?', category: 'Emergency' },
+  { id: 'tr3', question: 'Points for traumatic unconsciousness?', category: 'Emergency' },
+  { id: 'tr4', question: 'Emergency treatment for spinal trauma?', category: 'Emergency' },
+  { id: 'tr5', question: 'Treatment for acute respiratory distress?', category: 'Emergency' },
+  // Head/Brain
+  { id: 'tr6', question: 'Acute head trauma with confusion treatment?', category: 'Head' },
+  { id: 'tr7', question: 'Traumatic brain injury (TBI) approach?', category: 'Head' },
+  { id: 'tr8', question: 'Post-concussion syndrome treatment?', category: 'Head' },
+  { id: 'tr9', question: 'Skull fracture complications management?', category: 'Head' },
+  // Chest/Thorax
+  { id: 'tr10', question: 'Blast injury with chest trauma?', category: 'Chest' },
+  { id: 'tr11', question: 'Rib fracture pain management?', category: 'Chest' },
+  { id: 'tr12', question: 'Pneumothorax supportive treatment?', category: 'Chest' },
+  // Fractures/Bones
+  { id: 'tr13', question: 'Acute pain from multiple fractures?', category: 'Fractures' },
+  { id: 'tr14', question: 'Bone healing acceleration?', category: 'Fractures' },
+  { id: 'tr15', question: 'Compound fracture infection prevention?', category: 'Fractures' },
+  { id: 'tr16', question: 'Pelvic fracture pain management?', category: 'Fractures' },
+  // Internal Bleeding
+  { id: 'tr17', question: 'Traumatic internal bleeding treatment?', category: 'Bleeding' },
+  { id: 'tr18', question: 'Hemostatic acupuncture points?', category: 'Bleeding' },
+  { id: 'tr19', question: 'Blood stasis after trauma?', category: 'Bleeding' },
+  // Burns
+  { id: 'tr20', question: 'Burn injury treatment approach?', category: 'Burns' },
+  { id: 'tr21', question: 'Severe burns fluid loss treatment?', category: 'Burns' },
+  { id: 'tr22', question: 'Burn scar prevention?', category: 'Burns' },
+  // Soft Tissue
+  { id: 'tr23', question: 'Crush injury treatment?', category: 'Soft Tissue' },
+  { id: 'tr24', question: 'Severe laceration wound healing?', category: 'Soft Tissue' },
+  { id: 'tr25', question: 'Muscle trauma recovery?', category: 'Soft Tissue' },
+  // Pain Management
+  { id: 'tr26', question: 'Acute trauma pain relief points?', category: 'Pain' },
+  { id: 'tr27', question: 'Chronic post-trauma pain?', category: 'Pain' },
+  { id: 'tr28', question: 'Phantom limb pain treatment?', category: 'Pain' },
+  // PTSD/Psychological
+  { id: 'tr29', question: 'Post-traumatic stress (PTSD) treatment?', category: 'PTSD' },
+  { id: 'tr30', question: 'Trauma-related anxiety treatment?', category: 'PTSD' },
+  { id: 'tr31', question: 'Sleep disturbance after trauma?', category: 'PTSD' },
+  { id: 'tr32', question: 'Shen disturbance from severe trauma?', category: 'PTSD' },
+  // Recovery/Rehabilitation
+  { id: 'tr33', question: 'Post-surgery recovery acceleration?', category: 'Recovery' },
+  { id: 'tr34', question: 'Weakness after prolonged hospitalization?', category: 'Recovery' },
+  { id: 'tr35', question: 'Appetite loss during recovery?', category: 'Recovery' },
+  { id: 'tr36', question: 'Immune support during healing?', category: 'Recovery' },
+  // Specific Injuries
+  { id: 'tr37', question: 'Amputation recovery support?', category: 'Specific' },
+  { id: 'tr38', question: 'Eye trauma treatment?', category: 'Specific' },
+  { id: 'tr39', question: 'Nerve damage from trauma?', category: 'Specific' },
+  { id: 'tr40', question: 'Abdominal trauma treatment?', category: 'Specific' },
+  // Formulas/Herbs
+  { id: 'tr41', question: 'Key trauma herbal formulas?', category: 'Herbs' },
+  { id: 'tr42', question: 'Blood-moving trauma herbs?', category: 'Herbs' },
+  { id: 'tr43', question: 'Bone-healing herbal support?', category: 'Herbs' },
+  { id: 'tr44', question: 'Pain-relieving trauma formulas?', category: 'Herbs' },
+  // Techniques
+  { id: 'tr45', question: 'Moxibustion for trauma recovery?', category: 'Techniques' },
+  { id: 'tr46', question: 'Cupping for blood stasis?', category: 'Techniques' },
+  { id: 'tr47', question: 'Gua Sha after trauma?', category: 'Techniques' },
+  { id: 'tr48', question: 'Electro-acupuncture for trauma pain?', category: 'Techniques' },
+  // Battlefield/Mass Casualty
+  { id: 'tr49', question: 'Mass casualty triage approach?', category: 'Battlefield' },
+  { id: 'tr50', question: 'Field treatment with limited resources?', category: 'Battlefield' },
 ];
