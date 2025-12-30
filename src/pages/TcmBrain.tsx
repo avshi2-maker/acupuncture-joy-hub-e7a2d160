@@ -2203,7 +2203,7 @@ Based on this framework, provide a complete treatment protocol:
                       </Card>
                     )}
 
-                    {/* Comparison Panel - side by side view */}
+                    {/* Comparison Panel - side by side view with diff highlighting */}
                     {comparisonWorkflow && chainedWorkflow.currentPhase === 'complete' && (
                       <Card className="border-primary/40 bg-primary/5">
                         <CardHeader className="pb-2 pt-3">
@@ -2228,50 +2228,169 @@ Based on this framework, provide a complete treatment protocol:
                             </Button>
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="pt-0">
-                          <div className="grid md:grid-cols-2 gap-4">
-                            {/* Current Workflow */}
-                            <div className="space-y-2">
-                              <h4 className="text-xs font-bold text-jade flex items-center gap-1">
-                                <Sparkles className="h-3 w-3" />
-                                Current Workflow
-                              </h4>
-                              <div className="text-xs space-y-2">
-                                <div>
-                                  <span className="font-medium text-muted-foreground">Symptoms:</span>
-                                  <p className="mt-0.5 line-clamp-3">{workflowEditMode ? editedWorkflow.symptomsData : chainedWorkflow.symptomsData}</p>
-                                </div>
-                                <div>
-                                  <span className="font-medium text-muted-foreground">Diagnosis:</span>
-                                  <p className="mt-0.5 line-clamp-4">{workflowEditMode ? editedWorkflow.diagnosisData : chainedWorkflow.diagnosisData}</p>
-                                </div>
-                                <div>
-                                  <span className="font-medium text-muted-foreground">Treatment:</span>
-                                  <p className="mt-0.5 line-clamp-4">{workflowEditMode ? editedWorkflow.treatmentData : chainedWorkflow.treatmentData}</p>
-                                </div>
+                        <CardContent className="pt-0 space-y-4">
+                          {/* Symptoms Comparison */}
+                          <div className="grid md:grid-cols-2 gap-3 p-2 rounded-lg bg-background/50">
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs font-bold text-jade">Current Symptoms</span>
+                                {(workflowEditMode ? editedWorkflow.symptomsData : chainedWorkflow.symptomsData) !== comparisonWorkflow.symptomsData && (
+                                  <Badge variant="outline" className="text-[9px] bg-amber-500/10 text-amber-600 border-amber-500/30">Changed</Badge>
+                                )}
                               </div>
+                              <p className={`text-xs p-2 rounded border ${
+                                (workflowEditMode ? editedWorkflow.symptomsData : chainedWorkflow.symptomsData) !== comparisonWorkflow.symptomsData 
+                                  ? 'bg-green-500/10 border-green-500/30' 
+                                  : 'bg-muted/30 border-border/50'
+                              }`}>
+                                {workflowEditMode ? editedWorkflow.symptomsData : chainedWorkflow.symptomsData || 'N/A'}
+                              </p>
                             </div>
-                            {/* Previous Workflow */}
-                            <div className="space-y-2 border-l pl-4">
-                              <h4 className="text-xs font-bold text-muted-foreground flex items-center gap-1">
-                                <History className="h-3 w-3" />
-                                Previous Visit
-                              </h4>
-                              <div className="text-xs space-y-2 opacity-80">
-                                <div>
-                                  <span className="font-medium text-muted-foreground">Symptoms:</span>
-                                  <p className="mt-0.5 line-clamp-3">{comparisonWorkflow.symptomsData || 'N/A'}</p>
-                                </div>
-                                <div>
-                                  <span className="font-medium text-muted-foreground">Diagnosis:</span>
-                                  <p className="mt-0.5 line-clamp-4">{comparisonWorkflow.diagnosisData || 'N/A'}</p>
-                                </div>
-                                <div>
-                                  <span className="font-medium text-muted-foreground">Treatment:</span>
-                                  <p className="mt-0.5 line-clamp-4">{comparisonWorkflow.treatmentData || 'N/A'}</p>
-                                </div>
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs font-medium text-muted-foreground">Previous</span>
+                                {comparisonWorkflow.symptomsData && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      if (workflowEditMode) {
+                                        setEditedWorkflow(prev => ({ ...prev, symptomsData: comparisonWorkflow.symptomsData }));
+                                      } else {
+                                        setChainedWorkflow(prev => ({ ...prev, symptomsData: comparisonWorkflow.symptomsData }));
+                                      }
+                                      setWorkflowSavedToPatient(false);
+                                      toast.success('Copied symptoms from previous visit');
+                                    }}
+                                    className="h-5 px-1.5 text-[10px] gap-1 text-primary hover:bg-primary/10"
+                                  >
+                                    <ArrowRight className="h-2.5 w-2.5 rotate-180" />
+                                    Copy
+                                  </Button>
+                                )}
                               </div>
+                              <p className="text-xs p-2 rounded border bg-muted/20 border-border/30 opacity-70">
+                                {comparisonWorkflow.symptomsData || 'N/A'}
+                              </p>
                             </div>
+                          </div>
+
+                          {/* Diagnosis Comparison */}
+                          <div className="grid md:grid-cols-2 gap-3 p-2 rounded-lg bg-background/50">
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs font-bold text-jade">Current Diagnosis</span>
+                                {(workflowEditMode ? editedWorkflow.diagnosisData : chainedWorkflow.diagnosisData) !== comparisonWorkflow.diagnosisData && (
+                                  <Badge variant="outline" className="text-[9px] bg-amber-500/10 text-amber-600 border-amber-500/30">Changed</Badge>
+                                )}
+                              </div>
+                              <p className={`text-xs p-2 rounded border max-h-24 overflow-y-auto ${
+                                (workflowEditMode ? editedWorkflow.diagnosisData : chainedWorkflow.diagnosisData) !== comparisonWorkflow.diagnosisData 
+                                  ? 'bg-green-500/10 border-green-500/30' 
+                                  : 'bg-muted/30 border-border/50'
+                              }`}>
+                                {workflowEditMode ? editedWorkflow.diagnosisData : chainedWorkflow.diagnosisData || 'N/A'}
+                              </p>
+                            </div>
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs font-medium text-muted-foreground">Previous</span>
+                                {comparisonWorkflow.diagnosisData && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      if (workflowEditMode) {
+                                        setEditedWorkflow(prev => ({ ...prev, diagnosisData: comparisonWorkflow.diagnosisData }));
+                                      } else {
+                                        setChainedWorkflow(prev => ({ ...prev, diagnosisData: comparisonWorkflow.diagnosisData }));
+                                      }
+                                      setWorkflowSavedToPatient(false);
+                                      toast.success('Copied diagnosis from previous visit');
+                                    }}
+                                    className="h-5 px-1.5 text-[10px] gap-1 text-primary hover:bg-primary/10"
+                                  >
+                                    <ArrowRight className="h-2.5 w-2.5 rotate-180" />
+                                    Copy
+                                  </Button>
+                                )}
+                              </div>
+                              <p className="text-xs p-2 rounded border bg-muted/20 border-border/30 opacity-70 max-h-24 overflow-y-auto">
+                                {comparisonWorkflow.diagnosisData || 'N/A'}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Treatment Comparison */}
+                          <div className="grid md:grid-cols-2 gap-3 p-2 rounded-lg bg-background/50">
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs font-bold text-jade">Current Treatment</span>
+                                {(workflowEditMode ? editedWorkflow.treatmentData : chainedWorkflow.treatmentData) !== comparisonWorkflow.treatmentData && (
+                                  <Badge variant="outline" className="text-[9px] bg-amber-500/10 text-amber-600 border-amber-500/30">Changed</Badge>
+                                )}
+                              </div>
+                              <p className={`text-xs p-2 rounded border max-h-24 overflow-y-auto ${
+                                (workflowEditMode ? editedWorkflow.treatmentData : chainedWorkflow.treatmentData) !== comparisonWorkflow.treatmentData 
+                                  ? 'bg-green-500/10 border-green-500/30' 
+                                  : 'bg-muted/30 border-border/50'
+                              }`}>
+                                {workflowEditMode ? editedWorkflow.treatmentData : chainedWorkflow.treatmentData || 'N/A'}
+                              </p>
+                            </div>
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs font-medium text-muted-foreground">Previous</span>
+                                {comparisonWorkflow.treatmentData && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      if (workflowEditMode) {
+                                        setEditedWorkflow(prev => ({ ...prev, treatmentData: comparisonWorkflow.treatmentData }));
+                                      } else {
+                                        setChainedWorkflow(prev => ({ ...prev, treatmentData: comparisonWorkflow.treatmentData }));
+                                      }
+                                      setWorkflowSavedToPatient(false);
+                                      toast.success('Copied treatment from previous visit');
+                                    }}
+                                    className="h-5 px-1.5 text-[10px] gap-1 text-primary hover:bg-primary/10"
+                                  >
+                                    <ArrowRight className="h-2.5 w-2.5 rotate-180" />
+                                    Copy
+                                  </Button>
+                                )}
+                              </div>
+                              <p className="text-xs p-2 rounded border bg-muted/20 border-border/30 opacity-70 max-h-24 overflow-y-auto">
+                                {comparisonWorkflow.treatmentData || 'N/A'}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Copy All Button */}
+                          <div className="flex justify-center pt-2 border-t">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const newData = {
+                                  symptomsData: comparisonWorkflow.symptomsData || '',
+                                  diagnosisData: comparisonWorkflow.diagnosisData || '',
+                                  treatmentData: comparisonWorkflow.treatmentData || '',
+                                };
+                                if (workflowEditMode) {
+                                  setEditedWorkflow(newData);
+                                } else {
+                                  setChainedWorkflow(prev => ({ ...prev, ...newData }));
+                                }
+                                setWorkflowSavedToPatient(false);
+                                toast.success('Copied all sections from previous visit');
+                              }}
+                              className="gap-2 text-xs"
+                            >
+                              <RotateCcw className="h-3 w-3" />
+                              Copy All from Previous Visit
+                            </Button>
                           </div>
                         </CardContent>
                       </Card>
