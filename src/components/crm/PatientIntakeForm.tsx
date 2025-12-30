@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { VoiceTextarea, VoiceInput } from './VoiceInputFields';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -797,10 +798,11 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                     <FormItem>
                       <FormLabel>Chief Complaint *</FormLabel>
                       <FormControl>
-                        <Textarea 
+                        <VoiceTextarea 
                           placeholder="What brings you in today? Main symptoms and concerns..." 
                           className="min-h-[100px]"
-                          {...field} 
+                          value={field.value}
+                          onChange={field.onChange}
                         />
                       </FormControl>
                       <FormMessage />
@@ -816,9 +818,10 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                       <FormItem>
                         <FormLabel>Past Medical History</FormLabel>
                         <FormControl>
-                          <Textarea 
+                          <VoiceTextarea 
                             placeholder="Previous illnesses, surgeries, hospitalizations..." 
-                            {...field} 
+                            value={field.value}
+                            onChange={field.onChange}
                           />
                         </FormControl>
                         <FormMessage />
@@ -842,7 +845,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                           }}
                         />
                         <FormControl>
-                          <Textarea 
+                          <VoiceTextarea 
                             placeholder="Additional allergy notes, reactions, severity details..." 
                             className="mt-2"
                             value={field.value?.includes('\n\nNotes: ') ? field.value.split('\n\nNotes: ')[1] : (selectedAllergies.length === 0 ? field.value : '')}
@@ -874,7 +877,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                         }}
                       />
                       <FormControl>
-                        <Textarea 
+                        <VoiceTextarea 
                           placeholder="Add dosage details, frequency, or other medication notes..." 
                           className="mt-2"
                           value={field.value?.includes('\n\nDosage Notes: ') ? field.value.split('\n\nDosage Notes: ')[1] : (selectedMedications.length === 0 ? field.value : '')}
@@ -990,8 +993,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                           q.type !== 'info' && (
                             <div key={q.id} className="space-y-2">
                               <Label htmlFor={q.id}>{q.label}</Label>
-                              <Textarea
-                                id={q.id}
+                              <VoiceTextarea
                                 placeholder={q.placeholder}
                                 value={pregnancyAnswers[q.id] || ''}
                                 onChange={(e) => setPregnancyAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
@@ -1025,8 +1027,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                   {currentAgeQuestions.map((q) => (
                     <div key={q.id} className="space-y-2">
                       <Label htmlFor={`age-${q.id}`}>{q.label}</Label>
-                      <Textarea
-                        id={`age-${q.id}`}
+                      <VoiceTextarea
                         placeholder={q.placeholder}
                         value={ageSpecificAnswers[q.id] || ''}
                         onChange={(e) => setAgeSpecificAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
@@ -1183,9 +1184,10 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                     <FormItem>
                       <FormLabel>Additional Diet Notes</FormLabel>
                       <FormControl>
-                        <Textarea 
+                        <VoiceTextarea 
                           placeholder="Any additional dietary notes, restrictions, allergies..." 
-                          {...field} 
+                          value={field.value}
+                          onChange={field.onChange}
                         />
                       </FormControl>
                       <FormMessage />
@@ -1200,9 +1202,10 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                     <FormItem>
                       <FormLabel>Additional Lifestyle Notes</FormLabel>
                       <FormControl>
-                        <Textarea 
+                        <VoiceTextarea 
                           placeholder="Any other relevant lifestyle information..." 
-                          {...field} 
+                          value={field.value}
+                          onChange={field.onChange}
                         />
                       </FormControl>
                       <FormMessage />
@@ -1238,7 +1241,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                         maxSelections={5}
                       />
                       <FormControl>
-                        <Textarea 
+                        <VoiceTextarea 
                           placeholder="Additional tongue notes (color, coating, moisture, shape)..." 
                           className="mt-2"
                           value={field.value?.includes('\n\nNotes: ') ? field.value.split('\n\nNotes: ')[1] : (tongueFindings.length === 0 ? field.value : '')}
@@ -1271,7 +1274,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                         maxSelections={5}
                       />
                       <FormControl>
-                        <Textarea 
+                        <VoiceTextarea 
                           placeholder="Additional pulse notes (rate, rhythm, quality, position)..." 
                           className="mt-2"
                           value={field.value?.includes('\n\nNotes: ') ? field.value.split('\n\nNotes: ')[1] : (pulseFindings.length === 0 ? field.value : '')}
