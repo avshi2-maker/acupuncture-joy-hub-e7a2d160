@@ -20,7 +20,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { User, Heart, Baby, Activity, Utensils, Moon, Brain, AlertTriangle, FileSignature, PenTool, CheckCircle2, XCircle, Loader2, Calendar, BrainCircuit, ChevronLeft, ChevronRight, CloudOff } from 'lucide-react';
+import { User, Heart, Baby, Activity, Utensils, Moon, Brain, AlertTriangle, FileSignature, PenTool, CheckCircle2, XCircle, Loader2, Calendar, BrainCircuit, ChevronLeft, ChevronRight, CloudOff, Save } from 'lucide-react';
 import { AutoSaveIndicator } from '@/components/video/AutoSaveIndicator';
 import { SignaturePad } from './SignaturePad';
 import { MedicalDocumentUpload } from './MedicalDocumentUpload';
@@ -276,6 +276,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
     lastSaved,
     isSaving,
     hasDraft,
+    saveDraft,
     clearDraft,
     restoreDraft,
   } = useIntakeDraftAutosave({
@@ -291,6 +292,12 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
     currentStep,
     patientId,
   });
+
+  // Manual save handler
+  const handleManualSave = () => {
+    saveDraft();
+    toast.success('Draft saved');
+  };
 
   // Handle draft restore
   const handleRestoreDraft = () => {
@@ -592,9 +599,22 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
           </Alert>
         )}
 
-        {/* Autosave indicator */}
+        {/* Autosave indicator + manual save */}
         {!patientId && (
-          <AutoSaveIndicator isSaving={isSaving} lastSaved={lastSaved} />
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <AutoSaveIndicator isSaving={isSaving} lastSaved={lastSaved} />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleManualSave}
+              disabled={isSaving}
+              className="gap-1.5"
+            >
+              <Save className="h-4 w-4" />
+              Save draft now
+            </Button>
+          </div>
         )}
         {/* Progress Bar & Step Indicator */}
         <div className="sticky top-0 z-20 -mx-4 px-4 py-4 bg-background/95 backdrop-blur border-b">
