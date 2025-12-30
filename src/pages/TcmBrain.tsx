@@ -85,6 +85,7 @@ import { SessionTemplates, SessionTemplate } from '@/components/tcm/SessionTempl
 import { MobileVoiceNotesDrawer } from '@/components/tcm/MobileVoiceNotesDrawer';
 import { PatientSelectorDropdown, SelectedPatient } from '@/components/crm/PatientSelectorDropdown';
 import { PatientVisitHistoryDialog } from '@/components/tcm/PatientVisitHistoryDialog';
+import { WordDiffDisplay, SentenceMergeMode } from '@/components/tcm/WorkflowDiffMerge';
 import { RAGVerificationStatus } from '@/components/tcm/RAGSearchAnimation';
 import { RAGVerificationPanel } from '@/components/tcm/RAGVerificationPanel';
 import { AuditEvidencePanel } from '@/components/tcm/AuditEvidencePanel';
@@ -427,6 +428,15 @@ export default function TcmBrain() {
     diagnosisData: string;
     treatmentData: string;
   } | null>(null);
+
+  // Merge mode state
+  const [mergeMode, setMergeMode] = useState<{
+    active: boolean;
+    section: 'symptoms' | 'diagnosis' | 'treatment';
+  } | null>(null);
+
+  // Word diff toggle
+  const [showWordDiff, setShowWordDiff] = useState(true);
   
   // Session history hook
   const { sessions, saveSession, exportSessionAsPDF, openGmailWithSession, openWhatsAppWithSession } = useTcmSessionHistory();
@@ -2203,8 +2213,49 @@ Based on this framework, provide a complete treatment protocol:
                       </Card>
                     )}
 
+                    {/* Merge Mode Panel - when merging a specific section */}
+                    {mergeMode && comparisonWorkflow && (
+                      <SentenceMergeMode
+                        currentText={
+                          mergeMode.section === 'symptoms' 
+                            ? (workflowEditMode ? editedWorkflow.symptomsData : chainedWorkflow.symptomsData)
+                            : mergeMode.section === 'diagnosis'
+                            ? (workflowEditMode ? editedWorkflow.diagnosisData : chainedWorkflow.diagnosisData)
+                            : (workflowEditMode ? editedWorkflow.treatmentData : chainedWorkflow.treatmentData)
+                        }
+                        previousText={
+                          mergeMode.section === 'symptoms' 
+                            ? comparisonWorkflow.symptomsData
+                            : mergeMode.section === 'diagnosis'
+                            ? comparisonWorkflow.diagnosisData
+                            : comparisonWorkflow.treatmentData
+                        }
+                        sectionName={
+                          mergeMode.section === 'symptoms' ? 'Symptoms'
+                            : mergeMode.section === 'diagnosis' ? 'Diagnosis' : 'Treatment'
+                        }
+                        onMergeComplete={(mergedText) => {
+                          const updateField = mergeMode.section === 'symptoms' 
+                            ? 'symptomsData' 
+                            : mergeMode.section === 'diagnosis' 
+                            ? 'diagnosisData' 
+                            : 'treatmentData';
+                          
+                          if (workflowEditMode) {
+                            setEditedWorkflow(prev => ({ ...prev, [updateField]: mergedText }));
+                          } else {
+                            setChainedWorkflow(prev => ({ ...prev, [updateField]: mergedText }));
+                          }
+                          setWorkflowSavedToPatient(false);
+                          setMergeMode(null);
+                          toast.success(`Merged ${mergeMode.section} successfully`);
+                        }}
+                        onCancel={() => setMergeMode(null)}
+                      />
+                    )}
+
                     {/* Comparison Panel - side by side view with diff highlighting */}
-                    {comparisonWorkflow && chainedWorkflow.currentPhase === 'complete' && (
+                    {comparisonWorkflow && chainedWorkflow.currentPhase === 'complete' && !mergeMode && (
                       <Card className="border-primary/40 bg-primary/5">
                         <CardHeader className="pb-2 pt-3">
                           <CardTitle className="text-sm flex items-center justify-between">
@@ -2217,15 +2268,25 @@ Based on this framework, provide a complete treatment protocol:
                                 </Badge>
                               )}
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setComparisonWorkflow(null)}
-                              className="h-6 text-xs gap-1"
-                            >
-                              <X className="h-3 w-3" />
-                              Close
-                            </Button>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant={showWordDiff ? 'secondary' : 'ghost'}
+                                size="sm"
+                                onClick={() => setShowWordDiff(!showWordDiff)}
+                                className="h-6 text-[10px] px-2"
+                              >
+                                {showWordDiff ? 'Hide Diff' : 'Show Diff'}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setComparisonWorkflow(null)}
+                                className="h-6 text-xs gap-1"
+                              >
+                                <X className="h-3 w-3" />
+                                Close
+                              </Button>
+                            </div>
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="pt-0 space-y-4">
@@ -2234,17 +2295,31 @@ Based on this framework, provide a complete treatment protocol:
                             <div>
                               <div className="flex items-center justify-between mb-1">
                                 <span className="text-xs font-bold text-jade">Current Symptoms</span>
-                                {(workflowEditMode ? editedWorkflow.symptomsData : chainedWorkflow.symptomsData) !== comparisonWorkflow.symptomsData && (
-                                  <Badge variant="outline" className="text-[9px] bg-amber-500/10 text-amber-600 border-amber-500/30">Changed</Badge>
-                                )}
+                                <div className="flex items-center gap-1">
+                                  {(workflowEditMode ? editedWorkflow.symptomsData : chainedWorkflow.symptomsData) !== comparisonWorkflow.symptomsData && (
+                                    <Badge variant="outline" className="text-[9px] bg-amber-500/10 text-amber-600 border-amber-500/30">Changed</Badge>
+                                  )}
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setMergeMode({ active: true, section: 'symptoms' })}
+                                    className="h-5 px-1.5 text-[10px] gap-1 text-jade hover:bg-jade/10"
+                                  >
+                                    Merge
+                                  </Button>
+                                </div>
                               </div>
-                              <p className={`text-xs p-2 rounded border ${
+                              <div className={`text-xs p-2 rounded border ${
                                 (workflowEditMode ? editedWorkflow.symptomsData : chainedWorkflow.symptomsData) !== comparisonWorkflow.symptomsData 
                                   ? 'bg-green-500/10 border-green-500/30' 
                                   : 'bg-muted/30 border-border/50'
                               }`}>
-                                {workflowEditMode ? editedWorkflow.symptomsData : chainedWorkflow.symptomsData || 'N/A'}
-                              </p>
+                                <WordDiffDisplay
+                                  currentText={workflowEditMode ? editedWorkflow.symptomsData : chainedWorkflow.symptomsData || ''}
+                                  previousText={comparisonWorkflow.symptomsData || ''}
+                                  showDiff={showWordDiff}
+                                />
+                              </div>
                             </div>
                             <div>
                               <div className="flex items-center justify-between mb-1">
@@ -2280,17 +2355,31 @@ Based on this framework, provide a complete treatment protocol:
                             <div>
                               <div className="flex items-center justify-between mb-1">
                                 <span className="text-xs font-bold text-jade">Current Diagnosis</span>
-                                {(workflowEditMode ? editedWorkflow.diagnosisData : chainedWorkflow.diagnosisData) !== comparisonWorkflow.diagnosisData && (
-                                  <Badge variant="outline" className="text-[9px] bg-amber-500/10 text-amber-600 border-amber-500/30">Changed</Badge>
-                                )}
+                                <div className="flex items-center gap-1">
+                                  {(workflowEditMode ? editedWorkflow.diagnosisData : chainedWorkflow.diagnosisData) !== comparisonWorkflow.diagnosisData && (
+                                    <Badge variant="outline" className="text-[9px] bg-amber-500/10 text-amber-600 border-amber-500/30">Changed</Badge>
+                                  )}
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setMergeMode({ active: true, section: 'diagnosis' })}
+                                    className="h-5 px-1.5 text-[10px] gap-1 text-jade hover:bg-jade/10"
+                                  >
+                                    Merge
+                                  </Button>
+                                </div>
                               </div>
-                              <p className={`text-xs p-2 rounded border max-h-24 overflow-y-auto ${
+                              <div className={`text-xs p-2 rounded border max-h-24 overflow-y-auto ${
                                 (workflowEditMode ? editedWorkflow.diagnosisData : chainedWorkflow.diagnosisData) !== comparisonWorkflow.diagnosisData 
                                   ? 'bg-green-500/10 border-green-500/30' 
                                   : 'bg-muted/30 border-border/50'
                               }`}>
-                                {workflowEditMode ? editedWorkflow.diagnosisData : chainedWorkflow.diagnosisData || 'N/A'}
-                              </p>
+                                <WordDiffDisplay
+                                  currentText={workflowEditMode ? editedWorkflow.diagnosisData : chainedWorkflow.diagnosisData || ''}
+                                  previousText={comparisonWorkflow.diagnosisData || ''}
+                                  showDiff={showWordDiff}
+                                />
+                              </div>
                             </div>
                             <div>
                               <div className="flex items-center justify-between mb-1">
@@ -2326,17 +2415,31 @@ Based on this framework, provide a complete treatment protocol:
                             <div>
                               <div className="flex items-center justify-between mb-1">
                                 <span className="text-xs font-bold text-jade">Current Treatment</span>
-                                {(workflowEditMode ? editedWorkflow.treatmentData : chainedWorkflow.treatmentData) !== comparisonWorkflow.treatmentData && (
-                                  <Badge variant="outline" className="text-[9px] bg-amber-500/10 text-amber-600 border-amber-500/30">Changed</Badge>
-                                )}
+                                <div className="flex items-center gap-1">
+                                  {(workflowEditMode ? editedWorkflow.treatmentData : chainedWorkflow.treatmentData) !== comparisonWorkflow.treatmentData && (
+                                    <Badge variant="outline" className="text-[9px] bg-amber-500/10 text-amber-600 border-amber-500/30">Changed</Badge>
+                                  )}
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setMergeMode({ active: true, section: 'treatment' })}
+                                    className="h-5 px-1.5 text-[10px] gap-1 text-jade hover:bg-jade/10"
+                                  >
+                                    Merge
+                                  </Button>
+                                </div>
                               </div>
-                              <p className={`text-xs p-2 rounded border max-h-24 overflow-y-auto ${
+                              <div className={`text-xs p-2 rounded border max-h-24 overflow-y-auto ${
                                 (workflowEditMode ? editedWorkflow.treatmentData : chainedWorkflow.treatmentData) !== comparisonWorkflow.treatmentData 
                                   ? 'bg-green-500/10 border-green-500/30' 
                                   : 'bg-muted/30 border-border/50'
                               }`}>
-                                {workflowEditMode ? editedWorkflow.treatmentData : chainedWorkflow.treatmentData || 'N/A'}
-                              </p>
+                                <WordDiffDisplay
+                                  currentText={workflowEditMode ? editedWorkflow.treatmentData : chainedWorkflow.treatmentData || ''}
+                                  previousText={comparisonWorkflow.treatmentData || ''}
+                                  showDiff={showWordDiff}
+                                />
+                              </div>
                             </div>
                             <div>
                               <div className="flex items-center justify-between mb-1">
