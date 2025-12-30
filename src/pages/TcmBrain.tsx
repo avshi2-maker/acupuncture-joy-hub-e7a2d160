@@ -95,7 +95,9 @@ import {
   wellnessQuestions,
   sportsQuestions,
   astroQuestions,
-  traumaQuestions
+  traumaQuestions,
+  pediatricQuestions,
+  crisisQuestions
 } from '@/data/tcmBrainQuestions';
 
 interface Message {
@@ -112,6 +114,8 @@ const featureTabs = [
   { id: 'treatment-planner', icon: ClipboardList, label: 'AI Treatment Planner', isLink: true, href: '/treatment-planner' },
   { id: 'bodymap', icon: User, label: 'Body Map' },
   { id: 'trauma', icon: FileText, label: 'Trauma' },
+  { id: 'pediatric', icon: Heart, label: 'Pediatric' },
+  { id: 'crisis', icon: AlertTriangle, label: 'Crisis' },
   { id: 'herbs', icon: Leaf, label: 'Herbs' },
   { id: 'points', icon: MapPin, label: 'Points' },
   { id: 'conditions', icon: Stethoscope, label: 'Conditions' },
@@ -568,6 +572,8 @@ export default function TcmBrain() {
   const [selectedSportsQuestion, setSelectedSportsQuestion] = useState('');
   const [selectedAstroQuestion, setSelectedAstroQuestion] = useState('');
   const [selectedTraumaQuestion, setSelectedTraumaQuestion] = useState('');
+  const [selectedPediatricQuestion, setSelectedPediatricQuestion] = useState('');
+  const [selectedCrisisQuestion, setSelectedCrisisQuestion] = useState('');
   const [showDetailedView, setShowDetailedView] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [showInlineChat, setShowInlineChat] = useState(false);
@@ -2175,6 +2181,26 @@ Include:
                   traumaQuestions,
                   selectedTraumaQuestion,
                   setSelectedTraumaQuestion
+                )}
+              </TabsContent>
+
+              {/* Pediatric Tab */}
+              <TabsContent value="pediatric" className="flex-1 overflow-auto">
+                {renderQASection(
+                  'Pediatric Acupuncture',
+                  pediatricQuestions,
+                  selectedPediatricQuestion,
+                  setSelectedPediatricQuestion
+                )}
+              </TabsContent>
+
+              {/* Crisis Tab */}
+              <TabsContent value="crisis" className="flex-1 overflow-auto">
+                {renderQASection(
+                  'Profound Crisis & Severe Depression',
+                  crisisQuestions,
+                  selectedCrisisQuestion,
+                  setSelectedCrisisQuestion
                 )}
               </TabsContent>
 
