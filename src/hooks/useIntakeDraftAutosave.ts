@@ -170,13 +170,23 @@ export function useIntakeDraftAutosave({
   // Restore draft to form
   const restoreDraft = useCallback(() => {
     const draft = loadDraft();
-    if (!draft) return false;
+    if (!draft) {
+      console.log('No draft found to restore');
+      return false;
+    }
+
+    console.log('Restoring draft:', draft);
 
     try {
-      // Restore form data
-      Object.entries(draft.formData).forEach(([key, value]) => {
-        form.setValue(key as any, value);
-      });
+      // Restore form data - use reset for better reliability
+      const currentValues = form.getValues();
+      const mergedValues = { ...currentValues, ...draft.formData };
+      form.reset(mergedValues, { keepDefaultValues: false });
+      
+      // Also trigger validation
+      setTimeout(() => {
+        form.trigger();
+      }, 100);
 
       setHasDraft(false);
       return draft;
