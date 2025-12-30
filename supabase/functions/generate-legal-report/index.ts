@@ -66,7 +66,8 @@ serve(async (req) => {
     const totalChunks = chunkCounts?.length || 0;
     const indexedDocs = documents?.filter(d => d.status === 'indexed').length || 0;
 
-    const documentManifest = documents?.map(doc => ({
+    const documentManifest = documents?.map((doc, index) => ({
+      lineNumber: index + 1,
       fileName: doc.original_name,
       storedAs: doc.file_name,
       fileHash: doc.file_hash,
@@ -80,10 +81,16 @@ serve(async (req) => {
       indexedAt: doc.indexed_at,
     }));
 
+    // Build line-by-line summary for easy reference
+    const lineItemSummary = documentManifest?.map(doc => 
+      `#${String(doc.lineNumber).padStart(2, '0')} | ${doc.fileName} | ${doc.category || 'N/A'} | ${doc.language || 'N/A'} | ${doc.rowCount || 0} rows | ${doc.chunksIndexed} chunks | ${doc.status}`
+    ).join('\n');
+
     const report = {
-      reportTitle: "Data Provenance & Authenticity Report",
+      reportTitle: "Data Provenance & Authenticity Report - Cleaned Knowledge Base",
       generatedAt: reportDate,
       generatedBy: user.email,
+      reportVersion: "2.0",
       
       summary: {
         totalDocuments,
@@ -93,6 +100,18 @@ serve(async (req) => {
         externalDataSources: "NONE",
         publicDomainContent: "NONE",
       },
+
+      lineItemSummary: `
+================================================================================
+                    KNOWLEDGE BASE LINE ITEM INVENTORY
+================================================================================
+#   | FILE NAME                          | CATEGORY      | LANG | ROWS  | CHUNKS | STATUS
+--------------------------------------------------------------------------------
+${lineItemSummary}
+--------------------------------------------------------------------------------
+TOTAL: ${totalDocuments} documents | ${totalChunks} knowledge entries indexed
+================================================================================
+`,
 
       documentManifest,
 
