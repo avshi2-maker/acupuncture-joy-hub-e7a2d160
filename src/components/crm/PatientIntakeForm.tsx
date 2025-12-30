@@ -28,6 +28,7 @@ import { AllergiesSelect } from './AllergiesSelect';
 import { MedicationsSupplementsSelect } from './MedicationsSupplementsSelect';
 import { TongueDiagnosisSelect } from './TongueDiagnosisSelect';
 import { ConstitutionTypeSelect } from './ConstitutionTypeSelect';
+import { ChiefComplaintSelect } from './ChiefComplaintSelect';
 import { validateIsraeliId, looksLikeIsraeliId } from '@/utils/israeliIdValidation';
 
 // Base patient schema
@@ -178,6 +179,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
     stress_level: '',
     exercise_frequency: '',
     constitution_type: '',
+    chief_complaint: '',
   });
 
   const totalSteps = stepTitles.length;
@@ -799,13 +801,17 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                     <FormItem>
                       <FormLabel>Chief Complaint *</FormLabel>
                       <FormControl>
-                        <VoiceTextarea 
-                          placeholder="What brings you in today? Main symptoms and concerns..." 
-                          className="min-h-[100px]"
+                        <ChiefComplaintSelect
                           value={field.value}
-                          onChange={field.onChange}
+                          onValueChange={field.onChange}
                         />
                       </FormControl>
+                      <VoiceTextarea 
+                        placeholder="Additional details about symptoms and concerns..." 
+                        className="min-h-[80px] mt-2"
+                        value={customNotes.chief_complaint || ''}
+                        onChange={(e) => setCustomNotes(prev => ({ ...prev, chief_complaint: e.target.value }))}
+                      />
                       <FormMessage />
                     </FormItem>
                   )}
