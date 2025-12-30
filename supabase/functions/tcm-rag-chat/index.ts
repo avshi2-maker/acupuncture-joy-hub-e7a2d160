@@ -21,6 +21,18 @@ When answering:
 - Mention safety considerations if present in the source material
 - Be concise but thorough`;
 
+const EXTERNAL_AI_SYSTEM_PROMPT = `You are a general TCM (Traditional Chinese Medicine) knowledge assistant.
+
+IMPORTANT DISCLAIMER - INCLUDE THIS IN EVERY RESPONSE:
+⚠️ This response is from EXTERNAL AI and is NOT from Dr. Roni Sapir's verified clinical materials.
+The therapist has accepted liability for using this external information.
+
+When answering:
+- Provide helpful TCM information based on general knowledge
+- Include appropriate medical disclaimers
+- Recommend consulting Dr. Sapir's verified materials for clinical decisions
+- Respond in the same language as the user's question`;
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -49,12 +61,13 @@ serve(async (req) => {
       });
     }
 
-    const { query, messages } = await req.json();
+    const { query, messages, useExternalAI } = await req.json();
     const searchQuery = query || messages?.[messages.length - 1]?.content || '';
     const searchTerms = searchQuery.split(' ').slice(0, 5).join(' | ');
 
     console.log('RAG Query:', searchQuery);
     console.log('Search terms:', searchTerms);
+    console.log('Using external AI:', useExternalAI || false);
 
     // Search for relevant chunks using full-text search
     const { data: chunks, error: searchError } = await supabaseClient
@@ -118,9 +131,17 @@ ${chunk.content}`;
     console.log(`Found ${chunks?.length || 0} relevant chunks from ${new Set(sources.map(s => s.fileName)).size} unique documents`);
 
     // Build messages for AI
-    const systemMessage = context 
-      ? `${TCM_RAG_SYSTEM_PROMPT}\n\n=== CONTEXT FROM DR. SAPIR'S KNOWLEDGE BASE ===\n\n${context}\n\n=== END CONTEXT ===`
-      : `${TCM_RAG_SYSTEM_PROMPT}\n\nNOTE: No relevant entries found in the knowledge base for this query.`;
+    let systemMessage: string;
+    
+    if (useExternalAI) {
+      // Using external AI - no RAG context, use general knowledge
+      systemMessage = EXTERNAL_AI_SYSTEM_PROMPT;
+      console.log('Using external AI mode - no RAG context');
+    } else if (context) {
+      systemMessage = `${TCM_RAG_SYSTEM_PROMPT}\n\n=== CONTEXT FROM DR. SAPIR'S KNOWLEDGE BASE ===\n\n${context}\n\n=== END CONTEXT ===`;
+    } else {
+      systemMessage = `${TCM_RAG_SYSTEM_PROMPT}\n\nNOTE: No relevant entries found in the knowledge base for this query.`;
+    }
 
     const chatMessages = [
       { role: 'system', content: systemMessage },
@@ -181,9 +202,9 @@ ${chunk.content}`;
         search_terms: searchTerms,
         chunks_found: chunks?.length || 0,
         chunks_matched: chunksMatched,
-        sources_used: sources.map(s => ({ fileName: s.fileName, category: s.category, chunkIndex: s.chunkIndex })),
+        sources_used: useExternalAI ? [{ type: 'external_ai', liability_waived: true }] : sources.map(s => ({ fileName: s.fileName, category: s.category, chunkIndex: s.chunkIndex })),
         response_preview: responseContent.substring(0, 500),
-        ai_model: 'google/gemini-2.5-flash'
+        ai_model: useExternalAI ? 'google/gemini-2.5-flash (external)' : 'google/gemini-2.5-flash'
       });
 
     if (logError) {
@@ -197,11 +218,12 @@ ${chunk.content}`;
 
     return new Response(JSON.stringify({
       response: responseContent,
-      sources: sources,
-      chunksFound: chunks?.length || 0,
-      documentsSearched: uniqueDocuments.length,
+      sources: useExternalAI ? [] : sources,
+      chunksFound: useExternalAI ? 0 : (chunks?.length || 0),
+      documentsSearched: useExternalAI ? 0 : uniqueDocuments.length,
       searchTermsUsed: searchTerms,
       auditLogged: !logError,
+      isExternal: useExternalAI || false,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
