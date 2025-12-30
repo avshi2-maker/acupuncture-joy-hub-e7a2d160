@@ -1,9 +1,11 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
 import { 
   HelpCircle, X, Search, ExternalLink, 
   Brain, Calendar, Users, FileText, Settings,
@@ -13,7 +15,8 @@ import {
   Database, Shield, Bell, Printer, Mic, MessageCircle,
   User, Clock, BookOpen, Calculator, BarChart3,
   Keyboard, Lightbulb, Zap, Command, ArrowUp, ArrowDown,
-  CornerDownLeft, Option, Sparkles
+  CornerDownLeft, Option, Sparkles, Send, Mail,
+  Gift, Rocket, CheckCircle2, AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -44,6 +47,26 @@ interface QuickTip {
   icon: any;
   category: string;
 }
+
+interface WhatsNewItem {
+  id: string;
+  date: string;
+  title: string;
+  titleHe: string;
+  description: string;
+  descriptionHe: string;
+  type: 'feature' | 'improvement' | 'fix';
+  icon: any;
+}
+
+const WHATS_NEW: WhatsNewItem[] = [
+  { id: 'voice-multilang', date: '2024-12-30', title: 'Multi-language Voice Input', titleHe: 'קלט קולי רב-לשוני', description: 'Voice input now supports Hebrew, English, Russian, Arabic, and Chinese', descriptionHe: 'קלט קולי תומך כעת בעברית, אנגלית, רוסית, ערבית וסינית', type: 'feature', icon: Mic },
+  { id: 'help-guide', date: '2024-12-30', title: 'Interactive Help Guide', titleHe: 'מדריך עזרה אינטראקטיבי', description: 'New floating help button with searchable features, shortcuts, and tips', descriptionHe: 'כפתור עזרה צף חדש עם חיפוש פיצ\'רים, קיצורים וטיפים', type: 'feature', icon: HelpCircle },
+  { id: 'keyboard-nav', date: '2024-12-30', title: 'Keyboard Navigation', titleHe: 'ניווט מקלדת', description: 'Navigate through features with arrow keys and enter', descriptionHe: 'נווט בין פיצ\'רים עם מקשי חצים ואנטר', type: 'improvement', icon: Keyboard },
+  { id: 'session-timer', date: '2024-12-29', title: 'Session Timer Widget', titleHe: 'ווידג\'ט טיימר טיפול', description: 'Track session duration with pause/resume and milestone celebrations', descriptionHe: 'עקוב אחר משך הטיפול עם השהיה/המשך וחגיגות אבני דרך', type: 'feature', icon: Clock },
+  { id: 'consent-forms', date: '2024-12-28', title: 'Digital Consent Forms', titleHe: 'טפסי הסכמה דיגיטליים', description: 'Patients can sign consent forms digitally before appointments', descriptionHe: 'מטופלים יכולים לחתום על טפסי הסכמה דיגיטלית לפני תורים', type: 'feature', icon: FileText },
+  { id: 'whatsapp-templates', date: '2024-12-27', title: 'WhatsApp Templates', titleHe: 'תבניות וואטסאפ', description: 'Quick templates for appointment reminders and follow-ups', descriptionHe: 'תבניות מהירות לתזכורות תורים ומעקבים', type: 'feature', icon: MessageCircle },
+];
 
 const KEYBOARD_SHORTCUTS: ShortcutItem[] = [
   // Navigation
@@ -138,9 +161,13 @@ export function FloatingHelpGuide() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [shortcutFilter, setShortcutFilter] = useState<string | null>(null);
   const [tipFilter, setTipFilter] = useState<string | null>(null);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackSending, setFeedbackSending] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  // Keyboard shortcut to toggle help
+  // Keyboard shortcut to toggle help and navigate
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.altKey && (e.key === '?' || e.key === '/')) {
@@ -154,6 +181,25 @@ export function FloatingHelpGuide() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen]);
+
+  // Keyboard navigation within the panel
+  const handleKeyboardNav = useCallback((e: React.KeyboardEvent, items: any[], onSelect: (item: any) => void) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setFocusedIndex(prev => Math.min(prev + 1, items.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setFocusedIndex(prev => Math.max(prev - 1, 0));
+    } else if (e.key === 'Enter' && focusedIndex >= 0 && focusedIndex < items.length) {
+      e.preventDefault();
+      onSelect(items[focusedIndex]);
+    }
+  }, [focusedIndex]);
+
+  // Reset focus when search/filters change
+  useEffect(() => {
+    setFocusedIndex(-1);
+  }, [searchQuery, selectedLetter, selectedCategory, shortcutFilter, tipFilter, activeTab]);
 
   const filteredItems = useMemo(() => {
     let items = HELP_ITEMS;
@@ -227,6 +273,26 @@ export function FloatingHelpGuide() {
     setTipFilter(null);
   };
 
+  const sendFeedback = async () => {
+    if (!feedbackText.trim()) {
+      toast.error('אנא הכנס הודעה');
+      return;
+    }
+    
+    setFeedbackSending(true);
+    try {
+      const subject = encodeURIComponent('בקשת שיפור - TCM Therapist App');
+      const body = encodeURIComponent(`${feedbackText}\n\n---\nSent from: ${window.location.href}\nDate: ${new Date().toLocaleString('he-IL')}`);
+      window.open(`mailto:ronisapir61@gmail.com?subject=${subject}&body=${body}`, '_blank');
+      toast.success('נפתח חלון המייל');
+      setFeedbackText('');
+    } catch (error) {
+      toast.error('שגיאה בפתיחת המייל');
+    } finally {
+      setFeedbackSending(false);
+    }
+  };
+
   const renderKeyBadge = (key: string) => {
     const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
     let displayKey = key;
@@ -261,13 +327,21 @@ export function FloatingHelpGuide() {
     );
   };
 
+  const getWhatsNewTypeIcon = (type: WhatsNewItem['type']) => {
+    switch (type) {
+      case 'feature': return <Rocket className="h-4 w-4 text-emerald-500" />;
+      case 'improvement': return <Zap className="h-4 w-4 text-amber-500" />;
+      case 'fix': return <CheckCircle2 className="h-4 w-4 text-blue-500" />;
+    }
+  };
+
   return (
     <>
-      {/* Floating Help Button - Animated Yellow */}
+      {/* Floating Help Button - Animated Yellow - positioned bottom-right above other floating buttons */}
       <Button
         onClick={() => setIsOpen(true)}
         className={cn(
-          'fixed bottom-24 left-4 z-40 h-14 w-14 rounded-full shadow-lg',
+          'fixed bottom-36 right-4 z-40 h-12 w-12 rounded-full shadow-lg',
           'bg-gradient-to-br from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600',
           'transition-all duration-300 hover:scale-110',
           'animate-pulse hover:animate-none',
@@ -276,18 +350,18 @@ export function FloatingHelpGuide() {
         size="icon"
         title="עזרה / Help (Alt+?)"
       >
-        <HelpCircle className="h-7 w-7 text-amber-900" />
+        <HelpCircle className="h-6 w-6 text-amber-900" />
       </Button>
 
       {/* Help Panel */}
       {isOpen && (
-        <div className="fixed inset-4 md:inset-auto md:bottom-20 md:left-4 md:w-[460px] md:max-h-[650px] z-50 animate-fade-in-up">
+        <div className="fixed inset-4 md:inset-auto md:bottom-20 md:right-4 md:w-[480px] md:max-h-[700px] z-50 animate-fade-in-up">
           <div className="bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col h-full md:h-auto">
             {/* Header */}
             <div className="flex items-center justify-between p-4 bg-gradient-to-r from-amber-400/20 to-yellow-400/10 border-b border-border/50">
               <div className="flex items-center gap-2">
                 <HelpCircle className="h-5 w-5 text-amber-600" />
-                <span className="font-semibold">עזרה / Help Guide</span>
+                <span className="font-semibold text-sm">עזרה / Help</span>
                 <kbd className="hidden md:inline-flex px-1.5 py-0.5 bg-muted/50 border border-border/50 rounded text-[10px] font-mono">
                   Alt+?
                 </kbd>
@@ -304,26 +378,42 @@ export function FloatingHelpGuide() {
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search features, shortcuts, tips... / חיפוש..."
-                  className="pl-9 h-10"
+                  placeholder="חיפוש... / Search..."
+                  className="pl-9 h-9 text-sm"
+                  onKeyDown={(e) => {
+                    if (activeTab === 'features') {
+                      handleKeyboardNav(e, filteredItems, handleItemClick);
+                    }
+                  }}
                 />
               </div>
+              <p className="text-[10px] text-muted-foreground mt-1 text-center">
+                ↑↓ לניווט • Enter לבחירה
+              </p>
             </div>
 
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-              <TabsList className="w-full justify-start px-3 py-2 h-auto bg-muted/30 rounded-none border-b border-border/50">
-                <TabsTrigger value="features" className="gap-1.5 text-xs">
-                  <Compass className="h-3.5 w-3.5" />
+              <TabsList className="w-full justify-start px-2 py-1.5 h-auto bg-muted/30 rounded-none border-b border-border/50 flex-wrap gap-1">
+                <TabsTrigger value="features" className="gap-1 text-[11px] px-2 py-1">
+                  <Compass className="h-3 w-3" />
                   Features
                 </TabsTrigger>
-                <TabsTrigger value="shortcuts" className="gap-1.5 text-xs">
-                  <Keyboard className="h-3.5 w-3.5" />
+                <TabsTrigger value="shortcuts" className="gap-1 text-[11px] px-2 py-1">
+                  <Keyboard className="h-3 w-3" />
                   Shortcuts
                 </TabsTrigger>
-                <TabsTrigger value="tips" className="gap-1.5 text-xs">
-                  <Lightbulb className="h-3.5 w-3.5" />
-                  Quick Tips
+                <TabsTrigger value="tips" className="gap-1 text-[11px] px-2 py-1">
+                  <Lightbulb className="h-3 w-3" />
+                  Tips
+                </TabsTrigger>
+                <TabsTrigger value="whatsnew" className="gap-1 text-[11px] px-2 py-1">
+                  <Gift className="h-3 w-3" />
+                  What's New
+                </TabsTrigger>
+                <TabsTrigger value="feedback" className="gap-1 text-[11px] px-2 py-1">
+                  <Mail className="h-3 w-3" />
+                  בקשות
                 </TabsTrigger>
               </TabsList>
 
@@ -386,7 +476,7 @@ export function FloatingHelpGuide() {
 
                 {/* Results */}
                 <ScrollArea className="flex-1">
-                  <div className="p-2 space-y-1">
+                  <div ref={listRef} className="p-2 space-y-1">
                     {filteredItems.length === 0 ? (
                       <div className="text-center py-8 text-muted-foreground">
                         <HelpCircle className="h-10 w-10 mx-auto mb-2 opacity-30" />
@@ -394,7 +484,7 @@ export function FloatingHelpGuide() {
                         <p className="text-xs">לא נמצאו תוצאות</p>
                       </div>
                     ) : (
-                      filteredItems.map(item => (
+                      filteredItems.map((item, index) => (
                         <button
                           key={item.id}
                           onClick={() => handleItemClick(item)}
@@ -402,27 +492,25 @@ export function FloatingHelpGuide() {
                             "w-full text-left p-3 rounded-lg transition-all",
                             "bg-background hover:bg-amber-50 dark:hover:bg-amber-900/20",
                             "border border-transparent hover:border-amber-200 dark:hover:border-amber-800",
-                            "group"
+                            "group",
+                            focusedIndex === index && "ring-2 ring-amber-400 bg-amber-50 dark:bg-amber-900/30"
                           )}
                         >
                           <div className="flex items-start gap-3">
-                            <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                              <item.icon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                            <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                              <item.icon className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <span className="font-medium text-sm truncate">{item.title}</span>
                                 <span className="text-xs text-muted-foreground truncate">{item.titleHe}</span>
                               </div>
-                              <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
+                              <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
                                 {item.description}
                               </p>
-                              <Badge variant="outline" className="text-[10px] mt-1">
-                                {item.category}
-                              </Badge>
                             </div>
                             {item.route && (
-                              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-amber-600 shrink-0 mt-1" />
+                              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-amber-600 shrink-0" />
                             )}
                           </div>
                         </button>
@@ -558,14 +646,89 @@ export function FloatingHelpGuide() {
                   </div>
                 </ScrollArea>
               </TabsContent>
+
+              {/* What's New Tab */}
+              <TabsContent value="whatsnew" className="flex-1 flex flex-col overflow-hidden mt-0">
+                <ScrollArea className="flex-1">
+                  <div className="p-3 space-y-3">
+                    <div className="text-center pb-2">
+                      <Gift className="h-8 w-8 mx-auto text-amber-500 mb-1" />
+                      <h3 className="font-semibold text-sm">מה חדש? / What's New?</h3>
+                    </div>
+                    {WHATS_NEW.map(item => (
+                      <div
+                        key={item.id}
+                        className="p-3 rounded-lg bg-gradient-to-br from-background to-muted/50 border border-border/50"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                            <item.icon className="h-4 w-4 text-foreground" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              {getWhatsNewTypeIcon(item.type)}
+                              <span className="font-medium text-sm">{item.title}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">{item.description}</p>
+                            <p className="text-xs text-muted-foreground mt-1" dir="rtl">{item.descriptionHe}</p>
+                            <span className="text-[10px] text-muted-foreground/60 mt-1 block">{item.date}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+
+              {/* Feedback/Request Tab */}
+              <TabsContent value="feedback" className="flex-1 flex flex-col overflow-hidden mt-0">
+                <ScrollArea className="flex-1">
+                  <div className="p-4 space-y-4">
+                    <div className="text-center">
+                      <Mail className="h-10 w-10 mx-auto text-amber-500 mb-2" />
+                      <h3 className="font-semibold">בקשת שיפור / Improvement Request</h3>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        שלח הצעות לשיפור ישירות לד"ר רוני ספיר
+                      </p>
+                    </div>
+                    
+                    <Textarea
+                      value={feedbackText}
+                      onChange={(e) => setFeedbackText(e.target.value)}
+                      placeholder="תאר את השיפור או הפיצ'ר המבוקש... / Describe the improvement or feature you'd like..."
+                      className="min-h-[120px] text-sm"
+                      dir="auto"
+                    />
+                    
+                    <Button
+                      onClick={sendFeedback}
+                      disabled={feedbackSending || !feedbackText.trim()}
+                      className="w-full bg-amber-500 hover:bg-amber-600 text-amber-900"
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      שלח למייל / Send Email
+                    </Button>
+                    
+                    <div className="text-center text-xs text-muted-foreground space-y-1">
+                      <p>יישלח אל: ronisapir61@gmail.com</p>
+                      <p className="flex items-center justify-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        ההודעה תפתח במייל שלך
+                      </p>
+                    </div>
+                  </div>
+                </ScrollArea>
+              </TabsContent>
             </Tabs>
 
             {/* Footer */}
-            <div className="p-3 border-t border-border/50 bg-muted/30 text-center">
-              <p className="text-xs text-muted-foreground">
-                {activeTab === 'features' && `${filteredItems.length} of ${HELP_ITEMS.length} features`}
-                {activeTab === 'shortcuts' && `${filteredShortcuts.length} keyboard shortcuts`}
-                {activeTab === 'tips' && `${filteredTips.length} quick tips`}
+            <div className="p-2 border-t border-border/50 bg-muted/30 text-center">
+              <p className="text-[10px] text-muted-foreground">
+                {activeTab === 'features' && `${filteredItems.length}/${HELP_ITEMS.length} features`}
+                {activeTab === 'shortcuts' && `${filteredShortcuts.length} shortcuts`}
+                {activeTab === 'tips' && `${filteredTips.length} tips`}
+                {activeTab === 'whatsnew' && `${WHATS_NEW.length} updates`}
+                {activeTab === 'feedback' && 'Dr. Roni Sapir'}
               </p>
             </div>
           </div>
