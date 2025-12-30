@@ -73,12 +73,12 @@ export function HeaderActions({ onHelpClick }: HeaderActionsProps) {
 
   return (
     <div className="flex items-center gap-1">
-      {/* Help Button */}
+      {/* Help Button - with pulse animation */}
       <Button 
         variant="ghost" 
         size="icon" 
         onClick={onHelpClick}
-        className="bg-gradient-to-br from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-amber-900 h-8 w-8"
+        className="bg-gradient-to-br from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-amber-900 h-8 w-8 animate-pulse hover:animate-none"
         title="עזרה / Help (Alt+?)"
       >
         <HelpCircle className="h-4 w-4" />
