@@ -222,6 +222,13 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'general_health',
     defaultLanguage: 'en',
   },
+  {
+    id: 'nine-constitutions-qa',
+    label: 'nine-constitutions-qa.csv',
+    path: '/knowledge-assets/nine-constitutions-qa.csv',
+    defaultCategory: 'tcm_theory',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 type QueueItemStatus = 'pending' | 'importing' | 'done' | 'error';
