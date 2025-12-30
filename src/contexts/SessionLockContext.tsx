@@ -10,6 +10,10 @@ interface SessionLockContextType {
   unlock: () => void;
   timeoutMinutes: number;
   setTimeoutMinutes: (minutes: number) => void;
+  isPaused: boolean;
+  pauseLock: (reason?: string) => void;
+  resumeLock: () => void;
+  pauseReason: string | null;
 }
 
 const SessionLockContext = createContext<SessionLockContextType | undefined>(undefined);
@@ -26,14 +30,19 @@ export function SessionLockProvider({ children }: { children: React.ReactNode })
     const saved = localStorage.getItem(TIMEOUT_KEY);
     return saved ? parseInt(saved, 10) : 15;
   });
+  const [isPaused, setIsPaused] = useState(false);
+  const [pauseReason, setPauseReason] = useState<string | null>(null);
   
   // Track when the app went to background for screen wake detection
   const hiddenAtRef = useRef<number | null>(null);
 
   const lock = useCallback(() => {
+    // Don't lock if paused (during active treatment session)
+    if (isPaused) return;
+    
     setIsLocked(true);
     localStorage.setItem(LOCK_STATE_KEY, 'true');
-  }, []);
+  }, [isPaused]);
 
   const unlock = useCallback(() => {
     setIsLocked(false);
@@ -45,16 +54,26 @@ export function SessionLockProvider({ children }: { children: React.ReactNode })
     localStorage.setItem(TIMEOUT_KEY, minutes.toString());
   }, []);
 
-  // Auto-lock on inactivity if PIN is set
+  const pauseLock = useCallback((reason?: string) => {
+    setIsPaused(true);
+    setPauseReason(reason || 'Treatment session active');
+  }, []);
+
+  const resumeLock = useCallback(() => {
+    setIsPaused(false);
+    setPauseReason(null);
+  }, []);
+
+  // Auto-lock on inactivity if PIN is set (disabled when paused)
   useInactivityTimeout({
     timeoutMinutes,
     onTimeout: lock,
-    enabled: hasPin && !isLocked
+    enabled: hasPin && !isLocked && !isPaused
   });
 
   // Handle visibility changes for both immediate lock and screen wake detection
   useEffect(() => {
-    if (!hasPin || isLocked) return;
+    if (!hasPin || isLocked || isPaused) return;
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
@@ -83,7 +102,7 @@ export function SessionLockProvider({ children }: { children: React.ReactNode })
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [hasPin, isLocked, lock]);
+  }, [hasPin, isLocked, isPaused, lock]);
 
   // Clear lock state if user removes PIN
   useEffect(() => {
@@ -117,7 +136,11 @@ export function SessionLockProvider({ children }: { children: React.ReactNode })
       lock, 
       unlock, 
       timeoutMinutes, 
-      setTimeoutMinutes 
+      setTimeoutMinutes,
+      isPaused,
+      pauseLock,
+      resumeLock,
+      pauseReason
     }}>
       {children}
     </SessionLockContext.Provider>

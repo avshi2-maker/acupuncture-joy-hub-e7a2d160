@@ -85,6 +85,7 @@ import { PatientHistoryPanel } from '@/components/video/PatientHistoryPanel';
 import { FloatingQuickActions } from '@/components/video/FloatingQuickActions';
 import { CustomizableToolbar, ToolbarItemId } from '@/components/video/CustomizableToolbar';
 import { useLongPressTimer } from '@/hooks/useLongPressTimer';
+import { useSessionLock } from '@/contexts/SessionLockContext';
 import { cn } from '@/lib/utils';
 import aiGeneratorBg from '@/assets/ai-generator-bg.png';
 import animatedMicGif from '@/assets/mic-animated.gif';
@@ -108,6 +109,7 @@ export default function VideoSession() {
   const navigate = useNavigate();
   const { tier, hasFeature } = useTier();
   const { user } = useAuth();
+  const { pauseLock, resumeLock, isPaused: isLockPaused } = useSessionLock();
   
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loadingPatients, setLoadingPatients] = useState(true);
@@ -312,12 +314,14 @@ export default function VideoSession() {
       case 'start':
         if (sessionStatus === 'idle') {
           startSession();
+          pauseLock('Treatment session active');
           toast.success('Session started via voice command');
         }
         break;
       case 'stop':
         if (sessionStatus === 'running' || sessionStatus === 'paused') {
           endSession();
+          resumeLock();
           toast.success('Session ended via voice command');
         }
         break;
@@ -506,6 +510,7 @@ export default function VideoSession() {
 
   const handleStart = () => {
     startSession();
+    pauseLock('Treatment session active'); // Pause auto-lock during session
     toast.success('פגישת וידאו התחילה');
   };
 
@@ -521,12 +526,14 @@ export default function VideoSession() {
 
   const handleRepeat = () => {
     resetSession();
+    resumeLock(); // Resume auto-lock when session is reset
     setCurrentAppointmentId(null);
     toast.info('הפגישה אופסה');
   };
 
   const handleEnd = async () => {
     endSession();
+    resumeLock(); // Resume auto-lock after session ends
     if (selectedPatientId && selectedPatientName && user && sessionStartTime) {
       try {
         await supabase.from('video_sessions').insert({

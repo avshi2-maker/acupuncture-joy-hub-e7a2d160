@@ -33,12 +33,14 @@ import {
   Sun,
   Moon,
   KeyRound,
-  LockKeyhole
+  LockKeyhole,
+  ShieldOff
 } from 'lucide-react';
 import { PinSetupDialog } from '@/components/auth/PinSetupDialog';
 import { usePinAuth } from '@/hooks/usePinAuth';
 import { useSessionLock } from '@/contexts/SessionLockContext';
 import { ShareQRButton } from '@/components/ui/ShareQRButton';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { Link } from 'react-router-dom';
 import {
   Popover,
@@ -220,7 +222,7 @@ export default function Dashboard() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [showPinSetup, setShowPinSetup] = useState(false);
   const { progress, hasProgress, resetProgress } = useWorkflowProgress();
-  const { lock } = useSessionLock();
+  const { lock, isPaused, pauseReason } = useSessionLock();
   const { hasPin } = usePinAuth();
 
   const toggleTheme = () => {
@@ -685,8 +687,25 @@ export default function Dashboard() {
               <KeyRound className="h-5 w-5" />
             </Button>
 
-            {/* Manual Lock Button - only show if PIN is set */}
-            {hasPin && (
+            {/* Lock Status Indicator - show when paused */}
+            {hasPin && isPaused && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1 px-2 py-1 bg-amber-500/10 text-amber-600 rounded-full text-xs">
+                      <ShieldOff className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">נעילה מושהית</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>{pauseReason || 'Auto-lock is paused'}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+
+            {/* Manual Lock Button - only show if PIN is set and not paused */}
+            {hasPin && !isPaused && (
               <Button 
                 variant="ghost" 
                 size="icon" 
