@@ -33,6 +33,7 @@ const RAG_ASSETS = [
   'womens-health-tcm.csv',
   'work-stress-burnout.csv',
   'extreme-weather-climate.csv',
+  'skin_disease_qa_100.csv',
 ];
 
 export function RAGSearchAnimation({ 
