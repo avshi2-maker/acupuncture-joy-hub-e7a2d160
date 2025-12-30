@@ -22,7 +22,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.tcm-rag-chat]
-verify_jwt = true
+verify_jwt = false
 
 [functions.generate-legal-report]
 verify_jwt = true
