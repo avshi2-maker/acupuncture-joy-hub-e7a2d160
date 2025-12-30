@@ -6,18 +6,28 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
-import { Send, Loader2, BookOpen, FileText, AlertCircle, Printer } from 'lucide-react';
+import { Send, Loader2, BookOpen, FileText, AlertCircle, Printer, Shield, CheckCircle2, Database, Search } from 'lucide-react';
 import { VoiceInputButton } from '@/components/ui/VoiceInputButton';
 import { usePrintContent } from '@/hooks/usePrintContent';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+
+interface Source {
+  fileName: string;
+  chunkIndex: number;
+  preview: string;
+  category?: string;
+}
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
-  sources?: Array<{
-    fileName: string;
-    chunkIndex: number;
-    preview: string;
-  }>;
+  sources?: Source[];
+  metadata?: {
+    chunksFound: number;
+    documentsSearched: number;
+    searchTermsUsed: string;
+    auditLogged: boolean;
+  };
 }
 
 interface RAGChatInterfaceProps {
@@ -71,6 +81,12 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
         role: 'assistant',
         content: data.response,
         sources: data.sources,
+        metadata: {
+          chunksFound: data.chunksFound,
+          documentsSearched: data.documentsSearched,
+          searchTermsUsed: data.searchTermsUsed,
+          auditLogged: data.auditLogged,
+        }
       };
 
       setMessages(prev => [...prev, assistantMessage]);
@@ -101,19 +117,25 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
             <BookOpen className="w-5 h-5" />
             Dr. Sapir's CM Knowledge Base
           </CardTitle>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handlePrint}
-            className="no-print"
-          >
-            <Printer className="h-4 w-4 mr-2" />
-            Print
-          </Button>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
+              <Shield className="w-3 h-3 mr-1" />
+              Audit Logged
+            </Badge>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handlePrint}
+              className="no-print"
+            >
+              <Printer className="h-4 w-4 mr-2" />
+              Print
+            </Button>
+          </div>
         </div>
         <p className="text-sm text-muted-foreground">
-          Answers powered exclusively by proprietary clinical materials
+          Answers powered exclusively by proprietary clinical materials • All queries logged for legal compliance
         </p>
       </CardHeader>
       <CardContent className="p-0">
@@ -123,6 +145,13 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
               <BookOpen className="w-12 h-12 mb-4 opacity-50" />
               <p>Ask any question about CM diagnosis, acupuncture points, or herbal formulas.</p>
               <p className="text-xs mt-2">All answers are sourced from Dr. Sapir's materials with citations.</p>
+              <div className="mt-4 p-3 bg-muted/50 rounded-lg text-xs max-w-md">
+                <div className="flex items-center gap-2 text-green-600 mb-2">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span className="font-medium">RAG System Active</span>
+                </div>
+                <p>Every query searches ONLY our proprietary knowledge base. External AI knowledge is blocked. All searches are logged for legal compliance.</p>
+              </div>
             </div>
           ) : (
             <div className="space-y-4 py-4">
@@ -143,21 +172,66 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
                     <p className="whitespace-pre-wrap text-sm">{message.content}</p>
                   </div>
                   
+                  {/* Source Verification Panel */}
+                  {message.metadata && (
+                    <Collapsible className="mt-2 w-full max-w-[85%]">
+                      <CollapsibleTrigger asChild>
+                        <Button variant="ghost" size="sm" className="text-xs h-7 px-2 gap-1">
+                          <Database className="w-3 h-3" />
+                          View Source Verification
+                          {message.metadata.auditLogged && (
+                            <CheckCircle2 className="w-3 h-3 text-green-500 ml-1" />
+                          )}
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="mt-2">
+                        <div className="bg-muted/50 rounded-lg p-3 text-xs space-y-2 border border-border/50">
+                          <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground">Search Terms:</span>
+                            <code className="bg-background px-2 py-0.5 rounded">{message.metadata.searchTermsUsed}</code>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground">Chunks Found:</span>
+                            <Badge variant="secondary">{message.metadata.chunksFound}</Badge>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground">Documents Searched:</span>
+                            <Badge variant="secondary">{message.metadata.documentsSearched}</Badge>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground">Audit Logged:</span>
+                            {message.metadata.auditLogged ? (
+                              <Badge variant="outline" className="text-green-600 border-green-500/30">
+                                <CheckCircle2 className="w-3 h-3 mr-1" />
+                                Yes
+                              </Badge>
+                            ) : (
+                              <Badge variant="destructive">No</Badge>
+                            )}
+                          </div>
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
+                  
                   {/* Source Citations */}
                   {message.sources && message.sources.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1">
-                      {message.sources.slice(0, 3).map((source, i) => (
-                        <Badge key={i} variant="outline" className="text-xs">
+                      {message.sources.slice(0, 5).map((source, i) => (
+                        <Badge key={i} variant="outline" className="text-xs" title={source.preview}>
                           <FileText className="w-3 h-3 mr-1" />
-                          {source.fileName.length > 20 
-                            ? source.fileName.substring(0, 20) + '...' 
+                          {source.fileName.length > 25 
+                            ? source.fileName.substring(0, 25) + '...' 
                             : source.fileName}
                           #{source.chunkIndex}
+                          {source.category && (
+                            <span className="ml-1 opacity-60">({source.category})</span>
+                          )}
                         </Badge>
                       ))}
-                      {message.sources.length > 3 && (
+                      {message.sources.length > 5 && (
                         <Badge variant="secondary" className="text-xs">
-                          +{message.sources.length - 3} more
+                          +{message.sources.length - 5} more
                         </Badge>
                       )}
                     </div>
@@ -168,7 +242,7 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
               {isLoading && (
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="text-sm">Searching knowledge base...</span>
+                  <span className="text-sm">Searching proprietary knowledge base...</span>
                 </div>
               )}
             </div>
@@ -198,10 +272,16 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
               )}
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-            <AlertCircle className="w-3 h-3" />
-            Responses include source citations for verification
-          </p>
+          <div className="flex items-center justify-between mt-2">
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" />
+              Responses include source citations for verification
+            </p>
+            <p className="text-xs text-green-600 flex items-center gap-1">
+              <Shield className="w-3 h-3" />
+              All queries logged
+            </p>
+          </div>
         </div>
       </CardContent>
     </Card>

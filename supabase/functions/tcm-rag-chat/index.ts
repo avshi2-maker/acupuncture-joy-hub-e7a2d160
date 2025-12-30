@@ -51,8 +51,10 @@ serve(async (req) => {
 
     const { query, messages } = await req.json();
     const searchQuery = query || messages?.[messages.length - 1]?.content || '';
+    const searchTerms = searchQuery.split(' ').slice(0, 5).join(' | ');
 
     console.log('RAG Query:', searchQuery);
+    console.log('Search terms:', searchTerms);
 
     // Search for relevant chunks using full-text search
     const { data: chunks, error: searchError } = await supabaseClient
@@ -64,13 +66,13 @@ serve(async (req) => {
         answer,
         chunk_index,
         metadata,
-        document:knowledge_documents(file_name, original_name, category)
+        document:knowledge_documents(id, file_name, original_name, category)
       `)
-      .textSearch('content', searchQuery.split(' ').slice(0, 5).join(' | '), {
+      .textSearch('content', searchTerms, {
         type: 'websearch',
         config: 'english'
       })
-      .limit(10);
+      .limit(15);
 
     if (searchError) {
       console.error('Search error:', searchError);
@@ -78,16 +80,29 @@ serve(async (req) => {
 
     // Build context from retrieved chunks
     let context = '';
-    const sources: Array<{ fileName: string; chunkIndex: number; preview: string }> = [];
+    const sources: Array<{ fileName: string; chunkIndex: number; preview: string; category: string; documentId: string }> = [];
+    const chunksMatched: Array<{ id: string; documentId: string; chunkIndex: number; contentPreview: string }> = [];
 
     if (chunks && chunks.length > 0) {
       context = chunks.map((chunk, i) => {
         const doc = chunk.document as any;
         const fileName = doc?.original_name || doc?.file_name || 'Unknown';
+        const category = doc?.category || 'general';
+        const documentId = doc?.id || '';
+        
         sources.push({
           fileName,
           chunkIndex: chunk.chunk_index,
-          preview: (chunk.question || chunk.content).substring(0, 100)
+          preview: (chunk.question || chunk.content).substring(0, 100),
+          category,
+          documentId
+        });
+        
+        chunksMatched.push({
+          id: chunk.id,
+          documentId,
+          chunkIndex: chunk.chunk_index,
+          contentPreview: chunk.content.substring(0, 200)
         });
         
         if (chunk.question && chunk.answer) {
@@ -100,7 +115,7 @@ ${chunk.content}`;
       }).join('\n\n---\n\n');
     }
 
-    console.log(`Found ${chunks?.length || 0} relevant chunks`);
+    console.log(`Found ${chunks?.length || 0} relevant chunks from ${new Set(sources.map(s => s.fileName)).size} unique documents`);
 
     // Build messages for AI
     const systemMessage = context 
@@ -152,10 +167,41 @@ ${chunk.content}`;
     const aiData = await aiResponse.json();
     const responseContent = aiData.choices?.[0]?.message?.content || 'No response generated';
 
+    // Log the query for audit trail (use service role for insert)
+    const serviceClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const { error: logError } = await serviceClient
+      .from('rag_query_logs')
+      .insert({
+        user_id: user.id,
+        query_text: searchQuery,
+        search_terms: searchTerms,
+        chunks_found: chunks?.length || 0,
+        chunks_matched: chunksMatched,
+        sources_used: sources.map(s => ({ fileName: s.fileName, category: s.category, chunkIndex: s.chunkIndex })),
+        response_preview: responseContent.substring(0, 500),
+        ai_model: 'google/gemini-2.5-flash'
+      });
+
+    if (logError) {
+      console.error('Failed to log query:', logError);
+    } else {
+      console.log('Query logged for audit trail');
+    }
+
+    // Get unique documents used
+    const uniqueDocuments = [...new Set(sources.map(s => s.fileName))];
+
     return new Response(JSON.stringify({
       response: responseContent,
       sources: sources,
       chunksFound: chunks?.length || 0,
+      documentsSearched: uniqueDocuments.length,
+      searchTermsUsed: searchTerms,
+      auditLogged: !logError,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

@@ -856,6 +856,45 @@ export type Database = {
           },
         ]
       }
+      rag_query_logs: {
+        Row: {
+          ai_model: string | null
+          chunks_found: number | null
+          chunks_matched: Json | null
+          created_at: string
+          id: string
+          query_text: string
+          response_preview: string | null
+          search_terms: string | null
+          sources_used: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          ai_model?: string | null
+          chunks_found?: number | null
+          chunks_matched?: Json | null
+          created_at?: string
+          id?: string
+          query_text: string
+          response_preview?: string | null
+          search_terms?: string | null
+          sources_used?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          ai_model?: string | null
+          chunks_found?: number | null
+          chunks_matched?: Json | null
+          created_at?: string
+          id?: string
+          query_text?: string
+          response_preview?: string | null
+          search_terms?: string | null
+          sources_used?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       roi_scenarios: {
         Row: {
           archived: boolean | null
