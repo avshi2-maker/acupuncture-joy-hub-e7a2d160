@@ -6,12 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
-import { Send, Loader2, BookOpen, FileText, AlertCircle, Printer, Shield, CheckCircle2, Database, ExternalLink, Activity } from 'lucide-react';
+import { Send, Loader2, BookOpen, FileText, AlertCircle, Printer, Shield, CheckCircle2, Database, ExternalLink, Activity, Eye, EyeOff } from 'lucide-react';
 import { VoiceInputButton } from '@/components/ui/VoiceInputButton';
 import { usePrintContent } from '@/hooks/usePrintContent';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { RAGSearchAnimation, RAGVerificationStatus } from './RAGSearchAnimation';
 import { AITracePanel, TraceStep, ChunkMatch, HallucinationCheck, analyzeHallucination } from './AITracePanel';
+import { ConfidenceMeter } from './ConfidenceMeter';
 
 interface Source {
   fileName: string;
@@ -51,7 +52,7 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [searchPhase, setSearchPhase] = useState<SearchPhase>('idle');
   const [pendingQuery, setPendingQuery] = useState<string>('');
-  const [showTracePanel, setShowTracePanel] = useState(true);
+  const [showTracePanel, setShowTracePanel] = useState(false); // Advanced mode - hidden by default
   const [currentTrace, setCurrentTrace] = useState<{
     steps: TraceStep[];
     contextChunks: ChunkMatch[];
@@ -392,16 +393,6 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
           </CardTitle>
           <div className="flex items-center gap-2">
             <RAGVerificationStatus />
-            <Button
-              type="button"
-              variant={showTracePanel ? "default" : "outline"}
-              size="sm"
-              onClick={() => setShowTracePanel(!showTracePanel)}
-              className="no-print"
-            >
-              <Activity className="h-4 w-4 mr-1" />
-              {showTracePanel ? 'Hide' : 'Show'} Trace
-            </Button>
             <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
               <Shield className="w-3 h-3 mr-1" />
               Audit Logged
@@ -465,55 +456,31 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
                     <p className="whitespace-pre-wrap text-sm">{message.content}</p>
                   </div>
                   
-                  {/* Source Verification Panel */}
-                  {message.metadata && (
-                    <Collapsible className="mt-2 w-full max-w-[85%]">
-                      <CollapsibleTrigger asChild>
-                        <Button variant="ghost" size="sm" className="text-xs h-7 px-2 gap-1">
-                          <Database className="w-3 h-3" />
-                          View Source Verification
-                          {message.metadata.auditLogged && (
-                            <CheckCircle2 className="w-3 h-3 text-green-500 ml-1" />
-                          )}
-                        </Button>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="mt-2">
-                        <div className="bg-muted/50 rounded-lg p-3 text-xs space-y-2 border border-border/50">
-                          <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Search Terms:</span>
-                            <code className="bg-background px-2 py-0.5 rounded">{message.metadata.searchTermsUsed}</code>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Chunks Found:</span>
-                            <Badge variant="secondary">{message.metadata.chunksFound}</Badge>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Documents Searched:</span>
-                            <Badge variant="secondary">{message.metadata.documentsSearched}</Badge>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Audit Logged:</span>
-                            {message.metadata.auditLogged ? (
-                              <Badge variant="outline" className="text-green-600 border-green-500/30">
-                                <CheckCircle2 className="w-3 h-3 mr-1" />
-                                Yes
-                              </Badge>
-                            ) : (
-                              <Badge variant="destructive">No</Badge>
-                            )}
-                          </div>
-                          {message.isExternal && (
-                            <div className="flex items-center justify-between text-amber-600">
-                              <span className="text-muted-foreground">Source:</span>
-                              <Badge variant="outline" className="text-amber-600 border-amber-500/30">
-                                <ExternalLink className="w-3 h-3 mr-1" />
-                                External AI (Liability Waived)
-                              </Badge>
-                            </div>
-                          )}
-                        </div>
-                      </CollapsibleContent>
-                    </Collapsible>
+                  {/* Confidence Meter - Friendly UI for therapists */}
+                  {message.role === 'assistant' && message.traceData && (
+                    <div className="mt-2 w-full max-w-[85%]">
+                      <ConfidenceMeter
+                        confidence={message.traceData.hallucinationCheck?.confidence ?? (message.metadata?.chunksFound ? 80 : 30)}
+                        sourcesCount={message.metadata?.chunksFound ?? 0}
+                        sourceNames={message.sources?.map(s => s.fileName) ?? []}
+                        isExternal={message.isExternal ?? false}
+                        warnings={message.traceData.hallucinationCheck?.warnings ?? []}
+                        onShowDetails={() => setShowTracePanel(true)}
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Fallback for messages without traceData */}
+                  {message.role === 'assistant' && !message.traceData && message.metadata && (
+                    <div className="mt-2 w-full max-w-[85%]">
+                      <ConfidenceMeter
+                        confidence={message.metadata.chunksFound > 0 ? 80 : 20}
+                        sourcesCount={message.metadata.chunksFound}
+                        sourceNames={message.sources?.map(s => s.fileName) ?? []}
+                        isExternal={message.isExternal ?? false}
+                        onShowDetails={() => setShowTracePanel(true)}
+                      />
+                    </div>
                   )}
                   
                   {/* Source Citations */}
@@ -555,9 +522,24 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
           />
         </div>
 
-        {/* AI Trace Panel - Real-time monitoring for Dr. Sapir */}
+        {/* AI Trace Panel - Advanced mode for detailed monitoring */}
         {showTracePanel && (currentTrace.steps.length > 0 || isLoading) && (
           <div className="px-4 pb-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <Activity className="w-3 h-3" />
+                Advanced Trace Mode
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowTracePanel(false)}
+                className="h-6 text-xs"
+              >
+                <EyeOff className="w-3 h-3 mr-1" />
+                Hide Details
+              </Button>
+            </div>
             <AITracePanel
               isVisible={showTracePanel}
               steps={currentTrace.steps}
