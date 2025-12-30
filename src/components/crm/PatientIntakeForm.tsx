@@ -25,6 +25,7 @@ import { DietNutritionSelect } from './DietNutritionSelect';
 import { PulseDiagnosisSelect } from './PulseDiagnosisSelect';
 import { AllergiesSelect } from './AllergiesSelect';
 import { MedicationsSupplementsSelect } from './MedicationsSupplementsSelect';
+import { TongueDiagnosisSelect } from './TongueDiagnosisSelect';
 import { validateIsraeliId, looksLikeIsraeliId } from '@/utils/israeliIdValidation';
 
 // Base patient schema
@@ -158,6 +159,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
   const [pulseFindings, setPulseFindings] = useState<string[]>([]);
   const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
   const [selectedMedications, setSelectedMedications] = useState<string[]>([]);
+  const [tongueFindings, setTongueFindings] = useState<string[]>([]);
   
   // Post-save navigation dialog
   const [showNavigationDialog, setShowNavigationDialog] = useState(false);
@@ -1225,10 +1227,25 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Tongue Diagnosis</FormLabel>
+                      <TongueDiagnosisSelect
+                        value={tongueFindings}
+                        onChange={(newFindings) => {
+                          setTongueFindings(newFindings);
+                          const existingNotes = field.value || '';
+                          const selectedText = newFindings.join('; ');
+                          field.onChange(selectedText + (existingNotes && !existingNotes.startsWith(selectedText) ? '\n\nNotes: ' + existingNotes : ''));
+                        }}
+                        maxSelections={5}
+                      />
                       <FormControl>
                         <Textarea 
-                          placeholder="Color, coating, shape, moisture..." 
-                          {...field} 
+                          placeholder="Additional tongue notes (color, coating, moisture, shape)..." 
+                          className="mt-2"
+                          value={field.value?.includes('\n\nNotes: ') ? field.value.split('\n\nNotes: ')[1] : (tongueFindings.length === 0 ? field.value : '')}
+                          onChange={(e) => {
+                            const selectedText = tongueFindings.join('; ');
+                            field.onChange(selectedText ? selectedText + (e.target.value ? '\n\nNotes: ' + e.target.value : '') : e.target.value);
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
