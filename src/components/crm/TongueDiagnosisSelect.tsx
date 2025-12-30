@@ -15,12 +15,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { tongueDiagnosisData, type TongueFinding } from '@/data/tongue-diagnosis-data';
 
@@ -102,21 +96,20 @@ export function TongueDiagnosisSelect({
                           <span className="font-medium text-sm truncate">
                             {finding.finding}
                           </span>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0 cursor-help" />
-                              </TooltipTrigger>
-                              <TooltipContent side="right" className="max-w-[300px] z-[100]">
-                                <div className="space-y-1 text-xs">
-                                  <p><strong>Description:</strong> {finding.description}</p>
-                                  <p><strong>TCM Pattern:</strong> {finding.tcmPattern}</p>
-                                  <p><strong>Clinical Significance:</strong> {finding.clinicalSignificance}</p>
-                                  <p><strong>Treatment:</strong> {finding.treatmentPrinciple}</p>
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <button
+                            type="button"
+                            className="shrink-0 cursor-help text-muted-foreground hover:text-foreground transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                            title={[
+                              `Description: ${finding.description}`,
+                              `TCM Pattern: ${finding.tcmPattern}`,
+                              `Clinical Significance: ${finding.clinicalSignificance}`,
+                              `Treatment: ${finding.treatmentPrinciple}`,
+                            ].join('\n')}
+                            aria-label={`Tongue finding info: ${finding.finding}`}
+                          >
+                            <Info className="h-3.5 w-3.5" />
+                          </button>
                         </div>
                         <span className="text-xs text-muted-foreground">
                           {finding.chineseName}
@@ -137,32 +130,26 @@ export function TongueDiagnosisSelect({
           {value.map((finding) => {
             const data = getSelectedData(finding);
             return (
-              <TooltipProvider key={finding}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Badge
-                      variant="secondary"
-                      className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground transition-colors"
-                      onClick={() => removeSelection(finding)}
-                    >
-                      {finding.length > 30 ? finding.substring(0, 30) + '...' : finding}
-                      <span className="ml-1">×</span>
-                    </Badge>
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-[300px]">
-                    {data ? (
-                      <div className="space-y-1 text-xs">
-                        <p className="font-medium">{data.chineseName}</p>
-                        <p><strong>Pattern:</strong> {data.tcmPattern}</p>
-                        <p><strong>Treatment:</strong> {data.treatmentPrinciple}</p>
-                        <p className="text-muted-foreground italic">Click to remove</p>
-                      </div>
-                    ) : (
-                      <p className="text-xs">Click to remove</p>
-                    )}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Badge
+                key={finding}
+                variant="secondary"
+                className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                onClick={() => removeSelection(finding)}
+                title={
+                  data
+                    ? [
+                        data.chineseName,
+                        `Pattern: ${data.tcmPattern}`,
+                        `Treatment: ${data.treatmentPrinciple}`,
+                        'Click to remove',
+                      ].join('\n')
+                    : 'Click to remove'
+                }
+                aria-label={`Remove tongue finding ${finding}`}
+              >
+                {finding.length > 30 ? finding.substring(0, 30) + '...' : finding}
+                <span className="ml-1">×</span>
+              </Badge>
             );
           })}
         </div>

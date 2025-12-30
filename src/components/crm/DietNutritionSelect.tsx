@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
 import { ChevronDown, ChevronUp, X, Utensils, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { dietNutritionData, getDietHabitDetails } from '@/data/diet-nutrition-data';
@@ -54,9 +54,8 @@ export const DietNutritionSelect = memo(function DietNutritionSelect({
   const minHeight = value.length === 0 ? 'auto' : Math.min(56 + value.length * 32, 200);
 
   return (
-    <TooltipProvider>
-      <div className={cn('space-y-2', className)}>
-        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+    <div className={cn('space-y-2', className)}>
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <CollapsibleTrigger asChild>
             <Button
               type="button"
@@ -120,18 +119,19 @@ export const DietNutritionSelect = memo(function DietNutritionSelect({
                             <Label className="text-sm cursor-pointer flex-1">
                               {habit.habit}
                             </Label>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0 cursor-help" />
-                              </TooltipTrigger>
-                              <TooltipContent side="right" className="max-w-[300px] z-[100]">
-                                <div className="space-y-1 text-xs">
-                                  <p><strong>Western:</strong> {habit.westernPerspective}</p>
-                                  <p><strong>TCM:</strong> {habit.tcmPerspective}</p>
-                                  <p className="text-muted-foreground"><strong>Calories:</strong> {habit.estimatedCalories}</p>
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
+                            <button
+                              type="button"
+                              className="shrink-0 cursor-help text-muted-foreground hover:text-foreground transition-colors"
+                              onClick={(e) => e.stopPropagation()}
+                              title={[
+                                `Western: ${habit.westernPerspective}`,
+                                `TCM: ${habit.tcmPerspective}`,
+                                `Calories: ${habit.estimatedCalories}`,
+                              ].join('\n')}
+                              aria-label={`Diet habit info: ${habit.habit}`}
+                            >
+                              <Info className="h-3.5 w-3.5" />
+                            </button>
                           </div>
                         ))}
                       </CollapsibleContent>
@@ -167,40 +167,38 @@ export const DietNutritionSelect = memo(function DietNutritionSelect({
               {value.map((item) => {
                 const details = getDietHabitDetails(item);
                 return (
-                  <Tooltip key={item}>
-                    <TooltipTrigger>
-                      <Badge
-                        variant="secondary"
-                        className="text-xs pr-1 gap-1 cursor-pointer"
+                  <span
+                    key={item}
+                    className="inline-flex"
+                    title={
+                      details
+                        ? [`TCM: ${details.tcmPerspective}`, 'Click × to remove'].join('\n')
+                        : undefined
+                    }
+                  >
+                    <Badge
+                      variant="secondary"
+                      className="text-xs pr-1 gap-1 cursor-pointer"
+                    >
+                      {item.length > 35 ? item.substring(0, 35) + '...' : item}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeOption(item);
+                        }}
+                        className="ml-1 hover:bg-muted rounded-full p-0.5"
+                        aria-label={`Remove diet habit ${item}`}
                       >
-                        {item.length > 35 ? item.substring(0, 35) + '...' : item}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeOption(item);
-                          }}
-                          className="ml-1 hover:bg-muted rounded-full p-0.5"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    </TooltipTrigger>
-                    {details && (
-                      <TooltipContent className="max-w-[300px] z-50">
-                        <div className="space-y-1 text-xs">
-                          <p><strong>TCM:</strong> {details.tcmPerspective}</p>
-                          <p className="text-muted-foreground italic">Click × to remove</p>
-                        </div>
-                      </TooltipContent>
-                    )}
-                  </Tooltip>
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  </span>
                 );
               })}
             </div>
           </div>
         )}
-      </div>
-    </TooltipProvider>
+    </div>
   );
 });
