@@ -1966,6 +1966,15 @@ Based on this framework, provide a complete treatment protocol:
                         disabled={isLoading}
                         className="flex-1"
                       />
+                      <BrowserVoiceInput
+                        onTranscription={(text) => {
+                          setInput(prev => prev ? `${prev} ${text}` : text);
+                        }}
+                        disabled={isLoading}
+                        language="en-US"
+                        size="md"
+                        variant="outline"
+                      />
                       <Button
                         onClick={() => {
                           if (input.trim() && !isLoading) {
