@@ -22,6 +22,7 @@ import { User, Heart, Baby, Activity, Utensils, Moon, Brain, AlertTriangle, File
 import { SignaturePad } from './SignaturePad';
 import { MedicalDocumentUpload } from './MedicalDocumentUpload';
 import { DietNutritionSelect } from './DietNutritionSelect';
+import { PulseDiagnosisSelect } from './PulseDiagnosisSelect';
 import { validateIsraeliId, looksLikeIsraeliId } from '@/utils/israeliIdValidation';
 
 // Base patient schema
@@ -152,6 +153,7 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
   const [medicalDocuments, setMedicalDocuments] = useState<File[]>([]);
   const [dietHabits, setDietHabits] = useState<string[]>([]);
+  const [pulseFindings, setPulseFindings] = useState<string[]>([]);
   
   // Post-save navigation dialog
   const [showNavigationDialog, setShowNavigationDialog] = useState(false);
@@ -1208,10 +1210,26 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Pulse Diagnosis</FormLabel>
+                      <PulseDiagnosisSelect
+                        value={pulseFindings}
+                        onChange={(newFindings) => {
+                          setPulseFindings(newFindings);
+                          // Update the form field with selected findings
+                          const existingNotes = field.value || '';
+                          const selectedText = newFindings.join('; ');
+                          field.onChange(selectedText + (existingNotes && !existingNotes.startsWith(selectedText) ? '\n\nNotes: ' + existingNotes : ''));
+                        }}
+                        maxSelections={5}
+                      />
                       <FormControl>
                         <Textarea 
-                          placeholder="Rate, rhythm, quality, position..." 
-                          {...field} 
+                          placeholder="Additional pulse notes (rate, rhythm, quality, position)..." 
+                          className="mt-2"
+                          value={field.value?.includes('\n\nNotes: ') ? field.value.split('\n\nNotes: ')[1] : (pulseFindings.length === 0 ? field.value : '')}
+                          onChange={(e) => {
+                            const selectedText = pulseFindings.join('; ');
+                            field.onChange(selectedText ? selectedText + (e.target.value ? '\n\nNotes: ' + e.target.value : '') : e.target.value);
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
