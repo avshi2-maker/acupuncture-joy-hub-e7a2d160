@@ -123,8 +123,8 @@ function PhosphorClock() {
   );
 }
 
-// Gold clock widget with date - Desktop only
-function GoldClockWidget() {
+// Themed clock widget with date - Desktop only
+function ThemedClockWidget({ theme = 'gold' }: { theme?: 'gold' | 'silver' | 'jade' }) {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
@@ -152,18 +152,60 @@ function GoldClockWidget() {
     });
   };
 
+  // Theme-specific styles
+  const themeStyles = {
+    gold: {
+      container: 'from-amber-500/10 via-yellow-500/10 to-amber-500/10 border-amber-400/30 shadow-[0_0_20px_rgba(245,158,11,0.15)]',
+      clockFace: 'from-amber-100 to-yellow-200 dark:from-amber-900/50 dark:to-yellow-800/50 border-amber-400/50',
+      innerFace: 'from-amber-50 to-yellow-100 dark:from-amber-950/80 dark:to-yellow-900/80',
+      majorMarker: 'bg-amber-600 dark:bg-amber-400',
+      minorMarker: 'bg-amber-400/60 dark:bg-amber-500/60',
+      hourHand: 'from-amber-700 to-amber-500 dark:from-amber-400 dark:to-amber-300',
+      minuteHand: 'from-amber-600 to-amber-400 dark:from-amber-300 dark:to-amber-200',
+      centerDot: 'from-amber-500 to-amber-700 dark:from-amber-300 dark:to-amber-500 border-amber-400/50',
+      digitalTime: 'text-amber-700 dark:text-amber-300',
+      digitalDate: 'text-amber-600/80 dark:text-amber-400/80',
+    },
+    silver: {
+      container: 'from-slate-400/10 via-gray-300/10 to-slate-400/10 border-slate-400/30 shadow-[0_0_20px_rgba(148,163,184,0.15)]',
+      clockFace: 'from-slate-100 to-gray-200 dark:from-slate-800/50 dark:to-gray-700/50 border-slate-400/50',
+      innerFace: 'from-slate-50 to-gray-100 dark:from-slate-900/80 dark:to-gray-800/80',
+      majorMarker: 'bg-slate-600 dark:bg-slate-300',
+      minorMarker: 'bg-slate-400/60 dark:bg-slate-500/60',
+      hourHand: 'from-slate-700 to-slate-500 dark:from-slate-300 dark:to-slate-200',
+      minuteHand: 'from-slate-600 to-slate-400 dark:from-slate-200 dark:to-slate-100',
+      centerDot: 'from-slate-500 to-slate-700 dark:from-slate-300 dark:to-slate-500 border-slate-400/50',
+      digitalTime: 'text-slate-700 dark:text-slate-200',
+      digitalDate: 'text-slate-600/80 dark:text-slate-400/80',
+    },
+    jade: {
+      container: 'from-emerald-500/10 via-jade/10 to-emerald-500/10 border-jade/30 shadow-[0_0_20px_rgba(34,197,94,0.15)]',
+      clockFace: 'from-emerald-100 to-jade-light dark:from-emerald-900/50 dark:to-jade/30 border-jade/50',
+      innerFace: 'from-emerald-50 to-jade-light dark:from-emerald-950/80 dark:to-jade/20',
+      majorMarker: 'bg-jade dark:bg-emerald-400',
+      minorMarker: 'bg-jade/60 dark:bg-emerald-500/60',
+      hourHand: 'from-emerald-700 to-jade dark:from-emerald-400 dark:to-emerald-300',
+      minuteHand: 'from-emerald-600 to-jade dark:from-emerald-300 dark:to-emerald-200',
+      centerDot: 'from-jade to-emerald-700 dark:from-emerald-300 dark:to-jade border-jade/50',
+      digitalTime: 'text-jade dark:text-emerald-300',
+      digitalDate: 'text-emerald-600/80 dark:text-emerald-400/80',
+    },
+  };
+
+  const styles = themeStyles[theme];
+
   return (
-    <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-amber-500/10 via-yellow-500/10 to-amber-500/10 rounded-xl border border-amber-400/30 shadow-[0_0_20px_rgba(245,158,11,0.15)]">
+    <div className={`hidden md:flex items-center gap-3 px-4 py-2 bg-gradient-to-r ${styles.container} rounded-xl border`}>
       {/* Analog Clock */}
-      <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-amber-100 to-yellow-200 dark:from-amber-900/50 dark:to-yellow-800/50 border-2 border-amber-400/50 flex items-center justify-center shadow-[0_0_15px_rgba(245,158,11,0.3),inset_0_1px_3px_rgba(255,255,255,0.3)]">
+      <div className={`relative w-12 h-12 rounded-full bg-gradient-to-br ${styles.clockFace} border-2 flex items-center justify-center shadow-[0_0_15px_rgba(0,0,0,0.1),inset_0_1px_3px_rgba(255,255,255,0.3)]`}>
         {/* Clock face */}
-        <div className="absolute inset-1 rounded-full bg-gradient-to-br from-amber-50 to-yellow-100 dark:from-amber-950/80 dark:to-yellow-900/80" />
+        <div className={`absolute inset-1 rounded-full bg-gradient-to-br ${styles.innerFace}`} />
         
         {/* Hour markers */}
         {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((deg) => (
           <div
             key={deg}
-            className={`absolute rounded-full ${deg % 90 === 0 ? 'w-0.5 h-1.5 bg-amber-600 dark:bg-amber-400' : 'w-px h-1 bg-amber-400/60 dark:bg-amber-500/60'}`}
+            className={`absolute rounded-full ${deg % 90 === 0 ? `w-0.5 h-1.5 ${styles.majorMarker}` : `w-px h-1 ${styles.minorMarker}`}`}
             style={{
               transform: `rotate(${deg}deg) translateY(-18px)`,
               transformOrigin: 'center center',
@@ -173,7 +215,7 @@ function GoldClockWidget() {
         
         {/* Hour hand */}
         <div
-          className="absolute w-1 h-3 bg-gradient-to-t from-amber-700 to-amber-500 dark:from-amber-400 dark:to-amber-300 rounded-full origin-bottom shadow-md"
+          className={`absolute w-1 h-3 bg-gradient-to-t ${styles.hourHand} rounded-full origin-bottom shadow-md`}
           style={{
             transform: `rotate(${hourDeg}deg)`,
             bottom: '50%',
@@ -182,7 +224,7 @@ function GoldClockWidget() {
         
         {/* Minute hand */}
         <div
-          className="absolute w-0.5 h-4 bg-gradient-to-t from-amber-600 to-amber-400 dark:from-amber-300 dark:to-amber-200 rounded-full origin-bottom shadow-sm"
+          className={`absolute w-0.5 h-4 bg-gradient-to-t ${styles.minuteHand} rounded-full origin-bottom shadow-sm`}
           style={{
             transform: `rotate(${minuteDeg}deg)`,
             bottom: '50%',
@@ -199,15 +241,15 @@ function GoldClockWidget() {
         />
         
         {/* Center dot */}
-        <div className="absolute w-1.5 h-1.5 bg-gradient-to-br from-amber-500 to-amber-700 dark:from-amber-300 dark:to-amber-500 rounded-full shadow-md border border-amber-400/50" />
+        <div className={`absolute w-1.5 h-1.5 bg-gradient-to-br ${styles.centerDot} rounded-full shadow-md border`} />
       </div>
 
       {/* Digital Time & Date */}
       <div className="flex flex-col items-start">
-        <span className="text-lg font-mono font-bold text-amber-700 dark:text-amber-300 tracking-wider">
+        <span className={`text-lg font-mono font-bold ${styles.digitalTime} tracking-wider`}>
           {formatTime(time)}
         </span>
-        <span className="text-xs text-amber-600/80 dark:text-amber-400/80">
+        <span className={`text-xs ${styles.digitalDate}`}>
           {formatDate(time)}
         </span>
       </div>
@@ -316,9 +358,27 @@ export default function Dashboard() {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [showPinSetup, setShowPinSetup] = useState(false);
+  const [clockTheme, setClockTheme] = useState<'gold' | 'silver' | 'jade'>('gold');
   const { progress, hasProgress, resetProgress } = useWorkflowProgress();
   const { lock, isPaused, pauseReason, pauseLock, resumeLock } = useSessionLock();
   const { hasPin } = usePinAuth();
+
+  // Load clock theme from settings
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('therapist_clock_theme') as 'gold' | 'silver' | 'jade';
+    if (savedTheme && ['gold', 'silver', 'jade'].includes(savedTheme)) {
+      setClockTheme(savedTheme);
+    }
+    
+    // Listen for storage changes
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'therapist_clock_theme' && e.newValue) {
+        setClockTheme(e.newValue as 'gold' | 'silver' | 'jade');
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -699,8 +759,8 @@ export default function Dashboard() {
               <Search className="h-5 w-5" />
             </Button>
             
-            {/* Gold Clock Widget - Desktop only */}
-            <GoldClockWidget />
+            {/* Themed Clock Widget - Desktop only */}
+            <ThemedClockWidget theme={clockTheme} />
             
             {/* Phosphor Clock - Mobile only */}
             <PhosphorClock />

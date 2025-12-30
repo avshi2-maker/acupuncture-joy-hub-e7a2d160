@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Settings, Video, Save, Bell, Shield, Clock, Fingerprint, EyeOff, Smartphone } from 'lucide-react';
+import { Settings, Video, Save, Bell, Shield, Clock, Fingerprint, EyeOff, Smartphone, Palette } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSessionLock } from '@/contexts/SessionLockContext';
 import { usePinAuth } from '@/hooks/usePinAuth';
@@ -35,6 +35,18 @@ export const BIOMETRIC_ENABLED_KEY = 'therapist_biometric_enabled';
 export const LOCK_ON_TAB_SWITCH_KEY = 'therapist_lock_on_tab_switch';
 export const LOCK_ON_SCREEN_WAKE_KEY = 'therapist_lock_on_screen_wake';
 export const SCREEN_WAKE_GRACE_PERIOD_KEY = 'therapist_screen_wake_grace_period';
+export const CLOCK_THEME_KEY = 'therapist_clock_theme';
+
+export type ClockTheme = 'gold' | 'silver' | 'jade';
+
+export function getClockTheme(): ClockTheme {
+  try {
+    const saved = localStorage.getItem(CLOCK_THEME_KEY) as ClockTheme;
+    return saved && ['gold', 'silver', 'jade'].includes(saved) ? saved : 'gold';
+  } catch {
+    return 'gold';
+  }
+}
 
 export function getAudioAlertsEnabled(): boolean {
   try {
@@ -99,6 +111,7 @@ export function TherapistSettingsDialog({
   const [lockOnTabSwitch, setLockOnTabSwitch] = useState(false);
   const [lockOnScreenWake, setLockOnScreenWake] = useState(false);
   const [screenWakeGracePeriod, setScreenWakeGracePeriod] = useState('30');
+  const [clockTheme, setClockTheme] = useState<ClockTheme>('gold');
   const [selectedTimeout, setSelectedTimeout] = useState('15');
   
   const { timeoutMinutes, setTimeoutMinutes } = useSessionLock();
@@ -121,6 +134,7 @@ export function TherapistSettingsDialog({
       setLockOnTabSwitch(savedLockOnTabSwitch);
       setLockOnScreenWake(savedLockOnScreenWake);
       setScreenWakeGracePeriod(savedGracePeriod.toString());
+      setClockTheme(getClockTheme());
       setSelectedTimeout(timeoutMinutes.toString());
     }
   }, [open, timeoutMinutes]);
@@ -133,6 +147,7 @@ export function TherapistSettingsDialog({
     localStorage.setItem(LOCK_ON_TAB_SWITCH_KEY, lockOnTabSwitch.toString());
     localStorage.setItem(LOCK_ON_SCREEN_WAKE_KEY, lockOnScreenWake.toString());
     localStorage.setItem(SCREEN_WAKE_GRACE_PERIOD_KEY, screenWakeGracePeriod);
+    localStorage.setItem(CLOCK_THEME_KEY, clockTheme);
     setTimeoutMinutes(parseInt(selectedTimeout, 10));
     toast.success('ההגדרות נשמרו בהצלחה');
     onOpenChange(false);
@@ -199,6 +214,45 @@ export function TherapistSettingsDialog({
               checked={audioAlertsEnabled}
               onCheckedChange={setAudioAlertsEnabled}
             />
+          </div>
+
+          {/* Clock Theme */}
+          <div className="space-y-2 p-3 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <Palette className="h-4 w-4 text-purple-500" />
+              <Label className="text-sm font-medium">ערכת נושא לשעון</Label>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {(['gold', 'silver', 'jade'] as const).map((theme) => (
+                <button
+                  key={theme}
+                  type="button"
+                  onClick={() => setClockTheme(theme)}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    clockTheme === theme
+                      ? theme === 'gold'
+                        ? 'border-amber-400 bg-amber-50 dark:bg-amber-950/30'
+                        : theme === 'silver'
+                        ? 'border-slate-400 bg-slate-50 dark:bg-slate-900/30'
+                        : 'border-jade bg-jade-light dark:bg-jade/10'
+                      : 'border-transparent bg-background hover:bg-muted'
+                  }`}
+                >
+                  <div
+                    className={`w-6 h-6 mx-auto rounded-full ${
+                      theme === 'gold'
+                        ? 'bg-gradient-to-br from-amber-400 to-yellow-600'
+                        : theme === 'silver'
+                        ? 'bg-gradient-to-br from-slate-300 to-slate-500'
+                        : 'bg-gradient-to-br from-emerald-400 to-jade'
+                    }`}
+                  />
+                  <span className="text-xs mt-1 block text-center">
+                    {theme === 'gold' ? 'זהב' : theme === 'silver' ? 'כסף' : 'ירקן'}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Session Lock Timeout - only show if PIN is set */}
