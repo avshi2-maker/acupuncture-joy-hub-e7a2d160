@@ -9,6 +9,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { TierProvider } from "@/hooks/useTier";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
+import { SessionLockProvider } from "@/contexts/SessionLockContext";
 import RequireTier from "@/components/auth/RequireTier";
 import { FloatingMusicPlayer } from "@/components/ui/FloatingMusicPlayer";
 import { OfflineBanner } from "@/components/ui/OfflineBanner";
@@ -66,8 +67,9 @@ const App = () => (
           <LanguageProvider>
             <AuthProvider>
               <TierProvider>
-                <TooltipProvider>
-                  <OfflineBanner />
+                <SessionLockProvider>
+                  <TooltipProvider>
+                    <OfflineBanner />
                   <Toaster />
                   <Sonner />
                   <BrowserRouter>
@@ -127,7 +129,8 @@ const App = () => (
                     <AccessibilityPanel />
                     <BugReportButton />
                   </BrowserRouter>
-                </TooltipProvider>
+                  </TooltipProvider>
+                </SessionLockProvider>
               </TierProvider>
             </AuthProvider>
           </LanguageProvider>

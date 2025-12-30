@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Button } from '@/components/ui/button';
 import { usePinAuth } from '@/hooks/usePinAuth';
+import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { toast } from 'sonner';
-import { Lock, LogOut, AlertTriangle } from 'lucide-react';
+import { Lock, LogOut, AlertTriangle, Fingerprint } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface PinUnlockScreenProps {
@@ -18,8 +19,29 @@ export function PinUnlockScreen({ onUnlock, onLogout }: PinUnlockScreenProps) {
   const [error, setError] = useState<string | null>(null);
   const [attemptsRemaining, setAttemptsRemaining] = useState<number | null>(null);
   const { verifyPin, isLocked, lockoutEndTime } = usePinAuth();
+  const { isAvailable: biometricAvailable, isEnabled: biometricEnabled, authenticate: biometricAuth, isAuthenticating } = useBiometricAuth();
   const haptic = useHapticFeedback();
   const [lockoutCountdown, setLockoutCountdown] = useState<string | null>(null);
+
+  // Auto-trigger biometric on mount if available and enabled
+  useEffect(() => {
+    if (biometricAvailable && biometricEnabled && !isLocked) {
+      handleBiometricUnlock();
+    }
+  }, [biometricAvailable, biometricEnabled, isLocked]);
+
+  const handleBiometricUnlock = async () => {
+    haptic.light();
+    const result = await biometricAuth();
+    
+    if (result.success) {
+      haptic.success();
+      onUnlock();
+    } else if (result.error && result.error !== 'Authentication cancelled') {
+      haptic.error();
+      toast.error(result.error);
+    }
+  };
 
   // Countdown timer for lockout
   useEffect(() => {
@@ -145,6 +167,19 @@ export function PinUnlockScreen({ onUnlock, onLogout }: PinUnlockScreenProps) {
               </span>
             )}
           </div>
+        )}
+
+        {/* Biometric button */}
+        {biometricAvailable && biometricEnabled && (
+          <Button 
+            variant="outline" 
+            onClick={handleBiometricUnlock}
+            disabled={isAuthenticating}
+            className="gap-2 border-jade/30 hover:border-jade hover:bg-jade/10"
+          >
+            <Fingerprint className="w-5 h-5 text-jade" />
+            {isAuthenticating ? 'Authenticating...' : 'Use Biometric'}
+          </Button>
         )}
 
         <div className="pt-4">
