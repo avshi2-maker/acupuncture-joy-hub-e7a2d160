@@ -16,6 +16,7 @@ import { OfflineBanner } from "@/components/ui/OfflineBanner";
 import { AccessibilityPanel } from "@/components/ui/AccessibilityPanel";
 import { BugReportButton } from "@/components/ui/BugReportButton";
 import { FloatingVoiceButton } from "@/components/ui/FloatingVoiceButton";
+import { FloatingHelpGuide } from "@/components/ui/FloatingHelpGuide";
 
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -130,6 +131,7 @@ const App = () => (
                     <AccessibilityPanel />
                     <BugReportButton />
                     <FloatingVoiceButton />
+                    <FloatingHelpGuide />
                   </BrowserRouter>
                   </TooltipProvider>
                 </SessionLockProvider>

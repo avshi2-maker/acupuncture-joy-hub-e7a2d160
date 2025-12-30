@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClipboardList, User, Loader2, Search, UserCheck, Printer } from 'lucide-react';
 import { toast } from 'sonner';
-import { VoiceInputButton } from '@/components/ui/VoiceInputButton';
+import { BrowserVoiceInput } from '@/components/ui/BrowserVoiceInput';
 import { usePrintContent } from '@/hooks/usePrintContent';
 
 interface PatientContext {
@@ -45,6 +45,7 @@ export function TreatmentPlannerForm({ onSubmit, isLoading }: TreatmentPlannerFo
   const [selectedPatientId, setSelectedPatientId] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoadingPatients, setIsLoadingPatients] = useState(false);
+  const [voiceLang, setVoiceLang] = useState('he-IL');
   const [patientContext, setPatientContext] = useState<PatientContext>({
     ageGroup: '',
     gender: '',
@@ -157,12 +158,25 @@ export function TreatmentPlannerForm({ onSubmit, isLoading }: TreatmentPlannerFo
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="diagnosis">TCM Diagnosis / Pattern *</Label>
-              <VoiceInputButton
-                onTranscription={handleVoiceTranscription}
-                disabled={isLoading}
-                size="sm"
-                className="no-print"
-              />
+              <div className="flex items-center gap-2 no-print">
+                <Select value={voiceLang} onValueChange={setVoiceLang}>
+                  <SelectTrigger className="h-8 w-20 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="he-IL">🇮🇱 עברית</SelectItem>
+                    <SelectItem value="en-US">🇺🇸 English</SelectItem>
+                    <SelectItem value="ru-RU">🇷🇺 Русский</SelectItem>
+                  </SelectContent>
+                </Select>
+                <BrowserVoiceInput
+                  onTranscription={handleVoiceTranscription}
+                  disabled={isLoading}
+                  size="sm"
+                  language={voiceLang}
+                  continuous
+                />
+              </div>
             </div>
             <Textarea
               id="diagnosis"
@@ -282,11 +296,11 @@ export function TreatmentPlannerForm({ onSubmit, isLoading }: TreatmentPlannerFo
                   <div className="space-y-2 sm:col-span-2">
                     <div className="flex items-center justify-between">
                       <Label>Allergies</Label>
-                      <VoiceInputButton
+                      <BrowserVoiceInput
                         onTranscription={handleAllergiesVoice}
                         disabled={isLoading}
                         size="sm"
-                        className="no-print"
+                        language={voiceLang}
                       />
                     </div>
                     <Input
@@ -300,11 +314,11 @@ export function TreatmentPlannerForm({ onSubmit, isLoading }: TreatmentPlannerFo
                   <div className="space-y-2 sm:col-span-2">
                     <div className="flex items-center justify-between">
                       <Label>Current Medications</Label>
-                      <VoiceInputButton
+                      <BrowserVoiceInput
                         onTranscription={handleMedicationsVoice}
                         disabled={isLoading}
                         size="sm"
-                        className="no-print"
+                        language={voiceLang}
                       />
                     </div>
                     <Input
@@ -318,11 +332,11 @@ export function TreatmentPlannerForm({ onSubmit, isLoading }: TreatmentPlannerFo
                   <div className="space-y-2 sm:col-span-2">
                     <div className="flex items-center justify-between">
                       <Label>Medical History</Label>
-                      <VoiceInputButton
+                      <BrowserVoiceInput
                         onTranscription={handleHistoryVoice}
                         disabled={isLoading}
                         size="sm"
-                        className="no-print"
+                        language={voiceLang}
                       />
                     </div>
                     <Textarea
