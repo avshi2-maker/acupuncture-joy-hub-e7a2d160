@@ -431,8 +431,10 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
       if (existingPatient) {
         setIsIdDuplicate(true);
         setIdCheckStatus('duplicate');
-        toast.error('מספר ת.ז. כבר קיים במערכת! לא ניתן לשמור. / ID number already exists!');
+        toast.error('מספר ת.ז. כבר קיים במערכת! חזור לשלב 1 לשנות. / ID number already exists! Go back to step 1 to change.');
+        setCurrentStep(0); // Navigate back to step 0 where ID field is
         setLoading(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
       // Compile notes with age-specific and pregnancy answers
@@ -642,17 +644,16 @@ export function PatientIntakeForm({ patientId, onSuccess }: PatientIntakeFormPro
                     key={index}
                     type="button"
                     onClick={() => {
-                      if (index < currentStep) {
-                        setCurrentStep(index);
-                      }
+                      // Allow navigating to any step (both back and forward for flexibility)
+                      setCurrentStep(index);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    disabled={index > currentStep}
-                    className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full transition-colors ${
+                    className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full transition-colors cursor-pointer ${
                       isCurrent 
                         ? 'bg-jade/20 text-jade font-medium' 
                         : isCompleted 
-                          ? 'text-jade cursor-pointer hover:bg-jade/10' 
-                          : 'text-muted-foreground cursor-not-allowed'
+                          ? 'text-jade hover:bg-jade/10' 
+                          : 'text-muted-foreground hover:bg-muted/50'
                     }`}
                   >
                     {isCompleted ? (
