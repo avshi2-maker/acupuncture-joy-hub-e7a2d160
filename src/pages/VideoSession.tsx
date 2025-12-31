@@ -1003,8 +1003,19 @@ export default function VideoSession() {
               </Link>
             </div>
 
+            {/* Mobile Workflow Indicator - Above patient selector */}
+            <div className="md:hidden absolute top-full left-0 right-0 px-2 py-1 bg-background/95 backdrop-blur-sm border-b">
+              <SessionWorkflowIndicator
+                hasPatient={!!selectedPatientId}
+                isSessionStarted={sessionStatus !== 'idle'}
+                isRecording={recordingModuleRef.current?.isRecording() || false}
+                guideCompleted={guideCompleted}
+                hasNotes={sessionNotes.length > 10}
+              />
+            </div>
+
             {/* Mobile Quick Access Bar: Patient → History → Start → Record → Settings */}
-            <div className="flex md:hidden items-center gap-1 flex-1 mx-1 overflow-x-auto scrollbar-hide">
+            <div className="flex md:hidden items-center gap-1 flex-1 mx-1 overflow-x-auto scrollbar-hide mt-10">
               {/* 1. Patient Selector */}
               <Select
                 value={selectedPatientId || 'none'}
