@@ -20,7 +20,7 @@ interface VideoSessionHeaderBoxesProps {
 
 export function VideoSessionHeaderBoxes({ boxes }: VideoSessionHeaderBoxesProps) {
   return (
-    <div className="flex items-center gap-2 md:gap-3 overflow-x-auto pb-1 scrollbar-hide">
+    <div dir="ltr" className="flex items-center gap-2 md:gap-3 overflow-x-auto pb-1 scrollbar-hide">
       {boxes.map((box, index) => {
         const isImageIcon = typeof box.icon === 'string';
         const Icon = !isImageIcon ? box.icon as LucideIcon : null;

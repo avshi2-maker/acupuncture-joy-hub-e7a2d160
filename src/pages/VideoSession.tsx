@@ -47,7 +47,8 @@ import {
   MapPin,
   BookOpen,
   Accessibility,
-  Music
+  Music,
+  HelpCircle
 } from 'lucide-react';
 import { AnimatedMic } from '@/components/ui/AnimatedMic';
 import { toast } from 'sonner';
@@ -147,6 +148,7 @@ export default function VideoSession() {
   const [sessionGuideExpanded, setSessionGuideExpanded] = useState(false);
   const [showAISuggestions, setShowAISuggestions] = useState(false);
   const [showMusicPlayer, setShowMusicPlayer] = useState(false);
+  const [showHelpGuide, setShowHelpGuide] = useState(false);
   const [liveTranscription, setLiveTranscription] = useState('');
   const [currentAppointmentId, setCurrentAppointmentId] = useState<string | null>(null);
   const [isCancellingBlock, setIsCancellingBlock] = useState(false);
@@ -1043,8 +1045,22 @@ export default function VideoSession() {
               </Button>
             </div>
 
-            {/* Clock - circular with full background - hidden on mobile */}
-            <div className="absolute left-1/2 -translate-x-1/2 hidden md:block">
+            {/* Help + Clock - Desktop only */}
+            <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-2">
+              <Button
+                onClick={() => setShowHelpGuide((v) => !v)}
+                size="icon"
+                className={cn(
+                  'h-12 w-12 rounded-full shadow-lg',
+                  'bg-gradient-to-br from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600',
+                  'transition-all duration-300 hover:scale-110',
+                  showHelpGuide ? 'ring-2 ring-amber-500/40' : ''
+                )}
+                title="עזרה / Help"
+              >
+                <HelpCircle className="h-6 w-6 text-amber-900" />
+              </Button>
+
               <div className="relative h-20 w-20 rounded-full shadow-lg overflow-hidden">
                 <img
                   src={clockImg}
@@ -1604,18 +1620,6 @@ export default function VideoSession() {
                 patientName={selectedPatientName}
               />
 
-              {/* Session Recording Module */}
-              <SessionRecordingModule
-                ref={recordingModuleRef}
-                patientId={selectedPatientId || undefined}
-                patientName={selectedPatientName || undefined}
-                onTranscriptionUpdate={(text) => {
-                  setNotes(sessionNotes + '\n' + text);
-                  // Feed transcription to AI suggestions panel
-                  setLiveTranscription(prev => prev + ' ' + text);
-                }}
-              />
-
               {/* Session Controls */}
               <Card className="border-jade/30">
                 <CardHeader className="pb-2 pt-3">
@@ -1680,6 +1684,18 @@ export default function VideoSession() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Session Recording Module */}
+              <SessionRecordingModule
+                ref={recordingModuleRef}
+                patientId={selectedPatientId || undefined}
+                patientName={selectedPatientName || undefined}
+                onTranscriptionUpdate={(text) => {
+                  setNotes(sessionNotes + '\n' + text);
+                  // Feed transcription to AI suggestions panel
+                  setLiveTranscription(prev => prev + ' ' + text);
+                }}
+              />
 
               {/* Zoom Timer */}
               {sessionStatus !== 'idle' && sessionStatus !== 'ended' && (
@@ -1854,8 +1870,8 @@ export default function VideoSession() {
         anchorPosition={quickActionsPosition}
       />
 
-      {/* Yellow Floating Help Guide */}
-      <FloatingHelpGuide />
+      {/* Help Guide (trigger is next to the clock) */}
+      <FloatingHelpGuide isOpen={showHelpGuide} onOpenChange={setShowHelpGuide} />
     </SessionTimerProvider>
   );
 }
