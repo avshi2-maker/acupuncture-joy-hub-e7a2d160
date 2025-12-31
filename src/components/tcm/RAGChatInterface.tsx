@@ -427,7 +427,7 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
         <div className="px-4 pt-2">
           <QASuggestionsPanel 
             onSelectQuestion={handleSuggestionSelect}
-            currentStage="Before"
+            sessionSeconds={0}
           />
         </div>
 
