@@ -40,6 +40,7 @@ export default function TcmBrain() {
   const [showKnowledgeAssets, setShowKnowledgeAssets] = useState(true);
   const [showQASuggestions, setShowQASuggestions] = useState(false);
   const [showIntakeReview, setShowIntakeReview] = useState(false);
+  const [qaFavoritesCount, setQaFavoritesCount] = useState(0);
   const quickActionsRef = useRef<QuickActionsRef>(null);
   
   const {
@@ -116,6 +117,37 @@ export default function TcmBrain() {
       }
     }
   }, [messages]);
+
+  // Track Q&A favorites count from localStorage
+  useEffect(() => {
+    const updateFavoritesCount = () => {
+      try {
+        const stored = localStorage.getItem('tcm-qa-favorites');
+        if (stored) {
+          const favorites = JSON.parse(stored);
+          setQaFavoritesCount(Array.isArray(favorites) ? favorites.length : 0);
+        } else {
+          setQaFavoritesCount(0);
+        }
+      } catch {
+        setQaFavoritesCount(0);
+      }
+    };
+    
+    // Initial load
+    updateFavoritesCount();
+    
+    // Listen for storage changes (from QASuggestionsPanel)
+    window.addEventListener('storage', updateFavoritesCount);
+    
+    // Also poll periodically for same-tab updates
+    const interval = setInterval(updateFavoritesCount, 2000);
+    
+    return () => {
+      window.removeEventListener('storage', updateFavoritesCount);
+      clearInterval(interval);
+    };
+  }, []);
 
   // Tab navigation
   const tabItems = [
@@ -454,18 +486,27 @@ export default function TcmBrain() {
           </Tabs>
         </main>
 
-        {/* Floating Q&A Access Button */}
+        {/* Floating Q&A Access Button with Favorites Badge */}
         {!showQASuggestions && (
-          <Button
-            onClick={() => {
-              setShowQASuggestions(true);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 transition-all animate-pulse"
-            title="Open Q&A Suggestions"
-          >
-            <MessageCircleQuestion className="h-6 w-6" />
-          </Button>
+          <div className="fixed bottom-6 right-6 z-50">
+            <Button
+              onClick={() => {
+                setShowQASuggestions(true);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="h-14 w-14 rounded-full bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 transition-all animate-pulse"
+              title={`Open Q&A Suggestions${qaFavoritesCount > 0 ? ` (${qaFavoritesCount} favorites)` : ''}`}
+            >
+              <MessageCircleQuestion className="h-6 w-6" />
+            </Button>
+            {qaFavoritesCount > 0 && (
+              <Badge 
+                className="absolute -top-1 -right-1 h-6 min-w-6 flex items-center justify-center rounded-full bg-amber-500 text-white text-xs font-bold border-2 border-white shadow-md"
+              >
+                {qaFavoritesCount > 99 ? '99+' : qaFavoritesCount}
+              </Badge>
+            )}
+          </div>
         )}
       </div>
     </>
