@@ -1180,7 +1180,7 @@ export default function VideoSession() {
 
         {/* Header Boxes with Circular Icons - Reorganized */}
         <div className="px-3 md:px-4 pt-2 md:pt-4 pb-2 border-b bg-gradient-to-b from-jade/5 to-transparent">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
             <VideoSessionHeaderBoxes
               boxes={[
                 // 1. New Meeting / Start
@@ -1290,10 +1290,12 @@ export default function VideoSession() {
             />
             
             {/* Q&A Type Dropdown - replaces anxiety box */}
-            <QATypeDropdown 
-              onSelect={handleQATypeSelect}
-              isActive={showAnxietyQA || showTcmBrainPanel}
-            />
+            <div className="shrink-0">
+              <QATypeDropdown 
+                onSelect={handleQATypeSelect}
+                isActive={showAnxietyQA || showTcmBrainPanel}
+              />
+            </div>
           </div>
           
           {/* CAF Asset Boxes - Customizable Toolbar */}
