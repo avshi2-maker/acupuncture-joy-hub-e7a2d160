@@ -44,7 +44,8 @@ import {
   Dumbbell,
   Compass,
   Star,
-  MapPin
+  MapPin,
+  BookOpen
 } from 'lucide-react';
 import { AnimatedMic } from '@/components/ui/AnimatedMic';
 import { toast } from 'sonner';
@@ -86,6 +87,7 @@ import { SessionRecordingModule, SessionRecordingModuleRef } from '@/components/
 import { FloatingQuickActions } from '@/components/video/FloatingQuickActions';
 import { CustomizableToolbar, ToolbarItemId } from '@/components/video/CustomizableToolbar';
 import { FloatingHelpGuide } from '@/components/ui/FloatingHelpGuide';
+import { SessionGuideTeleprompter } from '@/components/video/SessionGuideTeleprompter';
 import { 
   VideoSessionAPIMeter, 
   VideoSessionEngineIndicator,
@@ -134,6 +136,8 @@ export default function VideoSession() {
   const [showVoiceDictation, setShowVoiceDictation] = useState(false);
   const [showCalendarInvite, setShowCalendarInvite] = useState(false);
   const [showSessionReport, setShowSessionReport] = useState(false);
+  const [showSessionGuide, setShowSessionGuide] = useState(false);
+  const [sessionGuideExpanded, setSessionGuideExpanded] = useState(false);
   const [currentAppointmentId, setCurrentAppointmentId] = useState<string | null>(null);
   const [isCancellingBlock, setIsCancellingBlock] = useState(false);
   const warningShownRef = useRef(false);
@@ -1043,6 +1047,21 @@ export default function VideoSession() {
               <FileText className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
               <span className="truncate">Report</span>
             </Button>
+            <Button 
+              variant={showSessionGuide ? "default" : "outline"}
+              size="sm" 
+              onClick={() => setShowSessionGuide(!showSessionGuide)}
+              className={cn(
+                "gap-0.5 md:gap-1.5 text-[10px] md:text-sm px-1 md:px-3 h-7 md:h-9",
+                showSessionGuide 
+                  ? "bg-amber-500 hover:bg-amber-600 text-white border-amber-600" 
+                  : "bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-300"
+              )}
+              title="Session Guide Teleprompter"
+            >
+              <BookOpen className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+              <span className="truncate">Guide</span>
+            </Button>
           </div>
 
           {/* Patient History Panel - Mobile only */}
@@ -1127,12 +1146,18 @@ export default function VideoSession() {
           </div>
         )}
 
-        {/* Main Content - 2 Column Layout */}
+        {/* Main Content - Dynamic Grid Layout */}
         <main className="p-3 md:p-4 flex-1 overflow-hidden pb-24 md:pb-4">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 md:gap-4 h-full">
+          <div className={cn(
+            "grid grid-cols-1 gap-3 md:gap-4 h-full",
+            showSessionGuide ? "lg:grid-cols-5" : "lg:grid-cols-4"
+          )}>
             
-            {/* Left Column - Video + Anxiety Q&A (3/4 width) */}
-            <div className="lg:col-span-3 flex flex-col gap-3 md:gap-4 h-full overflow-hidden">
+            {/* Left Column - Video + Anxiety Q&A */}
+            <div className={cn(
+              "flex flex-col gap-3 md:gap-4 h-full overflow-hidden",
+              showSessionGuide ? "lg:col-span-3" : "lg:col-span-3"
+            )}>
               {/* Top Row: Video Area + Anxiety Q&A Chat */}
               <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 min-h-0">
                 {/* Video Area - Compact on mobile */}
@@ -1293,8 +1318,27 @@ export default function VideoSession() {
               </Card>
             </div>
 
+            {/* Session Guide Teleprompter Panel - Shows when enabled */}
+            {showSessionGuide && (
+              <div className={cn(
+                "hidden md:block",
+                sessionGuideExpanded ? "fixed inset-4 z-50 bg-background" : "md:col-span-1"
+              )}>
+                <SessionGuideTeleprompter
+                  sessionDuration={sessionDuration}
+                  isSessionActive={sessionStatus === 'running'}
+                  onClose={() => setShowSessionGuide(false)}
+                  isExpanded={sessionGuideExpanded}
+                  onToggleExpand={() => setSessionGuideExpanded(!sessionGuideExpanded)}
+                />
+              </div>
+            )}
+
             {/* Right Sidebar - All Tools & Controls (1/4 width) - Hidden on mobile */}
-            <div className="hidden lg:flex lg:col-span-1 flex-col gap-3 overflow-y-auto max-h-[calc(100vh-105px)]">
+            <div className={cn(
+              "hidden lg:flex flex-col gap-3 overflow-y-auto max-h-[calc(100vh-105px)]",
+              showSessionGuide ? "lg:col-span-1" : "lg:col-span-1"
+            )}>
               {/* Patient Selection */}
               <Card>
                 <CardHeader className="pb-2 pt-3">
@@ -1512,6 +1556,35 @@ export default function VideoSession() {
             setShowQuickActions(true);
           }}
         />
+
+        {/* Mobile Session Guide Floating Button */}
+        <div className="md:hidden fixed bottom-28 left-4 z-40">
+          <Button
+            variant={showSessionGuide ? "default" : "outline"}
+            size="icon"
+            onClick={() => setShowSessionGuide(!showSessionGuide)}
+            className={cn(
+              "h-12 w-12 rounded-full shadow-lg",
+              showSessionGuide 
+                ? "bg-amber-500 hover:bg-amber-600 text-white border-amber-600" 
+                : "bg-background border-amber-300"
+            )}
+          >
+            <BookOpen className="h-5 w-5" />
+          </Button>
+        </div>
+
+        {/* Mobile Session Guide Panel */}
+        {showSessionGuide && (
+          <div className="md:hidden fixed inset-x-2 bottom-32 top-20 z-50">
+            <SessionGuideTeleprompter
+              sessionDuration={sessionDuration}
+              isSessionActive={sessionStatus === 'running'}
+              onClose={() => setShowSessionGuide(false)}
+              isExpanded={false}
+            />
+          </div>
+        )}
 
         {/* Mobile Tools Drawer - Floating button */}
         <div className="md:hidden fixed bottom-28 right-4 z-40">
