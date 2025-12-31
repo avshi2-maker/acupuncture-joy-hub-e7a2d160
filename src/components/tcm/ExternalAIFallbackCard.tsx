@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { AlertTriangle, ExternalLink, X, ChevronDown, Copy, Check } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { AlertTriangle, ExternalLink, X, ChevronDown, Copy, Check, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +19,7 @@ interface AIProviderOption {
   id: ExternalAIProvider;
   name: string;
   description: string;
-  url?: string;
+  baseUrl: string;
   isInternal: boolean;
 }
 
@@ -28,37 +28,105 @@ const AI_PROVIDERS: AIProviderOption[] = [
     id: 'lovable-gemini', 
     name: 'Lovable AI (Gemini)', 
     description: 'Internal - stays in module',
+    baseUrl: '',
     isInternal: true 
   },
   { 
     id: 'chatgpt', 
     name: 'ChatGPT', 
     description: 'Opens OpenAI ChatGPT',
-    url: 'https://chatgpt.com',
+    baseUrl: 'https://chatgpt.com',
     isInternal: false 
   },
   { 
     id: 'claude', 
     name: 'Claude', 
     description: 'Opens Anthropic Claude',
-    url: 'https://claude.ai',
+    baseUrl: 'https://claude.ai/new',
     isInternal: false 
   },
   { 
     id: 'perplexity', 
     name: 'Perplexity', 
     description: 'Opens Perplexity AI',
-    url: 'https://perplexity.ai',
+    baseUrl: 'https://www.perplexity.ai',
     isInternal: false 
   },
   { 
     id: 'gemini', 
     name: 'Google Gemini', 
     description: 'Opens Google Gemini',
-    url: 'https://gemini.google.com',
+    baseUrl: 'https://gemini.google.com/app',
     isInternal: false 
   },
 ];
+
+// Audio feedback utilities
+const playSound = (type: 'click' | 'success' | 'warning' | 'error') => {
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContext) return;
+    
+    const ctx = new AudioContext();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    
+    switch (type) {
+      case 'click':
+        oscillator.frequency.value = 800;
+        gainNode.gain.value = 0.1;
+        oscillator.start();
+        oscillator.stop(ctx.currentTime + 0.05);
+        break;
+      case 'success':
+        oscillator.frequency.value = 523.25; // C5
+        gainNode.gain.value = 0.15;
+        oscillator.start();
+        setTimeout(() => {
+          oscillator.frequency.value = 659.25; // E5
+        }, 100);
+        setTimeout(() => {
+          oscillator.frequency.value = 783.99; // G5
+        }, 200);
+        oscillator.stop(ctx.currentTime + 0.3);
+        break;
+      case 'warning':
+        oscillator.frequency.value = 440;
+        gainNode.gain.value = 0.12;
+        oscillator.start();
+        oscillator.stop(ctx.currentTime + 0.15);
+        break;
+      case 'error':
+        oscillator.frequency.value = 200;
+        gainNode.gain.value = 0.15;
+        oscillator.start();
+        oscillator.stop(ctx.currentTime + 0.2);
+        break;
+    }
+  } catch (e) {
+    console.debug('Audio not available:', e);
+  }
+};
+
+const triggerHaptic = (type: 'light' | 'medium' | 'heavy' | 'success' | 'error') => {
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    try {
+      const patterns: Record<string, number | number[]> = {
+        light: 10,
+        medium: 25,
+        heavy: 50,
+        success: [10, 50, 10],
+        error: [50, 100, 50, 100, 50],
+      };
+      navigator.vibrate(patterns[type]);
+    } catch (e) {
+      console.debug('Haptic not available:', e);
+    }
+  }
+};
 
 interface ExternalAIFallbackCardProps {
   query: string;
@@ -85,6 +153,12 @@ export function ExternalAIFallbackCard({
     return AI_PROVIDERS[0];
   });
 
+  // Play warning sound when card appears
+  useEffect(() => {
+    playSound('warning');
+    triggerHaptic('medium');
+  }, []);
+
   // Save preference when changed
   useEffect(() => {
     try {
@@ -96,48 +170,109 @@ export function ExternalAIFallbackCard({
     try {
       await navigator.clipboard.writeText(query);
       setCopied(true);
+      playSound('success');
+      triggerHaptic('success');
       toast.success('Question copied to clipboard');
       setTimeout(() => setCopied(false), 2000);
     } catch {
+      playSound('error');
+      triggerHaptic('error');
       toast.error('Failed to copy');
     }
   };
 
-  const handleUseAI = () => {
-    if (selectedProvider.isInternal) {
-      onUseExternalAI(selectedProvider.id);
-    } else if (selectedProvider.url) {
-      const encodedQuery = encodeURIComponent(query);
-      let targetUrl = selectedProvider.url;
-      
-      if (selectedProvider.id === 'chatgpt') {
-        targetUrl = `https://chatgpt.com/?q=${encodedQuery}`;
-      } else if (selectedProvider.id === 'perplexity') {
-        targetUrl = `https://perplexity.ai/search?q=${encodedQuery}`;
-      } else if (selectedProvider.id === 'gemini') {
-        targetUrl = `https://gemini.google.com/app?q=${encodedQuery}`;
-      } else if (selectedProvider.id === 'claude') {
+  const handleProviderSelect = (provider: AIProviderOption) => {
+    setSelectedProvider(provider);
+    playSound('click');
+    triggerHaptic('light');
+    toast.info(`Selected: ${provider.name}`);
+  };
+
+  const openExternalUrl = useCallback((provider: AIProviderOption) => {
+    const encodedQuery = encodeURIComponent(query);
+    let targetUrl = provider.baseUrl;
+    
+    console.log('[ExternalAI] Opening provider:', provider.id, 'Query:', query);
+    
+    // Build the URL with query parameter where supported
+    switch (provider.id) {
+      case 'chatgpt':
+        // ChatGPT doesn't support query params, just open it
+        targetUrl = 'https://chatgpt.com';
+        break;
+      case 'perplexity':
+        targetUrl = `https://www.perplexity.ai/search?q=${encodedQuery}`;
+        break;
+      case 'gemini':
+        targetUrl = 'https://gemini.google.com/app';
+        break;
+      case 'claude':
         targetUrl = 'https://claude.ai/new';
-      }
+        break;
+    }
+    
+    console.log('[ExternalAI] Opening URL:', targetUrl);
+    
+    // Open in new tab
+    const newWindow = window.open(targetUrl, '_blank', 'noopener,noreferrer');
+    
+    if (newWindow) {
+      playSound('success');
+      triggerHaptic('success');
+      toast.success(`Opening ${provider.name}... Question copied!`, {
+        description: 'Paste the question in the chat'
+      });
       
-      window.open(targetUrl, '_blank', 'noopener,noreferrer');
+      // Also copy the question to clipboard for easy pasting
+      navigator.clipboard.writeText(query).catch(() => {});
+    } else {
+      playSound('error');
+      triggerHaptic('error');
+      toast.error('Popup blocked! Please allow popups for this site.', {
+        action: {
+          label: 'Copy Link',
+          onClick: () => {
+            navigator.clipboard.writeText(targetUrl);
+            toast.success('Link copied!');
+          }
+        }
+      });
+    }
+  }, [query]);
+
+  const handleUseAI = () => {
+    console.log('[ExternalAI] handleUseAI called, provider:', selectedProvider.id, 'isInternal:', selectedProvider.isInternal);
+    
+    if (selectedProvider.isInternal) {
+      playSound('click');
+      triggerHaptic('medium');
+      onUseExternalAI(selectedProvider.id);
+    } else {
+      openExternalUrl(selectedProvider);
       onDismiss();
     }
   };
 
+  const handleDismiss = () => {
+    playSound('click');
+    triggerHaptic('light');
+    onDismiss();
+  };
+
   return (
     <div className="fixed bottom-24 left-1/2 z-50 w-[min(620px,calc(100vw-2rem))] -translate-x-1/2">
-      <Card className="border-2 border-destructive/30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 shadow-lg">
+      <Card className="border-2 border-destructive/30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 shadow-lg animate-in slide-in-from-bottom-4">
         <div className="p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-3">
               <div className="mt-0.5">
-                <AlertTriangle className="h-5 w-5 text-destructive" />
+                <AlertTriangle className="h-5 w-5 text-destructive animate-pulse" />
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-semibold">No match in proprietary knowledge base</p>
                   <Badge variant="destructive" className="text-[10px]">External option</Badge>
+                  <span title="Audio feedback enabled"><Volume2 className="h-3 w-3 text-muted-foreground" /></span>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   We couldn't find this in Dr. Sapir's verified materials. You can optionally ask an external AI.
@@ -152,7 +287,7 @@ export function ExternalAIFallbackCard({
               type="button"
               variant="ghost"
               size="icon"
-              onClick={onDismiss}
+              onClick={handleDismiss}
               className="h-8 w-8"
               aria-label="Dismiss"
             >
@@ -185,7 +320,7 @@ export function ExternalAIFallbackCard({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={onDismiss}
+                onClick={handleDismiss}
                 disabled={isLoading}
               >
                 Stay in KB only
@@ -209,8 +344,10 @@ export function ExternalAIFallbackCard({
                   {AI_PROVIDERS.map((provider) => (
                     <DropdownMenuItem
                       key={provider.id}
-                      onClick={() => setSelectedProvider(provider)}
-                      className="flex flex-col items-start gap-0.5 cursor-pointer"
+                      onClick={() => handleProviderSelect(provider)}
+                      className={`flex flex-col items-start gap-0.5 cursor-pointer ${
+                        selectedProvider.id === provider.id ? 'bg-accent' : ''
+                      }`}
                     >
                       <span className="font-medium">{provider.name}</span>
                       <span className="text-[10px] text-muted-foreground">
@@ -226,10 +363,10 @@ export function ExternalAIFallbackCard({
                 size="sm"
                 onClick={handleUseAI}
                 disabled={isLoading}
-                className="gap-2"
+                className="gap-2 bg-jade hover:bg-jade-600"
               >
                 <ExternalLink className="h-4 w-4" />
-                {selectedProvider.isInternal ? 'Use AI' : 'Open'}
+                {selectedProvider.isInternal ? 'Use AI' : `Open ${selectedProvider.name}`}
               </Button>
             </div>
           </div>
