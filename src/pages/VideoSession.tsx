@@ -45,7 +45,8 @@ import {
   Compass,
   Star,
   MapPin,
-  BookOpen
+  BookOpen,
+  Accessibility
 } from 'lucide-react';
 import { AnimatedMic } from '@/components/ui/AnimatedMic';
 import { toast } from 'sonner';
@@ -101,6 +102,7 @@ import { VideoSessionHeaderBoxes } from '@/components/video/VideoSessionHeaderBo
 import { useLongPressTimer } from '@/hooks/useLongPressTimer';
 import { useSessionLock } from '@/contexts/SessionLockContext';
 import { useVideoSessionShortcuts } from '@/hooks/useVideoSessionShortcuts';
+import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { cn } from '@/lib/utils';
 import aiGeneratorBg from '@/assets/ai-generator-bg.png';
 import animatedMicGif from '@/assets/mic-animated.gif';
@@ -125,6 +127,7 @@ export default function VideoSession() {
   const { tier, hasFeature } = useTier();
   const { user } = useAuth();
   const { pauseLock, resumeLock, isPaused: isLockPaused } = useSessionLock();
+  const { fontSize, setFontSize, highContrast, setHighContrast } = useAccessibility();
   
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loadingPatients, setLoadingPatients] = useState(true);
@@ -1087,6 +1090,22 @@ export default function VideoSession() {
                 color: 'text-indigo-600',
                 borderColor: 'border-indigo-300',
                 onClick: () => setShowSessionReport(true),
+              },
+              {
+                id: 'accessibility',
+                name: 'Access',
+                nameHe: 'נגישות',
+                icon: Accessibility,
+                color: highContrast ? 'text-white' : 'text-jade',
+                borderColor: highContrast ? 'border-jade bg-jade' : 'border-jade/50',
+                isActive: highContrast,
+                onClick: () => {
+                  setHighContrast(!highContrast);
+                  toast.success(highContrast ? 'ניגודיות רגילה' : 'ניגודיות גבוהה', { 
+                    description: highContrast ? 'High contrast disabled' : 'High contrast enabled',
+                    duration: 2000 
+                  });
+                },
               },
             ]}
           />

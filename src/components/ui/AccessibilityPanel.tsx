@@ -22,8 +22,8 @@ export function AccessibilityPanel() {
   const { fontSize, setFontSize, highContrast, setHighContrast } = useAccessibility();
   const [open, setOpen] = useState(false);
 
-  // Hide on TCM Brain page (has its own accessibility controls in toolbar)
-  if (location.pathname === '/tcm-brain') {
+  // Hide on TCM Brain page and Video Session page (has its own accessibility controls in toolbar/header)
+  if (location.pathname === '/tcm-brain' || location.pathname === '/video-session') {
     return null;
   }
 
