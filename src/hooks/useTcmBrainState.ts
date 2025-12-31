@@ -372,8 +372,15 @@ export function useTcmBrainState() {
     setExternalFallbackQuery(null);
   }, []);
 
-  const runExternalAIFallback = useCallback(async () => {
+  const runExternalAIFallback = useCallback(async (provider?: string) => {
     if (!externalFallbackQuery || isLoading) return;
+    
+    // Only handle internal providers here - external ones open in new tabs
+    if (provider && provider !== 'lovable-gemini') {
+      // External provider handled by component (opens in new tab)
+      setExternalFallbackQuery(null);
+      return;
+    }
 
     if (!disclaimerStatus.signed) {
       toast.error(disclaimerStatus.expired ? 'Disclaimer expired — please sign again' : 'Please sign disclaimer before using AI');

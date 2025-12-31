@@ -495,7 +495,7 @@ export default function TcmBrain() {
             query={externalFallbackQuery}
             isLoading={isLoading}
             onDismiss={dismissExternalFallback}
-            onUseExternalAI={runExternalAIFallback}
+            onUseExternalAI={(provider) => runExternalAIFallback(provider)}
           />
         )}
 
