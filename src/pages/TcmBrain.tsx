@@ -32,7 +32,7 @@ import { QuickActionBoxes } from '@/components/tcm-brain/QuickActionBoxes';
 import { IntakeReviewDialog } from '@/components/tcm-brain/IntakeReviewDialog';
 import { QuickActionsRef } from '@/components/tcm-brain/QuickActionsBar';
 import { QASuggestionsPanel } from '@/components/tcm/QASuggestionsPanel';
-import { ExternalAIFallbackCard } from '@/components/tcm/ExternalAIFallbackCard';
+import { ExternalAIFallbackCard, ExternalAIProvider } from '@/components/tcm/ExternalAIFallbackCard';
 import { toast } from 'sonner';
 
 export default function TcmBrain() {

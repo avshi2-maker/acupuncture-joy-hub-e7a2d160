@@ -5,6 +5,7 @@ import { useTcmSessionHistory, TcmSession, VoiceNoteData } from '@/hooks/useTcmS
 import { VoiceNote } from '@/components/tcm/VoiceNoteRecorder';
 import { SessionTemplate } from '@/components/tcm/SessionTemplates';
 import { SelectedPatient } from '@/components/crm/PatientSelectorDropdown';
+import { ExternalAIProvider } from '@/components/tcm/ExternalAIFallbackCard';
 import { toast } from 'sonner';
 import { parsePointReferences } from '@/components/acupuncture/BodyFigureSelector';
 import {
@@ -372,7 +373,7 @@ export function useTcmBrainState() {
     setExternalFallbackQuery(null);
   }, []);
 
-  const runExternalAIFallback = useCallback(async (provider?: string) => {
+  const runExternalAIFallback = useCallback(async (provider?: ExternalAIProvider) => {
     if (!externalFallbackQuery || isLoading) return;
     
     // Only handle internal providers here - external ones open in new tabs
