@@ -32,8 +32,9 @@ interface UsageEntry {
 }
 
 // Audio feedback utilities
-export const playSessionSound = (type: 'click' | 'success' | 'warning' | 'error' | 'start' | 'stop', enabled: boolean) => {
-  if (!enabled) return;
+export const playSessionSound = (type: 'click' | 'success' | 'warning' | 'error' | 'start' | 'stop' | 'pause' | 'resume' | 'end' | 'reset', enabled?: boolean) => {
+  // If enabled is false, don't play. If undefined, assume enabled.
+  if (enabled === false) return;
   
   try {
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
@@ -62,6 +63,7 @@ export const playSessionSound = (type: 'click' | 'success' | 'warning' | 'error'
         oscillator.stop(ctx.currentTime + 0.3);
         break;
       case 'warning':
+      case 'pause':
         oscillator.frequency.value = 440;
         gainNode.gain.value = 0.12;
         oscillator.start();
@@ -74,7 +76,8 @@ export const playSessionSound = (type: 'click' | 'success' | 'warning' | 'error'
         oscillator.stop(ctx.currentTime + 0.2);
         break;
       case 'start':
-        // Ascending tone for session start
+      case 'resume':
+        // Ascending tone for session start/resume
         oscillator.frequency.value = 440;
         gainNode.gain.value = 0.12;
         oscillator.start();
@@ -83,7 +86,8 @@ export const playSessionSound = (type: 'click' | 'success' | 'warning' | 'error'
         oscillator.stop(ctx.currentTime + 0.45);
         break;
       case 'stop':
-        // Descending tone for session stop
+      case 'end':
+        // Descending tone for session stop/end
         oscillator.frequency.value = 659.25;
         gainNode.gain.value = 0.12;
         oscillator.start();
@@ -91,13 +95,29 @@ export const playSessionSound = (type: 'click' | 'success' | 'warning' | 'error'
         setTimeout(() => { oscillator.frequency.value = 440; }, 300);
         oscillator.stop(ctx.currentTime + 0.45);
         break;
+      case 'reset':
+        // Quick double beep for reset
+        oscillator.frequency.value = 600;
+        gainNode.gain.value = 0.1;
+        oscillator.start();
+        oscillator.stop(ctx.currentTime + 0.1);
+        // Second beep after short pause
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.frequency.value = 600;
+        gain2.gain.value = 0.1;
+        osc2.start(ctx.currentTime + 0.15);
+        osc2.stop(ctx.currentTime + 0.25);
+        break;
     }
   } catch (e) {
     console.debug('Audio not available:', e);
   }
 };
 
-export const triggerSessionHaptic = (type: 'light' | 'medium' | 'heavy' | 'success' | 'error' | 'start') => {
+export const triggerSessionHaptic = (type: 'light' | 'medium' | 'heavy' | 'success' | 'error' | 'start' | 'pause' | 'resume' | 'end' | 'reset') => {
   if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
     try {
       const patterns: Record<string, number | number[]> = {
@@ -107,6 +127,10 @@ export const triggerSessionHaptic = (type: 'light' | 'medium' | 'heavy' | 'succe
         success: [10, 50, 10],
         error: [50, 100, 50, 100, 50],
         start: [50, 100, 50], // Double pulse for session start
+        pause: [30, 50, 30], // Short pulses for pause
+        resume: [20, 30, 20, 30], // Quick pulses for resume
+        end: [100, 50, 100], // Strong double pulse for end
+        reset: [15, 30, 15, 30, 15], // Triple light pulse for reset
       };
       navigator.vibrate(patterns[type]);
     } catch (e) {

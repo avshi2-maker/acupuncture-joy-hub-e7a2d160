@@ -88,6 +88,18 @@ const KEYBOARD_SHORTCUTS: ShortcutItem[] = [
   { id: 'quick-note', keys: ['Alt', 'N'], action: 'Quick Note', actionHe: 'הערה מהירה', category: 'Session' },
   { id: 'end-session', keys: ['Alt', 'E'], action: 'End Session', actionHe: 'סיים טיפול', category: 'Session' },
   
+  // Video Session Specific
+  { id: 'vs-space', keys: ['Space'], action: 'Start/Pause/Resume Timer (Video Session)', actionHe: 'התחל/השהה/המשך טיימר (פגישת וידאו)', category: 'Video Session' },
+  { id: 'vs-voice', keys: ['Alt', 'V'], action: 'Voice Dictation', actionHe: 'הקלטה קולית', category: 'Video Session' },
+  { id: 'vs-anxiety', keys: ['Alt', 'A'], action: 'Anxiety Q&A Dialog', actionHe: 'שאלות חרדה', category: 'Video Session' },
+  { id: 'vs-followup', keys: ['Alt', 'F'], action: 'Follow-up Plan', actionHe: 'תוכנית המשך', category: 'Video Session' },
+  { id: 'vs-report', keys: ['Alt', 'S'], action: 'Session Report', actionHe: 'דוח טיפול', category: 'Video Session' },
+  { id: 'vs-patient', keys: ['Alt', 'P'], action: 'Quick Patient', actionHe: 'מטופל מהיר', category: 'Video Session' },
+  { id: 'vs-appt', keys: ['Alt', 'C'], action: 'Quick Appointment', actionHe: 'תור מהיר', category: 'Video Session' },
+  { id: 'vs-zoom', keys: ['Alt', 'Z'], action: 'Zoom Invite', actionHe: 'הזמנת Zoom', category: 'Video Session' },
+  { id: 'vs-reset', keys: ['Alt', 'R'], action: 'Reset Timer', actionHe: 'אפס טיימר', category: 'Video Session' },
+  { id: 'vs-timestamp', keys: ['Alt', 'T'], action: 'Add Timestamp to Notes', actionHe: 'הוסף חותמת זמן', category: 'Video Session' },
+  
   // UI
   { id: 'escape', keys: ['Esc'], action: 'Close Dialog/Panel', actionHe: 'סגור חלון', category: 'UI' },
   { id: 'tab', keys: ['Tab'], action: 'Next Field', actionHe: 'שדה הבא', category: 'UI' },
@@ -96,6 +108,15 @@ const KEYBOARD_SHORTCUTS: ShortcutItem[] = [
 ];
 
 const QUICK_TIPS: QuickTip[] = [
+  // Video Session Tips (prioritized)
+  { id: 'vs-space-timer', tip: 'Press SPACE to quickly start, pause, or resume the session timer (when not typing)', tipHe: 'לחץ SPACE להתחלה, השהייה או המשך הטיימר (כשלא מקלידים)', icon: Clock, category: 'Video Session' },
+  { id: 'vs-gestures', tip: 'Double-tap the notes area to add a timestamp. Shake your phone to undo the last entry', tipHe: 'הקש פעמיים על ההערות להוספת חותמת זמן. נער את הטלפון לביטול', icon: Zap, category: 'Video Session' },
+  { id: 'vs-voice-cmd', tip: 'Say "Hey CM" followed by commands like "start", "pause", "timestamp", or "feeling better"', tipHe: 'אמור "Hey CM" ואחריו פקודות כמו "start", "pause", "timestamp"', icon: Mic, category: 'Video Session' },
+  { id: 'vs-three-finger', tip: 'Three-finger tap toggles between Notes and AI Chat panels on mobile', tipHe: 'הקשת שלוש אצבעות מחליפה בין הערות וצ\'אט AI במובייל', icon: Activity, category: 'Video Session' },
+  { id: 'vs-long-press', tip: 'Long-press the timer for quick actions menu with shortcuts to all tools', tipHe: 'לחיצה ארוכה על הטיימר פותחת תפריט פעולות מהירות', icon: Star, category: 'Video Session' },
+  { id: 'vs-autosave', tip: 'Session notes auto-save every second. Look for the green checkmark indicator', tipHe: 'הערות נשמרות אוטומטית כל שניה. חפש את סימן הוי הירוק', icon: CheckCircle2, category: 'Video Session' },
+  
+  // General Tips
   { id: 'voice-anywhere', tip: 'Use the floating microphone button to dictate text into any input field across the app', tipHe: 'השתמש בכפתור המיקרופון הצף להקלטת טקסט בכל שדה קלט באפליקציה', icon: Mic, category: 'Productivity' },
   { id: 'paste-transcript', tip: 'After recording, click "Paste" to insert the transcript into the currently focused field', tipHe: 'לאחר הקלטה, לחץ "הדבק" להכנסת התמלול לשדה הנוכחי', icon: ClipboardList, category: 'Productivity' },
   { id: 'body-map', tip: 'Click on body figures to see acupuncture point details and add them to treatment plans', tipHe: 'לחץ על דמויות גוף לצפייה בפרטי נקודות דיקור והוספתן לתוכניות טיפול', icon: MapPin, category: 'TCM' },
