@@ -30,6 +30,7 @@ import { KnowledgeAssetTabs, detectActiveAssets } from '@/components/tcm-brain/K
 import { QuickActionBoxes } from '@/components/tcm-brain/QuickActionBoxes';
 import { IntakeReviewDialog } from '@/components/tcm-brain/IntakeReviewDialog';
 import { QuickActionsRef } from '@/components/tcm-brain/QuickActionsBar';
+import { QASuggestionsPanel } from '@/components/tcm/QASuggestionsPanel';
 import { toast } from 'sonner';
 
 export default function TcmBrain() {
@@ -308,6 +309,17 @@ export default function TcmBrain() {
                 />
               </div>
             )}
+          </div>
+
+          {/* Q&A Suggestions Panel - Ready-made questions for therapists */}
+          <div className="mb-4 p-3 bg-violet-50 dark:bg-violet-950/30 rounded-lg border border-violet-200 dark:border-violet-800">
+            <QASuggestionsPanel 
+              onSelectQuestion={(question) => {
+                streamChat(question);
+                setActiveTab('diagnostics');
+              }}
+              sessionSeconds={sessionSeconds}
+            />
           </div>
 
           {/* Quick Action Boxes - 6 Configurable */}
