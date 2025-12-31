@@ -96,6 +96,7 @@ import {
 } from '@/components/video/VideoSessionEnhancements';
 import { useLongPressTimer } from '@/hooks/useLongPressTimer';
 import { useSessionLock } from '@/contexts/SessionLockContext';
+import { useVideoSessionShortcuts } from '@/hooks/useVideoSessionShortcuts';
 import { cn } from '@/lib/utils';
 import aiGeneratorBg from '@/assets/ai-generator-bg.png';
 import animatedMicGif from '@/assets/mic-animated.gif';
@@ -283,7 +284,61 @@ export default function VideoSession() {
     }, [activePanel, haptic]),
   });
 
-  // Auto-save notes with debounce
+  // Notes textarea ref for focus
+  const notesTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Keyboard shortcuts for VideoSession
+  useVideoSessionShortcuts({
+    sessionStatus,
+    onStart: () => {
+      if (sessionStatus === 'idle') {
+        startSession();
+        pauseLock('Treatment session active');
+        if (audioEnabled) playSessionSound('start');
+        triggerSessionHaptic('start');
+      }
+    },
+    onPause: () => {
+      if (sessionStatus === 'running') {
+        pauseSession();
+        if (audioEnabled) playSessionSound('pause');
+        triggerSessionHaptic('pause');
+      }
+    },
+    onResume: () => {
+      if (sessionStatus === 'paused') {
+        resumeSession();
+        if (audioEnabled) playSessionSound('resume');
+        triggerSessionHaptic('resume');
+      }
+    },
+    onEnd: () => {
+      if (sessionStatus !== 'idle') {
+        endSession();
+        resumeLock();
+        if (audioEnabled) playSessionSound('end');
+        triggerSessionHaptic('end');
+      }
+    },
+    onReset: () => {
+      resetSession();
+      if (audioEnabled) playSessionSound('reset');
+      triggerSessionHaptic('reset');
+    },
+    onQuickNote: () => {
+      notesTextareaRef.current?.focus();
+    },
+    onTimestamp: handleDoubleTapTimestamp,
+    onVoiceDictation: () => setShowVoiceDictation(true),
+    onAnxietyQA: () => setShowAnxietyQA(true),
+    onFollowUp: () => setShowFollowUpPlan(true),
+    onSessionReport: () => setShowSessionReport(true),
+    onQuickPatient: () => setShowQuickPatient(true),
+    onQuickAppointment: () => setShowQuickAppointment(true),
+    onZoomInvite: () => setShowZoomInvite(true),
+    onSettings: () => setShowSettings(true),
+    enabled: true,
+  });
   useEffect(() => {
     if (sessionNotes && sessionStatus !== 'idle') {
       if (saveTimeoutRef.current) {
@@ -1228,6 +1283,7 @@ export default function VideoSession() {
                     </div>
                   </div>
                   <Textarea
+                    ref={notesTextareaRef}
                     value={sessionNotes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="רשום הערות במהלך הפגישה..."
