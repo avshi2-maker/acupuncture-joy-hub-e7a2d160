@@ -29,6 +29,7 @@ import { TcmBrainVoiceCommands, TcmVoiceCommand } from '@/components/tcm-brain/T
 import { KnowledgeAssetTabs, detectActiveAssets } from '@/components/tcm-brain/KnowledgeAssetTabs';
 import { TcmBrainToolbar } from '@/components/tcm-brain/TcmBrainToolbar';
 import { QuickActionBoxes } from '@/components/tcm-brain/QuickActionBoxes';
+import { IntakeReviewDialog } from '@/components/tcm-brain/IntakeReviewDialog';
 import { QuickActionsRef } from '@/components/tcm-brain/QuickActionsBar';
 import { toast } from 'sonner';
 
@@ -36,6 +37,7 @@ export default function TcmBrain() {
   const [activeTab, setActiveTab] = useState('diagnostics');
   const [activeAssets, setActiveAssets] = useState<string[]>([]);
   const [showKnowledgeAssets, setShowKnowledgeAssets] = useState(true);
+  const [showIntakeReview, setShowIntakeReview] = useState(false);
   const quickActionsRef = useRef<QuickActionsRef>(null);
   
   const {
@@ -311,12 +313,33 @@ export default function TcmBrain() {
           <div className="mb-4 p-3 bg-card/50 rounded-lg border">
             <QuickActionBoxes 
               onActionClick={(prompt, actionName) => {
+                // Handle special actions
+                if (prompt === '__INTAKE_REVIEW__') {
+                  if (!selectedPatient) {
+                    toast.warning('Please select a patient first');
+                    return;
+                  }
+                  setShowIntakeReview(true);
+                  return;
+                }
+                // Regular AI prompt actions
                 streamChat(prompt);
                 setActiveTab('diagnostics');
               }}
               isLoading={isLoading}
             />
           </div>
+
+          {/* Intake Review Dialog */}
+          <IntakeReviewDialog
+            open={showIntakeReview}
+            onOpenChange={setShowIntakeReview}
+            patientId={selectedPatient?.id}
+            patientName={selectedPatient?.name}
+            onComplete={() => {
+              toast.success('Intake verified - continuing session');
+            }}
+          />
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid grid-cols-6 w-full mb-4">

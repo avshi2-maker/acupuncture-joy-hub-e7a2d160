@@ -29,7 +29,7 @@ import {
   BookOpen,
   Wand2,
   ScrollText,
-  Clipboard
+  ClipboardCheck
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -112,6 +112,17 @@ const ALL_ACTION_BOXES: QuickActionBox[] = [
     borderColor: 'border-cyan-500/30',
     prompt: 'Create patient-friendly education materials explaining their condition and self-care recommendations.',
     description: 'Patient education materials'
+  },
+  {
+    id: 'intake-review',
+    name: 'Intake Review',
+    nameHe: 'סקירת קליטה',
+    icon: ClipboardCheck,
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-500/10',
+    borderColor: 'border-orange-500/30',
+    prompt: '__INTAKE_REVIEW__',
+    description: 'Review intake form with patient'
   },
   {
     id: 'diff-patterns',
