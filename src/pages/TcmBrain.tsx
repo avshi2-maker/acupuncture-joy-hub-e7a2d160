@@ -13,7 +13,8 @@ import {
   Save,
   Database,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  MessageCircleQuestion
 } from 'lucide-react';
 import { APIUsageMeter } from '@/components/tcm-brain/APIUsageMeter';
 import { useTcmBrainState } from '@/hooks/useTcmBrainState';
@@ -37,6 +38,7 @@ export default function TcmBrain() {
   const [activeTab, setActiveTab] = useState('diagnostics');
   const [activeAssets, setActiveAssets] = useState<string[]>([]);
   const [showKnowledgeAssets, setShowKnowledgeAssets] = useState(true);
+  const [showQASuggestions, setShowQASuggestions] = useState(false);
   const [showIntakeReview, setShowIntakeReview] = useState(false);
   const quickActionsRef = useRef<QuickActionsRef>(null);
   
@@ -311,15 +313,39 @@ export default function TcmBrain() {
             )}
           </div>
 
-          {/* Q&A Suggestions Panel - Ready-made questions for therapists */}
-          <div className="mb-4 p-3 bg-violet-50 dark:bg-violet-950/30 rounded-lg border border-violet-200 dark:border-violet-800">
-            <QASuggestionsPanel 
-              onSelectQuestion={(question) => {
-                streamChat(question);
-                setActiveTab('diagnostics');
-              }}
-              sessionSeconds={sessionSeconds}
-            />
+          {/* Q&A Suggestions Panel - Collapsible */}
+          <div className="mb-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="w-full flex items-center justify-between py-2 px-3 bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-800 rounded-lg hover:bg-violet-100 dark:hover:bg-violet-950/50"
+              onClick={() => setShowQASuggestions(!showQASuggestions)}
+            >
+              <div className="flex items-center gap-2">
+                <MessageCircleQuestion className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+                <span className="text-xs font-medium text-violet-700 dark:text-violet-300">Ready-Made Q&A Suggestions</span>
+                <Badge variant="secondary" className="text-[10px] bg-violet-200 dark:bg-violet-800 text-violet-700 dark:text-violet-300">
+                  200+ Questions
+                </Badge>
+              </div>
+              {showQASuggestions ? (
+                <ChevronUp className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+              )}
+            </Button>
+            
+            {showQASuggestions && (
+              <div className="mt-2 p-3 bg-violet-50 dark:bg-violet-950/30 rounded-lg border border-violet-200 dark:border-violet-800">
+                <QASuggestionsPanel 
+                  onSelectQuestion={(question) => {
+                    streamChat(question);
+                    setActiveTab('diagnostics');
+                  }}
+                  sessionSeconds={sessionSeconds}
+                />
+              </div>
+            )}
           </div>
 
           {/* Quick Action Boxes - 6 Configurable */}
@@ -427,6 +453,20 @@ export default function TcmBrain() {
             </div>
           </Tabs>
         </main>
+
+        {/* Floating Q&A Access Button */}
+        {!showQASuggestions && (
+          <Button
+            onClick={() => {
+              setShowQASuggestions(true);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 transition-all animate-pulse"
+            title="Open Q&A Suggestions"
+          >
+            <MessageCircleQuestion className="h-6 w-6" />
+          </Button>
+        )}
       </div>
     </>
   );
