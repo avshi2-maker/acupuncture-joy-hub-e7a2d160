@@ -10,12 +10,9 @@ import {
   User as UserIcon, 
   FileText, 
   Clock,
-  ArrowLeft,
-  Settings,
   Save,
   Database
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { useTcmBrainState } from '@/hooks/useTcmBrainState';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { DiagnosticsTab } from '@/components/tcm-brain/DiagnosticsTab';
@@ -27,6 +24,7 @@ import { PatientHistoryTab } from '@/components/tcm-brain/PatientHistoryTab';
 import { PatientSelectorDropdown } from '@/components/crm/PatientSelectorDropdown';
 import { TcmBrainVoiceCommands, TcmVoiceCommand } from '@/components/tcm-brain/TcmBrainVoiceCommands';
 import { KnowledgeAssetTabs, detectActiveAssets } from '@/components/tcm-brain/KnowledgeAssetTabs';
+import { TcmBrainToolbar } from '@/components/tcm-brain/TcmBrainToolbar';
 import { QuickActionsRef } from '@/components/tcm-brain/QuickActionsBar';
 import { toast } from 'sonner';
 
@@ -180,13 +178,25 @@ export default function TcmBrain() {
       </Helmet>
 
       <div className="min-h-screen bg-background flex flex-col">
-        <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-          <div className="container mx-auto px-4 py-3">
+        {/* Main Toolbar */}
+        <TcmBrainToolbar
+          sessionStatus={sessionStatus}
+          sessionSeconds={sessionSeconds}
+          formatSessionTime={formatSessionTime}
+          onStartSession={startSession}
+          onPauseSession={pauseSession}
+          onContinueSession={continueSession}
+          onEndSession={endSession}
+          onExport={() => quickActionsRef.current?.exportSession()}
+          onPrint={() => quickActionsRef.current?.printReport()}
+          onShare={() => quickActionsRef.current?.shareWhatsApp()}
+        />
+
+        {/* Secondary Header - Patient & Auto-save */}
+        <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+          <div className="container mx-auto px-4 py-2">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <Button variant="ghost" size="icon" asChild>
-                  <Link to="/dashboard"><ArrowLeft className="h-5 w-5" /></Link>
-                </Button>
                 <div>
                   <h1 className="text-lg font-semibold">TCM Brain</h1>
                   <p className="text-xs text-muted-foreground">Clinical Assistant</p>
@@ -206,12 +216,6 @@ export default function TcmBrain() {
                     {isSaving ? 'Saving...' : 'Auto-save'}
                   </Badge>
                 )}
-                {sessionStatus !== 'idle' && (
-                  <Badge variant={sessionStatus === 'running' ? 'default' : 'secondary'}
-                    className={sessionStatus === 'running' ? 'bg-jade animate-pulse' : ''}>
-                    <Clock className="h-3 w-3 mr-1" />{formatSessionTime(sessionSeconds)}
-                  </Badge>
-                )}
                 {selectedPatient && (
                   <Badge variant="outline" className="hidden sm:flex">
                     <UserIcon className="h-3 w-3 mr-1" />{selectedPatient.name}
@@ -226,7 +230,6 @@ export default function TcmBrain() {
                   onSelectPatient={setSelectedPatient}
                   isLoading={loadingPatients}
                 />
-                <Button variant="ghost" size="icon"><Settings className="h-5 w-5" /></Button>
               </div>
             </div>
           </div>
