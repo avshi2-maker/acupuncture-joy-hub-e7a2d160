@@ -963,8 +963,8 @@ export default function VideoSession() {
               </Link>
             </div>
 
-            {/* Mobile Patient Selector - Quick access */}
-            <div className="flex md:hidden items-center gap-2 flex-1 mx-2">
+            {/* Mobile Patient Selector + New Session - Quick access */}
+            <div className="flex md:hidden items-center gap-1.5 flex-1 mx-2">
               <Select
                 value={selectedPatientId || 'none'}
                 onValueChange={handlePatientSelect}
@@ -982,6 +982,28 @@ export default function VideoSession() {
                   ))}
                 </SelectContent>
               </Select>
+              
+              {/* New Meeting Button - Right after patient for logical flow */}
+              {(sessionStatus === 'idle' || sessionStatus === 'ended') ? (
+                <Button 
+                  onClick={handleStart}
+                  size="sm"
+                  className="h-9 px-3 bg-jade hover:bg-jade/90 gap-1 shrink-0 touch-manipulation"
+                >
+                  <Play className="h-4 w-4" />
+                  <span className="text-xs">התחל</span>
+                </Button>
+              ) : (
+                <Button 
+                  onClick={handleRepeat}
+                  size="sm"
+                  variant="outline"
+                  className="h-9 px-2 gap-1 shrink-0 touch-manipulation border-jade text-jade"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              )}
+              
               <Button 
                 variant="outline" 
                 size="icon" 
