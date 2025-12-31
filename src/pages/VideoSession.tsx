@@ -85,6 +85,7 @@ import { PatientHistoryPanel } from '@/components/video/PatientHistoryPanel';
 import { SessionRecordingModule, SessionRecordingModuleRef } from '@/components/video/SessionRecordingModule';
 import { FloatingQuickActions } from '@/components/video/FloatingQuickActions';
 import { CustomizableToolbar, ToolbarItemId } from '@/components/video/CustomizableToolbar';
+import { FloatingHelpGuide } from '@/components/ui/FloatingHelpGuide';
 import { 
   VideoSessionAPIMeter, 
   VideoSessionEngineIndicator,
@@ -1501,6 +1502,9 @@ export default function VideoSession() {
         onSessionReport={() => setShowSessionReport(true)}
         anchorPosition={quickActionsPosition}
       />
+
+      {/* Yellow Floating Help Guide */}
+      <FloatingHelpGuide />
     </SessionTimerProvider>
   );
 }
