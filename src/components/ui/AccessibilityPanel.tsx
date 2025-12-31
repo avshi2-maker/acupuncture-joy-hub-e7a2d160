@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Accessibility, Plus, Minus, Sun, Moon, Eye } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+import { Accessibility, Plus, Minus, Eye } from 'lucide-react';
 import { Button } from './button';
 import { Switch } from './switch';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
@@ -17,8 +18,14 @@ const FONT_SIZES = [
 ] as const;
 
 export function AccessibilityPanel() {
+  const location = useLocation();
   const { fontSize, setFontSize, highContrast, setHighContrast } = useAccessibility();
   const [open, setOpen] = useState(false);
+
+  // Hide on TCM Brain page (has its own accessibility controls in toolbar)
+  if (location.pathname === '/tcm-brain') {
+    return null;
+  }
 
   console.log('AccessibilityPanel - highContrast:', highContrast);
 

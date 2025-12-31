@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Mic, MicOff, X, Languages, Copy, Check, ClipboardPaste } from 'lucide-react';
 import { toast } from 'sonner';
@@ -33,6 +34,7 @@ const VOICE_LANGUAGES = [
 ];
 
 export function FloatingVoiceButton({ className }: FloatingVoiceButtonProps) {
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
@@ -41,6 +43,11 @@ export function FloatingVoiceButton({ className }: FloatingVoiceButtonProps) {
   const [interimTranscript, setInterimTranscript] = useState('');
   const [copied, setCopied] = useState(false);
   const [recognition, setRecognition] = useState<any>(null);
+
+  // Hide on TCM Brain page (has its own voice controls in toolbar)
+  if (location.pathname === '/tcm-brain') {
+    return null;
+  }
 
   useEffect(() => {
     const SpeechRecognition = getSpeechRecognition();
