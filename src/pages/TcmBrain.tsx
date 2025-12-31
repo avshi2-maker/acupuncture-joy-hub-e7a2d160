@@ -11,8 +11,11 @@ import {
   FileText, 
   Clock,
   Save,
-  Database
+  Database,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
+import { APIUsageMeter } from '@/components/tcm-brain/APIUsageMeter';
 import { useTcmBrainState } from '@/hooks/useTcmBrainState';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { DiagnosticsTab } from '@/components/tcm-brain/DiagnosticsTab';
@@ -178,6 +181,68 @@ export default function TcmBrain() {
       </Helmet>
 
       <div className="min-h-screen bg-background flex flex-col">
+        {/* Top Header - Golden Title + Patient Selector */}
+        <header className="border-b bg-gradient-to-r from-amber-900/20 via-amber-800/10 to-amber-900/20 backdrop-blur-sm sticky top-0 z-50">
+          <div className="container mx-auto px-4 py-2">
+            <div className="flex items-center justify-between gap-4">
+              {/* Golden Title */}
+              <div className="flex items-center gap-3">
+                <Brain className="h-6 w-6 text-amber-500" />
+                <h1 className="text-xl font-bold bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent drop-shadow-sm">
+                  TCM BRAIN
+                </h1>
+                <span className="text-xs text-amber-600/70 hidden sm:block">Clinical AI Assistant</span>
+              </div>
+
+              {/* Patient Selector + Active Assets Count */}
+              <div className="flex items-center gap-3">
+                {activeAssets.length > 0 && (
+                  <Badge className="bg-jade/20 text-jade border-jade/30">
+                    <Database className="h-3 w-3 mr-1" />
+                    {activeAssets.length} Assets Active
+                  </Badge>
+                )}
+                
+                {selectedPatient && (
+                  <Badge variant="outline" className="hidden md:flex bg-background/50">
+                    <UserIcon className="h-3 w-3 mr-1" />{selectedPatient.name}
+                  </Badge>
+                )}
+                
+                <PatientSelectorDropdown 
+                  patients={patients}
+                  selectedPatient={selectedPatient}
+                  onSelectPatient={setSelectedPatient}
+                  isLoading={loadingPatients}
+                />
+
+                {/* Auto-save indicator */}
+                {sessionStatus === 'running' && (
+                  <Badge 
+                    variant="outline" 
+                    className={`text-xs cursor-pointer ${isSaving ? 'animate-pulse' : ''}`}
+                    onClick={saveNow}
+                    title={lastSaveTime ? `Last saved: ${lastSaveTime.toLocaleTimeString()}` : 'Click to save now'}
+                  >
+                    <Save className={`h-3 w-3 mr-1 ${isSaving ? 'text-jade' : ''}`} />
+                    {isSaving ? 'Saving...' : 'Auto-save'}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* API Usage Meter Bar - Proof of Real AI */}
+        <div className="border-b bg-card/30 backdrop-blur-sm py-2 px-4 overflow-x-auto">
+          <div className="container mx-auto flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">AI/API Status:</span>
+            </div>
+            <APIUsageMeter />
+          </div>
+        </div>
+
         {/* Main Toolbar */}
         <TcmBrainToolbar
           sessionStatus={sessionStatus}
@@ -192,93 +257,43 @@ export default function TcmBrain() {
           onShare={() => quickActionsRef.current?.shareWhatsApp()}
         />
 
-        {/* Secondary Header - Patient & Auto-save */}
-        <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-40">
-          <div className="container mx-auto px-4 py-2">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div>
-                  <h1 className="text-lg font-semibold">TCM Brain</h1>
-                  <p className="text-xs text-muted-foreground">Clinical Assistant</p>
-                </div>
-              </div>
-
+        <main className="flex-1 container mx-auto px-4 py-4">
+          {/* Knowledge Assets - Collapsible */}
+          <div className="mb-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="w-full flex items-center justify-between py-2 px-3 bg-card/50 border rounded-lg hover:bg-card"
+              onClick={() => setShowKnowledgeAssets(!showKnowledgeAssets)}
+            >
               <div className="flex items-center gap-2">
-                {/* Auto-save indicator */}
-                {sessionStatus === 'running' && (
-                  <Badge 
-                    variant="outline" 
-                    className={`text-xs cursor-pointer ${isSaving ? 'animate-pulse' : ''}`}
-                    onClick={saveNow}
-                    title={lastSaveTime ? `Last saved: ${lastSaveTime.toLocaleTimeString()}` : 'Click to save now'}
-                  >
-                    <Save className={`h-3 w-3 mr-1 ${isSaving ? 'text-jade' : ''}`} />
-                    {isSaving ? 'Saving...' : 'Auto-save'}
-                  </Badge>
-                )}
-                {selectedPatient && (
-                  <Badge variant="outline" className="hidden sm:flex">
-                    <UserIcon className="h-3 w-3 mr-1" />{selectedPatient.name}
+                <Database className="h-4 w-4 text-jade" />
+                <span className="text-xs font-medium">Knowledge Assets</span>
+                {activeAssets.length > 0 && (
+                  <Badge variant="secondary" className="text-[10px] bg-jade/20 text-jade">
+                    {activeAssets.length} Active
                   </Badge>
                 )}
               </div>
-
-              <div className="flex items-center gap-2">
-                <PatientSelectorDropdown 
-                  patients={patients}
-                  selectedPatient={selectedPatient}
-                  onSelectPatient={setSelectedPatient}
-                  isLoading={loadingPatients}
+              {showKnowledgeAssets ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </Button>
+            
+            {showKnowledgeAssets && (
+              <div className="mt-2 bg-card/50 backdrop-blur-sm rounded-lg border shadow-sm">
+                <KnowledgeAssetTabs 
+                  activeAssets={activeAssets}
+                  showLabels={true}
+                  onAssetClick={(id) => {
+                    toast.info(`${id} knowledge base selected`);
+                  }}
                 />
               </div>
-            </div>
+            )}
           </div>
-        </header>
-
-        <main className="flex-1 container mx-auto px-4 py-4">
-          {/* Knowledge Assets Bar */}
-          {showKnowledgeAssets && (
-            <div className="mb-4 bg-card/50 backdrop-blur-sm rounded-lg border shadow-sm">
-              <div className="flex items-center justify-between px-3 py-2 border-b">
-                <div className="flex items-center gap-2">
-                  <Database className="h-4 w-4 text-jade" />
-                  <span className="text-xs font-medium">Knowledge Assets</span>
-                  {activeAssets.length > 0 && (
-                    <Badge variant="secondary" className="text-[10px] bg-jade/20 text-jade">
-                      {activeAssets.length} Active
-                    </Badge>
-                  )}
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-6 text-xs"
-                  onClick={() => setShowKnowledgeAssets(false)}
-                >
-                  Hide
-                </Button>
-              </div>
-              <KnowledgeAssetTabs 
-                activeAssets={activeAssets}
-                showLabels={true}
-                onAssetClick={(id) => {
-                  toast.info(`${id} knowledge base selected`);
-                }}
-              />
-            </div>
-          )}
-
-          {!showKnowledgeAssets && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="mb-4 text-xs"
-              onClick={() => setShowKnowledgeAssets(true)}
-            >
-              <Database className="h-3 w-3 mr-1" />
-              Show Knowledge Assets ({activeAssets.length} active)
-            </Button>
-          )}
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid grid-cols-6 w-full mb-4">
