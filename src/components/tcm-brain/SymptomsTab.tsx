@@ -6,6 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Search, Filter, Send, Bookmark, BookmarkCheck, FileText } from 'lucide-react';
+import { QuickActionsBar } from './QuickActionsBar';
+import { Message } from '@/hooks/useTcmBrainState';
+import { SelectedPatient } from '@/components/crm/PatientSelectorDropdown';
 
 // Symptom questions organized by category
 const symptomQuestions = [
@@ -39,34 +42,29 @@ const symptomQuestions = [
   { id: 's28', question: 'Any skin problems?', category: 'Body' },
   { id: 's29', question: 'Any tinnitus or ear ringing?', category: 'Head' },
   { id: 's30', question: 'Any vision problems?', category: 'Head' },
-  { id: 's31', question: 'Current emotional state?', category: 'Emotions' },
-  { id: 's32', question: 'Current medication use?', category: 'Medical' },
-  { id: 's33', question: 'Current stress level?', category: 'Lifestyle' },
-  { id: 's34', question: 'Eating habits and patterns?', category: 'Lifestyle' },
-  { id: 's35', question: 'How is the appetite?', category: 'Digestion' },
-  { id: 's36', question: 'Is the pain constant or intermittent?', category: 'Pain' },
-  { id: 's37', question: 'Pain character? (sharp, dull, stabbing)', category: 'Pain' },
-  { id: 's38', question: 'Pulse quality? (fast, slow, weak)', category: 'Diagnosis' },
-  { id: 's39', question: 'Sleep quality assessment?', category: 'Sleep' },
-  { id: 's40', question: 'Stool frequency and quality?', category: 'Digestion' },
-  { id: 's41', question: 'Tongue condition? (color, coating)', category: 'Diagnosis' },
-  { id: 's42', question: 'Urination frequency?', category: 'Urination' },
-  { id: 's43', question: 'Urine color assessment?', category: 'Urination' },
-  { id: 's44', question: 'What aggravates the pain?', category: 'Pain' },
-  { id: 's45', question: 'What is the energy level?', category: 'Energy' },
-  { id: 's46', question: 'What is the main symptom?', category: 'General' },
-  { id: 's47', question: 'What relieves the pain?', category: 'Pain' },
-  { id: 's48', question: 'What time of day is fatigue worse?', category: 'Energy' },
-  { id: 's49', question: 'When did symptoms begin?', category: 'General' },
-  { id: 's50', question: 'Where is the headache located?', category: 'Head' },
 ];
 
 interface SymptomsTabProps {
-  streamChat: (message: string) => void;
+  messages: Message[];
   isLoading: boolean;
+  onSendMessage: (message: string) => void;
+  onClear: () => void;
+  selectedPatient?: SelectedPatient | null;
+  sessionSeconds?: number;
+  questionsAsked?: string[];
+  formatSessionTime?: (seconds: number) => string;
 }
 
-export function SymptomsTab({ streamChat, isLoading }: SymptomsTabProps) {
+export function SymptomsTab({ 
+  messages,
+  isLoading,
+  onSendMessage, 
+  onClear,
+  selectedPatient,
+  sessionSeconds = 0,
+  questionsAsked = [],
+  formatSessionTime = (s) => `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`,
+}: SymptomsTabProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [bookmarkedQuestions, setBookmarkedQuestions] = useState<string[]>(() => {
@@ -97,12 +95,21 @@ export function SymptomsTab({ streamChat, isLoading }: SymptomsTabProps) {
 
   const handleQuestionClick = (question: string) => {
     if (!isLoading) {
-      streamChat(question);
+      onSendMessage(question);
     }
   };
 
   return (
     <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+      {/* Quick Actions Bar */}
+      <QuickActionsBar
+        messages={messages}
+        sessionSeconds={sessionSeconds}
+        selectedPatient={selectedPatient || null}
+        questionsAsked={questionsAsked}
+        formatSessionTime={formatSessionTime}
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -172,7 +179,7 @@ export function SymptomsTab({ streamChat, isLoading }: SymptomsTabProps) {
       )}
 
       {/* Questions by Category */}
-      <ScrollArea className="h-[calc(100vh-350px)]">
+      <ScrollArea className="h-[calc(100vh-450px)]">
         <div className="space-y-4">
           {categories.filter(cat => categoryFilter === 'all' || cat === categoryFilter).map(category => {
             const categoryQuestions = filteredQuestions.filter(q => q.category === category);

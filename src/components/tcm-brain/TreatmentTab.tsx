@@ -6,6 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Search, Filter, Send, Bookmark, BookmarkCheck, Pill, Leaf, MapPin, Flame } from 'lucide-react';
+import { QuickActionsBar } from './QuickActionsBar';
+import { Message } from '@/hooks/useTcmBrainState';
+import { SelectedPatient } from '@/components/crm/PatientSelectorDropdown';
 
 // Treatment questions organized by category
 const treatmentQuestions = [
@@ -13,60 +16,50 @@ const treatmentQuestions = [
   { id: 't2', question: 'Any breathing exercises recommended?', category: 'Practice' },
   { id: 't3', question: 'Any circadian rhythm considerations?', category: 'Seasonal' },
   { id: 't4', question: 'Any contraindications present?', category: 'Herbs' },
-  { id: 't5', question: 'Any crystal therapy use?', category: 'Complementary' },
-  { id: 't6', question: 'Any ear points recommended?', category: 'Ear' },
-  { id: 't7', question: 'Any ear seed application?', category: 'Ear' },
-  { id: 't8', question: 'Any emotional treatment needed?', category: 'Emotional' },
-  { id: 't9', question: 'Any essential oil use?', category: 'Complementary' },
-  { id: 't10', question: 'Any exercise recommendations?', category: 'Lifestyle' },
-  { id: 't11', question: 'Any foods to add?', category: 'Nutrition' },
-  { id: 't12', question: 'Any foods to avoid?', category: 'Nutrition' },
-  { id: 't13', question: 'Any meditation recommendations?', category: 'Emotional' },
-  { id: 't14', question: 'Any possible reactions?', category: 'Safety' },
-  { id: 't15', question: 'Any preventive treatment available?', category: 'Prevention' },
-  { id: 't16', question: 'Any Qi Gong exercises recommended?', category: 'Practice' },
-  { id: 't17', question: 'Any reflexology recommendations?', category: 'Reflexology' },
-  { id: 't18', question: 'Any safety precautions?', category: 'Safety' },
-  { id: 't19', question: 'Any scalp points recommended?', category: 'Scalp' },
-  { id: 't20', question: 'Any sleep recommendations?', category: 'Lifestyle' },
-  { id: 't21', question: 'Any stress management tips?', category: 'Lifestyle' },
-  { id: 't22', question: 'Any stretching exercises recommended?', category: 'Practice' },
-  { id: 't23', question: 'Any Tai Chi recommendations?', category: 'Practice' },
-  { id: 't24', question: 'Any tea or soup recommendations?', category: 'Nutrition' },
-  { id: 't25', question: 'Expected treatment duration?', category: 'Planning' },
-  { id: 't26', question: 'Five Element approach recommended?', category: 'Elements' },
-  { id: 't27', question: 'How many acupuncture sessions needed?', category: 'Acupuncture' },
-  { id: 't28', question: 'How long to take herbs?', category: 'Herbs' },
-  { id: 't29', question: 'Lifestyle recommendations?', category: 'Lifestyle' },
-  { id: 't30', question: 'Nutrition recommendations?', category: 'Nutrition' },
-  { id: 't31', question: 'Recommended herb dosage?', category: 'Herbs' },
-  { id: 't32', question: 'Recommended herbal formula?', category: 'Herbs' },
-  { id: 't33', question: 'Seasonal treatment recommended?', category: 'Seasonal' },
-  { id: 't34', question: 'Should cupping be used?', category: 'Techniques' },
-  { id: 't35', question: 'Should electro-acupuncture be used?', category: 'Techniques' },
-  { id: 't36', question: 'Should Gua Sha be used?', category: 'Techniques' },
-  { id: 't37', question: 'Should moxibustion be used?', category: 'Techniques' },
-  { id: 't38', question: 'Signs of expected improvement?', category: 'Planning' },
-  { id: 't39', question: 'Tonify or disperse approach?', category: 'Principles' },
-  { id: 't40', question: 'Treatment frequency recommended?', category: 'Acupuncture' },
-  { id: 't41', question: 'Warm or cool approach?', category: 'Principles' },
-  { id: 't42', question: 'What acupuncture points recommended?', category: 'Acupuncture' },
-  { id: 't43', question: 'What acupuncture technique to use?', category: 'Acupuncture' },
-  { id: 't44', question: 'What element to calm?', category: 'Elements' },
-  { id: 't45', question: 'What element to strengthen?', category: 'Elements' },
-  { id: 't46', question: 'What is the main treatment principle?', category: 'Principles' },
-  { id: 't47', question: 'What is the prognosis?', category: 'Prognosis' },
-  { id: 't48', question: 'When to follow up?', category: 'Planning' },
-  { id: 't49', question: 'When to refer to physician?', category: 'Safety' },
-  { id: 't50', question: 'Moisten or dry approach?', category: 'Principles' },
+  { id: 't5', question: 'Any ear points recommended?', category: 'Ear' },
+  { id: 't6', question: 'Any exercise recommendations?', category: 'Lifestyle' },
+  { id: 't7', question: 'Any foods to add?', category: 'Nutrition' },
+  { id: 't8', question: 'Any foods to avoid?', category: 'Nutrition' },
+  { id: 't9', question: 'Any meditation recommendations?', category: 'Emotional' },
+  { id: 't10', question: 'Any safety precautions?', category: 'Safety' },
+  { id: 't11', question: 'Any sleep recommendations?', category: 'Lifestyle' },
+  { id: 't12', question: 'Any stress management tips?', category: 'Lifestyle' },
+  { id: 't13', question: 'Expected treatment duration?', category: 'Planning' },
+  { id: 't14', question: 'How many acupuncture sessions needed?', category: 'Acupuncture' },
+  { id: 't15', question: 'How long to take herbs?', category: 'Herbs' },
+  { id: 't16', question: 'Lifestyle recommendations?', category: 'Lifestyle' },
+  { id: 't17', question: 'Recommended herb dosage?', category: 'Herbs' },
+  { id: 't18', question: 'Recommended herbal formula?', category: 'Herbs' },
+  { id: 't19', question: 'Should cupping be used?', category: 'Techniques' },
+  { id: 't20', question: 'Should moxibustion be used?', category: 'Techniques' },
+  { id: 't21', question: 'Treatment frequency recommended?', category: 'Acupuncture' },
+  { id: 't22', question: 'What acupuncture points recommended?', category: 'Acupuncture' },
+  { id: 't23', question: 'What is the main treatment principle?', category: 'Principles' },
+  { id: 't24', question: 'When to follow up?', category: 'Planning' },
+  { id: 't25', question: 'When to refer to physician?', category: 'Safety' },
 ];
 
 interface TreatmentTabProps {
-  streamChat: (message: string) => void;
+  messages: Message[];
   isLoading: boolean;
+  onSendMessage: (message: string) => void;
+  onClear: () => void;
+  selectedPatient?: SelectedPatient | null;
+  sessionSeconds?: number;
+  questionsAsked?: string[];
+  formatSessionTime?: (seconds: number) => string;
 }
 
-export function TreatmentTab({ streamChat, isLoading }: TreatmentTabProps) {
+export function TreatmentTab({ 
+  messages,
+  isLoading,
+  onSendMessage, 
+  onClear,
+  selectedPatient,
+  sessionSeconds = 0,
+  questionsAsked = [],
+  formatSessionTime = (s) => `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`,
+}: TreatmentTabProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [bookmarkedQuestions, setBookmarkedQuestions] = useState<string[]>(() => {
@@ -97,7 +90,7 @@ export function TreatmentTab({ streamChat, isLoading }: TreatmentTabProps) {
 
   const handleQuestionClick = (question: string) => {
     if (!isLoading) {
-      streamChat(question);
+      onSendMessage(question);
     }
   };
 
@@ -112,6 +105,15 @@ export function TreatmentTab({ streamChat, isLoading }: TreatmentTabProps) {
 
   return (
     <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+      {/* Quick Actions Bar */}
+      <QuickActionsBar
+        messages={messages}
+        sessionSeconds={sessionSeconds}
+        selectedPatient={selectedPatient || null}
+        questionsAsked={questionsAsked}
+        formatSessionTime={formatSessionTime}
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -213,7 +215,7 @@ export function TreatmentTab({ streamChat, isLoading }: TreatmentTabProps) {
       )}
 
       {/* Questions by Category */}
-      <ScrollArea className="h-[calc(100vh-400px)]">
+      <ScrollArea className="h-[calc(100vh-500px)]">
         <div className="space-y-4">
           {categories.filter(cat => categoryFilter === 'all' || cat === categoryFilter).map(category => {
             const categoryQuestions = filteredQuestions.filter(q => q.category === category);

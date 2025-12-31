@@ -3,49 +3,58 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowRight, Sparkles, ChevronRight, Stethoscope, Eye, Activity } from 'lucide-react';
+import { Loader2, ArrowRight, Sparkles, ChevronRight, Stethoscope, Eye, Activity, Trash2 } from 'lucide-react';
 import { BrowserVoiceInput } from '@/components/ui/BrowserVoiceInput';
-import { ChainedWorkflow, RagStats } from '@/hooks/useTcmBrainState';
 import { AIResponseDisplay } from '@/components/tcm/AIResponseDisplay';
+import { QuickActionsBar } from './QuickActionsBar';
 import { Message } from '@/hooks/useTcmBrainState';
+import { SelectedPatient } from '@/components/crm/PatientSelectorDropdown';
 
 interface DiagnosticsTabProps {
-  input: string;
-  setInput: (value: string) => void;
-  isLoading: boolean;
-  chainedWorkflow: ChainedWorkflow;
-  runChainedWorkflow: (symptomDescription: string) => void;
   messages: Message[];
-  currentQuery: string;
-  loadingStartTime: number | null;
-  lastRagStats: RagStats;
-  setHighlightedPoints: (points: string[]) => void;
-  onViewBodyMap: (points: string[]) => void;
+  isLoading: boolean;
+  onSendMessage: (message: string) => void;
+  onClear: () => void;
+  selectedPatient?: SelectedPatient | null;
+  sessionSeconds?: number;
+  questionsAsked?: string[];
+  formatSessionTime?: (seconds: number) => string;
 }
 
 export function DiagnosticsTab({
-  input,
-  setInput,
-  isLoading,
-  chainedWorkflow,
-  runChainedWorkflow,
   messages,
-  currentQuery,
-  loadingStartTime,
-  lastRagStats,
-  onViewBodyMap,
+  isLoading,
+  onSendMessage,
+  onClear,
+  selectedPatient,
+  sessionSeconds = 0,
+  questionsAsked = [],
+  formatSessionTime = (s) => `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`,
 }: DiagnosticsTabProps) {
+  const [input, setInput] = useState('');
   const [voiceLanguage, setVoiceLanguage] = useState<'en-US' | 'he-IL'>('en-US');
 
   const handleRunWorkflow = () => {
     if (input.trim() && !isLoading) {
-      runChainedWorkflow(input.trim());
+      onSendMessage(input.trim());
       setInput('');
     }
   };
 
+  const lastAssistantMessage = messages.filter(m => m.role === 'assistant').pop();
+  const lastUserMessage = messages.filter(m => m.role === 'user').pop();
+
   return (
     <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+      {/* Quick Actions Bar */}
+      <QuickActionsBar
+        messages={messages}
+        sessionSeconds={sessionSeconds}
+        selectedPatient={selectedPatient || null}
+        questionsAsked={questionsAsked}
+        formatSessionTime={formatSessionTime}
+      />
+
       {/* Auto-Chain Workflow Card */}
       <Card className="bg-gradient-to-r from-jade/20 via-jade/10 to-primary/10 border-2 border-jade/40 shadow-lg">
         <CardHeader className="pb-3">
@@ -61,14 +70,6 @@ export function DiagnosticsTab({
                 </p>
               </div>
             </div>
-            {chainedWorkflow.isActive && (
-              <Badge className="bg-jade text-white animate-pulse">
-                {chainedWorkflow.currentPhase === 'symptoms' && '1/3 Symptoms'}
-                {chainedWorkflow.currentPhase === 'diagnosis' && '2/3 Diagnosis'}
-                {chainedWorkflow.currentPhase === 'treatment' && '3/3 Treatment'}
-                {chainedWorkflow.currentPhase === 'complete' && '✓ Complete'}
-              </Badge>
-            )}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -122,7 +123,7 @@ export function DiagnosticsTab({
               disabled={!input.trim() || isLoading}
               className="bg-jade hover:bg-jade-600 text-white gap-2"
             >
-              {isLoading && chainedWorkflow.isActive ? (
+              {isLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Running...
@@ -130,30 +131,22 @@ export function DiagnosticsTab({
               ) : (
                 <>
                   <ArrowRight className="h-4 w-4" />
-                  Run Full Workflow
+                  Run Workflow
                 </>
               )}
             </Button>
+            {messages.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClear}
+                className="text-muted-foreground hover:text-destructive"
+                title="Clear conversation"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
           </div>
-          
-          {/* Progress indicator */}
-          {chainedWorkflow.isActive && (
-            <div className="flex items-center gap-2 p-2 bg-background/80 rounded-lg border">
-              <div className={`h-3 w-3 rounded-full ${chainedWorkflow.currentPhase === 'symptoms' ? 'bg-jade animate-pulse' : chainedWorkflow.symptomsData ? 'bg-green-500' : 'bg-muted'}`} />
-              <span className="text-xs">Symptoms</span>
-              <ChevronRight className="h-3 w-3 text-muted-foreground" />
-              <div className={`h-3 w-3 rounded-full ${chainedWorkflow.currentPhase === 'diagnosis' ? 'bg-jade animate-pulse' : chainedWorkflow.diagnosisData ? 'bg-green-500' : 'bg-muted'}`} />
-              <span className="text-xs">Diagnosis</span>
-              <ChevronRight className="h-3 w-3 text-muted-foreground" />
-              <div className={`h-3 w-3 rounded-full ${chainedWorkflow.currentPhase === 'treatment' ? 'bg-jade animate-pulse' : chainedWorkflow.treatmentData ? 'bg-green-500' : 'bg-muted'}`} />
-              <span className="text-xs">Treatment</span>
-              {chainedWorkflow.currentPhase === 'complete' && (
-                <Badge variant="outline" className="ml-2 text-green-600 border-green-500">
-                  ✓ Complete
-                </Badge>
-              )}
-            </div>
-          )}
           
           <p className="text-[10px] text-muted-foreground text-center">
             💡 Enter symptoms once → AI generates diagnosis AND treatment automatically
@@ -163,7 +156,10 @@ export function DiagnosticsTab({
 
       {/* Diagnostic Tools Grid */}
       <div className="grid md:grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-br from-card to-jade/5 border border-jade/20 hover:border-jade/40 transition-all cursor-pointer group">
+        <Card 
+          className="bg-gradient-to-br from-card to-jade/5 border border-jade/20 hover:border-jade/40 transition-all cursor-pointer group"
+          onClick={() => onSendMessage('Analyze pulse diagnosis for this patient')}
+        >
           <CardContent className="p-4">
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2 rounded-lg bg-jade/10 group-hover:bg-jade/20 transition-colors">
@@ -180,7 +176,10 @@ export function DiagnosticsTab({
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-card to-rose/5 border border-rose/20 hover:border-rose/40 transition-all cursor-pointer group">
+        <Card 
+          className="bg-gradient-to-br from-card to-rose/5 border border-rose/20 hover:border-rose/40 transition-all cursor-pointer group"
+          onClick={() => onSendMessage('Analyze tongue diagnosis for this patient')}
+        >
           <CardContent className="p-4">
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2 rounded-lg bg-rose/10 group-hover:bg-rose/20 transition-colors">
@@ -197,7 +196,10 @@ export function DiagnosticsTab({
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-card to-amber/5 border border-amber/20 hover:border-amber/40 transition-all cursor-pointer group">
+        <Card 
+          className="bg-gradient-to-br from-card to-amber/5 border border-amber/20 hover:border-amber/40 transition-all cursor-pointer group"
+          onClick={() => onSendMessage('Identify TCM pattern differentiation')}
+        >
           <CardContent className="p-4">
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2 rounded-lg bg-amber/10 group-hover:bg-amber/20 transition-colors">
@@ -219,11 +221,9 @@ export function DiagnosticsTab({
       {(isLoading || messages.length > 0) && (
         <AIResponseDisplay
           isLoading={isLoading}
-          content={messages.filter(m => m.role === 'assistant').pop()?.content || ''}
-          query={currentQuery || messages.filter(m => m.role === 'user').pop()?.content || ''}
-          loadingStartTime={loadingStartTime || undefined}
-          ragMeta={lastRagStats}
-          onViewBodyMap={onViewBodyMap}
+          content={lastAssistantMessage?.content || ''}
+          query={lastUserMessage?.content || ''}
+          onViewBodyMap={() => {}}
         />
       )}
     </div>
