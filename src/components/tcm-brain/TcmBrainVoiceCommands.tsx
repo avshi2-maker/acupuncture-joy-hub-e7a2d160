@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Mic, MicOff, Volume2 } from 'lucide-react';
+import { Mic, MicOff, Volume2, Languages } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { toast } from 'sonner';
@@ -22,49 +22,38 @@ interface TcmBrainVoiceCommandsProps {
   onCommand: (command: TcmVoiceCommand) => void;
   isSessionActive: boolean;
   wakeWord?: string;
+  language?: 'en' | 'he';
 }
 
-const VOICE_COMMANDS: Record<string, TcmVoiceCommand> = {
-  // Summary commands
+// English voice commands
+const ENGLISH_COMMANDS: Record<string, TcmVoiceCommand> = {
   'generate summary': 'generate-summary',
   'create summary': 'generate-summary',
   'summary': 'generate-summary',
   'summarize': 'generate-summary',
   'ai summary': 'generate-summary',
   'topic summary': 'generate-summary',
-  
-  // Save commands
   'save to patient': 'save-to-patient',
   'save patient': 'save-to-patient',
   'save': 'save-to-patient',
   'save file': 'save-to-patient',
   'save record': 'save-to-patient',
-  
-  // Export commands
   'export': 'export-session',
   'export session': 'export-session',
   'download': 'export-session',
   'download session': 'export-session',
-  
-  // Print commands
   'print': 'print-report',
   'print report': 'print-report',
   'print session': 'print-report',
-  
-  // WhatsApp commands
   'share whatsapp': 'share-whatsapp',
   'whatsapp': 'share-whatsapp',
   'send whatsapp': 'share-whatsapp',
   'share': 'share-whatsapp',
-  
-  // Audio commands
   'generate audio': 'generate-audio',
   'create audio': 'generate-audio',
   'make mp3': 'generate-audio',
   'audio': 'generate-audio',
   'mp3': 'generate-audio',
-  
-  // Session commands
   'start session': 'start-session',
   'begin session': 'start-session',
   'start': 'start-session',
@@ -73,13 +62,9 @@ const VOICE_COMMANDS: Record<string, TcmVoiceCommand> = {
   'end session': 'end-session',
   'stop session': 'end-session',
   'finish': 'end-session',
-  
-  // Clear command
   'clear': 'clear-chat',
   'clear chat': 'clear-chat',
   'reset': 'clear-chat',
-  
-  // Navigation
   'next tab': 'next-tab',
   'next': 'next-tab',
   'previous tab': 'previous-tab',
@@ -87,29 +72,97 @@ const VOICE_COMMANDS: Record<string, TcmVoiceCommand> = {
   'back': 'previous-tab',
 };
 
-const COMMAND_LABELS: Record<TcmVoiceCommand, string> = {
-  'generate-summary': '📝 Generate Summary',
-  'save-to-patient': '💾 Save to Patient',
-  'export-session': '📥 Export Session',
-  'print-report': '🖨️ Print Report',
-  'share-whatsapp': '💬 Share WhatsApp',
-  'generate-audio': '🔊 Generate MP3',
-  'start-session': '▶️ Start Session',
-  'pause-session': '⏸️ Pause Session',
-  'end-session': '⏹️ End Session',
-  'clear-chat': '🗑️ Clear Chat',
-  'next-tab': '➡️ Next Tab',
-  'previous-tab': '⬅️ Previous Tab',
+// Hebrew voice commands
+const HEBREW_COMMANDS: Record<string, TcmVoiceCommand> = {
+  // Summary - סיכום
+  'סיכום': 'generate-summary',
+  'צור סיכום': 'generate-summary',
+  'סכם': 'generate-summary',
+  'תסכם': 'generate-summary',
+  'סיכום נושא': 'generate-summary',
+  
+  // Save - שמור
+  'שמור': 'save-to-patient',
+  'שמור למטופל': 'save-to-patient',
+  'שמור קובץ': 'save-to-patient',
+  'שמור לתיק': 'save-to-patient',
+  'שמירה': 'save-to-patient',
+  
+  // Export - ייצוא
+  'ייצא': 'export-session',
+  'ייצוא': 'export-session',
+  'הורד': 'export-session',
+  'הורדה': 'export-session',
+  
+  // Print - הדפסה
+  'הדפס': 'print-report',
+  'הדפסה': 'print-report',
+  'הדפס דוח': 'print-report',
+  
+  // WhatsApp - וואטסאפ
+  'שלח וואטסאפ': 'share-whatsapp',
+  'וואטסאפ': 'share-whatsapp',
+  'שתף': 'share-whatsapp',
+  'שיתוף': 'share-whatsapp',
+  
+  // Audio - אודיו
+  'צור אודיו': 'generate-audio',
+  'אודיו': 'generate-audio',
+  'הקלטה': 'generate-audio',
+  'mp3': 'generate-audio',
+  
+  // Session - טיפול
+  'התחל טיפול': 'start-session',
+  'התחל': 'start-session',
+  'התחלה': 'start-session',
+  'עצור': 'pause-session',
+  'השהה': 'pause-session',
+  'הפסקה': 'pause-session',
+  'סיים טיפול': 'end-session',
+  'סיום': 'end-session',
+  'סיים': 'end-session',
+  
+  // Clear - נקה
+  'נקה': 'clear-chat',
+  'ניקוי': 'clear-chat',
+  'אפס': 'clear-chat',
+  'מחק': 'clear-chat',
+  
+  // Navigation - ניווט
+  'הבא': 'next-tab',
+  'טאב הבא': 'next-tab',
+  'קדימה': 'next-tab',
+  'הקודם': 'previous-tab',
+  'טאב קודם': 'previous-tab',
+  'אחורה': 'previous-tab',
+  'חזור': 'previous-tab',
+};
+
+const COMMAND_LABELS: Record<TcmVoiceCommand, { en: string; he: string }> = {
+  'generate-summary': { en: '📝 Generate Summary', he: '📝 צור סיכום' },
+  'save-to-patient': { en: '💾 Save to Patient', he: '💾 שמור למטופל' },
+  'export-session': { en: '📥 Export Session', he: '📥 ייצא טיפול' },
+  'print-report': { en: '🖨️ Print Report', he: '🖨️ הדפס דוח' },
+  'share-whatsapp': { en: '💬 Share WhatsApp', he: '💬 שתף בוואטסאפ' },
+  'generate-audio': { en: '🔊 Generate MP3', he: '🔊 צור אודיו' },
+  'start-session': { en: '▶️ Start Session', he: '▶️ התחל טיפול' },
+  'pause-session': { en: '⏸️ Pause Session', he: '⏸️ השהה טיפול' },
+  'end-session': { en: '⏹️ End Session', he: '⏹️ סיים טיפול' },
+  'clear-chat': { en: '🗑️ Clear Chat', he: '🗑️ נקה צאט' },
+  'next-tab': { en: '➡️ Next Tab', he: '➡️ טאב הבא' },
+  'previous-tab': { en: '⬅️ Previous Tab', he: '⬅️ טאב קודם' },
 };
 
 export function TcmBrainVoiceCommands({ 
   onCommand, 
   isSessionActive,
-  wakeWord = 'hey cm' 
+  wakeWord = 'hey cm',
+  language: initialLanguage = 'en'
 }: TcmBrainVoiceCommandsProps) {
   const [isListening, setIsListening] = useState(false);
   const [isAwake, setIsAwake] = useState(false);
   const [lastCommand, setLastCommand] = useState<TcmVoiceCommand | null>(null);
+  const [language, setLanguage] = useState<'en' | 'he'>(initialLanguage);
   const recognitionRef = useRef<SpeechRecognitionInterface | null>(null);
   const awakeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const haptic = useHapticFeedback();
@@ -117,46 +170,54 @@ export function TcmBrainVoiceCommands({
   const isSupported = typeof window !== 'undefined' && 
     ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
+  const currentCommands = language === 'he' ? HEBREW_COMMANDS : ENGLISH_COMMANDS;
+  const currentWakeWord = language === 'he' ? 'היי סיאם' : wakeWord;
+
   const processTranscript = useCallback((transcript: string) => {
     const lowerTranscript = transcript.toLowerCase().trim();
-    console.log('[TcmVoice] Transcript:', lowerTranscript);
+    console.log('[TcmVoice] Transcript:', lowerTranscript, 'Language:', language);
 
-    if (lowerTranscript.includes(wakeWord.toLowerCase())) {
+    if (lowerTranscript.includes(currentWakeWord.toLowerCase())) {
       setIsAwake(true);
       haptic.medium();
-      toast.info('🎙️ Listening for command...', { duration: 2000 });
+      toast.info(language === 'he' ? '🎙️ מקשיב לפקודה...' : '🎙️ Listening for command...', { duration: 2000 });
       
       if (awakeTimeoutRef.current) clearTimeout(awakeTimeoutRef.current);
       awakeTimeoutRef.current = setTimeout(() => setIsAwake(false), 6000);
       
-      const afterWakeWord = lowerTranscript.split(wakeWord.toLowerCase())[1]?.trim();
+      const afterWakeWord = lowerTranscript.split(currentWakeWord.toLowerCase())[1]?.trim();
       if (afterWakeWord) processCommand(afterWakeWord);
       return;
     }
 
     if (isAwake) processCommand(lowerTranscript);
-  }, [wakeWord, isAwake, haptic]);
+  }, [currentWakeWord, isAwake, haptic, language]);
 
   const processCommand = useCallback((text: string) => {
-    for (const [phrase, command] of Object.entries(VOICE_COMMANDS)) {
+    for (const [phrase, command] of Object.entries(currentCommands)) {
       if (text.includes(phrase)) {
         setLastCommand(command);
         setIsAwake(false);
         haptic.success();
         onCommand(command);
-        toast.success(COMMAND_LABELS[command], { duration: 2000 });
+        toast.success(COMMAND_LABELS[command][language], { duration: 2000 });
         
         if (awakeTimeoutRef.current) clearTimeout(awakeTimeoutRef.current);
         return;
       }
     }
     
-    toast.info(`Command not recognized: "${text}"`, { duration: 2000 });
-  }, [onCommand, haptic]);
+    toast.info(
+      language === 'he' 
+        ? `פקודה לא מוכרת: "${text}"` 
+        : `Command not recognized: "${text}"`, 
+      { duration: 2000 }
+    );
+  }, [onCommand, haptic, currentCommands, language]);
 
   const startListening = useCallback(() => {
     if (!isSupported) {
-      toast.error('Voice commands not supported');
+      toast.error(language === 'he' ? 'פקודות קוליות לא נתמכות' : 'Voice commands not supported');
       return;
     }
 
@@ -166,7 +227,7 @@ export function TcmBrainVoiceCommands({
       
       recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = true;
-      recognitionRef.current.lang = 'en-US';
+      recognitionRef.current.lang = language === 'he' ? 'he-IL' : 'en-US';
 
       recognitionRef.current.onresult = (event) => {
         const last = event.results.length - 1;
@@ -177,7 +238,7 @@ export function TcmBrainVoiceCommands({
       recognitionRef.current.onerror = (event) => {
         console.error('Speech error:', event.error);
         if (event.error === 'not-allowed') {
-          toast.error('Microphone access denied');
+          toast.error(language === 'he' ? 'גישה למיקרופון נדחתה' : 'Microphone access denied');
           setIsListening(false);
         }
       };
@@ -189,12 +250,17 @@ export function TcmBrainVoiceCommands({
       recognitionRef.current.start();
       setIsListening(true);
       haptic.light();
-      toast.success('🎙️ Voice commands active - Say "Hey CM"', { duration: 3000 });
+      toast.success(
+        language === 'he' 
+          ? '🎙️ פקודות קוליות פעילות - אמור "היי סיאם"'
+          : '🎙️ Voice commands active - Say "Hey CM"', 
+        { duration: 3000 }
+      );
     } catch (error) {
       console.error('Speech recognition error:', error);
-      toast.error('Failed to start voice commands');
+      toast.error(language === 'he' ? 'נכשל בהפעלת פקודות קוליות' : 'Failed to start voice commands');
     }
-  }, [isSupported, isListening, processTranscript, haptic]);
+  }, [isSupported, isListening, processTranscript, haptic, language]);
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current) {
@@ -206,6 +272,22 @@ export function TcmBrainVoiceCommands({
     haptic.light();
   }, [haptic]);
 
+  const toggleLanguage = useCallback(() => {
+    const wasListening = isListening;
+    if (wasListening) stopListening();
+    
+    setLanguage(prev => {
+      const newLang = prev === 'en' ? 'he' : 'en';
+      toast.info(newLang === 'he' ? '🇮🇱 עברית' : '🇺🇸 English', { duration: 1500 });
+      return newLang;
+    });
+    
+    // Restart listening with new language
+    setTimeout(() => {
+      if (wasListening) startListening();
+    }, 100);
+  }, [isListening, stopListening, startListening]);
+
   useEffect(() => {
     return () => {
       if (recognitionRef.current) recognitionRef.current.stop();
@@ -216,7 +298,20 @@ export function TcmBrainVoiceCommands({
   if (!isSupported) return null;
 
   return (
-    <div className="fixed bottom-24 left-4 z-40">
+    <div className="fixed bottom-24 left-4 z-40 flex flex-col gap-2">
+      {/* Language toggle */}
+      <button
+        onClick={toggleLanguage}
+        className={cn(
+          'w-10 h-10 rounded-full shadow-md flex items-center justify-center transition-all duration-200',
+          'bg-card border border-border text-muted-foreground hover:bg-muted'
+        )}
+        aria-label={language === 'he' ? 'Switch to English' : 'Switch to Hebrew'}
+      >
+        <span className="text-xs font-bold">{language === 'he' ? 'EN' : 'עב'}</span>
+      </button>
+
+      {/* Main voice button */}
       <button
         onClick={isListening ? stopListening : startListening}
         className={cn(
@@ -245,15 +340,17 @@ export function TcmBrainVoiceCommands({
             'text-[10px] px-2 py-0.5 rounded-full',
             isAwake ? 'bg-jade text-white' : 'bg-muted text-muted-foreground'
           )}>
-            {isAwake ? 'Listening...' : 'Say "Hey CM"'}
+            {isAwake 
+              ? (language === 'he' ? 'מקשיב...' : 'Listening...') 
+              : (language === 'he' ? 'אמור "היי סיאם"' : 'Say "Hey CM"')}
           </span>
         </div>
       )}
 
       {lastCommand && (
-        <div className="absolute top-16 left-0 text-center whitespace-nowrap">
+        <div className="absolute top-20 left-0 text-center whitespace-nowrap">
           <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted/80 text-muted-foreground">
-            Last: {COMMAND_LABELS[lastCommand]}
+            {language === 'he' ? 'אחרון: ' : 'Last: '}{COMMAND_LABELS[lastCommand][language]}
           </span>
         </div>
       )}

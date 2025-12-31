@@ -12,7 +12,8 @@ import {
   Clock,
   ArrowLeft,
   Settings,
-  Save
+  Save,
+  Database
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTcmBrainState } from '@/hooks/useTcmBrainState';
@@ -25,11 +26,14 @@ import { SessionNotesTab } from '@/components/tcm-brain/SessionNotesTab';
 import { PatientHistoryTab } from '@/components/tcm-brain/PatientHistoryTab';
 import { PatientSelectorDropdown } from '@/components/crm/PatientSelectorDropdown';
 import { TcmBrainVoiceCommands, TcmVoiceCommand } from '@/components/tcm-brain/TcmBrainVoiceCommands';
+import { KnowledgeAssetTabs, detectActiveAssets } from '@/components/tcm-brain/KnowledgeAssetTabs';
 import { QuickActionsRef } from '@/components/tcm-brain/QuickActionsBar';
 import { toast } from 'sonner';
 
 export default function TcmBrain() {
   const [activeTab, setActiveTab] = useState('diagnostics');
+  const [activeAssets, setActiveAssets] = useState<string[]>([]);
+  const [showKnowledgeAssets, setShowKnowledgeAssets] = useState(true);
   const quickActionsRef = useRef<QuickActionsRef>(null);
   
   const {
@@ -93,6 +97,19 @@ export default function TcmBrain() {
       );
     }
   }, []);
+
+  // Detect active knowledge assets from messages
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.role === 'assistant') {
+        const detected = detectActiveAssets(lastMessage.content);
+        if (detected.length > 0) {
+          setActiveAssets(detected);
+        }
+      }
+    }
+  }, [messages]);
 
   // Tab navigation
   const tabItems = [
@@ -216,6 +233,49 @@ export default function TcmBrain() {
         </header>
 
         <main className="flex-1 container mx-auto px-4 py-4">
+          {/* Knowledge Assets Bar */}
+          {showKnowledgeAssets && (
+            <div className="mb-4 bg-card/50 backdrop-blur-sm rounded-lg border shadow-sm">
+              <div className="flex items-center justify-between px-3 py-2 border-b">
+                <div className="flex items-center gap-2">
+                  <Database className="h-4 w-4 text-jade" />
+                  <span className="text-xs font-medium">Knowledge Assets</span>
+                  {activeAssets.length > 0 && (
+                    <Badge variant="secondary" className="text-[10px] bg-jade/20 text-jade">
+                      {activeAssets.length} Active
+                    </Badge>
+                  )}
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-6 text-xs"
+                  onClick={() => setShowKnowledgeAssets(false)}
+                >
+                  Hide
+                </Button>
+              </div>
+              <KnowledgeAssetTabs 
+                activeAssets={activeAssets}
+                onAssetClick={(id) => {
+                  toast.info(`${id} knowledge base selected`);
+                }}
+              />
+            </div>
+          )}
+
+          {!showKnowledgeAssets && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mb-4 text-xs"
+              onClick={() => setShowKnowledgeAssets(true)}
+            >
+              <Database className="h-3 w-3 mr-1" />
+              Show Knowledge Assets ({activeAssets.length} active)
+            </Button>
+          )}
+
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid grid-cols-6 w-full mb-4">
               {tabItems.map((tab) => (
@@ -227,7 +287,7 @@ export default function TcmBrain() {
               ))}
             </TabsList>
 
-            <div className="bg-card rounded-lg border min-h-[calc(100vh-200px)]">
+            <div className="bg-card rounded-lg border min-h-[calc(100vh-280px)]">
               <TabsContent value="diagnostics" className="m-0">
                 <DiagnosticsTab 
                   messages={messages} 
