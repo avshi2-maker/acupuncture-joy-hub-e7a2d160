@@ -243,6 +243,20 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'tcm_theory',
     defaultLanguage: 'en',
   },
+  {
+    id: 'qa-professional-corrected',
+    label: 'QA_Professional_Corrected_4Columns.csv',
+    path: '/knowledge-assets/QA_Professional_Corrected_4Columns.csv',
+    defaultCategory: 'tcm_theory',
+    defaultLanguage: 'en',
+  },
+  {
+    id: 'treatment-planning-protocols',
+    label: 'Treatment_Planning_Protocols_Professional_100plus.csv',
+    path: '/knowledge-assets/Treatment_Planning_Protocols_Professional_100plus.csv',
+    defaultCategory: 'tcm_theory',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 type QueueItemStatus = 'pending' | 'importing' | 'done' | 'error';
