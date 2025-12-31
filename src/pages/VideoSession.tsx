@@ -1097,7 +1097,30 @@ export default function VideoSession() {
         <div className="px-3 md:px-4 pt-2 md:pt-4 pb-2 border-b bg-gradient-to-b from-jade/5 to-transparent">
           <VideoSessionHeaderBoxes
             boxes={[
-              // CRM: Calendar
+              // 1. New Meeting / Start
+              {
+                id: 'new-meeting',
+                name: sessionStatus === 'idle' ? 'Start' : 'Reset',
+                nameHe: sessionStatus === 'idle' ? 'התחל' : 'איפוס',
+                icon: sessionStatus === 'idle' ? Play : RotateCcw,
+                color: 'text-jade',
+                borderColor: 'border-jade',
+                isActive: sessionStatus === 'running',
+                onClick: sessionStatus === 'idle' ? handleStart : handleRepeat,
+              },
+              // 2. Record
+              {
+                id: 'record',
+                name: 'Record',
+                nameHe: 'הקלטה',
+                icon: Video,
+                color: 'text-rose-600',
+                borderColor: 'border-rose-300',
+                onClick: () => recordingModuleRef.current?.isRecording() 
+                  ? recordingModuleRef.current?.stopRecording() 
+                  : recordingModuleRef.current?.startRecording(),
+              },
+              // 3. CRM: Calendar
               {
                 id: 'calendar',
                 name: 'Calendar',
@@ -1107,7 +1130,7 @@ export default function VideoSession() {
                 borderColor: 'border-blue-300',
                 onClick: () => navigate('/crm/calendar'),
               },
-              // CRM: New Appointment
+              // 4. CRM: New Appointment
               {
                 id: 'appointment',
                 name: 'Appoint',
@@ -1117,7 +1140,7 @@ export default function VideoSession() {
                 borderColor: 'border-emerald-300',
                 onClick: () => setShowQuickAppointment(true),
               },
-              // Session Guide
+              // 5. Session Guide
               {
                 id: 'guide',
                 name: 'Guide',
