@@ -21,8 +21,12 @@ import {
   Clock,
   Sparkles,
   ExternalLink,
-  Settings2
+  Settings2,
+  Users2,
+  User
 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { AnimatedMic } from '@/components/ui/AnimatedMic';
 import { AudioLevelMeter } from '@/components/ui/AudioLevelMeter';
 import { toast } from 'sonner';
@@ -67,6 +71,8 @@ export function SessionRecordingModule({
   const [sessionDuration, setSessionDuration] = useState(0);
   const [sessionTranscription, setSessionTranscription] = useState('');
   const [isTranscribingSession, setIsTranscribingSession] = useState(false);
+  const [enableDiarization, setEnableDiarization] = useState(true);
+  const [detectedSpeakers, setDetectedSpeakers] = useState<string[]>([]);
   
   // Voice notes state
   const [voiceNotes, setVoiceNotes] = useState<VoiceNote[]>([]);
@@ -171,31 +177,68 @@ export function SessionRecordingModule({
     }
   }, [isRecordingSession]);
 
-  const transcribeSession = async () => {
+  const transcribeSession = async (withDiarization: boolean = enableDiarization) => {
     if (!sessionBlob) return;
 
     setIsTranscribingSession(true);
     try {
-      const reader = new FileReader();
-      const base64Audio = await new Promise<string>((resolve, reject) => {
-        reader.onloadend = () => {
-          const base64 = (reader.result as string).split(',')[1];
-          resolve(base64);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(sessionBlob);
-      });
+      // Use ElevenLabs for diarization, OpenAI Whisper for simple transcription
+      if (withDiarization) {
+        // Create FormData for ElevenLabs
+        const formData = new FormData();
+        formData.append('audio', sessionBlob, 'recording.webm');
+        formData.append('diarize', 'true');
+        formData.append('language', 'heb');
 
-      const { data, error } = await supabase.functions.invoke('voice-to-text', {
-        body: { audio: base64Audio },
-      });
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-transcribe`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: formData,
+          }
+        );
 
-      if (error) throw error;
+        if (!response.ok) {
+          throw new Error('Transcription with diarization failed');
+        }
 
-      if (data?.text) {
-        setSessionTranscription(data.text);
-        onTranscriptionUpdate?.(data.text);
-        toast.success('תמלול הפגישה הושלם');
+        const data = await response.json();
+        
+        if (data.formatted_text) {
+          setSessionTranscription(data.formatted_text);
+          setDetectedSpeakers(data.speakers || []);
+          onTranscriptionUpdate?.(data.formatted_text);
+          
+          const speakerCount = data.speakers?.length || 0;
+          toast.success(`תמלול הושלם - זוהו ${speakerCount} דוברים`);
+        }
+      } else {
+        // Use OpenAI Whisper for simple transcription
+        const reader = new FileReader();
+        const base64Audio = await new Promise<string>((resolve, reject) => {
+          reader.onloadend = () => {
+            const base64 = (reader.result as string).split(',')[1];
+            resolve(base64);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(sessionBlob);
+        });
+
+        const { data, error } = await supabase.functions.invoke('voice-to-text', {
+          body: { audio: base64Audio },
+        });
+
+        if (error) throw error;
+
+        if (data?.text) {
+          setSessionTranscription(data.text);
+          setDetectedSpeakers([]);
+          onTranscriptionUpdate?.(data.text);
+          toast.success('תמלול הפגישה הושלם');
+        }
       }
     } catch (error) {
       console.error('Transcription error:', error);
@@ -687,6 +730,27 @@ export function SessionRecordingModule({
                     <Clock className="h-3 w-3 mr-1" />
                     הקלטה של {formatDuration(sessionDuration)}
                   </Badge>
+                  
+                  {/* Diarization Toggle */}
+                  <div className="flex items-center gap-3 p-2 bg-background rounded-lg border w-full justify-center">
+                    <div className="flex items-center gap-2">
+                      <Users2 className="h-4 w-4 text-muted-foreground" />
+                      <Label htmlFor="diarization" className="text-sm">
+                        זיהוי דוברים
+                      </Label>
+                    </div>
+                    <Switch
+                      id="diarization"
+                      checked={enableDiarization}
+                      onCheckedChange={setEnableDiarization}
+                    />
+                    {enableDiarization && (
+                      <Badge variant="outline" className="text-xs">
+                        מטפל / מטופל
+                      </Badge>
+                    )}
+                  </div>
+                  
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
@@ -709,16 +773,18 @@ export function SessionRecordingModule({
                     </Button>
                     <Button
                       variant="outline"
-                      onClick={transcribeSession}
+                      onClick={() => transcribeSession(enableDiarization)}
                       disabled={isTranscribingSession}
                       className="gap-1"
                     >
                       {isTranscribingSession ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : enableDiarization ? (
+                        <Users2 className="h-4 w-4" />
                       ) : (
                         <Sparkles className="h-4 w-4" />
                       )}
-                      תמלל
+                      {enableDiarization ? 'תמלל עם דוברים' : 'תמלל'}
                     </Button>
                     <Button
                       variant="outline"
@@ -734,14 +800,62 @@ export function SessionRecordingModule({
                       <Download className="h-4 w-4" />
                     </Button>
                   </div>
+                  
+                  {/* Speaker Labels */}
+                  {detectedSpeakers.length > 0 && (
+                    <div className="flex items-center gap-2 w-full justify-center">
+                      <span className="text-xs text-muted-foreground">דוברים שזוהו:</span>
+                      {detectedSpeakers.map((speaker, idx) => (
+                        <Badge key={speaker} variant="outline" className="gap-1">
+                          <User className="h-3 w-3" />
+                          {speaker === 'speaker_0' ? 'מטפל' : speaker === 'speaker_1' ? 'מטופל' : speaker}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Transcription Display */}
                   {sessionTranscription && (
-                    <Textarea
-                      value={sessionTranscription}
-                      onChange={(e) => setSessionTranscription(e.target.value)}
-                      placeholder="תמלול הפגישה..."
-                      rows={4}
-                      className="w-full"
-                    />
+                    <div className="w-full space-y-2">
+                      <ScrollArea className="h-40 w-full border rounded-lg p-3 bg-background">
+                        <div className="space-y-2 text-sm" dir="rtl">
+                          {sessionTranscription.split('\n\n').map((segment, idx) => {
+                            const match = segment.match(/^\[(.*?)\]:\s*(.*)/s);
+                            if (match && enableDiarization) {
+                              const speaker = match[1];
+                              const text = match[2];
+                              const isTherapist = speaker === 'speaker_0';
+                              return (
+                                <div 
+                                  key={idx} 
+                                  className={`p-2 rounded-lg ${
+                                    isTherapist 
+                                      ? 'bg-jade/10 border-r-2 border-jade' 
+                                      : 'bg-amber-50 border-r-2 border-amber-400'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-1 text-xs font-medium mb-1">
+                                    <User className="h-3 w-3" />
+                                    {isTherapist ? 'מטפל' : 'מטופל'}
+                                  </div>
+                                  <p className="text-sm">{text}</p>
+                                </div>
+                              );
+                            }
+                            return (
+                              <p key={idx} className="text-sm">{segment}</p>
+                            );
+                          })}
+                        </div>
+                      </ScrollArea>
+                      <Textarea
+                        value={sessionTranscription}
+                        onChange={(e) => setSessionTranscription(e.target.value)}
+                        placeholder="ערוך תמלול..."
+                        rows={3}
+                        className="w-full text-xs"
+                      />
+                    </div>
                   )}
                 </div>
               ) : (
