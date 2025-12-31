@@ -124,8 +124,8 @@ export function FloatingMusicPlayer() {
   const [volume, setVolume] = useState(0.5);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Hide on TCM Brain page (has its own music player in toolbar)
-  if (location.pathname === '/tcm-brain') {
+  // Hide on TCM Brain page and Video Session page (have their own controls)
+  if (location.pathname === '/tcm-brain' || location.pathname === '/video-session') {
     return null;
   }
 

@@ -46,7 +46,8 @@ import {
   Star,
   MapPin,
   BookOpen,
-  Accessibility
+  Accessibility,
+  Music
 } from 'lucide-react';
 import { AnimatedMic } from '@/components/ui/AnimatedMic';
 import { toast } from 'sonner';
@@ -99,6 +100,7 @@ import {
   addVideoSessionUsage
 } from '@/components/video/VideoSessionEnhancements';
 import { VideoSessionHeaderBoxes } from '@/components/video/VideoSessionHeaderBoxes';
+import { InlineMusicPlayer } from '@/components/video/InlineMusicPlayer';
 import { useLongPressTimer } from '@/hooks/useLongPressTimer';
 import { useSessionLock } from '@/contexts/SessionLockContext';
 import { useVideoSessionShortcuts } from '@/hooks/useVideoSessionShortcuts';
@@ -144,6 +146,7 @@ export default function VideoSession() {
   const [showSessionGuide, setShowSessionGuide] = useState(false);
   const [sessionGuideExpanded, setSessionGuideExpanded] = useState(false);
   const [showAISuggestions, setShowAISuggestions] = useState(false);
+  const [showMusicPlayer, setShowMusicPlayer] = useState(false);
   const [liveTranscription, setLiveTranscription] = useState('');
   const [currentAppointmentId, setCurrentAppointmentId] = useState<string | null>(null);
   const [isCancellingBlock, setIsCancellingBlock] = useState(false);
@@ -1107,6 +1110,16 @@ export default function VideoSession() {
                   });
                 },
               },
+              {
+                id: 'music',
+                name: 'Music',
+                nameHe: 'מוזיקה',
+                icon: Music,
+                color: showMusicPlayer ? 'text-white' : 'text-amber-600',
+                borderColor: showMusicPlayer ? 'border-amber-500 bg-amber-500' : 'border-amber-300',
+                isActive: showMusicPlayer,
+                onClick: () => setShowMusicPlayer(!showMusicPlayer),
+              },
             ]}
           />
           
@@ -1151,6 +1164,13 @@ export default function VideoSession() {
             />
           </div>
         </div>
+
+        {/* Inline Music Player */}
+        {showMusicPlayer && (
+          <div className="px-3 md:px-4 pb-2">
+            <InlineMusicPlayer onClose={() => setShowMusicPlayer(false)} />
+          </div>
+        )}
 
         {/* AI Query Panel with Voice Input */}
         {activeAiQuery && (
