@@ -21,7 +21,17 @@ type VoiceCommand =
   | 'needs-followup'
   | 'start-recording'
   | 'stop-recording'
-  | 'generate-summary';
+  | 'generate-summary'
+  // AI cue commands
+  | 'objection-detected'
+  | 'positive-signal'
+  | 'resistance-detected'
+  | 'red-flag'
+  | 'closing-time'
+  | 'fear-objection'
+  | 'cost-objection'
+  | 'time-objection'
+  | 'skepticism-objection';
 
 const VOICE_COMMANDS: Record<string, VoiceCommand> = {
   'start': 'start',
@@ -59,6 +69,36 @@ const VOICE_COMMANDS: Record<string, VoiceCommand> = {
   'summary': 'generate-summary',
   'summarize': 'generate-summary',
   'ai summary': 'generate-summary',
+  // AI Cue commands - for real-time suggestions
+  'objection detected': 'objection-detected',
+  'objection': 'objection-detected',
+  'patient objecting': 'objection-detected',
+  'positive signal': 'positive-signal',
+  'positive': 'positive-signal',
+  'good sign': 'positive-signal',
+  'interested': 'positive-signal',
+  'resistance detected': 'resistance-detected',
+  'resistance': 'resistance-detected',
+  'hesitant': 'resistance-detected',
+  'red flag': 'red-flag',
+  'warning': 'red-flag',
+  'concern': 'red-flag',
+  'closing time': 'closing-time',
+  'close now': 'closing-time',
+  'ready to close': 'closing-time',
+  // Specific objection types
+  'fear objection': 'fear-objection',
+  'scared of needles': 'fear-objection',
+  'afraid': 'fear-objection',
+  'cost objection': 'cost-objection',
+  'too expensive': 'cost-objection',
+  'money concern': 'cost-objection',
+  'time objection': 'time-objection',
+  'no time': 'time-objection',
+  'too busy': 'time-objection',
+  'skepticism objection': 'skepticism-objection',
+  'doesn\'t believe': 'skepticism-objection',
+  'skeptical': 'skepticism-objection',
 };
 
 export function VoiceCommandSystem({ 

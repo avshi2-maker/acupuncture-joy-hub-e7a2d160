@@ -454,8 +454,53 @@ export default function VideoSession() {
           toast.success('🧠 Generating AI summary via voice command');
         }
         break;
+      // AI Cue voice commands
+      case 'objection-detected':
+        setNotes(sessionNotes + `\n🚫 [${timestamp}] Objection detected`);
+        setShowAISuggestions(true);
+        toast.info('🚫 Objection logged - AI suggestions activated');
+        break;
+      case 'positive-signal':
+        setNotes(sessionNotes + `\n✅ [${timestamp}] Positive buying signal`);
+        toast.success('✅ Positive signal logged');
+        break;
+      case 'resistance-detected':
+        setNotes(sessionNotes + `\n⚠️ [${timestamp}] Resistance detected`);
+        setShowAISuggestions(true);
+        toast.info('⚠️ Resistance logged - Check AI suggestions');
+        break;
+      case 'red-flag':
+        setNotes(sessionNotes + `\n🚨 [${timestamp}] RED FLAG - Do NOT proceed`);
+        setShowAISuggestions(true);
+        haptic.heavy();
+        toast.error('🚨 Red flag logged - Review ethical guidelines');
+        break;
+      case 'closing-time':
+        setNotes(sessionNotes + `\n🎯 [${timestamp}] Ready for trial close`);
+        toast.success('🎯 Closing time marked');
+        break;
+      case 'fear-objection':
+        setNotes(sessionNotes + `\n😰 [${timestamp}] Fear objection (needles/pain)`);
+        setShowAISuggestions(true);
+        toast.info('😰 Fear objection logged - Show needle demo');
+        break;
+      case 'cost-objection':
+        setNotes(sessionNotes + `\n💰 [${timestamp}] Cost objection`);
+        setShowAISuggestions(true);
+        toast.info('💰 Cost objection logged - Show ROI calculation');
+        break;
+      case 'time-objection':
+        setNotes(sessionNotes + `\n⏰ [${timestamp}] Time objection`);
+        setShowAISuggestions(true);
+        toast.info('⏰ Time objection logged - Emphasize flexibility');
+        break;
+      case 'skepticism-objection':
+        setNotes(sessionNotes + `\n🤔 [${timestamp}] Skepticism objection`);
+        setShowAISuggestions(true);
+        toast.info('🤔 Skepticism logged - Show research evidence');
+        break;
     }
-  }, [sessionStatus, sessionDuration, sessionNotes, startSession, endSession, pauseSession, resumeSession, resetSession, setNotes, pauseLock, resumeLock]);
+  }, [sessionStatus, sessionDuration, sessionNotes, startSession, endSession, pauseSession, resumeSession, resetSession, setNotes, pauseLock, resumeLock, haptic]);
 
   // Check access
   // Clock update effect
@@ -1427,7 +1472,11 @@ export default function VideoSession() {
                 ref={recordingModuleRef}
                 patientId={selectedPatientId || undefined}
                 patientName={selectedPatientName || undefined}
-                onTranscriptionUpdate={(text) => setNotes(sessionNotes + '\n' + text)}
+                onTranscriptionUpdate={(text) => {
+                  setNotes(sessionNotes + '\n' + text);
+                  // Feed transcription to AI suggestions panel
+                  setLiveTranscription(prev => prev + ' ' + text);
+                }}
               />
 
               {/* Session Controls */}
