@@ -464,29 +464,12 @@ export function KnowledgeAssetTabs({
   return (
     <TooltipProvider delayDuration={200}>
       <div className={cn("w-full", className)}>
-        {/* Search and View Toggle */}
+        {/* View Toggle - Removed Search */}
         <div className="flex items-center gap-2 px-3 py-2 border-b">
-          <div className="relative flex-1 max-w-xs">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Search assets..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-8 pl-8 pr-8 text-xs"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div>
           {favorites.length > 0 && (
             <Badge variant="secondary" className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
               <Star className="h-3 w-3 mr-1 fill-current" />
-              {favorites.length}
+              {favorites.length} Favorites
             </Badge>
           )}
           <div className="flex gap-1 ml-auto">

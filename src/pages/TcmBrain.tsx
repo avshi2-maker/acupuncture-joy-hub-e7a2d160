@@ -181,17 +181,28 @@ export default function TcmBrain() {
       </Helmet>
 
       <div className="min-h-screen bg-background flex flex-col">
-        {/* Top Header - Golden Title + Patient Selector */}
-        <header className="border-b bg-gradient-to-r from-amber-900/20 via-amber-800/10 to-amber-900/20 backdrop-blur-sm sticky top-0 z-50">
+        {/* Top Header - Bold Green Title + Patient Selector + Help */}
+        <header className="border-b bg-gradient-to-r from-emerald-900/20 via-emerald-800/10 to-emerald-900/20 backdrop-blur-sm sticky top-0 z-50">
           <div className="container mx-auto px-4 py-2">
             <div className="flex items-center justify-between gap-4">
-              {/* Golden Title */}
+              {/* Bold Green Title */}
               <div className="flex items-center gap-3">
-                <Brain className="h-6 w-6 text-amber-500" />
-                <h1 className="text-xl font-bold bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent drop-shadow-sm">
+                <Brain className="h-6 w-6 text-emerald-500" />
+                <h1 className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
                   TCM BRAIN
                 </h1>
-                <span className="text-xs text-amber-600/70 hidden sm:block">Clinical AI Assistant</span>
+                <span className="text-xs text-emerald-600/70 hidden sm:block font-medium">Clinical AI Assistant</span>
+                
+                {/* Animated Yellow Help Button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-3 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold animate-pulse shadow-lg shadow-yellow-400/50 hover:shadow-yellow-500/50 transition-all"
+                  onClick={() => toast.info('Voice Commands: Say "generate summary", "save session", "next tab", "pause session" and more!', { duration: 8000 })}
+                >
+                  <span className="animate-bounce inline-block mr-1">❓</span>
+                  Help
+                </Button>
               </div>
 
               {/* Patient Selector + Active Assets Count */}
