@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useCallback } from 'react';
+import { motion, Reorder, useDragControls } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,11 +24,12 @@ import {
   Heart,
   Zap,
   Shield,
-  Users,
   Target,
   Lightbulb,
-  MessageSquare,
-  BookOpen
+  BookOpen,
+  Wand2,
+  ScrollText,
+  Clipboard
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -44,22 +45,23 @@ export interface QuickActionBox {
   description: string;
 }
 
+// Renamed to avoid confusion with Tabs below (Diagnostics, Treatment, Session)
 const ALL_ACTION_BOXES: QuickActionBox[] = [
   {
-    id: 'quick-diagnosis',
-    name: 'Quick Diagnosis',
-    nameHe: 'אבחון מהיר',
-    icon: Stethoscope,
+    id: 'pattern-id',
+    name: 'Pattern ID',
+    nameHe: 'זיהוי דפוס',
+    icon: Wand2,
     color: 'text-blue-600',
     bgColor: 'bg-blue-500/10',
     borderColor: 'border-blue-500/30',
     prompt: 'Based on the patient symptoms and presentation, provide a quick TCM pattern diagnosis with confidence level.',
-    description: 'Get instant pattern identification'
+    description: 'Instant pattern identification'
   },
   {
-    id: 'treatment-plan',
-    name: 'Treatment Plan',
-    nameHe: 'תוכנית טיפול',
+    id: 'protocol-gen',
+    name: 'Protocol Gen',
+    nameHe: 'יצירת פרוטוקול',
     icon: ClipboardList,
     color: 'text-emerald-600',
     bgColor: 'bg-emerald-500/10',
@@ -68,10 +70,10 @@ const ALL_ACTION_BOXES: QuickActionBox[] = [
     description: 'Full treatment protocol'
   },
   {
-    id: 'session-notes',
-    name: 'Session Notes',
-    nameHe: 'הערות טיפול',
-    icon: FileText,
+    id: 'auto-notes',
+    name: 'Auto Notes',
+    nameHe: 'הערות אוטו',
+    icon: ScrollText,
     color: 'text-amber-600',
     bgColor: 'bg-amber-500/10',
     borderColor: 'border-amber-500/30',
@@ -79,9 +81,9 @@ const ALL_ACTION_BOXES: QuickActionBox[] = [
     description: 'Auto-generate clinical notes'
   },
   {
-    id: 'herbal-formula',
-    name: 'Herbal Formula',
-    nameHe: 'נוסחה צמחית',
+    id: 'herbal-rx',
+    name: 'Herbal Rx',
+    nameHe: 'מרשם צמחי',
     icon: Pill,
     color: 'text-purple-600',
     bgColor: 'bg-purple-500/10',
@@ -90,9 +92,9 @@ const ALL_ACTION_BOXES: QuickActionBox[] = [
     description: 'Herbal prescription helper'
   },
   {
-    id: 'point-selection',
-    name: 'Point Selection',
-    nameHe: 'בחירת נקודות',
+    id: 'acu-points',
+    name: 'Acu Points',
+    nameHe: 'נקודות דיקור',
     icon: Target,
     color: 'text-rose-600',
     bgColor: 'bg-rose-500/10',
@@ -101,20 +103,20 @@ const ALL_ACTION_BOXES: QuickActionBox[] = [
     description: 'Acupoint recommendations'
   },
   {
-    id: 'patient-education',
-    name: 'Patient Education',
-    nameHe: 'הדרכת מטופל',
+    id: 'patient-handout',
+    name: 'Patient Handout',
+    nameHe: 'דף למטופל',
     icon: Lightbulb,
     color: 'text-cyan-600',
     bgColor: 'bg-cyan-500/10',
     borderColor: 'border-cyan-500/30',
     prompt: 'Create patient-friendly education materials explaining their condition and self-care recommendations.',
-    description: 'Patient handouts'
+    description: 'Patient education materials'
   },
   {
-    id: 'differential-dx',
-    name: 'Differential Dx',
-    nameHe: 'אבחנה מבדלת',
+    id: 'diff-patterns',
+    name: 'Diff Patterns',
+    nameHe: 'דפוסים מבדילים',
     icon: Brain,
     color: 'text-indigo-600',
     bgColor: 'bg-indigo-500/10',
@@ -123,53 +125,53 @@ const ALL_ACTION_BOXES: QuickActionBox[] = [
     description: 'Pattern differentiation'
   },
   {
-    id: 'follow-up',
-    name: 'Follow-Up Plan',
-    nameHe: 'תוכנית המשך',
+    id: 'next-steps',
+    name: 'Next Steps',
+    nameHe: 'צעדים הבאים',
     icon: Activity,
     color: 'text-teal-600',
     bgColor: 'bg-teal-500/10',
     borderColor: 'border-teal-500/30',
     prompt: 'Create a follow-up treatment plan with recommended visit frequency and progression milestones.',
-    description: 'Treatment progression'
+    description: 'Follow-up planning'
   },
   {
-    id: 'risk-assessment',
-    name: 'Risk Assessment',
-    nameHe: 'הערכת סיכון',
+    id: 'safety-check',
+    name: 'Safety Check',
+    nameHe: 'בדיקת בטיחות',
     icon: Shield,
     color: 'text-red-600',
     bgColor: 'bg-red-500/10',
     borderColor: 'border-red-500/30',
     prompt: 'Assess potential risks, contraindications, and safety considerations for the proposed treatment.',
-    description: 'Safety check'
+    description: 'Risk assessment'
   },
   {
-    id: 'case-summary',
-    name: 'Case Summary',
-    nameHe: 'סיכום מקרה',
+    id: 'case-report',
+    name: 'Case Report',
+    nameHe: 'דוח מקרה',
     icon: BookOpen,
     color: 'text-slate-600',
     bgColor: 'bg-slate-500/10',
     borderColor: 'border-slate-500/30',
     prompt: 'Generate a comprehensive case summary suitable for medical records or referral letters.',
-    description: 'Documentation'
+    description: 'Documentation export'
   },
   {
-    id: 'ai-consult',
-    name: 'AI Consult',
-    nameHe: 'ייעוץ AI',
+    id: 'ai-second-opinion',
+    name: 'AI 2nd Opinion',
+    nameHe: 'דעה שנייה AI',
     icon: Sparkles,
     color: 'text-violet-600',
     bgColor: 'bg-violet-500/10',
     borderColor: 'border-violet-500/30',
     prompt: 'Provide an AI second opinion on the diagnosis and treatment approach with evidence-based recommendations.',
-    description: 'Second opinion'
+    description: 'AI consultation'
   },
   {
-    id: 'lifestyle-rx',
-    name: 'Lifestyle Rx',
-    nameHe: 'המלצות חיים',
+    id: 'wellness-plan',
+    name: 'Wellness Plan',
+    nameHe: 'תוכנית בריאות',
     icon: Heart,
     color: 'text-pink-600',
     bgColor: 'bg-pink-500/10',
@@ -179,12 +181,75 @@ const ALL_ACTION_BOXES: QuickActionBox[] = [
   },
 ];
 
-const STORAGE_KEY = 'tcm-brain-quick-action-boxes';
-const DEFAULT_BOXES = ['quick-diagnosis', 'treatment-plan', 'session-notes', 'herbal-formula', 'point-selection', 'patient-education'];
+const STORAGE_KEY = 'tcm-brain-quick-action-boxes-v2';
+const DEFAULT_BOXES = ['pattern-id', 'protocol-gen', 'auto-notes', 'herbal-rx', 'acu-points', 'patient-handout'];
 
 interface QuickActionBoxesProps {
   onActionClick: (prompt: string, actionName: string) => void;
   isLoading?: boolean;
+}
+
+// Draggable item component
+function DraggableActionBox({ 
+  box, 
+  isLoading, 
+  onActionClick 
+}: { 
+  box: QuickActionBox; 
+  isLoading?: boolean;
+  onActionClick: () => void;
+}) {
+  const Icon = box.icon;
+  const dragControls = useDragControls();
+
+  return (
+    <Reorder.Item
+      value={box.id}
+      dragListener={false}
+      dragControls={dragControls}
+      className="relative"
+      whileDrag={{ scale: 1.05, zIndex: 50 }}
+    >
+      <div className="relative group">
+        {/* Drag Handle */}
+        <div
+          onPointerDown={(e) => dragControls.start(e)}
+          className="absolute -top-1 -left-1 z-10 w-5 h-5 rounded-full bg-muted/80 border border-border flex items-center justify-center cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          <GripVertical className="h-3 w-3 text-muted-foreground" />
+        </div>
+
+        <motion.button
+          onClick={onActionClick}
+          disabled={isLoading}
+          className={cn(
+            'w-full flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all',
+            'hover:shadow-lg active:scale-95',
+            box.bgColor,
+            box.borderColor,
+            isLoading && 'opacity-50 cursor-not-allowed'
+          )}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <div className={cn(
+            'w-10 h-10 rounded-full flex items-center justify-center',
+            'bg-background/80 shadow-sm group-hover:shadow-md transition-all'
+          )}>
+            <Icon className={cn('h-5 w-5', box.color)} />
+          </div>
+          <div className="text-center">
+            <p className={cn('text-xs font-bold leading-tight', box.color)}>
+              {box.name}
+            </p>
+            <p className="text-[9px] text-muted-foreground leading-tight mt-0.5" dir="rtl">
+              {box.nameHe}
+            </p>
+          </div>
+        </motion.button>
+      </div>
+    </Reorder.Item>
+  );
 }
 
 export function QuickActionBoxes({ onActionClick, isLoading }: QuickActionBoxesProps) {
@@ -219,11 +284,15 @@ export function QuickActionBoxes({ onActionClick, isLoading }: QuickActionBoxesP
     });
   };
 
-  const handleBoxClick = (box: QuickActionBox) => {
+  const handleBoxClick = useCallback((box: QuickActionBox) => {
     if (isLoading) return;
     toast.info(`Running: ${box.name}`);
     onActionClick(box.prompt, box.name);
-  };
+  }, [isLoading, onActionClick]);
+
+  const handleReorder = useCallback((newOrder: string[]) => {
+    setSelectedBoxIds(newOrder);
+  }, []);
 
   return (
     <div className="space-y-3">
@@ -235,6 +304,9 @@ export function QuickActionBoxes({ onActionClick, isLoading }: QuickActionBoxesP
           <Badge variant="outline" className="text-[10px]">
             {selectedBoxes.length}/6
           </Badge>
+          <span className="text-[10px] text-muted-foreground hidden sm:inline">
+            (drag to reorder)
+          </span>
         </div>
         <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
           <DialogTrigger asChild>
@@ -251,7 +323,7 @@ export function QuickActionBoxes({ onActionClick, isLoading }: QuickActionBoxesP
               </DialogTitle>
             </DialogHeader>
             <p className="text-sm text-muted-foreground mb-4">
-              Select up to 6 quick actions to display. Click to toggle.
+              Select up to 6 quick actions. Drag boxes to reorder on the main screen.
             </p>
             <div className="grid grid-cols-2 gap-2 max-h-[400px] overflow-y-auto">
               {ALL_ACTION_BOXES.map(box => {
@@ -305,45 +377,22 @@ export function QuickActionBoxes({ onActionClick, isLoading }: QuickActionBoxesP
         </Dialog>
       </div>
 
-      {/* Quick Action Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
-        {selectedBoxes.map((box, index) => {
-          const Icon = box.icon;
-          return (
-            <motion.button
-              key={box.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              onClick={() => handleBoxClick(box)}
-              disabled={isLoading}
-              className={cn(
-                'group flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all',
-                'hover:scale-105 hover:shadow-lg active:scale-95',
-                box.bgColor,
-                box.borderColor,
-                isLoading && 'opacity-50 cursor-not-allowed'
-              )}
-            >
-              <div className={cn(
-                'w-10 h-10 rounded-full flex items-center justify-center',
-                'bg-background/80 shadow-sm group-hover:shadow-md transition-all',
-                'group-hover:scale-110'
-              )}>
-                <Icon className={cn('h-5 w-5', box.color)} />
-              </div>
-              <div className="text-center">
-                <p className={cn('text-xs font-bold leading-tight', box.color)}>
-                  {box.name}
-                </p>
-                <p className="text-[9px] text-muted-foreground leading-tight mt-0.5" dir="rtl">
-                  {box.nameHe}
-                </p>
-              </div>
-            </motion.button>
-          );
-        })}
-      </div>
+      {/* Quick Action Grid with Drag & Drop */}
+      <Reorder.Group
+        axis="x"
+        values={selectedBoxIds}
+        onReorder={handleReorder}
+        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2"
+      >
+        {selectedBoxes.map((box) => (
+          <DraggableActionBox
+            key={box.id}
+            box={box}
+            isLoading={isLoading}
+            onActionClick={() => handleBoxClick(box)}
+          />
+        ))}
+      </Reorder.Group>
     </div>
   );
 }
