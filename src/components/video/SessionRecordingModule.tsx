@@ -93,7 +93,11 @@ export function SessionRecordingModule({
   const [isLiveTranscribing, setIsLiveTranscribing] = useState(false);
   const [liveTranscript, setLiveTranscript] = useState('');
   const [partialTranscript, setPartialTranscript] = useState('');
-  const [committedTranscripts, setCommittedTranscripts] = useState<string[]>([]);
+  const [committedTranscripts, setCommittedTranscripts] = useState<{text: string; speaker: string}[]>([]);
+  const [liveSpeaker, setLiveSpeaker] = useState<string | null>(null);
+  const [enableLiveDiarization, setEnableLiveDiarization] = useState(true);
+  const liveAnalyserRef = useRef<AnalyserNode | null>(null);
+  const liveSpeakerDetectionRef = useRef<NodeJS.Timeout | null>(null);
   
   // Playback state
   const [playingNoteId, setPlayingNoteId] = useState<string | null>(null);
@@ -118,6 +122,7 @@ export function SessionRecordingModule({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       if (speakerDetectionRef.current) clearInterval(speakerDetectionRef.current);
+      if (liveSpeakerDetectionRef.current) clearInterval(liveSpeakerDetectionRef.current);
       if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
       if (webSocketRef.current) webSocketRef.current.close();
       if (audioContextRef.current) audioContextRef.current.close();
@@ -462,6 +467,12 @@ export function SessionRecordingModule({
       const ws = new WebSocket(`wss://api.elevenlabs.io/v1/scribe/realtime?token=${data.token}`);
       webSocketRef.current = ws;
 
+      // Track current speaker for VAD-based detection
+      let currentLiveSpeaker = 'speaker_0';
+      let lastSpeechTime = Date.now();
+      let silenceStartTime: number | null = null;
+      const SPEAKER_CHANGE_SILENCE_MS = 1200; // Silence threshold for speaker change
+
       ws.onopen = () => {
         console.log('ElevenLabs Scribe connected');
         setIsLiveTranscribing(true);
@@ -477,8 +488,46 @@ export function SessionRecordingModule({
 
         // Start sending audio data
         const audioContext = new AudioContext({ sampleRate: 16000 });
+        audioContextRef.current = audioContext;
         const source = audioContext.createMediaStreamSource(stream);
         const processor = audioContext.createScriptProcessor(4096, 1, 1);
+        
+        // Create analyser for VAD-based speaker detection
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        liveAnalyserRef.current = analyser;
+        source.connect(analyser);
+        
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        
+        // VAD-based speaker detection
+        if (enableLiveDiarization) {
+          liveSpeakerDetectionRef.current = setInterval(() => {
+            analyser.getByteFrequencyData(dataArray);
+            const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+            const now = Date.now();
+            
+            // Voice activity detected
+            if (average > 25) {
+              // If there was sufficient silence before, toggle speaker
+              if (silenceStartTime && (now - silenceStartTime) > SPEAKER_CHANGE_SILENCE_MS) {
+                currentLiveSpeaker = currentLiveSpeaker === 'speaker_0' ? 'speaker_1' : 'speaker_0';
+              }
+              silenceStartTime = null;
+              lastSpeechTime = now;
+              setLiveSpeaker(currentLiveSpeaker);
+            } else {
+              // Silence detected
+              if (!silenceStartTime) {
+                silenceStartTime = now;
+              }
+              // Clear active speaker after extended silence
+              if ((now - lastSpeechTime) > 500) {
+                setLiveSpeaker(null);
+              }
+            }
+          }, 50);
+        }
 
         processor.onaudioprocess = (e) => {
           if (ws.readyState === WebSocket.OPEN) {
@@ -520,9 +569,16 @@ export function SessionRecordingModule({
           } else if (data.type === 'committed_transcript') {
             const text = data.text || '';
             if (text.trim()) {
-              setCommittedTranscripts(prev => [...prev, text]);
-              setLiveTranscript(prev => prev + ' ' + text);
-              onTranscriptionUpdate?.(liveTranscript + ' ' + text);
+              // Add transcript with current speaker label
+              const speaker = enableLiveDiarization ? currentLiveSpeaker : 'unknown';
+              setCommittedTranscripts(prev => [...prev, { text, speaker }]);
+              
+              // Update full transcript with speaker labels
+              const labeledText = enableLiveDiarization 
+                ? `[${speaker}]: ${text}` 
+                : text;
+              setLiveTranscript(prev => prev ? prev + '\n\n' + labeledText : labeledText);
+              onTranscriptionUpdate?.(liveTranscript + '\n\n' + labeledText);
             }
             setPartialTranscript('');
           }
@@ -539,6 +595,7 @@ export function SessionRecordingModule({
       ws.onclose = () => {
         console.log('WebSocket closed');
         setIsLiveTranscribing(false);
+        setLiveSpeaker(null);
         stream.getTracks().forEach(track => track.stop());
         setMediaStream(null);
       };
@@ -547,7 +604,7 @@ export function SessionRecordingModule({
       console.error('Error starting live transcription:', error);
       toast.error('לא ניתן להתחיל תמלול חי');
     }
-  }, [liveTranscript, onTranscriptionUpdate]);
+  }, [liveTranscript, onTranscriptionUpdate, enableLiveDiarization]);
 
   const stopLiveTranscription = useCallback(() => {
     if (webSocketRef.current) {
@@ -558,7 +615,16 @@ export function SessionRecordingModule({
       mediaStream.getTracks().forEach(track => track.stop());
       setMediaStream(null);
     }
+    if (liveSpeakerDetectionRef.current) {
+      clearInterval(liveSpeakerDetectionRef.current);
+      liveSpeakerDetectionRef.current = null;
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
     setIsLiveTranscribing(false);
+    setLiveSpeaker(null);
   }, [mediaStream]);
 
   // ============================================
@@ -996,6 +1062,22 @@ export function SessionRecordingModule({
 
           {/* Live Transcription Tab */}
           <TabsContent value="live-transcription" className="space-y-4 mt-4">
+            {/* Diarization Toggle */}
+            <div className="flex items-center justify-center gap-3 p-2 bg-muted/30 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Users2 className="h-4 w-4 text-muted-foreground" />
+                <Label htmlFor="live-diarization" className="text-sm">
+                  זיהוי דוברים חי
+                </Label>
+              </div>
+              <Switch
+                id="live-diarization"
+                checked={enableLiveDiarization}
+                onCheckedChange={setEnableLiveDiarization}
+                disabled={isLiveTranscribing}
+              />
+            </div>
+            
             <div className="flex flex-col items-center gap-4 p-4 bg-muted/50 rounded-lg">
               {isLiveTranscribing ? (
                 <>
@@ -1003,6 +1085,29 @@ export function SessionRecordingModule({
                     <Radio className="h-5 w-5 text-red-500 animate-pulse" />
                     <span className="text-sm font-medium">תמלול חי פעיל</span>
                   </div>
+                  
+                  {/* Live Speaker Indicators */}
+                  {enableLiveDiarization && (
+                    <div className="flex items-center gap-3 w-full justify-center">
+                      <div className={`flex items-center gap-2 p-2 rounded-lg transition-all duration-200 ${
+                        liveSpeaker === 'speaker_0' 
+                          ? 'bg-jade/20 border border-jade scale-105 shadow-sm' 
+                          : 'bg-muted/50 opacity-50'
+                      }`}>
+                        <Volume2 className={`h-4 w-4 ${liveSpeaker === 'speaker_0' ? 'text-jade animate-pulse' : 'text-muted-foreground'}`} />
+                        <span className="text-sm font-medium">{speakerNames['speaker_0'] || 'מטפל'}</span>
+                      </div>
+                      <div className={`flex items-center gap-2 p-2 rounded-lg transition-all duration-200 ${
+                        liveSpeaker === 'speaker_1' 
+                          ? 'bg-amber-100 dark:bg-amber-950/30 border border-amber-400 scale-105 shadow-sm' 
+                          : 'bg-muted/50 opacity-50'
+                      }`}>
+                        <Volume2 className={`h-4 w-4 ${liveSpeaker === 'speaker_1' ? 'text-amber-500 animate-pulse' : 'text-muted-foreground'}`} />
+                        <span className="text-sm font-medium">{speakerNames['speaker_1'] || 'מטופל'}</span>
+                      </div>
+                    </div>
+                  )}
+                  
                   {mediaStream && (
                     <AudioLevelMeter stream={mediaStream} isRecording={true} variant="circle" />
                   )}
@@ -1019,15 +1124,50 @@ export function SessionRecordingModule({
               )}
             </div>
 
-            {(liveTranscript || partialTranscript) && (
+            {/* Live Transcription Display with Speaker Labels */}
+            {(committedTranscripts.length > 0 || partialTranscript) && (
               <div className="space-y-2">
-                <ScrollArea className="h-40 border rounded-lg p-3 bg-background">
-                  <p className="text-sm whitespace-pre-wrap" dir="rtl">
-                    {liveTranscript}
+                <ScrollArea className="h-48 border rounded-lg p-3 bg-background">
+                  <div className="space-y-2" dir="rtl">
+                    {committedTranscripts.map((item, idx) => {
+                      if (enableLiveDiarization && typeof item === 'object') {
+                        const isTherapist = item.speaker === 'speaker_0';
+                        const displayName = speakerNames[item.speaker] || (isTherapist ? 'מטפל' : 'מטופל');
+                        return (
+                          <div 
+                            key={idx} 
+                            className={`p-2 rounded-lg ${
+                              isTherapist 
+                                ? 'bg-jade/10 border-r-2 border-jade' 
+                                : 'bg-amber-50 dark:bg-amber-950/20 border-r-2 border-amber-400'
+                            }`}
+                          >
+                            <div className="flex items-center gap-1 text-xs font-medium mb-1">
+                              <User className="h-3 w-3" />
+                              {displayName}
+                            </div>
+                            <p className="text-sm">{item.text}</p>
+                          </div>
+                        );
+                      }
+                      // Fallback for string transcripts
+                      const text = typeof item === 'object' ? item.text : item;
+                      return (
+                        <p key={idx} className="text-sm">{text}</p>
+                      );
+                    })}
                     {partialTranscript && (
-                      <span className="text-muted-foreground italic"> {partialTranscript}</span>
+                      <div className={`p-2 rounded-lg border-r-2 ${
+                        liveSpeaker === 'speaker_0' 
+                          ? 'bg-jade/5 border-jade/50' 
+                          : liveSpeaker === 'speaker_1'
+                          ? 'bg-amber-50/50 dark:bg-amber-950/10 border-amber-400/50'
+                          : 'bg-muted/30 border-muted-foreground/30'
+                      }`}>
+                        <p className="text-sm text-muted-foreground italic">{partialTranscript}</p>
+                      </div>
                     )}
-                  </p>
+                  </div>
                 </ScrollArea>
                 <div className="flex justify-end">
                   <Button
