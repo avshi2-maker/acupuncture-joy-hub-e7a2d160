@@ -376,18 +376,40 @@ body {
   border: 0;
 }
 
-/* Equalizer animation for music player */
-@keyframes equalizer {
-  0%, 100% {
-    height: 20%;
-  }
-  25% {
-    height: 100%;
-  }
-  50% {
-    height: 40%;
-  }
-  75% {
-    height: 80%;
-  }
+/* Equalizer animations with organic timing variations */
+@keyframes eq1 {
+  0%, 100% { height: 15%; }
+  30% { height: 90%; }
+  60% { height: 35%; }
+  80% { height: 70%; }
+}
+
+@keyframes eq2 {
+  0%, 100% { height: 40%; }
+  20% { height: 100%; }
+  45% { height: 25%; }
+  70% { height: 85%; }
+}
+
+@keyframes eq3 {
+  0%, 100% { height: 25%; }
+  25% { height: 75%; }
+  50% { height: 100%; }
+  75% { height: 45%; }
+}
+
+@keyframes eq4 {
+  0%, 100% { height: 55%; }
+  15% { height: 30%; }
+  40% { height: 95%; }
+  65% { height: 50%; }
+  85% { height: 80%; }
+}
+
+@keyframes eq5 {
+  0%, 100% { height: 35%; }
+  20% { height: 65%; }
+  35% { height: 100%; }
+  55% { height: 20%; }
+  80% { height: 75%; }
 }

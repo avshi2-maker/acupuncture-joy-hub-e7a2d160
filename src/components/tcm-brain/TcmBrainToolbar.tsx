@@ -394,16 +394,17 @@ export function TcmBrainToolbar({
                 size="sm" 
                 variant={isPlaying ? 'default' : 'ghost'} 
                 className={cn(
-                  'h-8 w-8 p-0 relative overflow-hidden',
-                  isPlaying && 'bg-amber-500 hover:bg-amber-600'
+                  'h-8 w-8 p-0 relative overflow-visible transition-all duration-300',
+                  isPlaying && 'bg-amber-500 hover:bg-amber-600 shadow-[0_0_12px_3px_rgba(245,158,11,0.5)] hover:shadow-[0_0_16px_4px_rgba(245,158,11,0.6)]'
                 )}
               >
                 {isPlaying ? (
                   <div className="flex items-end justify-center gap-[2px] h-4 w-4">
-                    <span className="w-[3px] bg-white rounded-full animate-[equalizer_0.5s_ease-in-out_infinite]" style={{ height: '60%' }} />
-                    <span className="w-[3px] bg-white rounded-full animate-[equalizer_0.5s_ease-in-out_infinite_0.1s]" style={{ height: '100%' }} />
-                    <span className="w-[3px] bg-white rounded-full animate-[equalizer_0.5s_ease-in-out_infinite_0.2s]" style={{ height: '40%' }} />
-                    <span className="w-[3px] bg-white rounded-full animate-[equalizer_0.5s_ease-in-out_infinite_0.3s]" style={{ height: '80%' }} />
+                    <span className="w-[2px] bg-white rounded-full animate-[eq1_0.45s_ease-in-out_infinite]" />
+                    <span className="w-[2px] bg-white rounded-full animate-[eq2_0.55s_ease-in-out_infinite_0.1s]" />
+                    <span className="w-[2px] bg-white rounded-full animate-[eq3_0.4s_ease-in-out_infinite_0.15s]" />
+                    <span className="w-[2px] bg-white rounded-full animate-[eq4_0.6s_ease-in-out_infinite_0.05s]" />
+                    <span className="w-[2px] bg-white rounded-full animate-[eq5_0.5s_ease-in-out_infinite_0.2s]" />
                   </div>
                 ) : (
                   <Music className="h-4 w-4" />
