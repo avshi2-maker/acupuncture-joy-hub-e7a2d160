@@ -97,6 +97,7 @@ import {
   triggerSessionHaptic,
   addVideoSessionUsage
 } from '@/components/video/VideoSessionEnhancements';
+import { VideoSessionHeaderBoxes } from '@/components/video/VideoSessionHeaderBoxes';
 import { useLongPressTimer } from '@/hooks/useLongPressTimer';
 import { useSessionLock } from '@/contexts/SessionLockContext';
 import { useVideoSessionShortcuts } from '@/hooks/useVideoSessionShortcuts';
@@ -1035,19 +1036,75 @@ export default function VideoSession() {
           />
         </div>
 
-        {/* CAF Asset Boxes - Customizable Toolbar */}
-        <div className="px-3 md:px-4 pt-2 md:pt-4 pb-2">
-          <CustomizableToolbar
-            activeQuery={activeAiQuery}
-            onQueryChange={setActiveAiQuery}
+        {/* Header Boxes with Circular Icons */}
+        <div className="px-3 md:px-4 pt-2 md:pt-4 pb-2 border-b bg-gradient-to-b from-jade/5 to-transparent">
+          <VideoSessionHeaderBoxes
+            boxes={[
+              {
+                id: 'guide',
+                name: 'Guide',
+                nameHe: 'מדריך',
+                icon: BookOpen,
+                color: 'text-amber-600',
+                borderColor: 'border-amber-300',
+                isActive: showSessionGuide,
+                onClick: () => setShowSessionGuide(!showSessionGuide),
+              },
+              {
+                id: 'ai-tips',
+                name: 'AI Tips',
+                nameHe: 'טיפים AI',
+                icon: Brain,
+                color: 'text-purple-600',
+                borderColor: 'border-purple-300',
+                isActive: showAISuggestions,
+                onClick: () => setShowAISuggestions(!showAISuggestions),
+              },
+              {
+                id: 'qa',
+                name: 'Q&A',
+                nameHe: 'שאלון',
+                icon: Heart,
+                color: 'text-rose-600',
+                borderColor: 'border-rose-300',
+                isActive: showAnxietyQA,
+                onClick: () => setShowAnxietyQA(true),
+              },
+              {
+                id: 'cm-brain',
+                name: 'CM Brain',
+                nameHe: 'מוח CM',
+                icon: Brain,
+                color: 'text-blue-600',
+                borderColor: 'border-blue-300',
+                onClick: () => navigate('/cm-brain-questions'),
+              },
+              {
+                id: 'report',
+                name: 'Report',
+                nameHe: 'דוח',
+                icon: FileText,
+                color: 'text-indigo-600',
+                borderColor: 'border-indigo-300',
+                onClick: () => setShowSessionReport(true),
+              },
+            ]}
           />
-          {/* Second Row - Main Actions - Compact sizing for mobile */}
-          <div className="grid grid-cols-4 gap-1 md:flex md:flex-wrap md:gap-2 mt-2 md:mt-3">
-            {/* Animated AI Query Button */}
+          
+          {/* CAF Asset Boxes - Customizable Toolbar */}
+          <div className="mt-3">
+            <CustomizableToolbar
+              activeQuery={activeAiQuery}
+              onQueryChange={setActiveAiQuery}
+            />
+          </div>
+
+          {/* AI Query Animated Button Row */}
+          <div className="flex items-center gap-2 mt-3">
             <button
               onClick={() => setActiveAiQuery(activeAiQuery ? null : 'nutrition')}
-              className="relative overflow-hidden rounded-md px-1.5 py-1 md:px-4 md:py-2 text-white font-medium shadow-lg 
-                         hover:scale-105 transition-all duration-300 animate-pulse-slow group text-[10px] md:text-sm h-7 md:h-auto"
+              className="relative overflow-hidden rounded-xl px-3 py-2 text-white font-medium shadow-lg 
+                         hover:scale-105 transition-all duration-300 animate-pulse-slow group text-xs md:text-sm"
               style={{
                 background: `linear-gradient(135deg, rgba(22, 163, 74, 0.9), rgba(6, 95, 70, 0.95))`,
               }}
@@ -1060,71 +1117,11 @@ export default function VideoSession() {
                   backgroundPosition: 'center',
                 }}
               />
-              <div className="relative flex items-center justify-center gap-0.5 md:gap-2">
-                <Sparkles className="h-3 w-3 md:h-5 md:w-5 animate-bounce" />
-                <span className="truncate">AI</span>
+              <div className="relative flex items-center justify-center gap-2">
+                <Sparkles className="h-4 w-4 md:h-5 md:w-5 animate-bounce" />
+                <span>AI Query</span>
               </div>
             </button>
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setShowAnxietyQA(true)}
-              className="gap-0.5 md:gap-1.5 bg-rose-100 hover:bg-rose-200 text-rose-800 border-rose-300 text-[10px] md:text-sm px-1 md:px-3 h-7 md:h-9"
-            >
-              <Heart className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
-              <span className="truncate">Q&A</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => navigate('/cm-brain-questions')}
-              className="gap-0.5 md:gap-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 border-blue-300 text-[10px] md:text-sm px-1 md:px-3 h-7 md:h-9"
-            >
-              <Brain className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
-              <span className="truncate">CM</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setShowSessionReport(true)}
-              disabled={!selectedPatientId || !sessionNotes}
-              className="gap-0.5 md:gap-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-800 border-indigo-300 text-[10px] md:text-sm px-1 md:px-3 h-7 md:h-9"
-              title="Generate AI summary report of the session notes"
-            >
-              <FileText className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
-              <span className="truncate">Report</span>
-            </Button>
-            <Button 
-              variant={showSessionGuide ? "default" : "outline"}
-              size="sm" 
-              onClick={() => setShowSessionGuide(!showSessionGuide)}
-              className={cn(
-                "gap-0.5 md:gap-1.5 text-[10px] md:text-sm px-1 md:px-3 h-7 md:h-9",
-                showSessionGuide 
-                  ? "bg-amber-500 hover:bg-amber-600 text-white border-amber-600" 
-                  : "bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-300"
-              )}
-              title="Session Guide Teleprompter"
-            >
-              <BookOpen className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
-              <span className="truncate">Guide</span>
-            </Button>
-            <Button 
-              variant={showAISuggestions ? "default" : "outline"}
-              size="sm" 
-              onClick={() => setShowAISuggestions(!showAISuggestions)}
-              className={cn(
-                "gap-0.5 md:gap-1.5 text-[10px] md:text-sm px-1 md:px-3 h-7 md:h-9",
-                showAISuggestions 
-                  ? "bg-purple-500 hover:bg-purple-600 text-white border-purple-600" 
-                  : "bg-purple-100 hover:bg-purple-200 text-purple-800 border-purple-300"
-              )}
-              title="AI Real-Time Suggestions"
-            >
-              <Brain className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
-              <span className="truncate">AI Tips</span>
-            </Button>
           </div>
 
           {/* Patient History Panel - Mobile only */}
