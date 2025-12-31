@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { AlertTriangle, ExternalLink, X, ChevronDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { AlertTriangle, ExternalLink, X, ChevronDown, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,14 +9,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { toast } from 'sonner';
 
 export type ExternalAIProvider = 'lovable-gemini' | 'chatgpt' | 'claude' | 'perplexity' | 'gemini';
+
+const PREFERRED_PROVIDER_KEY = 'tcm-preferred-ai-provider';
 
 interface AIProviderOption {
   id: ExternalAIProvider;
   name: string;
   description: string;
-  url?: string; // External URL (null means use internal)
+  url?: string;
   isInternal: boolean;
 }
 
@@ -70,18 +73,43 @@ export function ExternalAIFallbackCard({
   onUseExternalAI,
   onDismiss,
 }: ExternalAIFallbackCardProps) {
-  const [selectedProvider, setSelectedProvider] = useState<AIProviderOption>(AI_PROVIDERS[0]);
+  const [copied, setCopied] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<AIProviderOption>(() => {
+    try {
+      const saved = localStorage.getItem(PREFERRED_PROVIDER_KEY);
+      if (saved) {
+        const found = AI_PROVIDERS.find(p => p.id === saved);
+        if (found) return found;
+      }
+    } catch {}
+    return AI_PROVIDERS[0];
+  });
+
+  // Save preference when changed
+  useEffect(() => {
+    try {
+      localStorage.setItem(PREFERRED_PROVIDER_KEY, selectedProvider.id);
+    } catch {}
+  }, [selectedProvider]);
+
+  const handleCopyQuestion = async () => {
+    try {
+      await navigator.clipboard.writeText(query);
+      setCopied(true);
+      toast.success('Question copied to clipboard');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Failed to copy');
+    }
+  };
 
   const handleUseAI = () => {
     if (selectedProvider.isInternal) {
-      // Use internal Lovable AI
       onUseExternalAI(selectedProvider.id);
     } else if (selectedProvider.url) {
-      // Open external AI in new tab with query pre-filled
       const encodedQuery = encodeURIComponent(query);
       let targetUrl = selectedProvider.url;
       
-      // Add query parameter where supported
       if (selectedProvider.id === 'chatgpt') {
         targetUrl = `https://chatgpt.com/?q=${encodedQuery}`;
       } else if (selectedProvider.id === 'perplexity') {
@@ -89,17 +117,16 @@ export function ExternalAIFallbackCard({
       } else if (selectedProvider.id === 'gemini') {
         targetUrl = `https://gemini.google.com/app?q=${encodedQuery}`;
       } else if (selectedProvider.id === 'claude') {
-        // Claude doesn't support query params, just open it
         targetUrl = 'https://claude.ai/new';
       }
       
       window.open(targetUrl, '_blank', 'noopener,noreferrer');
-      onDismiss(); // Dismiss after opening external
+      onDismiss();
     }
   };
 
   return (
-    <div className="fixed bottom-24 left-1/2 z-50 w-[min(600px,calc(100vw-2rem))] -translate-x-1/2">
+    <div className="fixed bottom-24 left-1/2 z-50 w-[min(620px,calc(100vw-2rem))] -translate-x-1/2">
       <Card className="border-2 border-destructive/30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 shadow-lg">
         <div className="p-4">
           <div className="flex items-start justify-between gap-3">
@@ -134,10 +161,25 @@ export function ExternalAIFallbackCard({
           </div>
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[11px] text-muted-foreground truncate max-w-[280px]">
-              Last question: <span className="font-medium text-foreground">{query}</span>
-            </p>
+            {/* Question with Copy button */}
+            <div className="flex items-center gap-2 min-w-0">
+              <p className="text-[11px] text-muted-foreground truncate max-w-[180px]">
+                <span className="font-medium text-foreground">{query}</span>
+              </p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleCopyQuestion}
+                className="h-7 px-2 gap-1 text-xs shrink-0"
+                title="Copy question to clipboard"
+              >
+                {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+                {copied ? 'Copied' : 'Copy'}
+              </Button>
+            </div>
 
+            {/* Action buttons */}
             <div className="flex items-center gap-2">
               <Button
                 type="button"
