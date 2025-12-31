@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Music, X, Volume2, ExternalLink, Star, Play, Pause, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -115,12 +116,18 @@ const FAVORITES_KEY = 'tcm-music-favorites';
 const VOLUME_KEY = 'tcm-music-volume';
 
 export function FloatingMusicPlayer() {
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [currentSound, setCurrentSound] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.5);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Hide on TCM Brain page (has its own music player in toolbar)
+  if (location.pathname === '/tcm-brain') {
+    return null;
+  }
 
   // Load favorites and volume from localStorage on mount
   useEffect(() => {
