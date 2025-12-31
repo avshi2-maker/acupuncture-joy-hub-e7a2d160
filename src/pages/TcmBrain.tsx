@@ -257,6 +257,7 @@ export default function TcmBrain() {
               </div>
               <KnowledgeAssetTabs 
                 activeAssets={activeAssets}
+                showLabels={true}
                 onAssetClick={(id) => {
                   toast.info(`${id} knowledge base selected`);
                 }}
