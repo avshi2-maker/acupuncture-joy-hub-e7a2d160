@@ -1,4 +1,4 @@
-import { useState, RefObject } from 'react';
+import { useState, useEffect, RefObject } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { Loader2, ArrowRight, Sparkles, ChevronRight, Stethoscope, Eye, Activity
 import { BrowserVoiceInput } from '@/components/ui/BrowserVoiceInput';
 import { AIResponseDisplay } from '@/components/tcm/AIResponseDisplay';
 import { QuickActionsBar, QuickActionsRef } from './QuickActionsBar';
+import { EngineActivityIndicator } from './APIUsageMeter';
 import { Message } from '@/hooks/useTcmBrainState';
 import { SelectedPatient } from '@/components/crm/PatientSelectorDropdown';
 
@@ -36,12 +37,24 @@ export function DiagnosticsTab({
   const [input, setInput] = useState('');
   const [voiceLanguage, setVoiceLanguage] = useState<'en-US' | 'he-IL'>('en-US');
 
+  // Trigger engine activity when sending message
   const handleRunWorkflow = () => {
     if (input.trim() && !isLoading) {
+      // Dispatch custom event to trigger engine indicator
+      window.dispatchEvent(new CustomEvent('tcm-query-start', { 
+        detail: { query: input.trim() } 
+      }));
       onSendMessage(input.trim());
       setInput('');
     }
   };
+
+  // Listen for loading state changes to update engine indicator
+  useEffect(() => {
+    if (!isLoading) {
+      window.dispatchEvent(new CustomEvent('tcm-query-end'));
+    }
+  }, [isLoading]);
 
   const lastAssistantMessage = messages.filter(m => m.role === 'assistant').pop();
   const lastUserMessage = messages.filter(m => m.role === 'user').pop();
@@ -73,6 +86,8 @@ export function DiagnosticsTab({
                 </p>
               </div>
             </div>
+            {/* Engine Activity Indicator - Real-time countdown */}
+            <EngineActivityIndicator />
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
