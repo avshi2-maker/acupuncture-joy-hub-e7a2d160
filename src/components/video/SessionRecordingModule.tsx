@@ -45,7 +45,6 @@ import { AudioLevelMeter } from '@/components/ui/AudioLevelMeter';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { TimelessIntegration } from './TimelessIntegration';
 
 interface SessionRecordingModuleProps {
   patientId?: string;
@@ -75,7 +74,6 @@ export function SessionRecordingModule({
 }: SessionRecordingModuleProps) {
   const { user } = useAuth();
   const [activeMode, setActiveMode] = useState<RecordingMode>('voice-notes');
-  const [showTimelessSettings, setShowTimelessSettings] = useState(false);
   
   // Full session recording state
   const [isRecordingSession, setIsRecordingSession] = useState(false);
@@ -483,17 +481,23 @@ export function SessionRecordingModule({
       const ws = new WebSocket(`wss://api.elevenlabs.io/v1/scribe/realtime?token=${data.token}`);
       webSocketRef.current = ws;
 
-      // Track current speaker for VAD-based detection
-      let currentLiveSpeaker = 'speaker_0';
+      // Track current speaker for VAD-based detection with adaptive thresholds
+      let currentLiveSpeaker = 'speaker_0'; // Therapist starts first
       let lastSpeechTime = Date.now();
       let silenceStartTime: number | null = null;
-      const SPEAKER_CHANGE_SILENCE_MS = 1200; // Silence threshold for speaker change
+      let speechDuration = 0; // Track how long current speaker has been talking
+      let turnCount = 0; // Track conversation turns
+      
+      // Adaptive silence thresholds for more natural diarization
+      const SHORT_PAUSE_MS = 800;  // Brief pause, same speaker continues
+      const TURN_CHANGE_MS = 1500; // Longer pause, likely speaker change
+      const LONG_MONOLOGUE_MS = 20000; // Very long speech, might be therapist explaining
 
       ws.onopen = () => {
         console.log('ElevenLabs Scribe connected');
         setIsLiveTranscribing(true);
         liveSessionStartRef.current = new Date();
-        toast.success('תמלול חי התחיל');
+        toast.success('תמלול חי התחיל - ElevenLabs');
 
         // Send initial configuration
         ws.send(JSON.stringify({
@@ -512,34 +516,56 @@ export function SessionRecordingModule({
         // Create analyser for VAD-based speaker detection
         const analyser = audioContext.createAnalyser();
         analyser.fftSize = 256;
+        analyser.smoothingTimeConstant = 0.8;
         liveAnalyserRef.current = analyser;
         source.connect(analyser);
         
         const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        let voiceActivityBuffer: number[] = [];
+        const BUFFER_SIZE = 10; // Smooth over last 10 samples
         
-        // VAD-based speaker detection
+        // Advanced VAD-based speaker detection with pattern recognition
         if (enableLiveDiarization) {
           liveSpeakerDetectionRef.current = setInterval(() => {
             analyser.getByteFrequencyData(dataArray);
             const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
             const now = Date.now();
             
-            // Voice activity detected
-            if (average > 25) {
-              // If there was sufficient silence before, toggle speaker
-              if (silenceStartTime && (now - silenceStartTime) > SPEAKER_CHANGE_SILENCE_MS) {
-                currentLiveSpeaker = currentLiveSpeaker === 'speaker_0' ? 'speaker_1' : 'speaker_0';
+            // Add to buffer for smoothing
+            voiceActivityBuffer.push(average);
+            if (voiceActivityBuffer.length > BUFFER_SIZE) voiceActivityBuffer.shift();
+            const smoothedAverage = voiceActivityBuffer.reduce((a, b) => a + b, 0) / voiceActivityBuffer.length;
+            
+            // Voice activity detected (with hysteresis)
+            const isVoiceActive = smoothedAverage > 20;
+            
+            if (isVoiceActive) {
+              // Calculate silence duration if coming back from silence
+              const silenceDuration = silenceStartTime ? (now - silenceStartTime) : 0;
+              
+              // Determine if this is a speaker change
+              if (silenceStartTime && silenceDuration > SHORT_PAUSE_MS) {
+                // Check for turn change based on silence duration
+                if (silenceDuration > TURN_CHANGE_MS) {
+                  currentLiveSpeaker = currentLiveSpeaker === 'speaker_0' ? 'speaker_1' : 'speaker_0';
+                  turnCount++;
+                  speechDuration = 0;
+                  console.log(`Speaker change detected (turn ${turnCount}): ${currentLiveSpeaker}`);
+                }
               }
+              
               silenceStartTime = null;
               lastSpeechTime = now;
+              speechDuration += 50; // Add interval duration
               setLiveSpeaker(currentLiveSpeaker);
             } else {
               // Silence detected
               if (!silenceStartTime) {
                 silenceStartTime = now;
               }
-              // Clear active speaker after extended silence
-              if ((now - lastSpeechTime) > 500) {
+              
+              // Clear active speaker indicator after brief silence
+              if ((now - lastSpeechTime) > 400) {
                 setLiveSpeaker(null);
               }
             }
@@ -827,15 +853,10 @@ export function SessionRecordingModule({
               </Badge>
             )}
           </CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowTimelessSettings(true)}
-            className="gap-1 text-muted-foreground"
-          >
-            <Settings2 className="h-4 w-4" />
-            Timeless.day
-          </Button>
+          <Badge variant="outline" className="gap-1 text-xs">
+            <Sparkles className="h-3 w-3" />
+            ElevenLabs
+          </Badge>
         </div>
       </CardHeader>
 
@@ -1372,12 +1393,6 @@ export function SessionRecordingModule({
           </Button>
         )}
       </CardContent>
-
-      {/* Timeless.day Integration Dialog */}
-      <TimelessIntegration
-        open={showTimelessSettings}
-        onOpenChange={setShowTimelessSettings}
-      />
     </Card>
   );
 }
