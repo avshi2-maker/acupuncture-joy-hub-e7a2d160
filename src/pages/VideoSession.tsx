@@ -85,6 +85,14 @@ import { PatientHistoryPanel } from '@/components/video/PatientHistoryPanel';
 import { SessionRecordingModule, SessionRecordingModuleRef } from '@/components/video/SessionRecordingModule';
 import { FloatingQuickActions } from '@/components/video/FloatingQuickActions';
 import { CustomizableToolbar, ToolbarItemId } from '@/components/video/CustomizableToolbar';
+import { 
+  VideoSessionAPIMeter, 
+  VideoSessionEngineIndicator,
+  useVideoSessionAudio,
+  playSessionSound,
+  triggerSessionHaptic,
+  addVideoSessionUsage
+} from '@/components/video/VideoSessionEnhancements';
 import { useLongPressTimer } from '@/hooks/useLongPressTimer';
 import { useSessionLock } from '@/contexts/SessionLockContext';
 import { cn } from '@/lib/utils';
@@ -135,6 +143,9 @@ export default function VideoSession() {
   
   // Haptic feedback hook
   const haptic = useHapticFeedback();
+  
+  // Audio feedback hook from enhancements
+  const { enabled: audioEnabled } = useVideoSessionAudio();
   
   // AI Query states
   const [activeAiQuery, setActiveAiQuery] = useState<ToolbarItemId | null>(null);
@@ -538,16 +549,22 @@ export default function VideoSession() {
   const handleStart = () => {
     startSession();
     pauseLock('Treatment session active'); // Pause auto-lock during session
+    playSessionSound('start', audioEnabled);
+    triggerSessionHaptic('start');
     toast.success('פגישת וידאו התחילה');
   };
 
   const handlePause = () => {
     pauseSession();
+    playSessionSound('warning', audioEnabled);
+    triggerSessionHaptic('medium');
     toast.info('הפגישה הושהתה');
   };
 
   const handleResume = () => {
     resumeSession();
+    playSessionSound('click', audioEnabled);
+    triggerSessionHaptic('light');
     toast.info('הפגישה ממשיכה');
   };
 
@@ -555,12 +572,17 @@ export default function VideoSession() {
     resetSession();
     resumeLock(); // Resume auto-lock when session is reset
     setCurrentAppointmentId(null);
+    playSessionSound('click', audioEnabled);
+    triggerSessionHaptic('medium');
     toast.info('הפגישה אופסה');
   };
 
   const handleEnd = async () => {
     endSession();
     resumeLock(); // Resume auto-lock after session ends
+    playSessionSound('stop', audioEnabled);
+    triggerSessionHaptic('heavy');
+    
     if (selectedPatientId && selectedPatientName && user && sessionStartTime) {
       try {
         await supabase.from('video_sessions').insert({
@@ -595,8 +617,10 @@ export default function VideoSession() {
         cupping: false,
         moxa: false,
       });
+      playSessionSound('success', audioEnabled);
       toast.success('הפגישה נשמרה');
     } else {
+      playSessionSound('warning', audioEnabled);
       toast.warning('לא נבחר מטופל - הדוח לא נשמר');
     }
   };
@@ -676,6 +700,12 @@ export default function VideoSession() {
       return;
     }
     setAiQueryLoading(true);
+    playSessionSound('click', audioEnabled);
+    triggerSessionHaptic('light');
+    
+    // Track usage
+    addVideoSessionUsage(type, aiQueryInput);
+    
     try {
       const { data, error } = await supabase.functions.invoke('tcm-rag-chat', {
         body: { 
@@ -686,8 +716,12 @@ export default function VideoSession() {
       });
       if (error) throw error;
       setAiQueryResult(data?.response || 'No response received');
+      playSessionSound('success', audioEnabled);
+      triggerSessionHaptic('success');
     } catch (error) {
       console.error('AI Query error:', error);
+      playSessionSound('error', audioEnabled);
+      triggerSessionHaptic('error');
       toast.error('Error sending question to AI');
     } finally {
       setAiQueryLoading(false);
@@ -702,6 +736,11 @@ export default function VideoSession() {
     setInlineAnxietyMessages(prev => [...prev, userMessage]);
     setAnxietyInput('');
     setAiQueryLoading(true);
+    playSessionSound('click', audioEnabled);
+    triggerSessionHaptic('light');
+    
+    // Track usage
+    addVideoSessionUsage('anxiety', anxietyInput);
     
     try {
       const { data, error } = await supabase.functions.invoke('tcm-rag-chat', {
@@ -715,8 +754,10 @@ export default function VideoSession() {
       if (error) throw error;
       const assistantMessage = { role: 'assistant' as const, content: data?.response || 'לא התקבלה תשובה' };
       setInlineAnxietyMessages(prev => [...prev, assistantMessage]);
+      playSessionSound('success', audioEnabled);
     } catch (error) {
       console.error('Anxiety Q&A error:', error);
+      playSessionSound('error', audioEnabled);
       toast.error('שגיאה בשליחת השאלה');
     } finally {
       setAiQueryLoading(false);
@@ -865,6 +906,17 @@ export default function VideoSession() {
             </div>
           </div>
         </header>
+
+        {/* API Usage Meter Bar */}
+        <div className="border-b bg-card/30 backdrop-blur-sm py-1.5 px-3 overflow-x-auto hidden md:block">
+          <div className="container mx-auto flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="font-medium text-foreground text-[10px]">AI Status:</span>
+              <VideoSessionAPIMeter />
+            </div>
+            <VideoSessionEngineIndicator isLoading={aiQueryLoading} />
+          </div>
+        </div>
 
         {/* Session Presets - Mobile only */}
         <div className="md:hidden px-3 pt-2">
