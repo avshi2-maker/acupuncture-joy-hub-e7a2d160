@@ -236,6 +236,13 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'general_health',
     defaultLanguage: 'en',
   },
+  {
+    id: 'diagnostics-professional',
+    label: 'diagnostics-professional.csv (Corrected 4-Column)',
+    path: '/knowledge-assets/diagnostics-professional.csv',
+    defaultCategory: 'tcm_theory',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 type QueueItemStatus = 'pending' | 'importing' | 'done' | 'error';
