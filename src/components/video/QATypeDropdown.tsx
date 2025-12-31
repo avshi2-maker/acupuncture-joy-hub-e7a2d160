@@ -16,6 +16,7 @@ export type QAType = 'anxiety' | 'tcm-brain' | 'diagnostics' | 'general';
 interface QATypeDropdownProps {
   onSelect: (type: QAType) => void;
   isActive?: boolean;
+  selectedType?: QAType | null;
 }
 
 const qaOptions: Array<{
@@ -60,8 +61,13 @@ const qaOptions: Array<{
   },
 ];
 
-export function QATypeDropdown({ onSelect, isActive }: QATypeDropdownProps) {
+export function QATypeDropdown({ onSelect, isActive, selectedType }: QATypeDropdownProps) {
   const [open, setOpen] = useState(false);
+  
+  // Get the selected option details
+  const selectedOption = selectedType ? qaOptions.find(o => o.type === selectedType) : null;
+  const DisplayIcon = selectedOption?.icon || Sparkles;
+  const displayColor = selectedOption?.color || (isActive ? 'text-jade' : 'text-purple-600');
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -80,20 +86,20 @@ export function QATypeDropdown({ onSelect, isActive }: QATypeDropdownProps) {
             'border-2 bg-background shadow-sm',
             isActive ? 'border-jade' : 'border-purple-300'
           )}>
-            <Sparkles className={cn('h-5 w-5 md:h-6 md:w-6', isActive ? 'text-jade' : 'text-purple-600')} />
+            <DisplayIcon className={cn('h-5 w-5 md:h-6 md:w-6', displayColor)} />
           </div>
           <div className="text-center">
             <div className="flex items-center gap-0.5">
               <span className={cn(
-                'text-[9px] md:text-[10px] font-semibold',
-                isActive ? 'text-jade' : 'text-purple-600'
+                'text-[9px] md:text-[10px] font-semibold truncate max-w-[50px]',
+                displayColor
               )}>
-                Q&A
+                {selectedOption?.label || 'Q&A'}
               </span>
-              <ChevronDown className="h-2.5 w-2.5 text-muted-foreground" />
+              <ChevronDown className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
             </div>
-            <p className="text-[8px] md:text-[9px] text-muted-foreground" dir="rtl">
-              שאלות
+            <p className="text-[8px] md:text-[9px] text-muted-foreground truncate" dir="rtl">
+              {selectedOption?.labelHe || 'שאלות'}
             </p>
           </div>
         </Button>

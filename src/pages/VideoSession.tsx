@@ -154,6 +154,7 @@ export default function VideoSession() {
   const [showMusicPlayer, setShowMusicPlayer] = useState(false);
   const [showHelpGuide, setShowHelpGuide] = useState(false);
   const [showTcmBrainPanel, setShowTcmBrainPanel] = useState(false);
+  const [selectedQAType, setSelectedQAType] = useState<QAType | null>(null);
   const [guideCompleted, setGuideCompleted] = useState(false);
   const [liveTranscription, setLiveTranscription] = useState('');
   const [currentAppointmentId, setCurrentAppointmentId] = useState<string | null>(null);
@@ -832,6 +833,7 @@ export default function VideoSession() {
 
   // Handle QA type dropdown selection
   const handleQATypeSelect = (type: QAType) => {
+    setSelectedQAType(type);
     switch (type) {
       case 'anxiety':
         setShowAnxietyQA(true);
@@ -1294,6 +1296,7 @@ export default function VideoSession() {
               <QATypeDropdown 
                 onSelect={handleQATypeSelect}
                 isActive={showAnxietyQA || showTcmBrainPanel}
+                selectedType={selectedQAType}
               />
             </div>
           </div>
