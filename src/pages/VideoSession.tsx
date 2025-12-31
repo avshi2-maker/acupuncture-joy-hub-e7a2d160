@@ -88,6 +88,7 @@ import { FloatingQuickActions } from '@/components/video/FloatingQuickActions';
 import { CustomizableToolbar, ToolbarItemId } from '@/components/video/CustomizableToolbar';
 import { FloatingHelpGuide } from '@/components/ui/FloatingHelpGuide';
 import { SessionGuideTeleprompter } from '@/components/video/SessionGuideTeleprompter';
+import { AISessionSuggestions } from '@/components/video/AISessionSuggestions';
 import { 
   VideoSessionAPIMeter, 
   VideoSessionEngineIndicator,
@@ -138,6 +139,8 @@ export default function VideoSession() {
   const [showSessionReport, setShowSessionReport] = useState(false);
   const [showSessionGuide, setShowSessionGuide] = useState(false);
   const [sessionGuideExpanded, setSessionGuideExpanded] = useState(false);
+  const [showAISuggestions, setShowAISuggestions] = useState(false);
+  const [liveTranscription, setLiveTranscription] = useState('');
   const [currentAppointmentId, setCurrentAppointmentId] = useState<string | null>(null);
   const [isCancellingBlock, setIsCancellingBlock] = useState(false);
   const warningShownRef = useRef(false);
@@ -1062,6 +1065,21 @@ export default function VideoSession() {
               <BookOpen className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
               <span className="truncate">Guide</span>
             </Button>
+            <Button 
+              variant={showAISuggestions ? "default" : "outline"}
+              size="sm" 
+              onClick={() => setShowAISuggestions(!showAISuggestions)}
+              className={cn(
+                "gap-0.5 md:gap-1.5 text-[10px] md:text-sm px-1 md:px-3 h-7 md:h-9",
+                showAISuggestions 
+                  ? "bg-purple-500 hover:bg-purple-600 text-white border-purple-600" 
+                  : "bg-purple-100 hover:bg-purple-200 text-purple-800 border-purple-300"
+              )}
+              title="AI Real-Time Suggestions"
+            >
+              <Brain className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+              <span className="truncate">AI Tips</span>
+            </Button>
           </div>
 
           {/* Patient History Panel - Mobile only */}
@@ -1330,6 +1348,24 @@ export default function VideoSession() {
                   onClose={() => setShowSessionGuide(false)}
                   isExpanded={sessionGuideExpanded}
                   onToggleExpand={() => setSessionGuideExpanded(!sessionGuideExpanded)}
+                />
+              </div>
+            )}
+
+            {/* AI Session Suggestions Panel - Shows when enabled */}
+            {showAISuggestions && (
+              <div className="hidden md:block md:col-span-1 max-h-[calc(100vh-105px)]">
+                <AISessionSuggestions
+                  sessionDuration={sessionDuration}
+                  isSessionActive={sessionStatus === 'running'}
+                  transcription={liveTranscription}
+                  patientName={selectedPatientName || undefined}
+                  currentPhase={`phase-${Math.min(6, Math.floor(sessionDuration / 600) + 1)}`}
+                  onSuggestionUsed={(suggestion) => {
+                    setNotes(sessionNotes + `\n📌 Used: ${suggestion.slice(0, 50)}...`);
+                  }}
+                  onClose={() => setShowAISuggestions(false)}
+                  isListening={recordingModuleRef.current?.isRecording() || false}
                 />
               </div>
             )}
