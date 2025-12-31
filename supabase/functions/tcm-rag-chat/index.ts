@@ -148,6 +148,25 @@ serve(async (req) => {
       })
       .limit(4);
 
+    // Priority 5: QA Professional file (clinical Q&A)
+    const { data: qaChunks, error: qaError } = await supabaseClient
+      .from('knowledge_chunks')
+      .select(`
+        id,
+        content,
+        question,
+        answer,
+        chunk_index,
+        metadata,
+        document:knowledge_documents!inner(id, file_name, original_name, category)
+      `)
+      .ilike('document.file_name', '%QA_Professional%')
+      .textSearch('content', searchTerms, {
+        type: 'websearch',
+        config: 'english'
+      })
+      .limit(4);
+
     // Then get other relevant chunks
     const { data: otherChunks, error: searchError } = await supabaseClient
       .from('knowledge_chunks')
@@ -164,18 +183,19 @@ serve(async (req) => {
         type: 'websearch',
         config: 'english'
       })
-      .limit(6);
+      .limit(5);
 
-    if (searchError || diagError || pulseError || zangfuError || acuError) {
-      console.error('Search error:', searchError || diagError || pulseError || zangfuError || acuError);
+    if (searchError || diagError || pulseError || zangfuError || acuError || qaError) {
+      console.error('Search error:', searchError || diagError || pulseError || zangfuError || acuError || qaError);
     }
 
-    // Merge with priority order: diagnostics first, then pulse/tongue, then zang-fu, then acupoints, then others
+    // Merge with priority order: diagnostics, pulse/tongue, zang-fu, acupoints, QA, then others
     const prioritizedIds = new Set([
       ...(diagnosticsChunks || []).map(c => c.id),
       ...(pulseChunks || []).map(c => c.id),
       ...(zangfuChunks || []).map(c => c.id),
-      ...(acuChunks || []).map(c => c.id)
+      ...(acuChunks || []).map(c => c.id),
+      ...(qaChunks || []).map(c => c.id)
     ]);
     
     const chunks = [
@@ -183,10 +203,11 @@ serve(async (req) => {
       ...(pulseChunks || []),
       ...(zangfuChunks || []),
       ...(acuChunks || []),
+      ...(qaChunks || []),
       ...(otherChunks || []).filter(c => !prioritizedIds.has(c.id))
     ].slice(0, 15);
 
-    console.log(`Priority chunks - Diagnostics: ${diagnosticsChunks?.length || 0}, Pulse/Tongue: ${pulseChunks?.length || 0}, Zang-Fu: ${zangfuChunks?.length || 0}, Acupoints: ${acuChunks?.length || 0}, Other: ${otherChunks?.length || 0}`);
+    console.log(`Priority chunks - Diagnostics: ${diagnosticsChunks?.length || 0}, Pulse/Tongue: ${pulseChunks?.length || 0}, Zang-Fu: ${zangfuChunks?.length || 0}, Acupoints: ${acuChunks?.length || 0}, QA: ${qaChunks?.length || 0}, Other: ${otherChunks?.length || 0}`);
 
     // Build context from retrieved chunks
     let context = '';
