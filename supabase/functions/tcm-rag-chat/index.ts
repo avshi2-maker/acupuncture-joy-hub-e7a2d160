@@ -122,7 +122,7 @@ serve(async (req) => {
         metadata,
         document:knowledge_documents!inner(id, file_name, original_name, category)
       `)
-      .or('file_name.ilike.%zang%,file_name.ilike.%fu%,file_name.ilike.%organ%,content.ilike.%zang-fu%,content.ilike.%zangfu%', { referencedTable: 'document' })
+      .or('file_name.ilike.%zang%,file_name.ilike.%fu%,file_name.ilike.%organ%', { referencedTable: 'document' })
       .textSearch('content', searchTerms, {
         type: 'websearch',
         config: 'english'
