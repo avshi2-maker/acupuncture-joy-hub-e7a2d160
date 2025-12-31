@@ -262,7 +262,7 @@ export function KnowledgeAssetTabs({
     <TooltipProvider delayDuration={200}>
       <div className={cn("w-full", className)}>
         <ScrollArea className="w-full">
-          <div className="flex gap-1.5 p-2">
+          <div className="flex gap-2 p-3">
             {KNOWLEDGE_ASSETS.map((asset) => {
               const Icon = asset.icon;
               const isActive = activeAssets.includes(asset.id);
@@ -274,32 +274,42 @@ export function KnowledgeAssetTabs({
                     <button
                       onClick={() => onAssetClick?.(asset.id)}
                       className={cn(
-                        'flex flex-col items-center gap-0.5 p-1.5 rounded-lg border-2 transition-all duration-300 min-w-[52px]',
-                        'hover:scale-105 active:scale-95',
+                        'flex flex-col items-center gap-1.5 p-2.5 rounded-xl border-2 transition-all duration-300 min-w-[72px]',
+                        'hover:scale-105 hover:shadow-md active:scale-95',
                         asset.bgColor,
                         isActive ? asset.borderColor : 'border-transparent',
-                        isFlashing && 'animate-pulse ring-2 ring-offset-1',
+                        isFlashing && 'animate-pulse ring-2 ring-offset-2 shadow-lg',
                         isFlashing && asset.color.replace('text-', 'ring-')
                       )}
                     >
                       <div className={cn(
-                        'w-8 h-8 rounded-full flex items-center justify-center',
+                        'w-10 h-10 rounded-full flex items-center justify-center shadow-sm',
                         isActive ? asset.bgColor : 'bg-muted/50',
+                        isActive && 'ring-2 ring-offset-1',
+                        isActive && asset.color.replace('text-', 'ring-'),
                         isFlashing && 'animate-bounce'
                       )}>
                         <Icon className={cn(
-                          'h-4 w-4 transition-all',
+                          'h-5 w-5 transition-all',
                           isActive ? asset.color : 'text-muted-foreground',
                           isFlashing && 'scale-125'
                         )} />
                       </div>
                       {showLabels && (
-                        <span className={cn(
-                          'text-[9px] font-medium text-center leading-tight max-w-[48px] truncate',
-                          isActive ? asset.color : 'text-muted-foreground'
-                        )}>
-                          {asset.name}
-                        </span>
+                        <div className="flex flex-col items-center gap-0.5">
+                          <span className={cn(
+                            'text-[10px] font-semibold text-center leading-tight max-w-[64px] line-clamp-2',
+                            isActive ? asset.color : 'text-foreground'
+                          )}>
+                            {asset.name}
+                          </span>
+                          <span className={cn(
+                            'text-[9px] text-center leading-tight max-w-[64px] truncate',
+                            isActive ? asset.color : 'text-muted-foreground'
+                          )} dir="rtl">
+                            {asset.nameHe}
+                          </span>
+                        </div>
                       )}
                     </button>
                   </TooltipTrigger>
