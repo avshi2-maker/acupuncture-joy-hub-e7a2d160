@@ -102,6 +102,9 @@ import {
 } from '@/components/video/VideoSessionEnhancements';
 import { VideoSessionHeaderBoxes } from '@/components/video/VideoSessionHeaderBoxes';
 import { InlineMusicPlayer } from '@/components/video/InlineMusicPlayer';
+import { TcmBrainPanel } from '@/components/video/TcmBrainPanel';
+import { SessionWorkflowIndicator } from '@/components/video/SessionWorkflowIndicator';
+import { QATypeDropdown, QAType } from '@/components/video/QATypeDropdown';
 import { useLongPressTimer } from '@/hooks/useLongPressTimer';
 import { useSessionLock } from '@/contexts/SessionLockContext';
 import { useVideoSessionShortcuts } from '@/hooks/useVideoSessionShortcuts';
@@ -150,6 +153,8 @@ export default function VideoSession() {
   const [showAISuggestions, setShowAISuggestions] = useState(false);
   const [showMusicPlayer, setShowMusicPlayer] = useState(false);
   const [showHelpGuide, setShowHelpGuide] = useState(false);
+  const [showTcmBrainPanel, setShowTcmBrainPanel] = useState(false);
+  const [guideCompleted, setGuideCompleted] = useState(false);
   const [liveTranscription, setLiveTranscription] = useState('');
   const [currentAppointmentId, setCurrentAppointmentId] = useState<string | null>(null);
   const [isCancellingBlock, setIsCancellingBlock] = useState(false);
@@ -825,6 +830,24 @@ export default function VideoSession() {
     });
   };
 
+  // Handle QA type dropdown selection
+  const handleQATypeSelect = (type: QAType) => {
+    switch (type) {
+      case 'anxiety':
+        setShowAnxietyQA(true);
+        break;
+      case 'tcm-brain':
+        setShowTcmBrainPanel(true);
+        break;
+      case 'diagnostics':
+        setActiveAiQuery('diagnosis');
+        break;
+      case 'general':
+        setShowAnxietyQA(true);
+        break;
+    }
+  };
+
   // AI Query handler - sends to tcm-rag-chat function
   const handleAiQuery = async (type: 'nutrition' | 'herbs' | 'diagnosis' | 'mental' | 'sleep' | 'worklife' | 'wellness' | 'sports' | 'bazi' | 'astro' | 'points') => {
     if (!aiQueryInput.trim()) {
@@ -1133,136 +1156,134 @@ export default function VideoSession() {
           />
         </div>
 
+        {/* Workflow Progress Indicator */}
+        <div className="px-3 md:px-4 pt-2 md:pt-3 hidden md:block">
+          <SessionWorkflowIndicator
+            hasPatient={!!selectedPatientId}
+            isSessionStarted={sessionStatus !== 'idle'}
+            isRecording={recordingModuleRef.current?.isRecording() || false}
+            guideCompleted={guideCompleted}
+            hasNotes={sessionNotes.length > 10}
+          />
+        </div>
+
         {/* Header Boxes with Circular Icons - Reorganized */}
         <div className="px-3 md:px-4 pt-2 md:pt-4 pb-2 border-b bg-gradient-to-b from-jade/5 to-transparent">
-          <VideoSessionHeaderBoxes
-            boxes={[
-              // 1. New Meeting / Start
-              {
-                id: 'new-meeting',
-                name: sessionStatus === 'idle' ? 'Start' : 'Reset',
-                nameHe: sessionStatus === 'idle' ? 'התחל' : 'איפוס',
-                icon: sessionStatus === 'idle' ? Play : RotateCcw,
-                color: 'text-jade',
-                borderColor: 'border-jade',
-                isActive: sessionStatus === 'running',
-                onClick: sessionStatus === 'idle' ? handleStart : handleRepeat,
-              },
-              // 2. Record
-              {
-                id: 'record',
-                name: 'Record',
-                nameHe: 'הקלטה',
-                icon: Video,
-                color: 'text-rose-600',
-                borderColor: 'border-rose-300',
-                onClick: () => recordingModuleRef.current?.isRecording() 
-                  ? recordingModuleRef.current?.stopRecording() 
-                  : recordingModuleRef.current?.startRecording(),
-              },
-              // 3. CRM: Calendar
-              {
-                id: 'calendar',
-                name: 'Calendar',
-                nameHe: 'יומן',
-                icon: Calendar,
-                color: 'text-blue-600',
-                borderColor: 'border-blue-300',
-                onClick: () => navigate('/crm/calendar'),
-              },
-              // 4. CRM: New Appointment
-              {
-                id: 'appointment',
-                name: 'Appoint',
-                nameHe: 'תור חדש',
-                icon: CalendarPlus,
-                color: 'text-emerald-600',
-                borderColor: 'border-emerald-300',
-                onClick: () => setShowQuickAppointment(true),
-              },
-              // 5. Session Guide
-              {
-                id: 'guide',
-                name: 'Guide',
-                nameHe: 'מדריך',
-                icon: BookOpen,
-                color: 'text-amber-600',
-                borderColor: 'border-amber-300',
-                isActive: showSessionGuide,
-                onClick: () => setShowSessionGuide(!showSessionGuide),
-              },
-              // AI Tips
-              {
-                id: 'ai-tips',
-                name: 'AI Tips',
-                nameHe: 'טיפים AI',
-                icon: Brain,
-                color: 'text-purple-600',
-                borderColor: 'border-purple-300',
-                isActive: showAISuggestions,
-                onClick: () => setShowAISuggestions(!showAISuggestions),
-              },
-              // Anxiety Q&A
-              {
-                id: 'qa',
-                name: 'Q&A',
-                nameHe: 'שאלון',
-                icon: Heart,
-                color: 'text-rose-600',
-                borderColor: 'border-rose-300',
-                isActive: showAnxietyQA,
-                onClick: () => setShowAnxietyQA(true),
-              },
-              // CM Brain
-              {
-                id: 'cm-brain',
-                name: 'CM Brain',
-                nameHe: 'מוח CM',
-                icon: Brain,
-                color: 'text-blue-600',
-                borderColor: 'border-blue-300',
-                onClick: () => navigate('/cm-brain-questions'),
-              },
-              // Report
-              {
-                id: 'report',
-                name: 'Report',
-                nameHe: 'דוח',
-                icon: FileText,
-                color: 'text-indigo-600',
-                borderColor: 'border-indigo-300',
-                onClick: () => setShowSessionReport(true),
-              },
-              // Accessibility
-              {
-                id: 'accessibility',
-                name: 'Access',
-                nameHe: 'נגישות',
-                icon: Accessibility,
-                color: highContrast ? 'text-white' : 'text-jade',
-                borderColor: highContrast ? 'border-jade bg-jade' : 'border-jade/50',
-                isActive: highContrast,
-                onClick: () => {
-                  setHighContrast(!highContrast);
-                  toast.success(highContrast ? 'ניגודיות רגילה' : 'ניגודיות גבוהה', { 
-                    description: highContrast ? 'High contrast disabled' : 'High contrast enabled',
-                    duration: 2000 
-                  });
+          <div className="flex items-center gap-2">
+            <VideoSessionHeaderBoxes
+              boxes={[
+                // 1. New Meeting / Start
+                {
+                  id: 'new-meeting',
+                  name: sessionStatus === 'idle' ? 'Start' : 'Reset',
+                  nameHe: sessionStatus === 'idle' ? 'התחל' : 'איפוס',
+                  icon: sessionStatus === 'idle' ? Play : RotateCcw,
+                  color: 'text-jade',
+                  borderColor: 'border-jade',
+                  isActive: sessionStatus === 'running',
+                  onClick: sessionStatus === 'idle' ? handleStart : handleRepeat,
                 },
-              },
-              // Music
-              {
-                id: 'music',
-                name: 'Music',
-                nameHe: 'מוזיקה',
-                icon: Music,
-                color: showMusicPlayer ? 'text-white' : 'text-amber-600',
-                borderColor: showMusicPlayer ? 'border-amber-500 bg-amber-500' : 'border-amber-300',
-                isActive: showMusicPlayer,
-                onClick: () => setShowMusicPlayer(!showMusicPlayer),
-              },
-            ]}
-          />
+                // 2. Record
+                {
+                  id: 'record',
+                  name: 'Record',
+                  nameHe: 'הקלטה',
+                  icon: Video,
+                  color: 'text-rose-600',
+                  borderColor: 'border-rose-300',
+                  onClick: () => recordingModuleRef.current?.isRecording() 
+                    ? recordingModuleRef.current?.stopRecording() 
+                    : recordingModuleRef.current?.startRecording(),
+                },
+                // 3. CRM: Calendar
+                {
+                  id: 'calendar',
+                  name: 'Calendar',
+                  nameHe: 'יומן',
+                  icon: Calendar,
+                  color: 'text-blue-600',
+                  borderColor: 'border-blue-300',
+                  onClick: () => navigate('/crm/calendar'),
+                },
+                // 4. CRM: New Appointment
+                {
+                  id: 'appointment',
+                  name: 'Appoint',
+                  nameHe: 'תור חדש',
+                  icon: CalendarPlus,
+                  color: 'text-emerald-600',
+                  borderColor: 'border-emerald-300',
+                  onClick: () => setShowQuickAppointment(true),
+                },
+                // 5. Session Guide
+                {
+                  id: 'guide',
+                  name: 'Guide',
+                  nameHe: 'מדריך',
+                  icon: BookOpen,
+                  color: 'text-amber-600',
+                  borderColor: 'border-amber-300',
+                  isActive: showSessionGuide,
+                  onClick: () => setShowSessionGuide(!showSessionGuide),
+                },
+                // AI Tips
+                {
+                  id: 'ai-tips',
+                  name: 'AI Tips',
+                  nameHe: 'טיפים AI',
+                  icon: Brain,
+                  color: 'text-purple-600',
+                  borderColor: 'border-purple-300',
+                  isActive: showAISuggestions,
+                  onClick: () => setShowAISuggestions(!showAISuggestions),
+                },
+                // Report
+                {
+                  id: 'report',
+                  name: 'Report',
+                  nameHe: 'דוח',
+                  icon: FileText,
+                  color: 'text-indigo-600',
+                  borderColor: 'border-indigo-300',
+                  onClick: () => setShowSessionReport(true),
+                },
+                // Accessibility
+                {
+                  id: 'accessibility',
+                  name: 'Access',
+                  nameHe: 'נגישות',
+                  icon: Accessibility,
+                  color: highContrast ? 'text-white' : 'text-jade',
+                  borderColor: highContrast ? 'border-jade bg-jade' : 'border-jade/50',
+                  isActive: highContrast,
+                  onClick: () => {
+                    setHighContrast(!highContrast);
+                    toast.success(highContrast ? 'ניגודיות רגילה' : 'ניגודיות גבוהה', { 
+                      description: highContrast ? 'High contrast disabled' : 'High contrast enabled',
+                      duration: 2000 
+                    });
+                  },
+                },
+                // Music
+                {
+                  id: 'music',
+                  name: 'Music',
+                  nameHe: 'מוזיקה',
+                  icon: Music,
+                  color: showMusicPlayer ? 'text-white' : 'text-amber-600',
+                  borderColor: showMusicPlayer ? 'border-amber-500 bg-amber-500' : 'border-amber-300',
+                  isActive: showMusicPlayer,
+                  onClick: () => setShowMusicPlayer(!showMusicPlayer),
+                },
+              ]}
+            />
+            
+            {/* Q&A Type Dropdown - replaces anxiety box */}
+            <QATypeDropdown 
+              onSelect={handleQATypeSelect}
+              isActive={showAnxietyQA || showTcmBrainPanel}
+            />
+          </div>
           
           {/* CAF Asset Boxes - Customizable Toolbar */}
           <div className="mt-3">
@@ -1879,6 +1900,15 @@ export default function VideoSession() {
       <VoiceDictationDialog open={showVoiceDictation} onOpenChange={setShowVoiceDictation} patientId={selectedPatientId || undefined} patientName={selectedPatientName || undefined} />
       <CalendarInviteDialog open={showCalendarInvite} onOpenChange={setShowCalendarInvite} patientId={selectedPatientId || undefined} patientName={selectedPatientName || undefined} patientPhone={selectedPatientPhone || undefined} onAppointmentCreated={handleCalendarInviteCreated} />
       <SessionReportDialog open={showSessionReport} onOpenChange={setShowSessionReport} patientName={selectedPatientName || ''} patientPhone={selectedPatientPhone} sessionNotes={sessionNotes} anxietyResponses={anxietyConversation} />
+      
+      {/* TCM Brain Slide-out Panel */}
+      <TcmBrainPanel 
+        open={showTcmBrainPanel} 
+        onOpenChange={setShowTcmBrainPanel}
+        patientId={selectedPatientId || undefined}
+        patientName={selectedPatientName || undefined}
+        sessionNotes={sessionNotes}
+      />
       
       {/* Floating Quick Actions - Long press on timer */}
       <FloatingQuickActions
