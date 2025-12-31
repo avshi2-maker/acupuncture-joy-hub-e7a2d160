@@ -375,3 +375,19 @@ body {
   white-space: nowrap;
   border: 0;
 }
+
+/* Equalizer animation for music player */
+@keyframes equalizer {
+  0%, 100% {
+    height: 20%;
+  }
+  25% {
+    height: 100%;
+  }
+  50% {
+    height: 40%;
+  }
+  75% {
+    height: 80%;
+  }
+}
