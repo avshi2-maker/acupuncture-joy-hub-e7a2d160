@@ -153,38 +153,13 @@ export function SessionNotesTab({
         </CardHeader>
         <CardContent className="space-y-3">
           <VoiceNoteRecorder 
-            onNoteRecorded={handleAddVoiceNote}
+            voiceNotes={voiceNotes}
+            onAddNote={handleAddVoiceNote}
+            onDeleteNote={handleDeleteVoiceNote}
             disabled={sessionStatus !== 'running'}
           />
           
-          {voiceNotes.length > 0 && (
-            <ScrollArea className="max-h-48">
-              <div className="space-y-2">
-                {voiceNotes.map((note) => (
-                  <div 
-                    key={note.id}
-                    className="flex items-start gap-2 p-2 rounded-lg bg-muted/50"
-                  >
-                    <Clock className="h-4 w-4 text-muted-foreground mt-0.5" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(note.timestamp).toLocaleTimeString()} • {note.duration}s
-                      </p>
-                      <p className="text-sm">{note.transcription || 'No transcription'}</p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteVoiceNote(note.id)}
-                      className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          )}
+          {/* Voice notes are now rendered inside VoiceNoteRecorder */}
         </CardContent>
       </Card>
 
