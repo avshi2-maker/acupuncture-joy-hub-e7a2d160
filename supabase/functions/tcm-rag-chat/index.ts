@@ -72,7 +72,27 @@ serve(async (req) => {
     console.log('Include chunk details:', includeChunkDetails || false);
 
     // Search for relevant chunks using full-text search
-    const { data: chunks, error: searchError } = await supabaseClient
+    // First, prioritize diagnostics file (should be used first in sessions)
+    const { data: diagnosticsChunks, error: diagError } = await supabaseClient
+      .from('knowledge_chunks')
+      .select(`
+        id,
+        content,
+        question,
+        answer,
+        chunk_index,
+        metadata,
+        document:knowledge_documents!inner(id, file_name, original_name, category)
+      `)
+      .ilike('document.file_name', '%Diagnostics_Professional%')
+      .textSearch('content', searchTerms, {
+        type: 'websearch',
+        config: 'english'
+      })
+      .limit(5);
+
+    // Then get other relevant chunks
+    const { data: otherChunks, error: searchError } = await supabaseClient
       .from('knowledge_chunks')
       .select(`
         id,
@@ -87,11 +107,20 @@ serve(async (req) => {
         type: 'websearch',
         config: 'english'
       })
-      .limit(15);
+      .limit(12);
 
-    if (searchError) {
-      console.error('Search error:', searchError);
+    if (searchError || diagError) {
+      console.error('Search error:', searchError || diagError);
     }
+
+    // Merge with diagnostics chunks first (prioritized)
+    const diagnosticsIds = new Set((diagnosticsChunks || []).map(c => c.id));
+    const chunks = [
+      ...(diagnosticsChunks || []),
+      ...(otherChunks || []).filter(c => !diagnosticsIds.has(c.id))
+    ].slice(0, 15);
+
+    console.log(`Diagnostics chunks found: ${diagnosticsChunks?.length || 0}, Other chunks: ${otherChunks?.length || 0}`);
 
     // Build context from retrieved chunks
     let context = '';
