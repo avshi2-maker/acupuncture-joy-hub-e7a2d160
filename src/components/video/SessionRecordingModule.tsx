@@ -25,8 +25,17 @@ import {
   Users2,
   User,
   Edit2,
-  Volume2
+  Volume2,
+  RefreshCw,
+  Copy,
+  Check
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
@@ -93,11 +102,18 @@ export function SessionRecordingModule({
   const [isLiveTranscribing, setIsLiveTranscribing] = useState(false);
   const [liveTranscript, setLiveTranscript] = useState('');
   const [partialTranscript, setPartialTranscript] = useState('');
-  const [committedTranscripts, setCommittedTranscripts] = useState<{text: string; speaker: string}[]>([]);
+  const [committedTranscripts, setCommittedTranscripts] = useState<{
+    text: string; 
+    speaker: string; 
+    timestamp: Date;
+    id: string;
+  }[]>([]);
   const [liveSpeaker, setLiveSpeaker] = useState<string | null>(null);
   const [enableLiveDiarization, setEnableLiveDiarization] = useState(true);
   const liveAnalyserRef = useRef<AnalyserNode | null>(null);
   const liveSpeakerDetectionRef = useRef<NodeJS.Timeout | null>(null);
+  const liveSessionStartRef = useRef<Date | null>(null);
+  const [copiedExport, setCopiedExport] = useState(false);
   
   // Playback state
   const [playingNoteId, setPlayingNoteId] = useState<string | null>(null);
@@ -476,6 +492,7 @@ export function SessionRecordingModule({
       ws.onopen = () => {
         console.log('ElevenLabs Scribe connected');
         setIsLiveTranscribing(true);
+        liveSessionStartRef.current = new Date();
         toast.success('תמלול חי התחיל');
 
         // Send initial configuration
@@ -569,9 +586,11 @@ export function SessionRecordingModule({
           } else if (data.type === 'committed_transcript') {
             const text = data.text || '';
             if (text.trim()) {
-              // Add transcript with current speaker label
+              // Add transcript with current speaker label and timestamp
               const speaker = enableLiveDiarization ? currentLiveSpeaker : 'unknown';
-              setCommittedTranscripts(prev => [...prev, { text, speaker }]);
+              const timestamp = new Date();
+              const id = `transcript_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+              setCommittedTranscripts(prev => [...prev, { text, speaker, timestamp, id }]);
               
               // Update full transcript with speaker labels
               const labeledText = enableLiveDiarization 
@@ -625,7 +644,92 @@ export function SessionRecordingModule({
     }
     setIsLiveTranscribing(false);
     setLiveSpeaker(null);
+    liveSessionStartRef.current = null;
   }, [mediaStream]);
+
+  // ============================================
+  // SPEAKER CORRECTION & EXPORT
+  // ============================================
+  const updateSpeakerForTranscript = (transcriptId: string, newSpeaker: string) => {
+    setCommittedTranscripts(prev => 
+      prev.map(t => t.id === transcriptId ? { ...t, speaker: newSpeaker } : t)
+    );
+    toast.success('הדובר עודכן');
+  };
+
+  const formatTimestamp = (timestamp: Date) => {
+    if (!liveSessionStartRef.current) {
+      return timestamp.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+    const elapsed = Math.floor((timestamp.getTime() - liveSessionStartRef.current.getTime()) / 1000);
+    const mins = Math.floor(elapsed / 60);
+    const secs = elapsed % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const exportLiveTranscription = (format: 'text' | 'formatted') => {
+    if (committedTranscripts.length === 0) {
+      toast.error('אין תמלול לייצוא');
+      return;
+    }
+
+    let content = '';
+    const sessionDate = liveSessionStartRef.current || new Date();
+    
+    if (format === 'formatted') {
+      content = `תמלול פגישה\n`;
+      content += `תאריך: ${sessionDate.toLocaleDateString('he-IL')}\n`;
+      if (patientName) content += `מטופל: ${patientName}\n`;
+      content += `${'─'.repeat(40)}\n\n`;
+      
+      committedTranscripts.forEach((t) => {
+        const displayName = speakerNames[t.speaker] || (t.speaker === 'speaker_0' ? 'מטפל' : 'מטופל');
+        const timestamp = formatTimestamp(t.timestamp);
+        content += `[${timestamp}] ${displayName}:\n${t.text}\n\n`;
+      });
+    } else {
+      committedTranscripts.forEach((t) => {
+        content += `${t.text}\n`;
+      });
+    }
+
+    // Copy to clipboard
+    navigator.clipboard.writeText(content).then(() => {
+      setCopiedExport(true);
+      toast.success('התמלול הועתק ללוח');
+      setTimeout(() => setCopiedExport(false), 2000);
+    });
+  };
+
+  const downloadTranscription = () => {
+    if (committedTranscripts.length === 0) {
+      toast.error('אין תמלול להורדה');
+      return;
+    }
+
+    let content = '';
+    const sessionDate = liveSessionStartRef.current || new Date();
+    
+    content = `תמלול פגישה\n`;
+    content += `תאריך: ${sessionDate.toLocaleDateString('he-IL')}\n`;
+    if (patientName) content += `מטופל: ${patientName}\n`;
+    content += `${'─'.repeat(40)}\n\n`;
+    
+    committedTranscripts.forEach((t) => {
+      const displayName = speakerNames[t.speaker] || (t.speaker === 'speaker_0' ? 'מטפל' : 'מטופל');
+      const timestamp = formatTimestamp(t.timestamp);
+      content += `[${timestamp}] ${displayName}:\n${t.text}\n\n`;
+    });
+
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `transcription_${sessionDate.toISOString().split('T')[0]}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('הקובץ הורד');
+  };
 
   // ============================================
   // SAVE ALL
@@ -1124,27 +1228,86 @@ export function SessionRecordingModule({
               )}
             </div>
 
-            {/* Live Transcription Display with Speaker Labels */}
+            {/* Live Transcription Display with Speaker Labels & Timestamps */}
             {(committedTranscripts.length > 0 || partialTranscript) && (
               <div className="space-y-2">
-                <ScrollArea className="h-48 border rounded-lg p-3 bg-background">
+                {/* Export Actions */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    {committedTranscripts.length} קטעים
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => exportLiveTranscription('formatted')}
+                      className="gap-1 h-7 text-xs"
+                    >
+                      {copiedExport ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                      העתק
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={downloadTranscription}
+                      className="gap-1 h-7 text-xs"
+                    >
+                      <Download className="h-3 w-3" />
+                      הורד
+                    </Button>
+                  </div>
+                </div>
+                
+                <ScrollArea className="h-56 border rounded-lg p-3 bg-background">
                   <div className="space-y-2" dir="rtl">
-                    {committedTranscripts.map((item, idx) => {
+                    {committedTranscripts.map((item) => {
                       if (enableLiveDiarization && typeof item === 'object') {
                         const isTherapist = item.speaker === 'speaker_0';
                         const displayName = speakerNames[item.speaker] || (isTherapist ? 'מטפל' : 'מטופל');
+                        const timestamp = formatTimestamp(item.timestamp);
                         return (
                           <div 
-                            key={idx} 
-                            className={`p-2 rounded-lg ${
+                            key={item.id} 
+                            className={`p-2 rounded-lg group ${
                               isTherapist 
                                 ? 'bg-jade/10 border-r-2 border-jade' 
                                 : 'bg-amber-50 dark:bg-amber-950/20 border-r-2 border-amber-400'
                             }`}
                           >
-                            <div className="flex items-center gap-1 text-xs font-medium mb-1">
-                              <User className="h-3 w-3" />
-                              {displayName}
+                            <div className="flex items-center justify-between mb-1">
+                              <div className="flex items-center gap-2">
+                                {/* Speaker Label with Dropdown for Manual Correction */}
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <button className="flex items-center gap-1 text-xs font-medium hover:bg-background/50 rounded px-1 py-0.5 transition-colors">
+                                      <User className="h-3 w-3" />
+                                      {displayName}
+                                      <RefreshCw className="h-2.5 w-2.5 opacity-0 group-hover:opacity-50" />
+                                    </button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="start">
+                                    <DropdownMenuItem 
+                                      onClick={() => updateSpeakerForTranscript(item.id, 'speaker_0')}
+                                      className="gap-2"
+                                    >
+                                      <div className="w-2 h-2 rounded-full bg-jade" />
+                                      {speakerNames['speaker_0'] || 'מטפל'}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem 
+                                      onClick={() => updateSpeakerForTranscript(item.id, 'speaker_1')}
+                                      className="gap-2"
+                                    >
+                                      <div className="w-2 h-2 rounded-full bg-amber-400" />
+                                      {speakerNames['speaker_1'] || 'מטופל'}
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                              {/* Timestamp Badge */}
+                              <Badge variant="outline" className="text-[10px] h-4 px-1.5 font-mono">
+                                <Clock className="h-2.5 w-2.5 mr-0.5" />
+                                {timestamp}
+                              </Badge>
                             </div>
                             <p className="text-sm">{item.text}</p>
                           </div>
@@ -1153,7 +1316,7 @@ export function SessionRecordingModule({
                       // Fallback for string transcripts
                       const text = typeof item === 'object' ? item.text : item;
                       return (
-                        <p key={idx} className="text-sm">{text}</p>
+                        <p key={typeof item === 'object' ? item.id : Math.random()} className="text-sm">{text}</p>
                       );
                     })}
                     {partialTranscript && (
