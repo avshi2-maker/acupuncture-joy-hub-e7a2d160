@@ -1301,14 +1301,6 @@ export default function VideoSession() {
                 },
               ]}
             />
-            
-            {/* Q&A Type Dropdown - in main header row */}
-            <QATypeDropdown 
-              onSelect={handleQATypeSelect}
-              onReset={handleQATypeReset}
-              isActive={showAnxietyQA || showTcmBrainPanel}
-              selectedType={selectedQAType}
-            />
           </div>
           
           {/* CAF Asset Boxes - Customizable Toolbar */}
@@ -1820,10 +1812,14 @@ export default function VideoSession() {
                     <ClipboardList className="h-3 w-3 flex-shrink-0" />
                     <span className="truncate">המשך</span>
                   </Button>
-                  <Button variant="secondary" size="sm" onClick={() => setShowAnxietyQA(true)} className="gap-0.5 h-7 text-[10px] px-1.5">
-                    <Sparkles className="h-3 w-3 flex-shrink-0" />
-                    <span className="truncate">חרדה</span>
-                  </Button>
+                  <QATypeDropdown
+                    onSelect={handleQATypeSelect}
+                    onReset={handleQATypeReset}
+                    isActive={showAnxietyQA || showTcmBrainPanel}
+                    selectedType={selectedQAType}
+                    variant="compact"
+                    triggerClassName="h-7 text-[10px] px-1.5"
+                  />
                   <Button variant="outline" size="sm" onClick={() => setShowVoiceDictation(true)} className="gap-0.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200 h-7 text-[10px] px-1.5">
                     <AnimatedMic size="sm" />
                     <span className="truncate">הקלטה</span>
