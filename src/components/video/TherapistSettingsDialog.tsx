@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Settings, Video, Save, Bell, Shield, Clock, Fingerprint, EyeOff, Smartphone, Palette } from 'lucide-react';
+import { Settings, Video, Save, Bell, Shield, Clock, Fingerprint, EyeOff, Smartphone, Palette, Mic } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSessionLock } from '@/contexts/SessionLockContext';
 import { usePinAuth } from '@/hooks/usePinAuth';
@@ -36,6 +36,8 @@ export const LOCK_ON_TAB_SWITCH_KEY = 'therapist_lock_on_tab_switch';
 export const LOCK_ON_SCREEN_WAKE_KEY = 'therapist_lock_on_screen_wake';
 export const SCREEN_WAKE_GRACE_PERIOD_KEY = 'therapist_screen_wake_grace_period';
 export const CLOCK_THEME_KEY = 'therapist_clock_theme';
+export const VOICE_WAKE_WORD_KEY = 'therapist_voice_wake_word';
+export const VOICE_WAKE_WORD_ENABLED_KEY = 'therapist_voice_wake_word_enabled';
 
 export type ClockTheme = 'gold' | 'silver' | 'jade';
 
@@ -93,6 +95,32 @@ export function getScreenWakeGracePeriod(): number {
   }
 }
 
+export function getVoiceWakeWord(): string {
+  try {
+    const saved = localStorage.getItem(VOICE_WAKE_WORD_KEY);
+    return saved || 'hey doctor';
+  } catch {
+    return 'hey doctor';
+  }
+}
+
+export function getVoiceWakeWordEnabled(): boolean {
+  try {
+    const saved = localStorage.getItem(VOICE_WAKE_WORD_ENABLED_KEY);
+    return saved === 'true';
+  } catch {
+    return false;
+  }
+}
+
+const WAKE_WORD_PRESETS = [
+  { value: 'hey doctor', label: 'Hey Doctor' },
+  { value: 'okay roni', label: 'Okay Roni' },
+  { value: 'listen up', label: 'Listen Up' },
+  { value: 'היי רוני', label: 'היי רוני' },
+  { value: 'בבקשה', label: 'בבקשה' },
+];
+
 const TIMEOUT_OPTIONS = [
   { value: '5', label: '5 דקות' },
   { value: '10', label: '10 דקות' },
@@ -113,6 +141,9 @@ export function TherapistSettingsDialog({
   const [screenWakeGracePeriod, setScreenWakeGracePeriod] = useState('30');
   const [clockTheme, setClockTheme] = useState<ClockTheme>('gold');
   const [selectedTimeout, setSelectedTimeout] = useState('15');
+  const [wakeWordEnabled, setWakeWordEnabled] = useState(false);
+  const [wakeWord, setWakeWord] = useState('hey doctor');
+  const [customWakeWord, setCustomWakeWord] = useState('');
   
   const { timeoutMinutes, setTimeoutMinutes } = useSessionLock();
   const { hasPin } = usePinAuth();
@@ -127,6 +158,8 @@ export function TherapistSettingsDialog({
       const savedLockOnTabSwitch = getLockOnTabSwitch();
       const savedLockOnScreenWake = getLockOnScreenWake();
       const savedGracePeriod = getScreenWakeGracePeriod();
+      const savedWakeWordEnabled = getVoiceWakeWordEnabled();
+      const savedWakeWord = getVoiceWakeWord();
       setZoomLink(savedLink);
       setDisplayName(savedName);
       setAudioAlertsEnabled(savedAudioAlerts);
@@ -136,10 +169,21 @@ export function TherapistSettingsDialog({
       setScreenWakeGracePeriod(savedGracePeriod.toString());
       setClockTheme(getClockTheme());
       setSelectedTimeout(timeoutMinutes.toString());
+      setWakeWordEnabled(savedWakeWordEnabled);
+      // Check if saved wake word is a preset or custom
+      const isPreset = WAKE_WORD_PRESETS.some(p => p.value === savedWakeWord);
+      if (isPreset) {
+        setWakeWord(savedWakeWord);
+        setCustomWakeWord('');
+      } else {
+        setWakeWord('custom');
+        setCustomWakeWord(savedWakeWord);
+      }
     }
   }, [open, timeoutMinutes]);
 
   const handleSave = () => {
+    const finalWakeWord = wakeWord === 'custom' ? customWakeWord : wakeWord;
     localStorage.setItem(ZOOM_LINK_STORAGE_KEY, zoomLink);
     localStorage.setItem(THERAPIST_NAME_KEY, displayName);
     localStorage.setItem(AUDIO_ALERTS_ENABLED_KEY, audioAlertsEnabled.toString());
@@ -148,6 +192,8 @@ export function TherapistSettingsDialog({
     localStorage.setItem(LOCK_ON_SCREEN_WAKE_KEY, lockOnScreenWake.toString());
     localStorage.setItem(SCREEN_WAKE_GRACE_PERIOD_KEY, screenWakeGracePeriod);
     localStorage.setItem(CLOCK_THEME_KEY, clockTheme);
+    localStorage.setItem(VOICE_WAKE_WORD_ENABLED_KEY, wakeWordEnabled.toString());
+    localStorage.setItem(VOICE_WAKE_WORD_KEY, finalWakeWord);
     setTimeoutMinutes(parseInt(selectedTimeout, 10));
     toast.success('ההגדרות נשמרו בהצלחה');
     onOpenChange(false);
@@ -214,6 +260,60 @@ export function TherapistSettingsDialog({
               checked={audioAlertsEnabled}
               onCheckedChange={setAudioAlertsEnabled}
             />
+          </div>
+
+          {/* Voice Wake Word Settings */}
+          <div className="space-y-3 p-3 bg-muted/50 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Mic className="h-4 w-4 text-jade" />
+                <div>
+                  <Label htmlFor="wake-word-enabled" className="text-sm font-medium">
+                    מילת השכמה לפקודות קול
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    אמור מילת הפעלה לפני פקודה
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="wake-word-enabled"
+                checked={wakeWordEnabled}
+                onCheckedChange={setWakeWordEnabled}
+              />
+            </div>
+            
+            {wakeWordEnabled && (
+              <div className="space-y-2 pt-2 border-t border-border/50">
+                <Label className="text-xs text-muted-foreground">בחר מילת השכמה</Label>
+                <Select value={wakeWord} onValueChange={setWakeWord}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="בחר מילת השכמה" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {WAKE_WORD_PRESETS.map((preset) => (
+                      <SelectItem key={preset.value} value={preset.value}>
+                        {preset.label}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="custom">מותאם אישית...</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                {wakeWord === 'custom' && (
+                  <Input
+                    value={customWakeWord}
+                    onChange={(e) => setCustomWakeWord(e.target.value)}
+                    placeholder="הקלד מילת השכמה מותאמת"
+                    className="mt-2"
+                  />
+                )}
+                
+                <p className="text-xs text-muted-foreground">
+                  דוגמה: אמור "{wakeWord === 'custom' ? customWakeWord || 'מילה שלך' : wakeWord}" ואז "start" להתחלת פגישה
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Clock Theme */}
