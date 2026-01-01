@@ -1407,36 +1407,11 @@ export default function VideoSession() {
           />
           
           {/* CAF Asset Boxes - Customizable Toolbar */}
-          <div className="mt-3">
+          <div className="mt-3 hidden md:block">
             <CustomizableToolbar
               activeQuery={activeAiQuery}
               onQueryChange={setActiveAiQuery}
             />
-          </div>
-
-          {/* AI Query Animated Button Row */}
-          <div className="flex items-center gap-2 mt-3">
-            <button
-              onClick={() => setActiveAiQuery(activeAiQuery ? null : 'nutrition')}
-              className="relative overflow-hidden rounded-xl px-3 py-2 text-white font-medium shadow-lg 
-                         hover:scale-105 transition-all duration-300 animate-pulse-slow group text-xs md:text-sm"
-              style={{
-                background: `linear-gradient(135deg, rgba(22, 163, 74, 0.9), rgba(6, 95, 70, 0.95))`,
-              }}
-            >
-              <div 
-                className="absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity"
-                style={{
-                  backgroundImage: `url(${aiGeneratorBg})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                }}
-              />
-              <div className="relative flex items-center justify-center gap-2">
-                <Sparkles className="h-4 w-4 md:h-5 md:w-5 animate-bounce" />
-                <span>AI Query</span>
-              </div>
-            </button>
           </div>
 
           {/* Patient History Panel - Mobile only */}
