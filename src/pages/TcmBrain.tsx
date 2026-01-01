@@ -340,6 +340,12 @@ export default function TcmBrain() {
                 
                 <div className="hidden md:flex items-center gap-2">
                   <LanguageSwitcher variant="outline" isScrolled={true} />
+                  <Button asChild variant="outline" size="sm" className="border-jade/30 text-jade hover:bg-jade/10">
+                    <Link to="/caf-browser" className="gap-2">
+                      <BookOpen className="h-4 w-4" />
+                      CAF Studies
+                    </Link>
+                  </Button>
                   <Button asChild variant="outline" size="sm">
                     <Link to="/dashboard" className="gap-2">
                       <ArrowRight className="h-4 w-4" />
