@@ -59,7 +59,7 @@ import Contact from "./pages/Contact";
 import AdminPasswordGenerator from "./pages/AdminPasswordGenerator";
 import CAFBrowser from "./pages/CAFBrowser";
 import TherapistProfileEdit from "./pages/TherapistProfileEdit";
-
+import RetreatQuiz from "./pages/RetreatQuiz";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -89,6 +89,7 @@ const App = () => (
                       <Route path="/contact" element={<Contact />} />
                       <Route path="/therapist-disclaimer" element={<TherapistDisclaimer />} />
                       <Route path="/therapist-intake" element={<TherapistIntake />} />
+                      <Route path="/retreat-quiz" element={<RetreatQuiz />} />
 
                       {/* Protected (requires tier) */}
                       <Route path="/dashboard" element={<RequireTier><Dashboard /></RequireTier>} />
