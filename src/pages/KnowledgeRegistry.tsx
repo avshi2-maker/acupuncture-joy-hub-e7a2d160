@@ -307,6 +307,13 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'general_health',
     defaultLanguage: 'en',
   },
+  {
+    id: 'tcm-teenage-mental-health-qa',
+    label: 'TCM Teenage Mental Health Q&A (13-18 years)',
+    path: '/knowledge-assets/tcm-teenage-mental-health-qa.csv',
+    defaultCategory: 'mental_health',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 type QueueItemStatus = 'pending' | 'importing' | 'done' | 'error';
