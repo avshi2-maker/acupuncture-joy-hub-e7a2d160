@@ -164,6 +164,8 @@ export default function VideoSession() {
   const [showHelpGuide, setShowHelpGuide] = useState(false);
   const [showTcmBrainPanel, setShowTcmBrainPanel] = useState(false);
   const [voiceAlwaysOn, setVoiceAlwaysOn] = useState(false);
+  const [voiceFeedback, setVoiceFeedback] = useState<{ text: string; matched: boolean; description?: string } | null>(null);
+  const voiceFeedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [selectedQAType, setSelectedQAType] = useState<QAType | null>(null);
   const [guideCompleted, setGuideCompleted] = useState(false);
   const [liveTranscription, setLiveTranscription] = useState('');
@@ -562,19 +564,166 @@ export default function VideoSession() {
     { patterns: COMMON_COMMAND_PATTERNS.print, action: () => window.print(), description: 'Print', category: 'utility' },
     
     // Status tags
-    { patterns: ['feeling better', 'מרגיש טוב', 'better'], action: () => handleVoiceCommand('feeling-better'), description: 'Mark feeling better', category: 'session' },
-    { patterns: ['needs followup', 'צריך מעקב', 'follow up needed'], action: () => handleVoiceCommand('needs-followup'), description: 'Mark needs follow-up', category: 'session' },
+    { patterns: ['feeling better', 'מרגיש טוב', 'better'], action: () => handleVoiceCommand('feeling-better'), description: 'Patient feeling better', category: 'session' },
+    { patterns: ['needs followup', 'צריך מעקב', 'follow up needed'], action: () => handleVoiceCommand('needs-followup'), description: 'Needs follow-up', category: 'session' },
     
     // Recording
     { patterns: ['start recording', 'התחל הקלטה', 'record'], action: () => handleVoiceCommand('start-recording'), description: 'Start recording', category: 'utility' },
     { patterns: ['stop recording', 'עצור הקלטה'], action: () => handleVoiceCommand('stop-recording'), description: 'Stop recording', category: 'utility' },
-  ], [handleVoiceCommand, showMusicPlayer]);
+    
+    // TCM-specific commands
+    { patterns: ['qi stagnation', 'קי סטגנציה', 'liver qi'], action: () => {
+      const ts = formatDuration(sessionDuration);
+      setNotes(sessionNotes + `\n🔄 [${ts}] TCM Pattern: Liver Qi Stagnation`);
+      haptic.success();
+    }, description: 'Add Qi stagnation note', category: 'ai' },
+    { patterns: ['blood stasis', 'סטזיס דם', 'דם קפוא'], action: () => {
+      const ts = formatDuration(sessionDuration);
+      setNotes(sessionNotes + `\n🩸 [${ts}] TCM Pattern: Blood Stasis`);
+      haptic.success();
+    }, description: 'Add Blood stasis note', category: 'ai' },
+    { patterns: ['yin deficiency', 'חסר יין', 'יין'], action: () => {
+      const ts = formatDuration(sessionDuration);
+      setNotes(sessionNotes + `\n🌙 [${ts}] TCM Pattern: Yin Deficiency`);
+      haptic.success();
+    }, description: 'Add Yin deficiency note', category: 'ai' },
+    { patterns: ['yang deficiency', 'חסר יאנג', 'יאנג'], action: () => {
+      const ts = formatDuration(sessionDuration);
+      setNotes(sessionNotes + `\n☀️ [${ts}] TCM Pattern: Yang Deficiency`);
+      haptic.success();
+    }, description: 'Add Yang deficiency note', category: 'ai' },
+    { patterns: ['dampness', 'לחות', 'phlegm', 'ליחה'], action: () => {
+      const ts = formatDuration(sessionDuration);
+      setNotes(sessionNotes + `\n💧 [${ts}] TCM Pattern: Dampness/Phlegm`);
+      haptic.success();
+    }, description: 'Add Dampness note', category: 'ai' },
+    { patterns: ['heat', 'חום', 'fire', 'אש'], action: () => {
+      const ts = formatDuration(sessionDuration);
+      setNotes(sessionNotes + `\n🔥 [${ts}] TCM Pattern: Heat/Fire`);
+      haptic.success();
+    }, description: 'Add Heat pattern note', category: 'ai' },
+    { patterns: ['cold', 'קור', 'cold pattern'], action: () => {
+      const ts = formatDuration(sessionDuration);
+      setNotes(sessionNotes + `\n❄️ [${ts}] TCM Pattern: Cold`);
+      haptic.success();
+    }, description: 'Add Cold pattern note', category: 'ai' },
+    { patterns: ['wind', 'רוח', 'external wind'], action: () => {
+      const ts = formatDuration(sessionDuration);
+      setNotes(sessionNotes + `\n🌬️ [${ts}] TCM Pattern: Wind`);
+      haptic.success();
+    }, description: 'Add Wind pattern note', category: 'ai' },
+    { patterns: ['kidney', 'כליות', 'kidney deficiency'], action: () => {
+      const ts = formatDuration(sessionDuration);
+      setNotes(sessionNotes + `\n🫘 [${ts}] Organ: Kidney involvement`);
+      haptic.success();
+    }, description: 'Add Kidney note', category: 'ai' },
+    { patterns: ['spleen', 'טחול', 'spleen qi'], action: () => {
+      const ts = formatDuration(sessionDuration);
+      setNotes(sessionNotes + `\n🟤 [${ts}] Organ: Spleen Qi Deficiency`);
+      haptic.success();
+    }, description: 'Add Spleen note', category: 'ai' },
+    { patterns: ['liver', 'כבד', 'liver fire'], action: () => {
+      const ts = formatDuration(sessionDuration);
+      setNotes(sessionNotes + `\n🟢 [${ts}] Organ: Liver involvement`);
+      haptic.success();
+    }, description: 'Add Liver note', category: 'ai' },
+    { patterns: ['heart', 'לב', 'heart fire'], action: () => {
+      const ts = formatDuration(sessionDuration);
+      setNotes(sessionNotes + `\n❤️ [${ts}] Organ: Heart involvement`);
+      haptic.success();
+    }, description: 'Add Heart note', category: 'ai' },
+    { patterns: ['lung', 'ריאות', 'lung qi'], action: () => {
+      const ts = formatDuration(sessionDuration);
+      setNotes(sessionNotes + `\n🫁 [${ts}] Organ: Lung involvement`);
+      haptic.success();
+    }, description: 'Add Lung note', category: 'ai' },
+    
+    // Treatment commands
+    { patterns: ['acupuncture', 'דיקור', 'needles', 'מחטים'], action: () => {
+      const ts = formatDuration(sessionDuration);
+      setNotes(sessionNotes + `\n📍 [${ts}] Treatment: Acupuncture applied`);
+      haptic.success();
+    }, description: 'Add acupuncture note', category: 'ai' },
+    { patterns: ['moxa', 'מוקסה', 'moxibustion'], action: () => {
+      const ts = formatDuration(sessionDuration);
+      setNotes(sessionNotes + `\n🔥 [${ts}] Treatment: Moxibustion applied`);
+      haptic.success();
+    }, description: 'Add moxa note', category: 'ai' },
+    { patterns: ['cupping', 'כוסות רוח', 'cups'], action: () => {
+      const ts = formatDuration(sessionDuration);
+      setNotes(sessionNotes + `\n⭕ [${ts}] Treatment: Cupping applied`);
+      haptic.success();
+    }, description: 'Add cupping note', category: 'ai' },
+    { patterns: ['tuina', 'טואינה', 'massage'], action: () => {
+      const ts = formatDuration(sessionDuration);
+      setNotes(sessionNotes + `\n✋ [${ts}] Treatment: Tuina/Massage applied`);
+      haptic.success();
+    }, description: 'Add Tuina note', category: 'ai' },
+    { patterns: ['herbs', 'צמחים', 'herbal', 'formula'], action: () => {
+      const ts = formatDuration(sessionDuration);
+      setNotes(sessionNotes + `\n🌿 [${ts}] Treatment: Herbal formula prescribed`);
+      haptic.success();
+    }, description: 'Add herbs note', category: 'ai' },
+    
+    // Pulse & tongue
+    { patterns: ['pulse wiry', 'דופק מתוח', 'wiry'], action: () => {
+      const ts = formatDuration(sessionDuration);
+      setNotes(sessionNotes + `\n💓 [${ts}] Pulse: Wiry (弦 xián)`);
+      haptic.success();
+    }, description: 'Add wiry pulse', category: 'ai' },
+    { patterns: ['pulse slippery', 'דופק חלק', 'slippery'], action: () => {
+      const ts = formatDuration(sessionDuration);
+      setNotes(sessionNotes + `\n💓 [${ts}] Pulse: Slippery (滑 huá)`);
+      haptic.success();
+    }, description: 'Add slippery pulse', category: 'ai' },
+    { patterns: ['pulse weak', 'דופק חלש', 'weak pulse'], action: () => {
+      const ts = formatDuration(sessionDuration);
+      setNotes(sessionNotes + `\n💓 [${ts}] Pulse: Weak/Empty (虚 xū)`);
+      haptic.success();
+    }, description: 'Add weak pulse', category: 'ai' },
+    { patterns: ['tongue pale', 'לשון חיוורת', 'pale tongue'], action: () => {
+      const ts = formatDuration(sessionDuration);
+      setNotes(sessionNotes + `\n👅 [${ts}] Tongue: Pale body`);
+      haptic.success();
+    }, description: 'Add pale tongue', category: 'ai' },
+    { patterns: ['tongue red', 'לשון אדומה', 'red tongue'], action: () => {
+      const ts = formatDuration(sessionDuration);
+      setNotes(sessionNotes + `\n👅 [${ts}] Tongue: Red body (Heat)`);
+      haptic.success();
+    }, description: 'Add red tongue', category: 'ai' },
+    { patterns: ['thick coating', 'ציפוי עבה', 'greasy coating'], action: () => {
+      const ts = formatDuration(sessionDuration);
+      setNotes(sessionNotes + `\n👅 [${ts}] Tongue: Thick/Greasy coating (Dampness)`);
+      haptic.success();
+    }, description: 'Add thick coating', category: 'ai' },
+  ], [handleVoiceCommand, showMusicPlayer, sessionDuration, sessionNotes, setNotes, haptic]);
 
-  const { isListening: isAlwaysOnListening, isSupported: isVoiceSupported, toggleListening: toggleAlwaysOnVoice } = useVoiceCommands({
+  // Voice command recognition callback
+  const handleVoiceRecognized = useCallback((transcript: string, matched: VoiceCommand | null) => {
+    // Clear any existing timeout
+    if (voiceFeedbackTimeoutRef.current) {
+      clearTimeout(voiceFeedbackTimeoutRef.current);
+    }
+    
+    // Set feedback
+    setVoiceFeedback({
+      text: transcript,
+      matched: !!matched,
+      description: matched?.description,
+    });
+    
+    // Auto-hide after 3 seconds
+    voiceFeedbackTimeoutRef.current = setTimeout(() => {
+      setVoiceFeedback(null);
+    }, 3000);
+  }, []);
+
+  const { isListening: isAlwaysOnListening, isSupported: isVoiceSupported, toggleListening: toggleAlwaysOnVoice, lastCommand } = useVoiceCommands({
     commands: alwaysOnVoiceCommands,
     enabled: voiceAlwaysOn,
     language: 'he-IL',
-    showToasts: true,
+    showToasts: false, // We'll handle feedback visually
+    onCommandRecognized: handleVoiceRecognized,
   });
 
   // Check access
@@ -1018,6 +1167,58 @@ export default function VideoSession() {
           onCommand={handleVoiceCommand}
           isSessionActive={sessionStatus === 'running' || sessionStatus === 'paused'}
         />
+        
+        {/* Floating Voice Feedback Indicator */}
+        {voiceAlwaysOn && (
+          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
+            {/* Listening indicator */}
+            {isAlwaysOnListening && !voiceFeedback && (
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-jade/90 text-jade-foreground shadow-lg backdrop-blur-sm animate-pulse">
+                <Mic className="h-4 w-4" />
+                <span className="text-sm font-medium">Listening...</span>
+                <div className="flex gap-0.5">
+                  <span className="w-1 h-3 bg-jade-foreground/60 rounded-full animate-[pulse_0.6s_ease-in-out_infinite]" />
+                  <span className="w-1 h-4 bg-jade-foreground/80 rounded-full animate-[pulse_0.6s_ease-in-out_infinite_0.1s]" />
+                  <span className="w-1 h-2 bg-jade-foreground/60 rounded-full animate-[pulse_0.6s_ease-in-out_infinite_0.2s]" />
+                </div>
+              </div>
+            )}
+            
+            {/* Command feedback */}
+            {voiceFeedback && (
+              <div 
+                className={cn(
+                  "px-4 py-3 rounded-xl shadow-xl backdrop-blur-sm animate-scale-in max-w-[300px]",
+                  voiceFeedback.matched 
+                    ? "bg-jade/95 text-jade-foreground" 
+                    : "bg-muted/95 text-foreground border border-border"
+                )}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  {voiceFeedback.matched ? (
+                    <>
+                      <div className="w-6 h-6 rounded-full bg-jade-foreground/20 flex items-center justify-center">
+                        <Sparkles className="h-3.5 w-3.5" />
+                      </div>
+                      <span className="text-xs font-semibold uppercase tracking-wide">Command Recognized</span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-6 h-6 rounded-full bg-muted-foreground/20 flex items-center justify-center">
+                        <Mic className="h-3.5 w-3.5" />
+                      </div>
+                      <span className="text-xs font-medium text-muted-foreground">Heard</span>
+                    </>
+                  )}
+                </div>
+                <p className="text-sm font-medium truncate">"{voiceFeedback.text}"</p>
+                {voiceFeedback.matched && voiceFeedback.description && (
+                  <p className="text-xs mt-1 opacity-80">→ {voiceFeedback.description}</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
         
         {/* Paused Dimming Overlay */}
         {sessionStatus === 'paused' && (
