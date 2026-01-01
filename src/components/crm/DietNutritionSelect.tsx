@@ -1,12 +1,20 @@
-import { useState, useCallback, memo } from 'react';
+import { useState, useMemo, memo } from 'react';
+import { Check, ChevronDown, Search, X, Utensils, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-
-import { ChevronDown, ChevronUp, X, Utensils, Info } from 'lucide-react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
 import { dietNutritionData, getDietHabitDetails } from '@/data/diet-nutrition-data';
 
@@ -16,189 +24,181 @@ interface DietNutritionSelectProps {
   className?: string;
 }
 
-export const DietNutritionSelect = memo(function DietNutritionSelect({ 
-  value = [], 
-  onChange, 
-  className 
+export const DietNutritionSelect = memo(function DietNutritionSelect({
+  value = [],
+  onChange,
+  className,
 }: DietNutritionSelectProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
+  const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const setCategoryOpen = useCallback((category: string, open: boolean) => {
-    setExpandedCategories((prev) => {
-      const isExpanded = prev.includes(category);
-      if (open && !isExpanded) return [...prev, category];
-      if (!open && isExpanded) return prev.filter((c) => c !== category);
-      return prev;
-    });
-  }, []);
+  const filteredData = useMemo(() => {
+    if (!searchQuery.trim()) return dietNutritionData;
+    
+    const q = searchQuery.toLowerCase();
+    return dietNutritionData
+      .map(cat => ({
+        ...cat,
+        habits: cat.habits.filter(h =>
+          h.habit.toLowerCase().includes(q) ||
+          h.westernPerspective.toLowerCase().includes(q) ||
+          h.tcmPerspective.toLowerCase().includes(q)
+        )
+      }))
+      .filter(cat => cat.habits.length > 0);
+  }, [searchQuery]);
 
-  const toggleOption = useCallback((option: string) => {
+  const toggleOption = (option: string) => {
     const currentValue = value || [];
     onChange(
       currentValue.includes(option)
-        ? currentValue.filter(v => v !== option)
-        : [...currentValue, option]
+        ? currentValue.filter((v) => v !== option)
+        : [...currentValue, option],
     );
-  }, [value, onChange]);
+  };
 
   const removeOption = (option: string) => {
-    onChange(value.filter(v => v !== option));
+    onChange(value.filter((v) => v !== option));
   };
 
   const clearAll = () => {
     onChange([]);
   };
 
-  // Calculate dynamic height based on selections
-  const minHeight = value.length === 0 ? 'auto' : Math.min(56 + value.length * 32, 200);
-
   return (
     <div className={cn('space-y-2', className)}>
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-          <CollapsibleTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              className={cn(
-                'w-full justify-between text-left font-normal',
-                !value.length && 'text-muted-foreground'
-              )}
-            >
-              <span className="flex items-center gap-2">
-                <Utensils className="h-4 w-4" />
-                {value.length === 0
-                  ? 'Select dietary habits...'
-                  : `${value.length} habit${value.length > 1 ? 's' : ''} selected`}
-              </span>
-              {isOpen ? (
-                <ChevronUp className="h-4 w-4 shrink-0" />
-              ) : (
-                <ChevronDown className="h-4 w-4 shrink-0" />
-              )}
-            </Button>
-          </CollapsibleTrigger>
-
-          <CollapsibleContent className="mt-2">
-            <div className="border rounded-lg bg-background">
-              <ScrollArea className="h-[300px]">
-                <div className="p-3 space-y-2">
-                  {dietNutritionData.map((category) => (
-                    <Collapsible
-                      key={category.category}
-                      open={expandedCategories.includes(category.category)}
-                      onOpenChange={(open) => setCategoryOpen(category.category, open)}
-                    >
-                      <CollapsibleTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="w-full justify-between px-2 h-8 font-medium text-sm"
-                        >
-                          <span>{category.category}</span>
-                          {expandedCategories.includes(category.category) ? (
-                            <ChevronUp className="h-3 w-3" />
-                          ) : (
-                            <ChevronDown className="h-3 w-3" />
-                          )}
-                        </Button>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="pl-4 mt-1 space-y-1">
-                        {category.habits.map((habit) => (
-                          <div
-                            key={habit.habit}
-                            className="flex items-center gap-2 py-1 px-2 rounded hover:bg-muted/50 cursor-pointer"
-                            onClick={() => toggleOption(habit.habit)}
-                          >
-                            <Checkbox
-                              checked={value.includes(habit.habit)}
-                              onCheckedChange={() => toggleOption(habit.habit)}
-                              className="pointer-events-none"
-                            />
-                            <Label className="text-sm cursor-pointer flex-1">
-                              {habit.habit}
-                            </Label>
-                            <button
-                              type="button"
-                              className="shrink-0 cursor-help text-muted-foreground hover:text-foreground transition-colors"
-                              onClick={(e) => e.stopPropagation()}
-                              title={[
-                                `Western: ${habit.westernPerspective}`,
-                                `TCM: ${habit.tcmPerspective}`,
-                                `Calories: ${habit.estimatedCalories}`,
-                              ].join('\n')}
-                              aria-label={`Diet habit info: ${habit.habit}`}
-                            >
-                              <Info className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        ))}
-                      </CollapsibleContent>
-                    </Collapsible>
-                  ))}
-                </div>
-              </ScrollArea>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-
-        {/* Selected items display - expands based on count */}
-        {value.length > 0 && (
-          <div
-            className="border rounded-lg p-3 bg-muted/30 transition-all duration-200"
-            style={{ minHeight: typeof minHeight === 'number' ? `${minHeight}px` : minHeight }}
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-between text-left font-normal min-h-[40px]"
           >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-muted-foreground font-medium">
-                Selected ({value.length})
-              </span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={clearAll}
-                className="h-6 px-2 text-xs text-destructive hover:text-destructive"
-              >
-                Clear all
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {value.map((item) => {
-                const details = getDietHabitDetails(item);
-                return (
-                  <span
-                    key={item}
-                    className="inline-flex"
-                    title={
-                      details
-                        ? [`TCM: ${details.tcmPerspective}`, 'Click × to remove'].join('\n')
-                        : undefined
-                    }
-                  >
-                    <Badge
-                      variant="secondary"
-                      className="text-xs pr-1 gap-1 cursor-pointer"
-                    >
-                      {item.length > 35 ? item.substring(0, 35) + '...' : item}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeOption(item);
-                        }}
-                        className="ml-1 hover:bg-muted rounded-full p-0.5"
-                        aria-label={`Remove diet habit ${item}`}
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  </span>
-                );
-              })}
+            <span className="flex items-center gap-2">
+              <Utensils className="h-4 w-4" />
+              {value.length === 0
+                ? 'Select dietary habits...'
+                : `${value.length} habit${value.length > 1 ? 's' : ''} selected`}
+            </span>
+            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[400px] p-0 z-50 bg-popover" align="start">
+          <div className="p-2 border-b">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search diet habits..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
             </div>
           </div>
-        )}
+          <ScrollArea className="h-[300px]">
+            <Accordion type="multiple" defaultValue={filteredData.map(c => c.category)} className="w-full">
+              {filteredData.map((category) => (
+                <AccordionItem key={category.category} value={category.category} className="border-b-0">
+                  <AccordionTrigger className="px-3 py-2 hover:no-underline hover:bg-accent/50 text-sm">
+                    <span className="flex items-center gap-2">
+                      <span className="font-medium">{category.category}</span>
+                      <Badge variant="secondary" className="text-xs ml-2">
+                        {category.habits.length}
+                      </Badge>
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-0">
+                    <div className="space-y-0.5 px-1">
+                      {category.habits.map((habit) => {
+                        const isSelected = value.includes(habit.habit);
+                        
+                        return (
+                          <button
+                            key={habit.habit}
+                            type="button"
+                            onClick={() => toggleOption(habit.habit)}
+                            className={cn(
+                              "w-full flex items-center gap-2 p-2 rounded-md text-left transition-colors text-sm",
+                              "hover:bg-accent hover:text-accent-foreground",
+                              isSelected && "bg-primary/10 border border-primary/30"
+                            )}
+                            title={`Western: ${habit.westernPerspective}\nTCM: ${habit.tcmPerspective}\nCalories: ${habit.estimatedCalories}`}
+                          >
+                            <div className={cn(
+                              "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border",
+                              isSelected ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/30"
+                            )}>
+                              {isSelected && <Check className="h-2.5 w-2.5" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <span className="font-medium">{habit.habit}</span>
+                            </div>
+                            <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+            {filteredData.length === 0 && (
+              <div className="p-4 text-center text-muted-foreground text-sm">
+                No diet habits found matching "{searchQuery}"
+              </div>
+            )}
+          </ScrollArea>
+        </PopoverContent>
+      </Popover>
+
+      {/* Selected items display */}
+      {value.length > 0 && (
+        <div className="border rounded-lg p-3 bg-muted/30">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-muted-foreground font-medium">
+              Selected Habits ({value.length})
+            </span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={clearAll}
+              className="h-6 px-2 text-xs text-destructive hover:text-destructive"
+            >
+              Clear all
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {value.map((item) => {
+              const details = getDietHabitDetails(item);
+
+              return (
+                <Badge
+                  key={item}
+                  variant="secondary"
+                  className="text-xs pr-1 gap-1"
+                  title={details ? `TCM: ${details.tcmPerspective}\nCalories: ${details.estimatedCalories}` : undefined}
+                >
+                  {item.length > 30 ? item.substring(0, 30) + '...' : item}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeOption(item);
+                    }}
+                    className="ml-1 hover:bg-muted rounded-full p-0.5"
+                    aria-label={`Remove diet habit ${item}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 });
