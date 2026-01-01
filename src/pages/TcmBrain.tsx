@@ -47,7 +47,8 @@ import { IntakeReviewDialog } from '@/components/tcm-brain/IntakeReviewDialog';
 import { QuickActionsRef } from '@/components/tcm-brain/QuickActionsBar';
 import { QASuggestionsPanel } from '@/components/tcm/QASuggestionsPanel';
 import { ExternalAIFallbackCard, ExternalAIProvider } from '@/components/tcm/ExternalAIFallbackCard';
-import { SessionHeaderBoxes, SessionHeaderBox, SessionPhaseIndicator, getPhaseFromDuration } from '@/components/session';
+import { SessionHeaderBoxes, SessionHeaderBox, SessionPhaseIndicator } from '@/components/session';
+import { useSessionPhase } from '@/hooks/useSessionPhase';
 import { CrossPlatformBackButton } from '@/components/ui/CrossPlatformBackButton';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { TierBadge } from '@/components/layout/TierBadge';
@@ -104,7 +105,8 @@ export default function TcmBrain() {
     runExternalAIFallback,
   } = useTcmBrainState();
 
-  // Auto-save functionality
+  // Session phase with haptic feedback and persistence
+  const { currentPhase, setPhase, isManualOverride } = useSessionPhase(sessionSeconds);
   const { lastSaveTime, isSaving, saveNow, loadSavedSession, clearSavedSession } = useAutoSave(
     {
       messages,
@@ -360,18 +362,23 @@ export default function TcmBrain() {
         {/* Session Phase Indicator - Unified with VideoSession */}
         <div className="px-3 md:px-6 pt-3 pb-2 border-b bg-gradient-to-r from-jade/5 via-transparent to-jade/5">
           <SessionPhaseIndicator
-            currentPhase={getPhaseFromDuration(sessionSeconds)}
+            currentPhase={currentPhase}
             patientName={selectedPatient?.name}
             onPhaseClick={(phase) => {
+              setPhase(phase);
               // Navigate to relevant tab based on phase
               if (phase === 'opening') setActiveTab('history');
               else if (phase === 'diagnosis') setActiveTab('diagnostics');
               else if (phase === 'treatment') setActiveTab('treatment');
               else if (phase === 'closing') setActiveTab('notes');
-              toast.info(`שלב: ${phase === 'opening' ? 'פתיחה' : phase === 'diagnosis' ? 'אבחון' : phase === 'treatment' ? 'טיפול' : 'סיום'}`);
             }}
             className="max-w-2xl mx-auto"
           />
+          {isManualOverride && (
+            <p className="text-[10px] text-center text-muted-foreground mt-1">
+              שלב ידני • לחץ לשינוי
+            </p>
+          )}
         </div>
 
         {/* Header Boxes Row - Matching VideoSession style */}

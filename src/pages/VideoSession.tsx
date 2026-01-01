@@ -106,7 +106,8 @@ import { VideoSessionHeaderBoxes } from '@/components/video/VideoSessionHeaderBo
 import { InlineMusicPlayer } from '@/components/video/InlineMusicPlayer';
 import { TcmBrainPanel } from '@/components/video/TcmBrainPanel';
 import { SessionWorkflowIndicator } from '@/components/video/SessionWorkflowIndicator';
-import { SessionPhaseIndicator, getPhaseFromDuration, SessionPhase } from '@/components/session';
+import { SessionPhaseIndicator } from '@/components/session';
+import { useSessionPhase } from '@/hooks/useSessionPhase';
 import { QATypeDropdown, QAType } from '@/components/video/QATypeDropdown';
 import { useLongPressTimer } from '@/hooks/useLongPressTimer';
 import { useSessionLock } from '@/contexts/SessionLockContext';
@@ -241,7 +242,8 @@ export default function VideoSession() {
     setAnxietyConversation,
   } = useSessionPersistence();
 
-  // Background detection - auto-pause when app goes to background
+  // Session phase with haptic feedback and persistence
+  const { currentPhase, setPhase, isManualOverride } = useSessionPhase(sessionDuration, sessionStartTime);
   useBackgroundDetection({
     onBackground: () => {
       if (sessionStatus === 'running') {
@@ -1195,9 +1197,10 @@ export default function VideoSession() {
         {/* Session Phase Indicator - Unified workflow */}
         <div className="px-3 md:px-6 pt-3 pb-2 border-b bg-gradient-to-r from-jade/5 via-transparent to-jade/5">
           <SessionPhaseIndicator
-            currentPhase={getPhaseFromDuration(sessionDuration)}
+            currentPhase={currentPhase}
             patientName={selectedPatientName}
             onPhaseClick={(phase) => {
+              setPhase(phase);
               // Navigate to relevant action based on phase
               if (phase === 'opening' && selectedPatientId) {
                 navigate(`/crm/patients/${selectedPatientId}`);
@@ -1208,10 +1211,14 @@ export default function VideoSession() {
               } else if (phase === 'closing') {
                 setShowSessionReport(true);
               }
-              toast.info(`שלב: ${phase === 'opening' ? 'פתיחה' : phase === 'diagnosis' ? 'אבחון' : phase === 'treatment' ? 'טיפול' : 'סיום'}`);
             }}
             className="max-w-2xl mx-auto"
           />
+          {isManualOverride && (
+            <p className="text-[10px] text-center text-muted-foreground mt-1">
+              שלב ידני • לחץ לשינוי
+            </p>
+          )}
         </div>
 
         {/* Workflow Progress Indicator (legacy - task steps) */}
