@@ -1507,6 +1507,15 @@ export default function VideoSession() {
               "flex flex-col gap-3 md:gap-4 h-full overflow-hidden",
               showSessionGuide ? "lg:col-span-3" : "lg:col-span-3"
             )}>
+              {/* Mobile Inspiration Carousel - Above Video */}
+              <div className="md:hidden">
+                <MiniInspirationCarousel 
+                  autoPlay={sessionStatus === 'running'}
+                  interval={6000}
+                  language="he"
+                />
+              </div>
+
               {/* Top Row: Video Area + Anxiety Q&A Chat */}
               <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 min-h-0">
                 {/* Video Area - Compact on mobile */}
