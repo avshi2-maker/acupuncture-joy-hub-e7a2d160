@@ -820,17 +820,29 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
   };
 
   return (
-    <div 
-      className="relative min-h-screen"
-      style={{
-        backgroundImage: `url(${intakeBg})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'bottom right',
-        backgroundAttachment: 'fixed',
-      }}
-    >
+    <div className="relative min-h-screen overflow-x-hidden">
+      {/* Parallax Background */}
+      <div 
+        className="fixed inset-0 -z-10"
+        style={{
+          backgroundImage: `url(${intakeBg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'bottom right',
+          transform: 'translateZ(0)',
+          willChange: 'transform',
+        }}
+      />
+      
       {/* Semi-transparent overlay for text readability */}
-      <div className="absolute inset-0 bg-background/85 backdrop-blur-[1px]" />
+      <div className="fixed inset-0 -z-10 bg-background/85 backdrop-blur-[1px]" />
+      
+      {/* Vignette overlay */}
+      <div 
+        className="fixed inset-0 -z-10 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse at center, transparent 40%, hsl(var(--background) / 0.6) 100%)',
+        }}
+      />
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit, handleFormErrors)} className="relative z-10 space-y-6 p-4 md:p-6">
