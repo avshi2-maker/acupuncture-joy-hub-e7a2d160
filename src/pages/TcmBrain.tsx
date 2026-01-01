@@ -28,7 +28,8 @@ import {
   HelpCircle,
   BookOpen,
   Heart,
-  Mic
+  Mic,
+  Baby
 } from 'lucide-react';
 import { APIUsageMeter } from '@/components/tcm-brain/APIUsageMeter';
 import { useTcmBrainState } from '@/hooks/useTcmBrainState';
@@ -53,6 +54,7 @@ import { CrossPlatformBackButton } from '@/components/ui/CrossPlatformBackButton
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { TierBadge } from '@/components/layout/TierBadge';
 import { FloatingHelpGuide } from '@/components/ui/FloatingHelpGuide';
+import { PregnancySafetyDialog } from '@/components/clinical';
 import { toast } from 'sonner';
 import clockImg from '@/assets/clock.png';
 
@@ -63,6 +65,7 @@ export default function TcmBrain() {
   const [showQASuggestions, setShowQASuggestions] = useState(false);
   const [showIntakeReview, setShowIntakeReview] = useState(false);
   const [showHelpGuide, setShowHelpGuide] = useState(false);
+  const [showPregnancyCalc, setShowPregnancyCalc] = useState(false);
   const [qaFavoritesCount, setQaFavoritesCount] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
   const quickActionsRef = useRef<QuickActionsRef>(null);
@@ -471,6 +474,17 @@ export default function TcmBrain() {
                     tooltip: 'Browse TCM knowledge base assets',
                     onClick: () => setShowKnowledgeAssets(!showKnowledgeAssets),
                   },
+                  {
+                    id: 'pregnancy',
+                    name: 'Pregnancy',
+                    nameHe: 'הריון',
+                    icon: Baby,
+                    color: 'text-pink-500',
+                    borderColor: 'border-pink-300',
+                    isActive: showPregnancyCalc,
+                    tooltip: 'Pregnancy safety calculator',
+                    onClick: () => setShowPregnancyCalc(true),
+                  },
                 ],
               },
               {
@@ -806,6 +820,13 @@ export default function TcmBrain() {
 
         {/* Help Guide */}
         <FloatingHelpGuide isOpen={showHelpGuide} onOpenChange={setShowHelpGuide} />
+        
+        {/* Pregnancy Safety Calculator */}
+        <PregnancySafetyDialog 
+          open={showPregnancyCalc} 
+          onOpenChange={setShowPregnancyCalc}
+          patientName={selectedPatient?.name}
+        />
       </div>
     </>
   );

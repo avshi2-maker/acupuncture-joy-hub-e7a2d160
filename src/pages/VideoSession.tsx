@@ -51,7 +51,8 @@ import {
   Music,
   HelpCircle,
   Mic,
-  MicOff
+  MicOff,
+  Baby
 } from 'lucide-react';
 import { AnimatedMic } from '@/components/ui/AnimatedMic';
 import { toast } from 'sonner';
@@ -107,6 +108,7 @@ import {
 import { VideoSessionHeaderBoxes } from '@/components/video/VideoSessionHeaderBoxes';
 import { InlineMusicPlayer } from '@/components/video/InlineMusicPlayer';
 import { TcmBrainPanel } from '@/components/video/TcmBrainPanel';
+import { PregnancySafetyDialog } from '@/components/clinical';
 
 import { SessionWorkflowIndicator } from '@/components/video/SessionWorkflowIndicator';
 import { SessionPhaseIndicator } from '@/components/session';
@@ -165,6 +167,7 @@ export default function VideoSession() {
   const [showMusicPlayer, setShowMusicPlayer] = useState(false);
   const [showHelpGuide, setShowHelpGuide] = useState(false);
   const [showTcmBrainPanel, setShowTcmBrainPanel] = useState(false);
+  const [showPregnancyCalc, setShowPregnancyCalc] = useState(false);
   const [voiceAlwaysOn, setVoiceAlwaysOn] = useState(false);
   const [voiceWakeWord, setVoiceWakeWord] = useState(() => getVoiceWakeWord());
   const [voiceWakeWordEnabled, setVoiceWakeWordEnabled] = useState(() => getVoiceWakeWordEnabled());
@@ -565,6 +568,7 @@ export default function VideoSession() {
     { patterns: ['follow up', 'מעקב', 'followup'], action: () => setShowFollowUpPlan(true), description: 'Follow-up plan', category: 'navigation' },
     { patterns: ['settings', 'הגדרות'], action: () => setShowSettings(true), description: 'Open settings', category: 'navigation' },
     { patterns: ['brain', 'מוח', 'tcm', 'ai'], action: () => setShowTcmBrainPanel(true), description: 'Open TCM Brain', category: 'ai' },
+    { patterns: ['pregnancy', 'הריון', 'pregnant', 'בהריון', 'gestation'], action: () => setShowPregnancyCalc(true), description: 'Pregnancy calculator', category: 'ai' },
     { patterns: ['anxiety', 'חרדה', 'qa', 'questions'], action: () => setShowAnxietyQA(true), description: 'Anxiety Q&A', category: 'ai' },
     { patterns: ['guide', 'מדריך', 'teleprompter'], action: () => setShowSessionGuide(true), description: 'Session guide', category: 'navigation' },
     { patterns: ['music', 'מוזיקה'], action: () => setShowMusicPlayer(!showMusicPlayer), description: 'Toggle music', category: 'utility' },
@@ -1618,6 +1622,17 @@ export default function VideoSession() {
                     },
                   },
                   {
+                    id: 'pregnancy',
+                    name: 'Pregnancy',
+                    nameHe: 'הריון',
+                    icon: Baby,
+                    color: 'text-pink-500',
+                    borderColor: 'border-pink-300',
+                    isActive: showPregnancyCalc,
+                    tooltip: 'Pregnancy safety calculator for TCM',
+                    onClick: () => setShowPregnancyCalc(true),
+                  },
+                  {
                     id: 'qa',
                     name: 'Q&A',
                     nameHe: 'שאלות',
@@ -2430,6 +2445,14 @@ export default function VideoSession() {
         patientId={selectedPatientId || undefined}
         patientName={selectedPatientName || undefined}
         sessionNotes={sessionNotes}
+      />
+      
+      {/* Pregnancy Safety Calculator Dialog */}
+      <PregnancySafetyDialog 
+        open={showPregnancyCalc} 
+        onOpenChange={setShowPregnancyCalc}
+        patientName={selectedPatientName || undefined}
+        therapistName={localStorage.getItem('therapist_display_name') || undefined}
       />
       
       {/* Floating Quick Actions - Long press on timer */}
