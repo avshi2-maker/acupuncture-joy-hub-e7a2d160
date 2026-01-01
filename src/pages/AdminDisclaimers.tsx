@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -19,9 +20,21 @@ import {
   Clock,
   User,
   Award,
-  Calendar
+  Calendar,
+  Mail,
+  Bell,
+  Eye,
+  FileSignature,
+  Globe
 } from 'lucide-react';
-import { format, isAfter, isBefore, addDays } from 'date-fns';
+import { format, isAfter, isBefore, addDays, differenceInDays } from 'date-fns';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface Disclaimer {
   id: string;
@@ -43,6 +56,8 @@ export default function AdminDisclaimers() {
   const [disclaimers, setDisclaimers] = useState<Disclaimer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedDisclaimer, setSelectedDisclaimer] = useState<Disclaimer | null>(null);
+  const [activeTab, setActiveTab] = useState('all');
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -79,13 +94,14 @@ export default function AdminDisclaimers() {
     const now = new Date();
     const expiry = new Date(expiresAt);
     const warningDate = addDays(now, 30);
+    const daysLeft = differenceInDays(expiry, now);
 
     if (isBefore(expiry, now)) {
-      return { status: 'expired', label: 'Expired', variant: 'destructive' as const };
+      return { status: 'expired', label: 'Expired', variant: 'destructive' as const, daysLeft: Math.abs(daysLeft) };
     } else if (isBefore(expiry, warningDate)) {
-      return { status: 'expiring', label: 'Expiring Soon', variant: 'secondary' as const };
+      return { status: 'expiring', label: `${daysLeft} days left`, variant: 'secondary' as const, daysLeft };
     }
-    return { status: 'valid', label: 'Valid', variant: 'default' as const };
+    return { status: 'valid', label: 'Valid', variant: 'default' as const, daysLeft };
   };
 
   const getLanguageFlag = (lang: string) => {
@@ -96,10 +112,27 @@ export default function AdminDisclaimers() {
     }
   };
 
-  const filteredDisclaimers = disclaimers.filter(d => 
-    d.therapist_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    d.license_number.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const getLanguageName = (lang: string) => {
+    switch (lang) {
+      case 'he': return 'Hebrew';
+      case 'ru': return 'Russian';
+      default: return 'English';
+    }
+  };
+
+  const filteredDisclaimers = disclaimers.filter(d => {
+    const matchesSearch = d.therapist_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      d.license_number.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (!matchesSearch) return false;
+    
+    const status = getExpirationStatus(d.expires_at).status;
+    if (activeTab === 'all') return true;
+    if (activeTab === 'valid') return status === 'valid';
+    if (activeTab === 'expiring') return status === 'expiring';
+    if (activeTab === 'expired') return status === 'expired';
+    return true;
+  });
 
   const stats = {
     total: disclaimers.length,
@@ -132,7 +165,7 @@ export default function AdminDisclaimers() {
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
                 <Shield className="h-6 w-6 text-jade" />
-                Signed Disclaimers
+                Therapist Disclaimers
               </h1>
               <p className="text-muted-foreground">View and manage therapist legal disclaimers</p>
             </div>
@@ -143,9 +176,65 @@ export default function AdminDisclaimers() {
           </Button>
         </div>
 
+        {/* Expiring Soon Alert */}
+        {stats.expiring > 0 && (
+          <Card className="border-amber-500/50 bg-amber-500/5">
+            <CardContent className="py-4">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-amber-500/20 rounded-full">
+                  <Bell className="h-6 w-6 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-amber-700 dark:text-amber-400">
+                    {stats.expiring} Disclaimer{stats.expiring > 1 ? 's' : ''} Expiring Soon
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    These therapists need to renew their disclaimer within the next 30 days.
+                  </p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  className="border-amber-500/50 text-amber-600 hover:bg-amber-500/10"
+                  onClick={() => setActiveTab('expiring')}
+                >
+                  View Expiring
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Expired Alert */}
+        {stats.expired > 0 && (
+          <Card className="border-destructive/50 bg-destructive/5">
+            <CardContent className="py-4">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-destructive/20 rounded-full">
+                  <AlertTriangle className="h-6 w-6 text-destructive" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-destructive">
+                    {stats.expired} Disclaimer{stats.expired > 1 ? 's' : ''} Expired
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    These therapists must sign a new disclaimer to continue using the platform.
+                  </p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  className="border-destructive/50 text-destructive hover:bg-destructive/10"
+                  onClick={() => setActiveTab('expired')}
+                >
+                  View Expired
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
+          <Card className="cursor-pointer hover:border-jade/50 transition-colors" onClick={() => setActiveTab('all')}>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-jade/10 rounded-lg">
@@ -158,7 +247,7 @@ export default function AdminDisclaimers() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="cursor-pointer hover:border-green-500/50 transition-colors" onClick={() => setActiveTab('valid')}>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-green-500/10 rounded-lg">
@@ -171,7 +260,7 @@ export default function AdminDisclaimers() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="cursor-pointer hover:border-amber-500/50 transition-colors" onClick={() => setActiveTab('expiring')}>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-amber-500/10 rounded-lg">
@@ -184,7 +273,7 @@ export default function AdminDisclaimers() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="cursor-pointer hover:border-destructive/50 transition-colors" onClick={() => setActiveTab('expired')}>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-destructive/10 rounded-lg">
@@ -199,12 +288,15 @@ export default function AdminDisclaimers() {
           </Card>
         </div>
 
-        {/* Search and Table */}
+        {/* Tabs and Table */}
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>All Disclaimers</CardTitle>
-              <div className="relative w-64">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <CardTitle>Disclaimer Records</CardTitle>
+                <CardDescription>Click on a row to view full details</CardDescription>
+              </div>
+              <div className="relative w-full sm:w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search by name or license..."
@@ -216,6 +308,23 @@ export default function AdminDisclaimers() {
             </div>
           </CardHeader>
           <CardContent>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="all" className="gap-1">
+                  All <Badge variant="secondary" className="ml-1">{stats.total}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="valid" className="gap-1">
+                  Valid <Badge variant="secondary" className="ml-1 bg-green-500/20">{stats.valid}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="expiring" className="gap-1">
+                  Expiring <Badge variant="secondary" className="ml-1 bg-amber-500/20">{stats.expiring}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="expired" className="gap-1">
+                  Expired <Badge variant="secondary" className="ml-1 bg-destructive/20">{stats.expired}</Badge>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <RefreshCw className="h-8 w-8 animate-spin text-jade" />
@@ -236,13 +345,18 @@ export default function AdminDisclaimers() {
                       <TableHead>Signed</TableHead>
                       <TableHead>Expires</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead className="w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredDisclaimers.map((disclaimer) => {
                       const expStatus = getExpirationStatus(disclaimer.expires_at);
                       return (
-                        <TableRow key={disclaimer.id}>
+                        <TableRow 
+                          key={disclaimer.id} 
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => setSelectedDisclaimer(disclaimer)}
+                        >
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <User className="h-4 w-4 text-muted-foreground" />
@@ -284,6 +398,9 @@ export default function AdminDisclaimers() {
                               {expStatus.label}
                             </Badge>
                           </TableCell>
+                          <TableCell>
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                          </TableCell>
                         </TableRow>
                       );
                     })}
@@ -294,6 +411,87 @@ export default function AdminDisclaimers() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Detail Dialog */}
+      <Dialog open={!!selectedDisclaimer} onOpenChange={() => setSelectedDisclaimer(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileSignature className="h-5 w-5 text-jade" />
+              Disclaimer Details
+            </DialogTitle>
+            <DialogDescription>
+              Full information about this signed disclaimer
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedDisclaimer && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Therapist Name</label>
+                  <p className="font-medium">{selectedDisclaimer.therapist_name}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">License Number</label>
+                  <p className="font-mono">{selectedDisclaimer.license_number}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Signed Date</label>
+                  <p>{format(new Date(selectedDisclaimer.signed_at), 'PPP')}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Expiry Date</label>
+                  <div className="flex items-center gap-2">
+                    <p>{format(new Date(selectedDisclaimer.expires_at), 'PPP')}</p>
+                    {(() => {
+                      const status = getExpirationStatus(selectedDisclaimer.expires_at);
+                      return (
+                        <Badge variant={status.variant} className={
+                          status.status === 'valid' ? 'bg-green-500/10 text-green-600' :
+                          status.status === 'expiring' ? 'bg-amber-500/10 text-amber-600' :
+                          'bg-destructive/10 text-destructive'
+                        }>
+                          {status.label}
+                        </Badge>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                  <Globe className="h-3 w-3" /> Language
+                </label>
+                <p>{getLanguageFlag(selectedDisclaimer.language)} {getLanguageName(selectedDisclaimer.language)}</p>
+              </div>
+
+              {selectedDisclaimer.signature_url && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Signature</label>
+                  <div className="mt-2 p-4 bg-muted rounded-lg">
+                    <img 
+                      src={selectedDisclaimer.signature_url} 
+                      alt="Signature" 
+                      className="max-h-24 mx-auto"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-4 border-t text-xs text-muted-foreground space-y-1">
+                <p><strong>IP Address:</strong> {selectedDisclaimer.ip_address || 'Not recorded'}</p>
+                <p><strong>User Agent:</strong> {selectedDisclaimer.user_agent?.substring(0, 60) || 'Not recorded'}...</p>
+                <p><strong>User ID:</strong> {selectedDisclaimer.user_id || 'Anonymous'}</p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
