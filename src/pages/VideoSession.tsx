@@ -106,7 +106,7 @@ import {
 import { VideoSessionHeaderBoxes } from '@/components/video/VideoSessionHeaderBoxes';
 import { InlineMusicPlayer } from '@/components/video/InlineMusicPlayer';
 import { TcmBrainPanel } from '@/components/video/TcmBrainPanel';
-import { VoiceCommandsHelpDialog } from '@/components/video/VoiceCommandsHelpDialog';
+
 import { SessionWorkflowIndicator } from '@/components/video/SessionWorkflowIndicator';
 import { SessionPhaseIndicator } from '@/components/session';
 import { useSessionPhase } from '@/hooks/useSessionPhase';

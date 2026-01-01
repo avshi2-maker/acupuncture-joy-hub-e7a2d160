@@ -16,8 +16,9 @@ import {
   User, Clock, BookOpen, Calculator, BarChart3,
   Keyboard, Lightbulb, Zap, Command, ArrowUp, ArrowDown,
   CornerDownLeft, Option, Sparkles, Send, Mail,
-  Gift, Rocket, CheckCircle2, AlertCircle
+  Gift, Rocket, CheckCircle2, AlertCircle, MicOff
 } from 'lucide-react';
+import { useVoiceCommands, COMMON_COMMAND_PATTERNS, VoiceCommand } from '@/hooks/useVoiceCommands';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 
@@ -205,8 +206,27 @@ export function FloatingHelpGuide({ isOpen: controlledIsOpen, onOpenChange }: Fl
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [feedbackText, setFeedbackText] = useState('');
   const [feedbackSending, setFeedbackSending] = useState(false);
+  const [voiceAlwaysOn, setVoiceAlwaysOn] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  // Voice commands definition for always-on mode
+  const voiceCommandsList: VoiceCommand[] = useMemo(() => [
+    { patterns: COMMON_COMMAND_PATTERNS.help, action: () => setActiveTab('tips'), description: 'Show help tips', category: 'utility' },
+    { patterns: COMMON_COMMAND_PATTERNS.save, action: () => { toast.success('Save triggered'); }, description: 'Save current form', category: 'utility' },
+    { patterns: COMMON_COMMAND_PATTERNS.print, action: () => { window.print(); }, description: 'Print page', category: 'utility' },
+    { patterns: ['features', 'פיצ\'רים'], action: () => setActiveTab('features'), description: 'Show features', category: 'navigation' },
+    { patterns: ['shortcuts', 'קיצורים'], action: () => setActiveTab('shortcuts'), description: 'Show shortcuts', category: 'navigation' },
+    { patterns: ['tips', 'טיפים'], action: () => setActiveTab('tips'), description: 'Show tips', category: 'navigation' },
+    { patterns: ['close', 'סגור'], action: () => setIsOpen(false), description: 'Close help', category: 'navigation' },
+  ], [setActiveTab, setIsOpen]);
+
+  const { isListening, isSupported, toggleListening, lastCommand } = useVoiceCommands({
+    commands: voiceCommandsList,
+    enabled: voiceAlwaysOn && isOpen,
+    language: 'he-IL',
+    showToasts: true,
+  });
 
   // Keyboard shortcut to toggle help and navigate
   useEffect(() => {
@@ -458,6 +478,11 @@ export function FloatingHelpGuide({ isOpen: controlledIsOpen, onOpenChange }: Fl
                 <TabsTrigger value="whatsnew" className="gap-1 text-[11px] px-2 py-1">
                   <Gift className="h-3 w-3" />
                   What's New
+                </TabsTrigger>
+                <TabsTrigger value="voice" className="gap-1 text-[11px] px-2 py-1">
+                  <Mic className="h-3 w-3" />
+                  Voice
+                  {isListening && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />}
                 </TabsTrigger>
                 <TabsTrigger value="feedback" className="gap-1 text-[11px] px-2 py-1">
                   <Mail className="h-3 w-3" />
@@ -728,6 +753,148 @@ export function FloatingHelpGuide({ isOpen: controlledIsOpen, onOpenChange }: Fl
                 </ScrollArea>
               </TabsContent>
 
+              {/* Voice Commands Tab */}
+              <TabsContent value="voice" className="flex-1 flex flex-col overflow-hidden mt-0">
+                <ScrollArea className="flex-1">
+                  <div className="p-3 space-y-4">
+                    {/* Always-on toggle */}
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-br from-jade/10 to-emerald-500/10 border border-jade/30">
+                      <div>
+                        <p className="font-medium text-sm flex items-center gap-2">
+                          <Mic className="h-4 w-4 text-jade" />
+                          Always-On Voice Commands
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {isListening ? 'Listening for commands...' : 'Enable hands-free control'}
+                        </p>
+                        {lastCommand && (
+                          <p className="text-xs text-jade mt-1">Last: "{lastCommand}"</p>
+                        )}
+                      </div>
+                      <Button
+                        variant={voiceAlwaysOn ? 'destructive' : 'default'}
+                        size="sm"
+                        onClick={() => {
+                          setVoiceAlwaysOn(!voiceAlwaysOn);
+                          if (!voiceAlwaysOn && isSupported) {
+                            toggleListening();
+                          }
+                        }}
+                        disabled={!isSupported}
+                        className="gap-2"
+                      >
+                        {voiceAlwaysOn ? (
+                          <>
+                            <MicOff className="h-4 w-4" />
+                            Stop
+                          </>
+                        ) : (
+                          <>
+                            <Mic className="h-4 w-4" />
+                            Start
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    
+                    {!isSupported && (
+                      <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-center">
+                        <AlertCircle className="h-5 w-5 mx-auto text-amber-500 mb-1" />
+                        <p className="text-xs text-amber-600 dark:text-amber-400">
+                          Voice commands not supported in this browser
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Session Commands */}
+                    <div>
+                      <Badge variant="outline" className="mb-2 bg-jade/20 text-jade border-jade/30">
+                        Session Controls
+                      </Badge>
+                      <div className="grid gap-1.5">
+                        {[
+                          { cmd: 'Start / התחל', desc: 'Start session timer' },
+                          { cmd: 'Stop / עצור', desc: 'End session' },
+                          { cmd: 'Pause / השהה', desc: 'Pause session' },
+                          { cmd: 'Resume / המשך', desc: 'Resume session' },
+                          { cmd: 'Reset / איפוס', desc: 'Reset timer' },
+                        ].map((item, idx) => (
+                          <div key={idx} className="flex items-center justify-between text-sm p-2 rounded bg-muted/30">
+                            <code className="text-xs font-mono bg-background px-2 py-0.5 rounded">"{item.cmd}"</code>
+                            <span className="text-xs text-muted-foreground">{item.desc}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Navigation Commands */}
+                    <div>
+                      <Badge variant="outline" className="mb-2 bg-blue-500/20 text-blue-600 border-blue-300">
+                        Navigation
+                      </Badge>
+                      <div className="grid gap-1.5">
+                        {[
+                          { cmd: 'Next / הבא', desc: 'Go to next section' },
+                          { cmd: 'Back / אחורה', desc: 'Go to previous' },
+                          { cmd: 'Save / שמור', desc: 'Save current form' },
+                          { cmd: 'Calendar / יומן', desc: 'Open calendar' },
+                          { cmd: 'Close / סגור', desc: 'Close dialogs' },
+                        ].map((item, idx) => (
+                          <div key={idx} className="flex items-center justify-between text-sm p-2 rounded bg-muted/30">
+                            <code className="text-xs font-mono bg-background px-2 py-0.5 rounded">"{item.cmd}"</code>
+                            <span className="text-xs text-muted-foreground">{item.desc}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* AI Commands */}
+                    <div>
+                      <Badge variant="outline" className="mb-2 bg-purple-500/20 text-purple-600 border-purple-300">
+                        AI & Diagnosis
+                      </Badge>
+                      <div className="grid gap-1.5">
+                        {[
+                          { cmd: 'Diagnose / אבחן', desc: 'Open AI diagnosis' },
+                          { cmd: 'Summary / סיכום', desc: 'Generate summary' },
+                          { cmd: 'Suggest / הצע', desc: 'Get AI suggestions' },
+                          { cmd: 'Brain / מוח', desc: 'Open TCM Brain' },
+                        ].map((item, idx) => (
+                          <div key={idx} className="flex items-center justify-between text-sm p-2 rounded bg-muted/30">
+                            <code className="text-xs font-mono bg-background px-2 py-0.5 rounded">"{item.cmd}"</code>
+                            <span className="text-xs text-muted-foreground">{item.desc}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Utility Commands */}
+                    <div>
+                      <Badge variant="outline" className="mb-2 bg-amber-500/20 text-amber-600 border-amber-300">
+                        Utilities
+                      </Badge>
+                      <div className="grid gap-1.5">
+                        {[
+                          { cmd: 'Help / עזרה', desc: 'Show help guide' },
+                          { cmd: 'Print / הדפס', desc: 'Print report' },
+                          { cmd: 'Share / שתף', desc: 'Share via WhatsApp' },
+                          { cmd: 'Music / מוזיקה', desc: 'Toggle music' },
+                        ].map((item, idx) => (
+                          <div key={idx} className="flex items-center justify-between text-sm p-2 rounded bg-muted/30">
+                            <code className="text-xs font-mono bg-background px-2 py-0.5 rounded">"{item.cmd}"</code>
+                            <span className="text-xs text-muted-foreground">{item.desc}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-muted-foreground text-center pt-2">
+                      Speak clearly in Hebrew or English. Uses Web Speech API.
+                    </p>
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+
               {/* Feedback/Request Tab */}
               <TabsContent value="feedback" className="flex-1 flex flex-col overflow-hidden mt-0">
                 <ScrollArea className="flex-1">
@@ -769,13 +936,13 @@ export function FloatingHelpGuide({ isOpen: controlledIsOpen, onOpenChange }: Fl
               </TabsContent>
             </Tabs>
 
-            {/* Footer */}
             <div className="p-2 border-t border-border/50 bg-muted/30 text-center">
               <p className="text-[10px] text-muted-foreground">
                 {activeTab === 'features' && `${filteredItems.length}/${HELP_ITEMS.length} features`}
                 {activeTab === 'shortcuts' && `${filteredShortcuts.length} shortcuts`}
                 {activeTab === 'tips' && `${filteredTips.length} tips`}
                 {activeTab === 'whatsnew' && `${WHATS_NEW.length} updates`}
+                {activeTab === 'voice' && (isListening ? '🎤 Listening...' : 'Voice commands')}
                 {activeTab === 'feedback' && 'Dr. Roni Sapir'}
               </p>
             </div>
