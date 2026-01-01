@@ -260,6 +260,8 @@ export function SessionTimerWidget({
         "fixed z-20 transition-all duration-300",
         !dragPosition && positionClasses[position],
         isDragging && "cursor-grabbing select-none",
+        // Move up on mobile to avoid covering form buttons
+        "max-sm:bottom-24",
         className
       )}
       style={positionStyle}

@@ -2047,8 +2047,8 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
           </Card>
         )}
 
-        {/* Navigation Bar */}
-        <div className="sticky bottom-0 z-10 -mx-4 px-4 py-4 bg-background/95 backdrop-blur border-t shadow-lg">
+        {/* Navigation Bar - higher z-index to stay above timer widget */}
+        <div className="sticky bottom-0 z-30 -mx-4 px-4 py-4 bg-background/95 backdrop-blur border-t shadow-lg mb-20 sm:mb-0">
           <div className="flex items-center justify-between gap-4">
             <Button 
               type="button" 
