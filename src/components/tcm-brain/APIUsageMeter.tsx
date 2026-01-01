@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Zap, 
@@ -10,8 +11,13 @@ import {
   ShieldCheck,
   Gauge,
   Timer,
-  BarChart3
+  BarChart3,
+  MessageCircle,
+  X,
+  Send
 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface APIUsageStats {
   sessionCalls: number;
@@ -234,7 +240,171 @@ export function APIUsageMeter() {
       <Badge className="text-[9px] bg-green-600 text-white animate-pulse">
         ✓ REAL API
       </Badge>
+
+      {/* Compact AI Chat Button */}
+      <CompactAIChatButton />
     </motion.div>
+  );
+}
+
+// Compact AI Chat Button with expandable chat panel
+function CompactAIChatButton() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const sendMessage = async () => {
+    if (!input.trim() || isLoading) return;
+    
+    const userMessage = input.trim();
+    setInput('');
+    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setIsLoading(true);
+
+    // Dispatch event for API meter tracking
+    window.dispatchEvent(new CustomEvent('tcm-query-start', { detail: { query: userMessage } }));
+
+    try {
+      const { data, error } = await supabase.functions.invoke('tcm-rag-chat', {
+        body: { query: userMessage }
+      });
+
+      if (error) throw error;
+      
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: data?.response || 'No response received.' 
+      }]);
+    } catch (err) {
+      console.error('Chat error:', err);
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: 'Sorry, I encountered an error. Please try again.' 
+      }]);
+    } finally {
+      setIsLoading(false);
+      window.dispatchEvent(new CustomEvent('tcm-query-end'));
+    }
+  };
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  return (
+    <div className="relative">
+      {/* Chat Toggle Button */}
+      <motion.button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border transition-all ${
+          isOpen 
+            ? 'bg-primary text-primary-foreground border-primary shadow-lg' 
+            : 'bg-jade/10 border-jade/30 hover:bg-jade/20'
+        }`}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        {isOpen ? (
+          <X className="h-3.5 w-3.5" />
+        ) : (
+          <MessageCircle className="h-3.5 w-3.5 text-jade" />
+        )}
+        <span className={`text-[10px] font-bold ${isOpen ? '' : 'text-jade'}`}>
+          {isOpen ? 'Close' : 'AI Chat'}
+        </span>
+      </motion.button>
+
+      {/* Expandable Chat Panel */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            className="absolute top-full right-0 mt-2 w-80 sm:w-96 bg-card border border-border rounded-xl shadow-2xl z-50 overflow-hidden"
+          >
+            {/* Chat Header */}
+            <div className="px-3 py-2 bg-jade/10 border-b border-border flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-xs font-semibold">TCM Brain AI</span>
+              <Badge variant="outline" className="text-[9px] ml-auto">RAG</Badge>
+            </div>
+
+            {/* Messages Area */}
+            <ScrollArea className="h-64 p-3" ref={scrollRef}>
+              {messages.length === 0 ? (
+                <div className="text-center text-muted-foreground text-xs py-8">
+                  <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                  <p>Ask me about TCM patterns, points, or treatments...</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {messages.map((msg, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`text-xs p-2 rounded-lg ${
+                        msg.role === 'user' 
+                          ? 'bg-primary/10 text-foreground ml-8' 
+                          : 'bg-muted text-foreground mr-8'
+                      }`}
+                    >
+                      {msg.content}
+                    </motion.div>
+                  ))}
+                  {isLoading && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-xs p-2 rounded-lg bg-muted mr-8 flex items-center gap-2"
+                    >
+                      <div className="flex gap-1">
+                        <span className="w-1.5 h-1.5 bg-jade rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-1.5 h-1.5 bg-jade rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-1.5 h-1.5 bg-jade rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                      <span className="text-muted-foreground">Thinking...</span>
+                    </motion.div>
+                  )}
+                </div>
+              )}
+            </ScrollArea>
+
+            {/* Input Area */}
+            <div className="p-2 border-t border-border bg-muted/30">
+              <div className="flex gap-2">
+                <Textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      sendMessage();
+                    }
+                  }}
+                  placeholder="Ask about TCM..."
+                  className="min-h-[36px] max-h-[80px] text-xs resize-none"
+                  rows={1}
+                />
+                <Button 
+                  size="sm" 
+                  onClick={sendMessage}
+                  disabled={!input.trim() || isLoading}
+                  className="h-9 w-9 p-0"
+                >
+                  <Send className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
