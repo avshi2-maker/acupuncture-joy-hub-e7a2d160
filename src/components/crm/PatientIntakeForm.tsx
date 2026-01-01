@@ -283,12 +283,17 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
     setIdCheckStatus('checking');
     
     try {
-      const { data: existingPatient } = await supabase
+      // Build query - only add neq filter if patientId exists (editing mode)
+      let query = supabase
         .from('patients')
         .select('id')
-        .eq('id_number', idNumber)
-        .neq('id', patientId || '')
-        .maybeSingle();
+        .eq('id_number', idNumber);
+      
+      if (patientId) {
+        query = query.neq('id', patientId);
+      }
+      
+      const { data: existingPatient } = await query.maybeSingle();
 
       if (existingPatient) {
         setIdCheckStatus('duplicate');
@@ -571,12 +576,17 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
     setLoading(true);
     try {
       // Double-check for duplicate ID number at submission time
-      const { data: existingPatient, error: checkError } = await supabase
+      // Build query - only add neq filter if patientId exists (editing mode)
+      let checkQuery = supabase
         .from('patients')
         .select('id')
-        .eq('id_number', data.id_number)
-        .neq('id', patientId || '')
-        .maybeSingle();
+        .eq('id_number', data.id_number);
+      
+      if (patientId) {
+        checkQuery = checkQuery.neq('id', patientId);
+      }
+      
+      const { data: existingPatient, error: checkError } = await checkQuery.maybeSingle();
 
       if (existingPatient) {
         setIsIdDuplicate(true);
