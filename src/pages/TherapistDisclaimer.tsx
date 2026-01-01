@@ -324,6 +324,34 @@ This is an automated message from the TCM Practice Support System.
       } catch (whatsappError) {
         console.log('WhatsApp notification skipped:', whatsappError);
       }
+
+      // Send email notification as backup
+      try {
+        await supabase.functions.invoke('send-contact-email', {
+          body: {
+            name: 'TCM Therapist Disclaimer Completed',
+            email: 'ronisapir61@gmail.com',
+            message: `
+🎉 A new therapist has completed the onboarding disclaimer!
+
+📋 THERAPIST INFORMATION:
+• Full Name: ${therapistName}
+• License Number: ${licenseNumber}
+• Language: ${language.toUpperCase()}
+
+📅 Date: ${new Date().toLocaleString()}
+
+✅ Status: Ready to use the system
+
+---
+This is an automated notification from the TCM Practice Support System.
+            `,
+          },
+        });
+        console.log('Email notification sent');
+      } catch (emailError) {
+        console.log('Email notification skipped:', emailError);
+      }
     } catch (err) {
       console.error('Error saving disclaimer:', err);
     }
