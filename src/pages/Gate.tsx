@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useTier } from '@/hooks/useTier';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { toast } from 'sonner';
-import { Lock, ArrowLeft, Leaf, CreditCard, Upload, CheckCircle, ArrowRight, MessageCircle, Mail, Loader2, Play, Fingerprint, Eye, EyeOff, Clock, Baby, Zap } from 'lucide-react';
+import { Lock, ArrowLeft, Leaf, CreditCard, Upload, CheckCircle, ArrowRight, MessageCircle, Mail, Loader2, Play, Fingerprint, Eye, EyeOff, Clock, Baby, Zap, Heart, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { TierCard } from '@/components/pricing/TierCard';
 import { Confetti } from '@/components/ui/Confetti';
@@ -125,7 +125,47 @@ const tiers = [
   },
 ];
 
-type Step = 'tiers' | 'payment' | 'password';
+type Step = 'tiers' | 'pathways' | 'payment' | 'password';
+
+// Intake pathway cards data
+const intakePathways = [
+  {
+    id: 'wellness',
+    icon: Leaf,
+    title: 'טיפול כללי',
+    titleEn: 'Comprehensive Wellness',
+    description: 'מסלול לגילוי שורש הבעיה והחזרת האיזון ההוליסטי.',
+    bestFor: 'מטופלים חדשים, כאבים כרוניים, רפואה פנימית, איזון חוקתי.',
+    color: 'jade',
+    accentClass: 'from-jade to-jade-dark',
+    bgClass: 'bg-jade/10 border-jade/30',
+  },
+  {
+    id: 'maternal',
+    icon: Baby,
+    title: 'הריון ופריון',
+    titleEn: 'Maternal & Fertility',
+    description: 'מסלול מיוחד לכל שלבי האמהות.',
+    bestFor: 'טיפולי פוריות, תמיכה בהריון, הכנה ללידה, התאוששות אחרי לידה.',
+    color: 'rose',
+    accentClass: 'from-rose-400 to-rose-600',
+    bgClass: 'bg-rose-50 border-rose-200 dark:bg-rose-950/20 dark:border-rose-800',
+  },
+  {
+    id: 'acute',
+    icon: Zap,
+    title: 'טיפול חד או תחזוקה',
+    titleEn: 'Acute & Maintenance',
+    description: 'תמיכה מהירה או טיפול תחזוקתי.',
+    bestFor: 'מטופלים חוזרים, מצבים חדים (הצטננות, פציעות), תחזוקה שוטפת.',
+    color: 'amber',
+    accentClass: 'from-amber-400 to-amber-600',
+    bgClass: 'bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800',
+  },
+];
+
+// Check if therapist disclaimer is completed
+const DISCLAIMER_STORAGE_KEY = 'tcm_therapist_disclaimer_signed';
 
 export default function Gate() {
   const navigate = useNavigate();
@@ -167,6 +207,27 @@ export default function Gate() {
     const redirect = params.get('redirect');
     const question = params.get('question');
     
+    // Check if therapist disclaimer is completed
+    const disclaimerSigned = localStorage.getItem(DISCLAIMER_STORAGE_KEY);
+    let needsDisclaimer = true;
+    
+    if (disclaimerSigned) {
+      try {
+        const signedData = JSON.parse(disclaimerSigned);
+        // Check if signed within the last year
+        if (signedData.signedAt && new Date(signedData.signedAt) > new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)) {
+          needsDisclaimer = false;
+        }
+      } catch {
+        needsDisclaimer = true;
+      }
+    }
+    
+    // If disclaimer not completed, redirect to therapist-disclaimer
+    if (needsDisclaimer) {
+      return '/therapist-disclaimer';
+    }
+    
     const hasProfile = localStorage.getItem('therapist_profile');
     const defaultRedirect = hasProfile ? '/dashboard' : '/therapist-profile';
 
@@ -179,8 +240,8 @@ export default function Gate() {
   const handleSelectTier = (tierName: string) => {
     setSelectedTier(tierName);
     if (tierName === 'Trial') {
-      // Trial goes directly to password step
-      setCurrentStep('password');
+      // Trial goes to pathways step first
+      setCurrentStep('pathways');
     } else {
       // Paid tiers show payment instructions
       setCurrentStep('payment');
@@ -407,20 +468,25 @@ export default function Gate() {
 
             {/* Step Indicator - Glassmorphism style */}
             <div className="flex justify-center mb-8">
-              <div className="flex items-center gap-2 p-2 rounded-full bg-white/80 backdrop-blur-md shadow-lg">
-                <div className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${currentStep === 'tiers' ? 'bg-jade text-white shadow-md' : 'text-slate-600'}`}>
-                  <span className="w-6 h-6 rounded-full bg-white/30 flex items-center justify-center text-sm font-medium">1</span>
-                  <span className="text-sm font-medium hidden sm:inline">בחירת תוכנית</span>
+              <div className="flex items-center gap-1 sm:gap-2 p-2 rounded-full bg-white/80 backdrop-blur-md shadow-lg flex-wrap justify-center">
+                <div className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-full transition-all ${currentStep === 'tiers' ? 'bg-jade text-white shadow-md' : 'text-slate-600'}`}>
+                  <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/30 flex items-center justify-center text-xs sm:text-sm font-medium">1</span>
+                  <span className="text-xs sm:text-sm font-medium hidden sm:inline">תוכנית</span>
                 </div>
-                <ArrowRight className="h-4 w-4 text-slate-400" />
-                <div className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${currentStep === 'payment' ? 'bg-jade text-white shadow-md' : 'text-slate-600'}`}>
-                  <span className="w-6 h-6 rounded-full bg-white/30 flex items-center justify-center text-sm font-medium">2</span>
-                  <span className="text-sm font-medium hidden sm:inline">תשלום</span>
+                <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 text-slate-400" />
+                <div className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-full transition-all ${currentStep === 'pathways' ? 'bg-jade text-white shadow-md' : 'text-slate-600'}`}>
+                  <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/30 flex items-center justify-center text-xs sm:text-sm font-medium">2</span>
+                  <span className="text-xs sm:text-sm font-medium hidden sm:inline">נתיב טיפול</span>
                 </div>
-                <ArrowRight className="h-4 w-4 text-slate-400" />
-                <div className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${currentStep === 'password' ? 'bg-jade text-white shadow-md' : 'text-slate-600'}`}>
-                  <span className="w-6 h-6 rounded-full bg-white/30 flex items-center justify-center text-sm font-medium">3</span>
-                  <span className="text-sm font-medium hidden sm:inline">כניסה</span>
+                <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 text-slate-400" />
+                <div className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-full transition-all ${currentStep === 'payment' ? 'bg-jade text-white shadow-md' : 'text-slate-600'}`}>
+                  <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/30 flex items-center justify-center text-xs sm:text-sm font-medium">3</span>
+                  <span className="text-xs sm:text-sm font-medium hidden sm:inline">תשלום</span>
+                </div>
+                <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 text-slate-400" />
+                <div className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-full transition-all ${currentStep === 'password' ? 'bg-jade text-white shadow-md' : 'text-slate-600'}`}>
+                  <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/30 flex items-center justify-center text-xs sm:text-sm font-medium">4</span>
+                  <span className="text-xs sm:text-sm font-medium hidden sm:inline">כניסה</span>
                 </div>
               </div>
             </div>
@@ -506,6 +572,87 @@ export default function Gate() {
                 <p className="text-xs text-muted-foreground">
                   Test access expires at midnight. For full access, select a plan above.
                 </p>
+              </div>
+            </>
+          )}
+
+          {/* Step: Intake Pathways (shown after tier selection for visual context) */}
+          {currentStep === 'pathways' && (
+            <>
+              {/* Glassmorphism header */}
+              <div className="text-center mb-10 mx-auto max-w-3xl">
+                <div className="bg-white/95 backdrop-blur-md rounded-3xl p-8 md:p-12 shadow-2xl border border-white/60">
+                  <h1 className="font-display text-3xl md:text-4xl text-jade-dark mb-4">
+                    בחרו את נתיב הטיפול
+                  </h1>
+                  <p className="text-slate-600 text-lg">
+                    בחרו את הנתיב המתאים ביותר לביקור שלכם היום
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-6 lg:gap-8 mb-8">
+                {intakePathways.map((pathway) => {
+                  const IconComponent = pathway.icon;
+                  return (
+                    <div 
+                      key={pathway.id}
+                      className={`relative bg-white/95 backdrop-blur-md rounded-2xl p-8 text-center transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl border-2 ${pathway.bgClass} cursor-pointer group overflow-hidden`}
+                      onClick={() => setCurrentStep('password')}
+                    >
+                      {/* Top accent bar */}
+                      <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${pathway.accentClass}`} />
+                      
+                      {/* Icon */}
+                      <div className={`mx-auto w-20 h-20 rounded-full bg-gradient-to-br ${pathway.accentClass} flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform`}>
+                        <IconComponent className="h-10 w-10 text-white" />
+                      </div>
+                      
+                      {/* Title */}
+                      <h3 className="font-display text-xl font-semibold text-slate-800 mb-2">
+                        {pathway.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        {pathway.titleEn}
+                      </p>
+                      
+                      {/* Description */}
+                      <p className="text-slate-600 mb-4 text-sm leading-relaxed">
+                        {pathway.description}
+                      </p>
+                      
+                      {/* Best for */}
+                      <div className="text-right bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3 mb-6">
+                        <p className="text-sm text-slate-600">
+                          <strong className={`text-${pathway.color}-600`}>מתאים ל:</strong>{' '}
+                          {pathway.bestFor}
+                        </p>
+                      </div>
+                      
+                      {/* CTA Button */}
+                      <Button 
+                        className={`w-full bg-gradient-to-r ${pathway.accentClass} text-white hover:opacity-90 transition-opacity shadow-md`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentStep('password');
+                        }}
+                      >
+                        התחל {pathway.title}
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="text-center">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setCurrentStep('tiers')}
+                  className="text-slate-600 hover:text-slate-800"
+                >
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                  חזרה לבחירת תוכנית
+                </Button>
               </div>
             </>
           )}
