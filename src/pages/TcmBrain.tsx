@@ -378,10 +378,11 @@ export default function TcmBrain() {
           />
         </div>
 
-        {/* Header Boxes Row - Matching VideoSession style */}
+        {/* Header Boxes Row - Organized by Category */}
         <div className="px-3 md:px-4 pt-2 md:pt-3 pb-2 border-b bg-gradient-to-b from-emerald-500/5 to-transparent">
           <SessionHeaderBoxes
             boxes={[
+              // === SESSION CONTROLS ===
               {
                 id: 'start-session',
                 name: sessionStatus === 'idle' ? 'Start' : sessionStatus === 'running' ? 'Pause' : 'Resume',
@@ -399,7 +400,7 @@ export default function TcmBrain() {
               {
                 id: 'end-session',
                 name: 'End',
-                nameHe: 'סיים',
+                nameHe: 'סיום',
                 icon: Square,
                 color: 'text-rose-600',
                 borderColor: 'border-rose-300',
@@ -414,6 +415,7 @@ export default function TcmBrain() {
                 borderColor: 'border-amber-300',
                 onClick: clearChat,
               },
+              // === AI & DIAGNOSIS ===
               {
                 id: 'diagnostics',
                 name: 'Diagnose',
@@ -426,14 +428,37 @@ export default function TcmBrain() {
               },
               {
                 id: 'symptoms',
-                name: 'Symptoms',
-                nameHe: 'סימפטומים',
+                name: 'Brain',
+                nameHe: 'מוח AI',
                 icon: Brain,
                 color: 'text-cyan-600',
                 borderColor: 'border-cyan-300',
                 isActive: activeTab === 'symptoms',
                 onClick: () => setActiveTab('symptoms'),
               },
+              {
+                id: 'qa',
+                name: 'Q&A',
+                nameHe: 'שאלות',
+                icon: Heart,
+                color: 'text-rose-600',
+                borderColor: 'border-rose-300',
+                isActive: showQASuggestions,
+                badge: qaFavoritesCount > 0 ? qaFavoritesCount : undefined,
+                onClick: () => setShowQASuggestions(!showQASuggestions),
+              },
+              {
+                id: 'knowledge',
+                name: 'Knowledge',
+                nameHe: 'ידע',
+                icon: BookOpen,
+                color: 'text-jade',
+                borderColor: 'border-jade/50',
+                isActive: showKnowledgeAssets,
+                badge: activeAssets.length > 0 ? activeAssets.length : undefined,
+                onClick: () => setShowKnowledgeAssets(!showKnowledgeAssets),
+              },
+              // === CLINICAL TABS ===
               {
                 id: 'treatment',
                 name: 'Treat',
@@ -455,16 +480,6 @@ export default function TcmBrain() {
                 onClick: () => setActiveTab('bodymap'),
               },
               {
-                id: 'session',
-                name: 'Notes',
-                nameHe: 'הערות',
-                icon: FileText,
-                color: 'text-amber-600',
-                borderColor: 'border-amber-300',
-                isActive: activeTab === 'session',
-                onClick: () => setActiveTab('session'),
-              },
-              {
                 id: 'history',
                 name: 'History',
                 nameHe: 'היסטוריה',
@@ -474,17 +489,7 @@ export default function TcmBrain() {
                 isActive: activeTab === 'history',
                 onClick: () => setActiveTab('history'),
               },
-              {
-                id: 'qa',
-                name: 'Q&A',
-                nameHe: 'שאלות',
-                icon: Heart,
-                color: 'text-rose-600',
-                borderColor: 'border-rose-300',
-                isActive: showQASuggestions,
-                badge: qaFavoritesCount > 0 ? qaFavoritesCount : undefined,
-                onClick: () => setShowQASuggestions(!showQASuggestions),
-              },
+              // === COMMUNICATION ===
               {
                 id: 'voice',
                 name: 'Voice',
@@ -493,24 +498,6 @@ export default function TcmBrain() {
                 color: 'text-violet-600',
                 borderColor: 'border-violet-300',
                 onClick: () => toast.info('Voice Commands: Say "generate summary", "save session", "next tab"', { duration: 5000 }),
-              },
-              {
-                id: 'print',
-                name: 'Print',
-                nameHe: 'הדפס',
-                icon: Printer,
-                color: 'text-gray-600',
-                borderColor: 'border-gray-300',
-                onClick: () => quickActionsRef.current?.printReport(),
-              },
-              {
-                id: 'email',
-                name: 'Email',
-                nameHe: 'אימייל',
-                icon: Mail,
-                color: 'text-blue-600',
-                borderColor: 'border-blue-300',
-                onClick: () => toast.info('Use Session tab to email report'),
               },
               {
                 id: 'whatsapp',
@@ -522,15 +509,33 @@ export default function TcmBrain() {
                 onClick: () => quickActionsRef.current?.shareWhatsApp(),
               },
               {
-                id: 'knowledge',
-                name: 'Knowledge',
-                nameHe: 'ידע',
-                icon: BookOpen,
-                color: 'text-jade',
-                borderColor: 'border-jade/50',
-                isActive: showKnowledgeAssets,
-                badge: activeAssets.length > 0 ? activeAssets.length : undefined,
-                onClick: () => setShowKnowledgeAssets(!showKnowledgeAssets),
+                id: 'email',
+                name: 'Email',
+                nameHe: 'אימייל',
+                icon: Mail,
+                color: 'text-blue-600',
+                borderColor: 'border-blue-300',
+                onClick: () => toast.info('Use Session tab to email report'),
+              },
+              // === UTILITIES ===
+              {
+                id: 'session',
+                name: 'Notes',
+                nameHe: 'הערות',
+                icon: FileText,
+                color: 'text-amber-600',
+                borderColor: 'border-amber-300',
+                isActive: activeTab === 'session',
+                onClick: () => setActiveTab('session'),
+              },
+              {
+                id: 'print',
+                name: 'Print',
+                nameHe: 'הדפס',
+                icon: Printer,
+                color: 'text-gray-600',
+                borderColor: 'border-gray-300',
+                onClick: () => quickActionsRef.current?.printReport(),
               },
             ]}
             size="sm"

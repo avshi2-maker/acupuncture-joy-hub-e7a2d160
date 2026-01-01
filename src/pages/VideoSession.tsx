@@ -1229,12 +1229,12 @@ export default function VideoSession() {
           />
         </div>
 
-        {/* Header Boxes with Circular Icons - Reorganized */}
+        {/* Header Boxes with Circular Icons - Organized by Category */}
         <div className="px-3 md:px-4 pt-2 md:pt-4 pb-2 border-b bg-gradient-to-b from-jade/5 to-transparent">
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
             <VideoSessionHeaderBoxes
               boxes={[
-                // 1. New Meeting / Start
+                // === SESSION CONTROLS ===
                 {
                   id: 'new-meeting',
                   name: sessionStatus === 'idle' ? 'Start' : 'Reset',
@@ -1245,69 +1245,20 @@ export default function VideoSession() {
                   isActive: sessionStatus === 'running',
                   onClick: sessionStatus === 'idle' ? handleStart : handleRepeat,
                 },
-                // 2. Record
+                // === AI & DIAGNOSIS ===
                 {
-                  id: 'record',
-                  name: 'Record',
-                  nameHe: 'הקלטה',
-                  icon: Video,
-                  color: 'text-rose-600',
-                  borderColor: 'border-rose-300',
-                  onClick: () => recordingModuleRef.current?.isRecording() 
-                    ? recordingModuleRef.current?.stopRecording() 
-                    : recordingModuleRef.current?.startRecording(),
+                  id: 'ai-tips',
+                  name: 'AI Brain',
+                  nameHe: 'מוח AI',
+                  icon: Brain,
+                  color: 'text-purple-600',
+                  borderColor: 'border-purple-300',
+                  isActive: showAISuggestions || showTcmBrainPanel,
+                  onClick: () => {
+                    if (showTcmBrainPanel) setShowTcmBrainPanel(false);
+                    else setShowTcmBrainPanel(true);
+                  },
                 },
-                // 3. Zoom
-                {
-                  id: 'zoom',
-                  name: 'Zoom',
-                  nameHe: 'זום',
-                  icon: VideoIcon,
-                  color: 'text-blue-500',
-                  borderColor: 'border-blue-300',
-                  onClick: () => setShowZoomInvite(true),
-                },
-                // 4. CRM: Calendar
-                {
-                  id: 'calendar',
-                  name: 'Calendar',
-                  nameHe: 'יומן',
-                  icon: Calendar,
-                  color: 'text-blue-600',
-                  borderColor: 'border-blue-300',
-                  onClick: () => navigate('/crm/calendar'),
-                },
-                // 5. Calendar Invite
-                {
-                  id: 'calendar-invite',
-                  name: 'Invite',
-                  nameHe: 'הזמנה',
-                  icon: CalendarPlus,
-                  color: 'text-emerald-600',
-                  borderColor: 'border-emerald-300',
-                  onClick: () => setShowCalendarInvite(true),
-                },
-                // 6. CRM: New Appointment
-                {
-                  id: 'appointment',
-                  name: 'Appoint',
-                  nameHe: 'תור חדש',
-                  icon: ClipboardList,
-                  color: 'text-teal-600',
-                  borderColor: 'border-teal-300',
-                  onClick: () => setShowQuickAppointment(true),
-                },
-                // 7. Follow-up Plan
-                {
-                  id: 'followup',
-                  name: 'Follow-up',
-                  nameHe: 'המשך',
-                  icon: ArrowRight,
-                  color: 'text-jade',
-                  borderColor: 'border-jade/50',
-                  onClick: () => setShowFollowUpPlan(true),
-                },
-                // 8. Q&A / Questions
                 {
                   id: 'qa',
                   name: 'Q&A',
@@ -1315,28 +1266,9 @@ export default function VideoSession() {
                   icon: HelpCircle,
                   color: 'text-cyan-600',
                   borderColor: 'border-cyan-300',
-                  isActive: showAnxietyQA || showTcmBrainPanel,
-                  onClick: () => {
-                    if (showTcmBrainPanel) {
-                      setShowTcmBrainPanel(false);
-                    } else if (showAnxietyQA) {
-                      setShowAnxietyQA(false);
-                    } else {
-                      setShowAnxietyQA(true);
-                    }
-                  },
+                  isActive: showAnxietyQA,
+                  onClick: () => setShowAnxietyQA(!showAnxietyQA),
                 },
-                // 9. Voice Recording
-                {
-                  id: 'voice',
-                  name: 'Voice',
-                  nameHe: 'הקלטה',
-                  icon: Mic,
-                  color: 'text-amber-600',
-                  borderColor: 'border-amber-300',
-                  onClick: () => setShowVoiceDictation(true),
-                },
-                // 10. Session Guide
                 {
                   id: 'guide',
                   name: 'Guide',
@@ -1347,18 +1279,63 @@ export default function VideoSession() {
                   isActive: showSessionGuide,
                   onClick: () => setShowSessionGuide(!showSessionGuide),
                 },
-                // AI Tips
+                // === CALENDAR & SCHEDULING ===
                 {
-                  id: 'ai-tips',
-                  name: 'AI Tips',
-                  nameHe: 'טיפים AI',
-                  icon: Brain,
-                  color: 'text-purple-600',
-                  borderColor: 'border-purple-300',
-                  isActive: showAISuggestions,
-                  onClick: () => setShowAISuggestions(!showAISuggestions),
+                  id: 'calendar',
+                  name: 'Calendar',
+                  nameHe: 'יומן',
+                  icon: Calendar,
+                  color: 'text-blue-600',
+                  borderColor: 'border-blue-300',
+                  onClick: () => navigate('/crm/calendar'),
                 },
-                // Report
+                {
+                  id: 'calendar-invite',
+                  name: 'Invite',
+                  nameHe: 'הזמנה',
+                  icon: CalendarPlus,
+                  color: 'text-emerald-600',
+                  borderColor: 'border-emerald-300',
+                  onClick: () => setShowCalendarInvite(true),
+                },
+                {
+                  id: 'appointment',
+                  name: 'Appoint',
+                  nameHe: 'תור חדש',
+                  icon: ClipboardList,
+                  color: 'text-teal-600',
+                  borderColor: 'border-teal-300',
+                  onClick: () => setShowQuickAppointment(true),
+                },
+                {
+                  id: 'followup',
+                  name: 'Follow-up',
+                  nameHe: 'המשך',
+                  icon: ArrowRight,
+                  color: 'text-jade',
+                  borderColor: 'border-jade/50',
+                  onClick: () => setShowFollowUpPlan(true),
+                },
+                // === COMMUNICATION & RECORDING ===
+                {
+                  id: 'zoom',
+                  name: 'Zoom',
+                  nameHe: 'זום',
+                  icon: VideoIcon,
+                  color: 'text-blue-500',
+                  borderColor: 'border-blue-300',
+                  onClick: () => setShowZoomInvite(true),
+                },
+                {
+                  id: 'voice',
+                  name: 'Voice',
+                  nameHe: 'הקלטה',
+                  icon: Mic,
+                  color: 'text-amber-600',
+                  borderColor: 'border-amber-300',
+                  onClick: () => setShowVoiceDictation(true),
+                },
+                // === UTILITIES ===
                 {
                   id: 'report',
                   name: 'Report',
@@ -1368,7 +1345,16 @@ export default function VideoSession() {
                   borderColor: 'border-indigo-300',
                   onClick: () => setShowSessionReport(true),
                 },
-                // Accessibility
+                {
+                  id: 'music',
+                  name: 'Music',
+                  nameHe: 'מוזיקה',
+                  icon: Music,
+                  color: showMusicPlayer ? 'text-white' : 'text-amber-600',
+                  borderColor: showMusicPlayer ? 'border-amber-500 bg-amber-500' : 'border-amber-300',
+                  isActive: showMusicPlayer,
+                  onClick: () => setShowMusicPlayer(!showMusicPlayer),
+                },
                 {
                   id: 'accessibility',
                   name: 'Access',
@@ -1384,17 +1370,6 @@ export default function VideoSession() {
                       duration: 2000 
                     });
                   },
-                },
-                // Music
-                {
-                  id: 'music',
-                  name: 'Music',
-                  nameHe: 'מוזיקה',
-                  icon: Music,
-                  color: showMusicPlayer ? 'text-white' : 'text-amber-600',
-                  borderColor: showMusicPlayer ? 'border-amber-500 bg-amber-500' : 'border-amber-300',
-                  isActive: showMusicPlayer,
-                  onClick: () => setShowMusicPlayer(!showMusicPlayer),
                 },
               ]}
             />
