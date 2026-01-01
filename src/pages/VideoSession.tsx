@@ -1196,6 +1196,20 @@ export default function VideoSession() {
         <div className="px-3 md:px-6 pt-3 pb-2 border-b bg-gradient-to-r from-jade/5 via-transparent to-jade/5">
           <SessionPhaseIndicator
             currentPhase={getPhaseFromDuration(sessionDuration)}
+            patientName={selectedPatientName}
+            onPhaseClick={(phase) => {
+              // Navigate to relevant action based on phase
+              if (phase === 'opening' && selectedPatientId) {
+                navigate(`/crm/patients/${selectedPatientId}`);
+              } else if (phase === 'diagnosis') {
+                setShowTcmBrainPanel(true);
+              } else if (phase === 'treatment') {
+                setActivePanel('notes');
+              } else if (phase === 'closing') {
+                setShowSessionReport(true);
+              }
+              toast.info(`שלב: ${phase === 'opening' ? 'פתיחה' : phase === 'diagnosis' ? 'אבחון' : phase === 'treatment' ? 'טיפול' : 'סיום'}`);
+            }}
             className="max-w-2xl mx-auto"
           />
         </div>

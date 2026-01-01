@@ -361,6 +361,15 @@ export default function TcmBrain() {
         <div className="px-3 md:px-6 pt-3 pb-2 border-b bg-gradient-to-r from-jade/5 via-transparent to-jade/5">
           <SessionPhaseIndicator
             currentPhase={getPhaseFromDuration(sessionSeconds)}
+            patientName={selectedPatient?.name}
+            onPhaseClick={(phase) => {
+              // Navigate to relevant tab based on phase
+              if (phase === 'opening') setActiveTab('history');
+              else if (phase === 'diagnosis') setActiveTab('diagnostics');
+              else if (phase === 'treatment') setActiveTab('treatment');
+              else if (phase === 'closing') setActiveTab('notes');
+              toast.info(`שלב: ${phase === 'opening' ? 'פתיחה' : phase === 'diagnosis' ? 'אבחון' : phase === 'treatment' ? 'טיפול' : 'סיום'}`);
+            }}
             className="max-w-2xl mx-auto"
           />
         </div>
