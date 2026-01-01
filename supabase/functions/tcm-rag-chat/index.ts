@@ -258,6 +258,40 @@ serve(async (req) => {
       })
       .limit(4);
 
+    // Priority 7: CAF Master Studies (comprehensive clinical framework)
+    const { data: cafChunks, error: cafError } = await supabaseClient
+      .from('knowledge_chunks')
+      .select(`
+        id,
+        content,
+        question,
+        answer,
+        chunk_index,
+        metadata,
+        document:knowledge_documents!inner(id, file_name, original_name, category)
+      `)
+      .or('file_name.ilike.%caf%,file_name.ilike.%comprehensive%', { referencedTable: 'document' })
+      .textSearch('content', searchTerms, {
+        type: 'websearch',
+        config: 'english'
+      })
+      .limit(5);
+
+    // Also query CAF Master Studies table directly for pattern matching
+    let cafStudies: any[] = [];
+    try {
+      const searchWords = searchQuery.toLowerCase().split(/\s+/).filter((w: string) => w.length > 2);
+      const { data: cafData } = await supabaseClient
+        .from('caf_master_studies')
+        .select('*')
+        .or(searchWords.map((w: string) => `western_label.ilike.%${w}%,tcm_pattern.ilike.%${w}%,key_symptoms.ilike.%${w}%,acupoints_display.ilike.%${w}%`).join(','))
+        .limit(3);
+      cafStudies = cafData || [];
+      console.log(`CAF Studies direct match: ${cafStudies.length}`);
+    } catch (cafStudyError) {
+      console.error('CAF Study query error:', cafStudyError);
+    }
+
     // Then get other relevant chunks
     const { data: otherChunks, error: searchError } = await supabaseClient
       .from('knowledge_chunks')
@@ -276,12 +310,13 @@ serve(async (req) => {
       })
       .limit(5);
 
-    if (searchError || diagError || pulseError || zangfuError || acuError || qaError || treatmentError || ageError) {
-      console.error('Search error:', searchError || diagError || pulseError || zangfuError || acuError || qaError || treatmentError || ageError);
+    if (searchError || diagError || pulseError || zangfuError || acuError || qaError || treatmentError || ageError || cafError) {
+      console.error('Search error:', searchError || diagError || pulseError || zangfuError || acuError || qaError || treatmentError || ageError || cafError);
     }
 
-    // Merge with priority order: age-specific, diagnostics, pulse/tongue, zang-fu, acupoints, QA, treatment protocols, then others
+    // Merge with priority order: CAF studies, age-specific, diagnostics, pulse/tongue, zang-fu, acupoints, QA, treatment protocols, then others
     const prioritizedIds = new Set([
+      ...(cafChunks || []).map(c => c.id),
       ...ageSpecificChunks.map(c => c.id),
       ...(diagnosticsChunks || []).map(c => c.id),
       ...(pulseChunks || []).map(c => c.id),
@@ -292,6 +327,7 @@ serve(async (req) => {
     ]);
     
     const chunks = [
+      ...(cafChunks || []),
       ...ageSpecificChunks,
       ...(diagnosticsChunks || []),
       ...(pulseChunks || []),
@@ -301,6 +337,23 @@ serve(async (req) => {
       ...(treatmentChunks || []),
       ...(otherChunks || []).filter(c => !prioritizedIds.has(c.id))
     ].slice(0, 18);
+
+    // Add CAF studies context as structured clinical data
+    let cafStudiesContext = '';
+    if (cafStudies.length > 0) {
+      cafStudiesContext = '\n\n=== CAF MASTER CLINICAL STUDIES (Deep Thinking Framework) ===\n';
+      cafStudiesContext += cafStudies.map((study, i) => `
+[CAF Study #${i + 1}: ${study.western_label} - ${study.tcm_pattern}]
+System: ${study.system_category}
+Key Symptoms: ${study.key_symptoms}
+Pulse/Tongue: ${study.pulse_tongue}
+Treatment Principle: ${study.treatment_principle}
+Acupoints: ${study.acupoints_display}
+Formula: ${study.pharmacopeia_formula}
+🧠 Clinical Insight: ${study.deep_thinking_note}
+`).join('\n---\n');
+      cafStudiesContext += '\n=== END CAF STUDIES ===';
+    }
 
     console.log(`Priority chunks - Age-Specific: ${ageSpecificChunks.length}, Diagnostics: ${diagnosticsChunks?.length || 0}, Pulse/Tongue: ${pulseChunks?.length || 0}, Zang-Fu: ${zangfuChunks?.length || 0}, Acupoints: ${acuChunks?.length || 0}, QA: ${qaChunks?.length || 0}, Treatment: ${treatmentChunks?.length || 0}, Other: ${otherChunks?.length || 0}`);
 
@@ -374,7 +427,8 @@ ${chunk.content}`;
       // Using external AI - no RAG context, use general knowledge
       systemMessage = EXTERNAL_AI_SYSTEM_PROMPT + ageContextPrefix + patientContextPrefix;
       console.log('Using external AI mode - no RAG context');
-    } else if (context) {
+    } else if (context || cafStudiesContext) {
+      systemMessage = `${TCM_RAG_SYSTEM_PROMPT}${ageContextPrefix}${patientContextPrefix}\n\n=== CONTEXT FROM DR. SAPIR'S KNOWLEDGE BASE ===\n\n${context}${cafStudiesContext}\n\n=== END CONTEXT ===`;
       systemMessage = `${TCM_RAG_SYSTEM_PROMPT}${ageContextPrefix}${patientContextPrefix}\n\n=== CONTEXT FROM DR. SAPIR'S KNOWLEDGE BASE ===\n\n${context}\n\n=== END CONTEXT ===`;
     } else {
       systemMessage = `${TCM_RAG_SYSTEM_PROMPT}${ageContextPrefix}${patientContextPrefix}\n\nNOTE: No relevant entries found in the knowledge base for this query.`;

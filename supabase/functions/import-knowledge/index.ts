@@ -236,6 +236,22 @@ serve(async (req) => {
             answer = `${code} - ${nameEn} (${pinyin})\nCategory: ${pointCategory}\nLocation: ${location}\nFunctions: ${functions}`;
             content = `Acupoint: ${code} ${nameEn} (${pinyin})\nCategory: ${pointCategory}\nLocation: ${location}\nFunctions/Indications: ${functions}`;
             contentType = 'acupoint';
+          } else if (row.system && row.western_label && row.tcm_pattern && row.deep_thinking_note) {
+            // CAF Master Studies format (comprehensive clinical framework)
+            const system = row.system || '';
+            const westernLabel = row.western_label || '';
+            const tcmPattern = row.tcm_pattern || '';
+            const keySymptoms = row.key_symptoms || '';
+            const pulseTongue = row.pulse_tongue || '';
+            const treatmentPrinciple = row.treatment_principle || '';
+            const acupoints = row.acupoints || '';
+            const pharmacopeia = row.pharmacopeia || '';
+            const deepThinking = row.deep_thinking_note || '';
+            
+            question = `How do I treat ${westernLabel} with ${tcmPattern} pattern in TCM?`;
+            answer = `**Western Condition:** ${westernLabel}\n**TCM Pattern:** ${tcmPattern}\n**System:** ${system}\n\n**Key Symptoms:** ${keySymptoms}\n**Pulse/Tongue:** ${pulseTongue}\n\n**Treatment Principle:** ${treatmentPrinciple}\n**Acupoints:** ${acupoints}\n**Formula:** ${pharmacopeia}\n\n**Clinical Insight (Deep Thinking):** ${deepThinking}`;
+            content = `CAF Clinical Study: ${westernLabel} - ${tcmPattern}\nSystem: ${system}\nSymptoms: ${keySymptoms}\nPulse/Tongue: ${pulseTongue}\nPrinciple: ${treatmentPrinciple}\nPoints: ${acupoints}\nFormula: ${pharmacopeia}\nDeep Thinking: ${deepThinking}`;
+            contentType = 'caf-study';
           } else {
             // Generic: join all values
             content = Object.values(row).filter(Boolean).join(' | ');
