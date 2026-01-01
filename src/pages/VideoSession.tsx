@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { InlineVoiceTextarea } from '@/components/ui/InlineVoiceTextarea';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { 
@@ -105,6 +106,7 @@ import {
 import { VideoSessionHeaderBoxes } from '@/components/video/VideoSessionHeaderBoxes';
 import { InlineMusicPlayer } from '@/components/video/InlineMusicPlayer';
 import { TcmBrainPanel } from '@/components/video/TcmBrainPanel';
+import { VoiceCommandsHelpDialog } from '@/components/video/VoiceCommandsHelpDialog';
 import { SessionWorkflowIndicator } from '@/components/video/SessionWorkflowIndicator';
 import { SessionPhaseIndicator } from '@/components/session';
 import { useSessionPhase } from '@/hooks/useSessionPhase';
@@ -1348,16 +1350,6 @@ export default function VideoSession() {
                     tooltip: 'Create Zoom meeting invite',
                     onClick: () => setShowZoomInvite(true),
                   },
-                  {
-                    id: 'voice',
-                    name: 'Voice',
-                    nameHe: 'הקלטה',
-                    icon: Mic,
-                    color: 'text-amber-600',
-                    borderColor: 'border-amber-300',
-                    tooltip: 'Voice dictation for notes',
-                    onClick: () => setShowVoiceDictation(true),
-                  },
                 ],
               },
               {
@@ -1754,7 +1746,7 @@ export default function VideoSession() {
                 </Card>
               </div>
 
-              {/* Session Notes - Below with double-tap gesture and voice note */}
+              {/* Session Notes - Below with double-tap gesture and inline voice input */}
               <Card 
                 className="touch-manipulation"
                 {...doubleTapHandlers}
@@ -1765,25 +1757,22 @@ export default function VideoSession() {
                       <label className="text-xs font-medium">הערות פגישה:</label>
                       <AutoSaveIndicator isSaving={isSaving} lastSaved={lastSaved} />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-muted-foreground md:hidden">
-                        Double-tap for timestamp
-                      </span>
-                      {/* Long-press voice note button - Mobile only */}
-                      <div className="md:hidden">
-                        <LongPressVoiceNote 
-                          onTranscription={handleVoiceNoteTranscription}
-                          className="scale-75 origin-right"
-                        />
-                      </div>
-                    </div>
+                    <span className="text-[10px] text-muted-foreground">
+                      🎤 Click mic for voice • Double-tap for timestamp
+                    </span>
                   </div>
-                  <Textarea
-                    ref={notesTextareaRef}
+                  <InlineVoiceTextarea
+                    ref={notesTextareaRef as any}
                     value={sessionNotes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="רשום הערות במהלך הפגישה..."
-                    rows={2}
+                    onVoiceInput={(text) => {
+                      haptic.success();
+                      toast.success('Voice note added', { duration: 1500 });
+                    }}
+                    placeholder="רשום הערות במהלך הפגישה... (לחץ על המיקרופון להקלטה)"
+                    rows={3}
+                    showLanguageSelector={true}
+                    defaultLanguage="he-IL"
                   />
                 </CardContent>
               </Card>
