@@ -14,9 +14,13 @@ import {
   BarChart3,
   MessageCircle,
   X,
-  Send
+  Send,
+  Mic,
+  MicOff,
+  Sparkles
 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface APIUsageStats {
@@ -247,28 +251,114 @@ export function APIUsageMeter() {
   );
 }
 
+// Quick prompt suggestions for TCM queries
+const QUICK_PROMPTS = [
+  { label: 'Liver Qi Stagnation', query: 'What are the main acupoints for Liver Qi Stagnation?' },
+  { label: 'Spleen Deficiency', query: 'Explain Spleen Qi deficiency patterns and treatment' },
+  { label: 'Kidney Yang', query: 'Points for tonifying Kidney Yang deficiency' },
+  { label: 'Blood Stasis', query: 'Treatment principles for Blood Stasis patterns' },
+  { label: 'Heart Yin', query: 'Heart Yin deficiency symptoms and acupoints' },
+  { label: 'Lung Dryness', query: 'Lung Dryness pattern differentiation and points' },
+];
+
 // Compact AI Chat Button with expandable chat panel
 function CompactAIChatButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [showQuickPrompts, setShowQuickPrompts] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
+  const { toast } = useToast();
 
-  const sendMessage = async () => {
-    if (!input.trim() || isLoading) return;
+  // Initialize speech recognition
+  useEffect(() => {
+    const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognitionAPI) {
+      recognitionRef.current = new SpeechRecognitionAPI();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.lang = 'en-US';
+
+      recognitionRef.current.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0].transcript)
+          .join('');
+        setInput(transcript);
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+        toast({
+          title: 'Voice Error',
+          description: 'Could not process voice input',
+          variant: 'destructive',
+        });
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+      }
+    };
+  }, [toast]);
+
+  const toggleVoiceInput = () => {
+    if (!recognitionRef.current) {
+      toast({
+        title: 'Not Supported',
+        description: 'Voice input is not supported in this browser',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+        toast({
+          title: 'Listening...',
+          description: 'Speak your question now',
+        });
+      } catch (err) {
+        console.error('Failed to start recognition:', err);
+      }
+    }
+  };
+
+  const sendMessage = async (messageText?: string) => {
+    const text = messageText || input.trim();
+    if (!text || isLoading) return;
     
-    const userMessage = input.trim();
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setShowQuickPrompts(false);
+    setMessages(prev => [...prev, { role: 'user', content: text }]);
     setIsLoading(true);
 
+    // Stop listening if active
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
+
     // Dispatch event for API meter tracking
-    window.dispatchEvent(new CustomEvent('tcm-query-start', { detail: { query: userMessage } }));
+    window.dispatchEvent(new CustomEvent('tcm-query-start', { detail: { query: text } }));
 
     try {
       const { data, error } = await supabase.functions.invoke('tcm-rag-chat', {
-        body: { query: userMessage }
+        body: { query: text }
       });
 
       if (error) throw error;
@@ -287,6 +377,10 @@ function CompactAIChatButton() {
       setIsLoading(false);
       window.dispatchEvent(new CustomEvent('tcm-query-end'));
     }
+  };
+
+  const handleQuickPrompt = (query: string) => {
+    sendMessage(query);
   };
 
   useEffect(() => {
@@ -337,9 +431,34 @@ function CompactAIChatButton() {
             {/* Messages Area */}
             <ScrollArea className="h-64 p-3" ref={scrollRef}>
               {messages.length === 0 ? (
-                <div className="text-center text-muted-foreground text-xs py-8">
-                  <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                  <p>Ask me about TCM patterns, points, or treatments...</p>
+                <div className="space-y-3">
+                  <div className="text-center text-muted-foreground text-xs py-4">
+                    <MessageCircle className="h-6 w-6 mx-auto mb-2 opacity-30" />
+                    <p>Ask me about TCM patterns, points, or treatments...</p>
+                  </div>
+                  
+                  {/* Quick Prompt Buttons */}
+                  {showQuickPrompts && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                        <Sparkles className="h-3 w-3" />
+                        <span>Quick prompts:</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {QUICK_PROMPTS.map((prompt) => (
+                          <Button
+                            key={prompt.label}
+                            variant="outline"
+                            size="sm"
+                            className="h-6 text-[10px] px-2 py-0 hover:bg-jade/10 hover:border-jade/50"
+                            onClick={() => handleQuickPrompt(prompt.query)}
+                          >
+                            {prompt.label}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -378,6 +497,21 @@ function CompactAIChatButton() {
             {/* Input Area */}
             <div className="p-2 border-t border-border bg-muted/30">
               <div className="flex gap-2">
+                {/* Voice Input Button */}
+                <Button
+                  size="sm"
+                  variant={isListening ? 'default' : 'outline'}
+                  onClick={toggleVoiceInput}
+                  className={`h-9 w-9 p-0 ${isListening ? 'bg-red-500 hover:bg-red-600 animate-pulse' : ''}`}
+                  title={isListening ? 'Stop listening' : 'Voice input'}
+                >
+                  {isListening ? (
+                    <MicOff className="h-3.5 w-3.5" />
+                  ) : (
+                    <Mic className="h-3.5 w-3.5" />
+                  )}
+                </Button>
+                
                 <Textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -387,13 +521,13 @@ function CompactAIChatButton() {
                       sendMessage();
                     }
                   }}
-                  placeholder="Ask about TCM..."
-                  className="min-h-[36px] max-h-[80px] text-xs resize-none"
+                  placeholder={isListening ? 'Listening...' : 'Ask about TCM...'}
+                  className={`min-h-[36px] max-h-[80px] text-xs resize-none ${isListening ? 'border-red-500/50' : ''}`}
                   rows={1}
                 />
                 <Button 
                   size="sm" 
-                  onClick={sendMessage}
+                  onClick={() => sendMessage()}
                   disabled={!input.trim() || isLoading}
                   className="h-9 w-9 p-0"
                 >
