@@ -75,7 +75,7 @@ const App = () => (
                   <Sonner />
                   <BrowserRouter>
                     <Routes>
-                      {/* Public */}
+                    {/* Public */}
                       <Route path="/" element={<Index />} />
                       <Route path="/therapist-register" element={<TherapistRegister />} />
                       <Route path="/pricing" element={<Pricing />} />
@@ -85,6 +85,7 @@ const App = () => (
                       <Route path="/confirm" element={<AppointmentConfirm />} />
                       <Route path="/install" element={<InstallApp />} />
                       <Route path="/contact" element={<Contact />} />
+                      <Route path="/therapist-disclaimer" element={<TherapistDisclaimer />} />
 
                       {/* Protected (requires tier) */}
                       <Route path="/dashboard" element={<RequireTier><Dashboard /></RequireTier>} />
@@ -104,7 +105,6 @@ const App = () => (
                       <Route path="/crm/patients/:patientId/consent" element={<RequireTier><CRMErrorBoundary><PatientConsentForm /></CRMErrorBoundary></RequireTier>} />
 
                       <Route path="/therapist-profile" element={<RequireTier><TherapistProfile /></RequireTier>} />
-                      <Route path="/therapist-disclaimer" element={<RequireTier><TherapistDisclaimer /></RequireTier>} />
 
                       <Route path="/admin" element={<RequireTier><Admin /></RequireTier>} />
                       <Route path="/admin/feedback" element={<RequireTier><AdminFeedback /></RequireTier>} />
