@@ -223,6 +223,13 @@ const BUILTIN_ASSETS = [
     defaultLanguage: 'en',
   },
   {
+    id: 'pattern-differentiation-protocols',
+    label: 'Pattern Differentiation Protocols (16 Syndromes + Herbal Formulas)',
+    path: '/knowledge-assets/pattern-differentiation-protocols.csv',
+    defaultCategory: 'tcm_diagnosis',
+    defaultLanguage: 'en',
+  },
+  {
     id: 'work-stress-burnout',
     label: 'work-stress-burnout.csv',
     path: '/knowledge-assets/work-stress-burnout.csv',
