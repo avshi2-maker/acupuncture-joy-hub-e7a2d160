@@ -65,9 +65,9 @@ export function OnboardingProgress() {
   const progressPercentage = (completedCount / steps.length) * 100;
   const allComplete = completedCount === steps.length;
 
-  // Don't show if all steps are complete
+  // Return empty fragment instead of null to maintain hook consistency
   if (allComplete) {
-    return null;
+    return <></>;
   }
 
   return (
@@ -156,8 +156,9 @@ export function OnboardingProgressCompact() {
   const completedCount = [tierSelected, disclaimerSigned, profileCompleted].filter(Boolean).length;
   const allComplete = completedCount === 3;
 
+  // Return empty fragment instead of null to maintain hook consistency
   if (allComplete) {
-    return null;
+    return <></>;
   }
 
   const currentStep = !tierSelected ? '/gate' : !disclaimerSigned ? '/therapist-disclaimer' : '/therapist-profile';
