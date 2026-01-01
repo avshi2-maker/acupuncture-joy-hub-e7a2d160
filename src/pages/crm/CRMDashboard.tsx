@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Users, Clock, TrendingUp, Plus, ArrowRight, Video, FileText, Trash2, BookOpen } from 'lucide-react';
+import { Calendar, Users, Clock, TrendingUp, Plus, ArrowRight, Video, FileText, Trash2, BookOpen, Leaf } from 'lucide-react';
 import { WhatsAppReminderButton } from '@/components/crm/WhatsAppReminderButton';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -348,12 +348,22 @@ export default function CRMDashboard() {
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="h-14 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm touch-manipulation active:scale-[0.98] col-span-2 border-jade/30 hover:bg-jade/5" 
+                  className="h-14 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm touch-manipulation active:scale-[0.98]" 
                   asChild
                 >
                   <Link to="/caf-browser">
                     <BookOpen className="h-5 w-5 md:h-5 md:w-5 text-jade" />
-                    <span>CAF Clinical Studies Browser</span>
+                    <span>CAF Studies</span>
+                  </Link>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-14 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm touch-manipulation active:scale-[0.98] border-gold/30 hover:bg-gold/5" 
+                  asChild
+                >
+                  <Link to="/retreat-quiz">
+                    <Leaf className="h-5 w-5 md:h-5 md:w-5 text-gold" />
+                    <span>Retreat Quiz</span>
                   </Link>
                 </Button>
               </div>

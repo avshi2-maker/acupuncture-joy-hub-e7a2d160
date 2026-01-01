@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Leaf, RefreshCw, CheckCircle, XCircle, MapPin, Pill, Video, Brain, Home } from 'lucide-react';
+import { Leaf, RefreshCw, CheckCircle, XCircle, MapPin, Pill, Video, Brain, Home, Share2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import retreatQuizBg from '@/assets/retreat-quiz-bg.png';
 
 interface QuestionData {
@@ -132,6 +133,28 @@ export default function RetreatQuiz() {
         message: 'Your balance is reasonable. Maintenance acupuncture and lifestyle changes should be sufficient.',
       };
     }
+  };
+
+  const shareViaWhatsApp = () => {
+    const status = getResultStatus();
+    const tcmSummary = collectedTCM.length > 0 
+      ? collectedTCM.slice(0, 5).map(item => `• ${item.pts} - ${item.herb}`).join('\n')
+      : 'No specific patterns detected';
+    
+    const message = `🌿 *TCM Retreat Assessment Results*
+
+📊 *Status:* ${status.badge}
+📈 *Score:* ${score} points
+
+🎯 *Key Patterns Detected:*
+${tcmSummary}
+
+${collectedTCM.length > 5 ? `...and ${collectedTCM.length - 5} more patterns\n` : ''}
+✨ Take your assessment: ${window.location.origin}/retreat-quiz`;
+
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+    toast.success('Opening WhatsApp to share results');
   };
 
   const progress = (currentIdx / questionsDB.length) * 100;
@@ -269,6 +292,15 @@ export default function RetreatQuiz() {
 
                   {/* Action Buttons */}
                   <div className="space-y-3 mt-6">
+                    {/* WhatsApp Share Button */}
+                    <Button
+                      onClick={shareViaWhatsApp}
+                      className="w-full bg-[#25D366] hover:bg-[#25D366]/90 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2"
+                    >
+                      <Share2 className="h-4 w-4" />
+                      Share Results via WhatsApp
+                    </Button>
+                    
                     <div className="grid grid-cols-2 gap-3">
                       <Button
                         onClick={() => navigate('/video-session')}
