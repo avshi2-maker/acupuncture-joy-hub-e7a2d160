@@ -292,6 +292,26 @@ serve(async (req) => {
       console.error('CAF Study query error:', cafStudyError);
     }
 
+    // Query Retreat Quiz Results for patient wellness assessment data
+    let quizResults: any[] = [];
+    try {
+      const searchWords = searchQuery.toLowerCase().split(/\s+/).filter((w: string) => w.length > 2);
+      const hasRetreatTerms = ['retreat', 'quiz', 'wellness', 'assessment', 'burnout', 'stress', 'lifestyle'].some(
+        term => searchQuery.toLowerCase().includes(term)
+      );
+      if (hasRetreatTerms) {
+        const { data: quizData } = await supabaseClient
+          .from('retreat_quiz_results')
+          .select('*, patients(full_name)')
+          .order('created_at', { ascending: false })
+          .limit(5);
+        quizResults = quizData || [];
+        console.log(`Retreat Quiz Results: ${quizResults.length}`);
+      }
+    } catch (quizError) {
+      console.error('Quiz Results query error:', quizError);
+    }
+
     // Then get other relevant chunks
     const { data: otherChunks, error: searchError } = await supabaseClient
       .from('knowledge_chunks')
@@ -353,6 +373,26 @@ Formula: ${study.pharmacopeia_formula}
 🧠 Clinical Insight: ${study.deep_thinking_note}
 `).join('\n---\n');
       cafStudiesContext += '\n=== END CAF STUDIES ===';
+    }
+
+    // Add Retreat Quiz Results context for wellness assessments
+    let quizResultsContext = '';
+    if (quizResults.length > 0) {
+      quizResultsContext = '\n\n=== RETREAT QUIZ WELLNESS ASSESSMENTS ===\n';
+      quizResultsContext += quizResults.map((result, i) => {
+        const tcmData = result.collected_tcm || {};
+        return `
+[Quiz Result #${i + 1}: ${result.patients?.full_name || 'Anonymous'}]
+Date: ${new Date(result.created_at).toLocaleDateString()}
+Score: ${result.score}% (${result.answered_yes}/${result.total_questions} wellness indicators)
+Status: ${result.status}
+TCM Observations:
+- Patterns: ${tcmData.patterns?.join(', ') || 'Not recorded'}
+- Symptoms: ${tcmData.symptoms?.join(', ') || 'Not recorded'}
+- Recommendations: ${tcmData.recommendations?.join(', ') || 'Not recorded'}
+`;
+      }).join('\n---\n');
+      quizResultsContext += '\n=== END QUIZ ASSESSMENTS ===';
     }
 
     console.log(`Priority chunks - Age-Specific: ${ageSpecificChunks.length}, Diagnostics: ${diagnosticsChunks?.length || 0}, Pulse/Tongue: ${pulseChunks?.length || 0}, Zang-Fu: ${zangfuChunks?.length || 0}, Acupoints: ${acuChunks?.length || 0}, QA: ${qaChunks?.length || 0}, Treatment: ${treatmentChunks?.length || 0}, Other: ${otherChunks?.length || 0}`);
@@ -427,9 +467,8 @@ ${chunk.content}`;
       // Using external AI - no RAG context, use general knowledge
       systemMessage = EXTERNAL_AI_SYSTEM_PROMPT + ageContextPrefix + patientContextPrefix;
       console.log('Using external AI mode - no RAG context');
-    } else if (context || cafStudiesContext) {
-      systemMessage = `${TCM_RAG_SYSTEM_PROMPT}${ageContextPrefix}${patientContextPrefix}\n\n=== CONTEXT FROM DR. SAPIR'S KNOWLEDGE BASE ===\n\n${context}${cafStudiesContext}\n\n=== END CONTEXT ===`;
-      systemMessage = `${TCM_RAG_SYSTEM_PROMPT}${ageContextPrefix}${patientContextPrefix}\n\n=== CONTEXT FROM DR. SAPIR'S KNOWLEDGE BASE ===\n\n${context}\n\n=== END CONTEXT ===`;
+    } else if (context || cafStudiesContext || quizResultsContext) {
+      systemMessage = `${TCM_RAG_SYSTEM_PROMPT}${ageContextPrefix}${patientContextPrefix}\n\n=== CONTEXT FROM DR. SAPIR'S KNOWLEDGE BASE ===\n\n${context}${cafStudiesContext}${quizResultsContext}\n\n=== END CONTEXT ===`;
     } else {
       systemMessage = `${TCM_RAG_SYSTEM_PROMPT}${ageContextPrefix}${patientContextPrefix}\n\nNOTE: No relevant entries found in the knowledge base for this query.`;
     }

@@ -356,16 +356,18 @@ export default function CRMDashboard() {
                     <span>CAF Studies</span>
                   </Link>
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="h-14 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm touch-manipulation active:scale-[0.98] border-gold/30 hover:bg-gold/5" 
-                  asChild
+                <Link 
+                  to="/retreat-quiz"
+                  className="relative h-14 md:h-20 rounded-md border border-gold/30 overflow-hidden flex flex-col items-center justify-center gap-1 md:gap-2 text-xs md:text-sm touch-manipulation active:scale-[0.98] hover:border-gold/50 transition-all group"
                 >
-                  <Link to="/retreat-quiz">
-                    <Leaf className="h-5 w-5 md:h-5 md:w-5 text-gold" />
-                    <span>Retreat Quiz</span>
-                  </Link>
-                </Button>
+                  <div 
+                    className="absolute inset-0 bg-cover bg-center opacity-30 group-hover:opacity-40 transition-opacity"
+                    style={{ backgroundImage: `url('/src/assets/quiz-dashboard-bg.jpg')` }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-background/20" />
+                  <Leaf className="relative z-10 h-5 w-5 md:h-5 md:w-5 text-gold" />
+                  <span className="relative z-10 font-medium">Retreat Quiz</span>
+                </Link>
               </div>
             </CardContent>
           </Card>
