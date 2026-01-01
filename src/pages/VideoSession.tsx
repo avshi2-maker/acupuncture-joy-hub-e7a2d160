@@ -113,6 +113,7 @@ import { cn } from '@/lib/utils';
 import aiGeneratorBg from '@/assets/ai-generator-bg.png';
 import animatedMicGif from '@/assets/mic-animated.gif';
 import clockImg from '@/assets/clock.png';
+import anxietySessionBg from '@/assets/anxiety-session-bg.jpg';
 
 // Session time alerts (in seconds)
 const SESSION_ALERT_30_MIN = 30 * 60;
@@ -1493,6 +1494,37 @@ export default function VideoSession() {
                   </CardContent>
                 </Card>
 
+                {/* Featured Q&A Discussion Box */}
+                <Card 
+                  className="relative overflow-hidden border-rose-200/50"
+                  style={{
+                    backgroundImage: `linear-gradient(rgba(255,255,255,0.75), rgba(255,255,255,0.75)), url(${anxietySessionBg})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}
+                >
+                  <CardContent className="p-4 flex flex-col items-center justify-center min-h-[180px] md:min-h-[200px]">
+                    <div className="text-center mb-4">
+                      <Heart className="h-8 w-8 text-rose-500 mx-auto mb-2" />
+                      <h3 className="text-lg font-semibold text-foreground">התחל דיון בנושא</h3>
+                      <p className="text-sm text-muted-foreground mt-1">בחר סוג שיחה להתחיל</p>
+                    </div>
+                    <QATypeDropdown
+                      variant="tile"
+                      selectedType={selectedQAType}
+                      onSelect={(type) => {
+                        setSelectedQAType(type);
+                        if (type === 'anxiety') {
+                          setShowAnxietyQA(true);
+                        } else if (type === 'tcm-brain') {
+                          setShowTcmBrainPanel(true);
+                        }
+                        haptic.medium();
+                      }}
+                      onReset={() => setSelectedQAType(null)}
+                    />
+                  </CardContent>
+                </Card>
               </div>
 
               {/* Session Notes - Below with double-tap gesture and voice note */}
