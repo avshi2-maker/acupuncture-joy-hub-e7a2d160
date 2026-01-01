@@ -1560,18 +1560,9 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
                     <Utensils className="h-4 w-4" />
                     Diet & Nutrition
                   </Label>
-                  <DietNutritionSelect
+                <DietNutritionSelect
                     value={dietHabits}
                     onChange={setDietHabits}
-                  />
-                  <Input
-                    placeholder="Or type diet notes here to bypass dropdown..."
-                    className="mt-1 border-dashed border-amber-400"
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        setDietHabits([e.target.value]);
-                      }
-                    }}
                   />
                 </div>
 
