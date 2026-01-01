@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef } from 'react';
 
 export type ClockTheme = 'gold' | 'silver' | 'jade';
 
@@ -16,7 +16,8 @@ interface ThemedClockWidgetProps {
   className?: string;
 }
 
-export function ThemedClockWidget({ theme = 'gold', className = '' }: ThemedClockWidgetProps) {
+export const ThemedClockWidget = forwardRef<HTMLDivElement, ThemedClockWidgetProps>(
+  ({ theme = 'gold', className = '' }, ref) => {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
@@ -87,7 +88,7 @@ export function ThemedClockWidget({ theme = 'gold', className = '' }: ThemedCloc
   const styles = themeStyles[theme];
 
   return (
-    <div className={`flex items-center gap-3 px-4 py-2 bg-card bg-gradient-to-r ${styles.container} rounded-xl border backdrop-blur-sm ${className}`}>
+    <div ref={ref} className={`flex items-center gap-3 px-4 py-2 bg-card bg-gradient-to-r ${styles.container} rounded-xl border backdrop-blur-sm ${className}`}>
       {/* Analog Clock */}
       <div className={`relative w-12 h-12 rounded-full bg-card bg-gradient-to-br ${styles.clockFace} border-2 flex items-center justify-center shadow-[0_0_15px_rgba(0,0,0,0.1),inset_0_1px_3px_rgba(255,255,255,0.3)]`}>
         {/* Clock face - solid background */}
@@ -147,4 +148,6 @@ export function ThemedClockWidget({ theme = 'gold', className = '' }: ThemedCloc
       </div>
     </div>
   );
-}
+});
+
+ThemedClockWidget.displayName = 'ThemedClockWidget';
