@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
@@ -50,7 +50,8 @@ import {
   Accessibility,
   Music,
   HelpCircle,
-  Mic
+  Mic,
+  MicOff
 } from 'lucide-react';
 import { AnimatedMic } from '@/components/ui/AnimatedMic';
 import { toast } from 'sonner';
@@ -115,6 +116,7 @@ import { useLongPressTimer } from '@/hooks/useLongPressTimer';
 import { useSessionLock } from '@/contexts/SessionLockContext';
 import { useVideoSessionShortcuts } from '@/hooks/useVideoSessionShortcuts';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
+import { useVoiceCommands, COMMON_COMMAND_PATTERNS, VoiceCommand } from '@/hooks/useVoiceCommands';
 import { cn } from '@/lib/utils';
 import aiGeneratorBg from '@/assets/ai-generator-bg.png';
 import animatedMicGif from '@/assets/mic-animated.gif';
@@ -161,6 +163,7 @@ export default function VideoSession() {
   const [showMusicPlayer, setShowMusicPlayer] = useState(false);
   const [showHelpGuide, setShowHelpGuide] = useState(false);
   const [showTcmBrainPanel, setShowTcmBrainPanel] = useState(false);
+  const [voiceAlwaysOn, setVoiceAlwaysOn] = useState(false);
   const [selectedQAType, setSelectedQAType] = useState<QAType | null>(null);
   const [guideCompleted, setGuideCompleted] = useState(false);
   const [liveTranscription, setLiveTranscription] = useState('');
@@ -533,6 +536,46 @@ export default function VideoSession() {
         break;
     }
   }, [sessionStatus, sessionDuration, sessionNotes, startSession, endSession, pauseSession, resumeSession, resetSession, setNotes, pauseLock, resumeLock, haptic]);
+
+  // Always-on voice commands using Web Speech API
+  const alwaysOnVoiceCommands: VoiceCommand[] = useMemo(() => [
+    // Session controls
+    { patterns: COMMON_COMMAND_PATTERNS.start, action: () => handleVoiceCommand('start'), description: 'Start session', category: 'session' },
+    { patterns: COMMON_COMMAND_PATTERNS.stop, action: () => handleVoiceCommand('stop'), description: 'End session', category: 'session' },
+    { patterns: COMMON_COMMAND_PATTERNS.pause, action: () => handleVoiceCommand('pause'), description: 'Pause session', category: 'session' },
+    { patterns: COMMON_COMMAND_PATTERNS.resume, action: () => handleVoiceCommand('resume'), description: 'Resume session', category: 'session' },
+    { patterns: COMMON_COMMAND_PATTERNS.reset, action: () => handleVoiceCommand('reset'), description: 'Reset session', category: 'session' },
+    { patterns: ['timestamp', 'חותמת זמן', 'mark', 'סמן'], action: () => handleVoiceCommand('timestamp'), description: 'Add timestamp', category: 'session' },
+    
+    // Navigation & dialogs
+    { patterns: ['calendar', 'יומן', 'appointment', 'תור'], action: () => setShowQuickAppointment(true), description: 'Open calendar', category: 'navigation' },
+    { patterns: ['patient', 'מטופל', 'add patient'], action: () => setShowQuickPatient(true), description: 'Quick patient', category: 'navigation' },
+    { patterns: ['zoom', 'זום', 'video call'], action: () => setShowZoomInvite(true), description: 'Zoom invite', category: 'navigation' },
+    { patterns: ['report', 'דוח', 'summary', 'סיכום'], action: () => setShowSessionReport(true), description: 'Session report', category: 'navigation' },
+    { patterns: ['follow up', 'מעקב', 'followup'], action: () => setShowFollowUpPlan(true), description: 'Follow-up plan', category: 'navigation' },
+    { patterns: ['settings', 'הגדרות'], action: () => setShowSettings(true), description: 'Open settings', category: 'navigation' },
+    { patterns: ['brain', 'מוח', 'tcm', 'ai'], action: () => setShowTcmBrainPanel(true), description: 'Open TCM Brain', category: 'ai' },
+    { patterns: ['anxiety', 'חרדה', 'qa', 'questions'], action: () => setShowAnxietyQA(true), description: 'Anxiety Q&A', category: 'ai' },
+    { patterns: ['guide', 'מדריך', 'teleprompter'], action: () => setShowSessionGuide(true), description: 'Session guide', category: 'navigation' },
+    { patterns: ['music', 'מוזיקה'], action: () => setShowMusicPlayer(!showMusicPlayer), description: 'Toggle music', category: 'utility' },
+    { patterns: COMMON_COMMAND_PATTERNS.help, action: () => setShowHelpGuide(true), description: 'Open help', category: 'utility' },
+    { patterns: COMMON_COMMAND_PATTERNS.print, action: () => window.print(), description: 'Print', category: 'utility' },
+    
+    // Status tags
+    { patterns: ['feeling better', 'מרגיש טוב', 'better'], action: () => handleVoiceCommand('feeling-better'), description: 'Mark feeling better', category: 'session' },
+    { patterns: ['needs followup', 'צריך מעקב', 'follow up needed'], action: () => handleVoiceCommand('needs-followup'), description: 'Mark needs follow-up', category: 'session' },
+    
+    // Recording
+    { patterns: ['start recording', 'התחל הקלטה', 'record'], action: () => handleVoiceCommand('start-recording'), description: 'Start recording', category: 'utility' },
+    { patterns: ['stop recording', 'עצור הקלטה'], action: () => handleVoiceCommand('stop-recording'), description: 'Stop recording', category: 'utility' },
+  ], [handleVoiceCommand, showMusicPlayer]);
+
+  const { isListening: isAlwaysOnListening, isSupported: isVoiceSupported, toggleListening: toggleAlwaysOnVoice } = useVoiceCommands({
+    commands: alwaysOnVoiceCommands,
+    enabled: voiceAlwaysOn,
+    language: 'he-IL',
+    showToasts: true,
+  });
 
   // Check access
   // Clock update effect
@@ -1122,7 +1165,26 @@ export default function VideoSession() {
                 <Settings className="h-3.5 w-3.5" />
               </Button>
               
-              {/* 6. Help - Mobile */}
+              {/* 6. Always-On Voice - Mobile */}
+              <Button 
+                size="icon" 
+                className={cn(
+                  "h-8 w-8 shrink-0 touch-manipulation transition-all",
+                  voiceAlwaysOn 
+                    ? "bg-jade text-jade-foreground animate-pulse" 
+                    : "bg-muted text-muted-foreground"
+                )}
+                onClick={() => {
+                  setVoiceAlwaysOn(!voiceAlwaysOn);
+                  if (!voiceAlwaysOn) toggleAlwaysOnVoice();
+                }}
+                disabled={!isVoiceSupported}
+                title={voiceAlwaysOn ? "Voice commands active" : "Enable voice commands"}
+              >
+                <Mic className="h-3.5 w-3.5" />
+              </Button>
+              
+              {/* 7. Help - Mobile */}
               <Button 
                 size="icon" 
                 className="h-8 w-8 shrink-0 touch-manipulation bg-gradient-to-br from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600" 
@@ -1132,8 +1194,27 @@ export default function VideoSession() {
               </Button>
             </div>
 
-            {/* Help + Clock - Desktop only */}
+            {/* Help + Voice + Clock - Desktop only */}
             <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-2">
+              {/* Always-On Voice Toggle - Desktop */}
+              <Button
+                onClick={() => {
+                  setVoiceAlwaysOn(!voiceAlwaysOn);
+                  if (!voiceAlwaysOn) toggleAlwaysOnVoice();
+                }}
+                size="icon"
+                disabled={!isVoiceSupported}
+                className={cn(
+                  'h-12 w-12 rounded-full shadow-lg transition-all duration-300 hover:scale-110',
+                  voiceAlwaysOn 
+                    ? 'bg-jade text-jade-foreground ring-2 ring-jade/40 animate-pulse' 
+                    : 'bg-muted hover:bg-muted/80'
+                )}
+                title={voiceAlwaysOn ? "🎤 Voice active - say commands" : "Enable always-on voice"}
+              >
+                <Mic className="h-6 w-6" />
+              </Button>
+
               <Button
                 onClick={() => setShowHelpGuide((v) => !v)}
                 size="icon"
