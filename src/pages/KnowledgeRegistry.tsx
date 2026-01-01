@@ -384,6 +384,13 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'dermatology',
     defaultLanguage: 'en',
   },
+  {
+    id: 'tcm-dermatology-comprehensive',
+    label: 'TCM Dermatology Comprehensive (50 Skin Conditions)',
+    path: '/knowledge-assets/tcm-dermatology-comprehensive.csv',
+    defaultCategory: 'dermatology',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 type QueueItemStatus = 'pending' | 'importing' | 'done' | 'error';
