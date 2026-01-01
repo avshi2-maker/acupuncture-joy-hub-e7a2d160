@@ -257,6 +257,56 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'tcm_theory',
     defaultLanguage: 'en',
   },
+  // Age-Group Specific Knowledge Assets
+  {
+    id: 'tcm-newborn-qa',
+    label: 'TCM Newborn Q&A (0-1 year)',
+    path: '/knowledge-assets/tcm-newborn-qa.csv',
+    defaultCategory: 'pediatrics',
+    defaultLanguage: 'en',
+  },
+  {
+    id: 'tcm-children-7-13-qa',
+    label: 'TCM Children Q&A (7-13 years)',
+    path: '/knowledge-assets/tcm-children-7-13-qa.csv',
+    defaultCategory: 'pediatrics',
+    defaultLanguage: 'en',
+  },
+  {
+    id: 'tcm-adults-18-50-qa',
+    label: 'TCM Adults Q&A (18-50 years)',
+    path: '/knowledge-assets/tcm-adults-18-50-qa.csv',
+    defaultCategory: 'general_health',
+    defaultLanguage: 'en',
+  },
+  {
+    id: 'tcm-elderly-70-120-qa',
+    label: 'TCM Elderly Q&A (70-120 years)',
+    path: '/knowledge-assets/tcm-elderly-70-120-qa.csv',
+    defaultCategory: 'general_health',
+    defaultLanguage: 'en',
+  },
+  {
+    id: 'age-prompts-adults-18-50',
+    label: 'Age Prompts Adults (18-50)',
+    path: '/knowledge-assets/age-prompts-adults-18-50.csv',
+    defaultCategory: 'general_health',
+    defaultLanguage: 'en',
+  },
+  {
+    id: 'age-prompts-adults-50-70',
+    label: 'Age Prompts Adults (50-70)',
+    path: '/knowledge-assets/age-prompts-adults-50-70.csv',
+    defaultCategory: 'general_health',
+    defaultLanguage: 'en',
+  },
+  {
+    id: 'elderly-lifestyle-recommendations',
+    label: 'Elderly Lifestyle Recommendations',
+    path: '/knowledge-assets/elderly-lifestyle-recommendations.csv',
+    defaultCategory: 'general_health',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 type QueueItemStatus = 'pending' | 'importing' | 'done' | 'error';
