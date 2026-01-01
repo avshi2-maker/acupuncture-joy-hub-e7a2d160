@@ -16,6 +16,8 @@ import { Lock, ArrowLeft, Leaf, CreditCard, Upload, CheckCircle, ArrowRight, Mes
 import { Link } from 'react-router-dom';
 import { TierCard } from '@/components/pricing/TierCard';
 import { Confetti } from '@/components/ui/Confetti';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const gateSchema = z.object({
   password: z
@@ -89,12 +91,20 @@ export default function Gate() {
   const [therapistName, setTherapistName] = useState('');
   const [therapistPhone, setTherapistPhone] = useState('');
   const [showConfetti, setShowConfetti] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(true);
   
   // Biometric authentication
   const { isAvailable: isBiometricAvailable, isEnabled: isBiometricEnabled, authenticate, enableBiometric, isAuthenticating } = useBiometricAuth();
   
   // Check if user has previously logged in (has stored tier info)
   const hasStoredSession = localStorage.getItem('tier') !== null;
+  
+  // Simulate page loading for tier cards
+  useEffect(() => {
+    const timer = setTimeout(() => setIsPageLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   const form = useForm<GateForm>({
     resolver: zodResolver(gateSchema),
@@ -210,7 +220,14 @@ export default function Gate() {
       }
 
       setTier(result.tier as 'trial' | 'standard' | 'premium');
-      if (result.expires_at) {
+      
+      // If remember me is checked, extend session to 30 days; otherwise use default from server
+      if (rememberMe) {
+        const extendedExpiry = new Date();
+        extendedExpiry.setDate(extendedExpiry.getDate() + 30);
+        setExpiresAt(extendedExpiry);
+        localStorage.setItem('remember_me', 'true');
+      } else if (result.expires_at) {
         setExpiresAt(new Date(result.expires_at));
       }
 
@@ -347,14 +364,39 @@ export default function Gate() {
               </div>
 
               <div className="grid md:grid-cols-3 gap-6 lg:gap-8 mb-8">
-                {tiers.map((tier) => (
-                  <TierCard
-                    key={tier.name}
-                    {...tier}
-                    onSelect={() => handleSelectTier(tier.name)}
-                    buttonText={tier.name === 'Trial' ? 'התחל ניסיון' : 'בחר תוכנית'}
-                  />
-                ))}
+                {isPageLoading ? (
+                  // Skeleton loading state
+                  <>
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="rounded-xl border bg-card p-6 space-y-4 animate-pulse">
+                        <div className="space-y-2">
+                          <Skeleton className="h-6 w-24 mx-auto" />
+                          <Skeleton className="h-10 w-20 mx-auto" />
+                          <Skeleton className="h-4 w-40 mx-auto" />
+                        </div>
+                        <div className="space-y-2 pt-4">
+                          {[1, 2, 3, 4, 5, 6, 7].map((j) => (
+                            <div key={j} className="flex items-center gap-2">
+                              <Skeleton className="h-4 w-4 rounded-full" />
+                              <Skeleton className="h-4 flex-1" />
+                            </div>
+                          ))}
+                        </div>
+                        <Skeleton className="h-10 w-full mt-4" />
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  // Actual tier cards
+                  tiers.map((tier) => (
+                    <TierCard
+                      key={tier.name}
+                      {...tier}
+                      onSelect={() => handleSelectTier(tier.name)}
+                      buttonText={tier.name === 'Trial' ? 'התחל ניסיון' : 'בחר תוכנית'}
+                    />
+                  ))
+                )}
               </div>
 
               {/* Quick Test Access for Daily Testing */}
@@ -599,6 +641,23 @@ export default function Gate() {
                           </FormItem>
                         )}
                       />
+
+                      {/* Remember me checkbox */}
+                      <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/50">
+                        <Checkbox
+                          id="remember-me"
+                          checked={rememberMe}
+                          onCheckedChange={(checked) => setRememberMe(checked === true)}
+                          className="data-[state=checked]:bg-jade data-[state=checked]:border-jade"
+                        />
+                        <label 
+                          htmlFor="remember-me" 
+                          className="text-sm cursor-pointer flex-1"
+                        >
+                          <span className="font-medium">זכור אותי</span>
+                          <span className="text-muted-foreground mr-1">(30 ימים)</span>
+                        </label>
+                      </div>
 
                       <Button 
                         type="submit" 
