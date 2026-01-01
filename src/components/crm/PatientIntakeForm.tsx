@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -194,9 +194,22 @@ const DEMO_PATIENT_DATA: Partial<PatientFormData> = {
 
 export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = false }: PatientIntakeFormProps) {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
+  
+  // Initialize step from URL or default to 0
+  const initialStep = (() => {
+    const stepParam = searchParams.get('step');
+    if (stepParam) {
+      const parsed = parseInt(stepParam, 10);
+      if (!isNaN(parsed) && parsed >= 0 && parsed < stepTitles.length) {
+        return parsed;
+      }
+    }
+    return 0;
+  })();
+  const [currentStep, setCurrentStep] = useState(initialStep);
   const [ageGroup, setAgeGroup] = useState<'child' | 'teen' | 'adult' | 'senior' | null>(null);
   const [ageSpecificAnswers, setAgeSpecificAnswers] = useState<Record<string, string>>({});
   const [pregnancyAnswers, setPregnancyAnswers] = useState<Record<string, string>>({});
@@ -231,6 +244,20 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
 
   // Track whether draft has been shown/dismissed
   const [draftDismissed, setDraftDismissed] = useState(false);
+
+  // Sync current step to URL for sharing/bookmarking
+  useEffect(() => {
+    const newParams = new URLSearchParams(searchParams);
+    if (currentStep > 0) {
+      newParams.set('step', currentStep.toString());
+    } else {
+      newParams.delete('step');
+    }
+    // Only update if different to avoid unnecessary history entries
+    if (newParams.toString() !== searchParams.toString()) {
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [currentStep, searchParams, setSearchParams]);
 
   // Function to check if ID number is unique and valid
   const checkIdUniqueness = async (idNumber: string) => {
