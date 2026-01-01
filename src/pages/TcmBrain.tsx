@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +15,20 @@ import {
   Database,
   ChevronDown,
   ChevronUp,
-  MessageCircleQuestion
+  MessageCircleQuestion,
+  Play,
+  Pause,
+  Square,
+  RotateCcw,
+  Printer,
+  MessageCircle,
+  Mail,
+  Leaf,
+  ArrowRight,
+  HelpCircle,
+  BookOpen,
+  Heart,
+  Mic
 } from 'lucide-react';
 import { APIUsageMeter } from '@/components/tcm-brain/APIUsageMeter';
 import { useTcmBrainState } from '@/hooks/useTcmBrainState';
@@ -33,7 +47,13 @@ import { IntakeReviewDialog } from '@/components/tcm-brain/IntakeReviewDialog';
 import { QuickActionsRef } from '@/components/tcm-brain/QuickActionsBar';
 import { QASuggestionsPanel } from '@/components/tcm/QASuggestionsPanel';
 import { ExternalAIFallbackCard, ExternalAIProvider } from '@/components/tcm/ExternalAIFallbackCard';
+import { SessionHeaderBoxes, SessionHeaderBox } from '@/components/session/SessionHeaderBoxes';
+import { CrossPlatformBackButton } from '@/components/ui/CrossPlatformBackButton';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { TierBadge } from '@/components/layout/TierBadge';
+import { FloatingHelpGuide } from '@/components/ui/FloatingHelpGuide';
 import { toast } from 'sonner';
+import clockImg from '@/assets/clock.png';
 
 export default function TcmBrain() {
   const [activeTab, setActiveTab] = useState('diagnostics');
@@ -41,8 +61,16 @@ export default function TcmBrain() {
   const [showKnowledgeAssets, setShowKnowledgeAssets] = useState(true);
   const [showQASuggestions, setShowQASuggestions] = useState(false);
   const [showIntakeReview, setShowIntakeReview] = useState(false);
+  const [showHelpGuide, setShowHelpGuide] = useState(false);
   const [qaFavoritesCount, setQaFavoritesCount] = useState(0);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const quickActionsRef = useRef<QuickActionsRef>(null);
+  
+  // Update current time every minute
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(interval);
+  }, []);
   
   const {
     messages,
@@ -222,42 +250,65 @@ export default function TcmBrain() {
       </Helmet>
 
       <div className="min-h-screen bg-background flex flex-col">
-        {/* Top Header - Bold Green Title + Patient Selector + Help */}
+        {/* Top Header - Unified with VideoSession style */}
         <header className="border-b bg-gradient-to-r from-emerald-900/20 via-emerald-800/10 to-emerald-900/20 backdrop-blur-sm sticky top-0 z-50">
-          <div className="container mx-auto px-4 py-2">
+          <div className="max-w-full mx-auto px-3 md:px-4 py-2 md:py-3">
             <div className="flex items-center justify-between gap-4">
-              {/* Bold Green Title */}
-              <div className="flex items-center gap-3">
-                <Brain className="h-6 w-6 text-emerald-500" />
-                <h1 className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
-                  TCM BRAIN
-                </h1>
-                <span className="text-xs text-emerald-600/70 hidden sm:block font-medium">Clinical AI Assistant</span>
+              {/* Left: Back + Logo + Title */}
+              <div className="flex items-center gap-2 md:gap-3">
+                <CrossPlatformBackButton 
+                  fallbackPath="/dashboard" 
+                  variant="ghost" 
+                  size="icon"
+                  className="md:hidden h-9 w-9"
+                />
+                <Link to="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+                  <div className="w-8 h-8 md:w-10 md:h-10 bg-emerald-100 dark:bg-emerald-900/50 rounded-full flex items-center justify-center">
+                    <Brain className="h-4 w-4 md:h-5 md:w-5 text-emerald-600" />
+                  </div>
+                  <div className="hidden sm:block">
+                    <h1 className="font-display text-lg md:text-xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
+                      TCM BRAIN
+                    </h1>
+                    <p className="text-xs text-muted-foreground">Clinical AI Assistant</p>
+                  </div>
+                </Link>
                 
-                {/* Animated Yellow Help Button */}
+                {/* Help Button */}
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 px-3 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold animate-pulse shadow-lg shadow-yellow-400/50 hover:shadow-yellow-500/50 transition-all"
-                  onClick={() => toast.info('Voice Commands: Say "generate summary", "save session", "next tab", "pause session" and more!', { duration: 8000 })}
+                  onClick={() => setShowHelpGuide(true)}
+                  className="h-8 px-3 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold shadow-lg transition-all"
                 >
-                  <span className="animate-bounce inline-block mr-1">❓</span>
-                  Help
+                  <HelpCircle className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">Help</span>
                 </Button>
               </div>
 
-              {/* Patient Selector + Active Assets Count */}
-              <div className="flex items-center gap-3">
+              {/* Center: Clock (Desktop) */}
+              <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-2">
+                <div className="relative h-16 w-16 rounded-full shadow-lg overflow-hidden">
+                  <img
+                    src={clockImg}
+                    alt="Session clock"
+                    className="absolute inset-0 h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                    <span className="text-sm font-bold text-white font-mono drop-shadow-lg">
+                      {currentTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Patient Selector + Actions */}
+              <div className="flex items-center gap-2 md:gap-3">
                 {activeAssets.length > 0 && (
-                  <Badge className="bg-jade/20 text-jade border-jade/30">
+                  <Badge className="bg-jade/20 text-jade border-jade/30 hidden md:flex">
                     <Database className="h-3 w-3 mr-1" />
-                    {activeAssets.length} Assets Active
-                  </Badge>
-                )}
-                
-                {selectedPatient && (
-                  <Badge variant="outline" className="hidden md:flex bg-background/50">
-                    <UserIcon className="h-3 w-3 mr-1" />{selectedPatient.name}
+                    {activeAssets.length} Active
                   </Badge>
                 )}
                 
@@ -272,30 +323,200 @@ export default function TcmBrain() {
                 {sessionStatus === 'running' && (
                   <Badge 
                     variant="outline" 
-                    className={`text-xs cursor-pointer ${isSaving ? 'animate-pulse' : ''}`}
+                    className={`text-xs cursor-pointer hidden md:flex ${isSaving ? 'animate-pulse' : ''}`}
                     onClick={saveNow}
                     title={lastSaveTime ? `Last saved: ${lastSaveTime.toLocaleTimeString()}` : 'Click to save now'}
                   >
                     <Save className={`h-3 w-3 mr-1 ${isSaving ? 'text-jade' : ''}`} />
-                    {isSaving ? 'Saving...' : 'Auto-save'}
+                    {isSaving ? 'Saving...' : 'Auto'}
                   </Badge>
                 )}
+                
+                <div className="hidden md:flex items-center gap-2">
+                  <LanguageSwitcher variant="outline" isScrolled={true} />
+                  <Button asChild variant="outline" size="sm">
+                    <Link to="/dashboard" className="gap-2">
+                      <ArrowRight className="h-4 w-4" />
+                      Dashboard
+                    </Link>
+                  </Button>
+                  <TierBadge />
+                </div>
               </div>
             </div>
           </div>
         </header>
 
-        {/* API Usage Meter Bar - Proof of Real AI */}
-        <div className="border-b bg-card/30 backdrop-blur-sm py-2 px-4 overflow-x-auto">
+        {/* API Usage Meter Bar */}
+        <div className="border-b bg-card/30 backdrop-blur-sm py-1.5 px-3 overflow-x-auto">
           <div className="container mx-auto flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">AI/API Status:</span>
+              <span className="font-medium text-foreground text-[10px]">AI Status:</span>
             </div>
             <APIUsageMeter />
           </div>
         </div>
 
-        {/* Main Toolbar */}
+        {/* Header Boxes Row - Matching VideoSession style */}
+        <div className="px-3 md:px-4 pt-2 md:pt-3 pb-2 border-b bg-gradient-to-b from-emerald-500/5 to-transparent">
+          <SessionHeaderBoxes
+            boxes={[
+              {
+                id: 'start-session',
+                name: sessionStatus === 'idle' ? 'Start' : sessionStatus === 'running' ? 'Pause' : 'Resume',
+                nameHe: sessionStatus === 'idle' ? 'התחל' : sessionStatus === 'running' ? 'השהה' : 'המשך',
+                icon: sessionStatus === 'running' ? Pause : Play,
+                color: 'text-jade',
+                borderColor: 'border-jade',
+                isActive: sessionStatus === 'running',
+                onClick: () => {
+                  if (sessionStatus === 'idle') startSession();
+                  else if (sessionStatus === 'running') pauseSession();
+                  else continueSession();
+                },
+              },
+              {
+                id: 'end-session',
+                name: 'End',
+                nameHe: 'סיים',
+                icon: Square,
+                color: 'text-rose-600',
+                borderColor: 'border-rose-300',
+                onClick: endSession,
+              },
+              {
+                id: 'reset',
+                name: 'Reset',
+                nameHe: 'איפוס',
+                icon: RotateCcw,
+                color: 'text-amber-600',
+                borderColor: 'border-amber-300',
+                onClick: clearChat,
+              },
+              {
+                id: 'diagnostics',
+                name: 'Diagnose',
+                nameHe: 'אבחון',
+                icon: Stethoscope,
+                color: 'text-purple-600',
+                borderColor: 'border-purple-300',
+                isActive: activeTab === 'diagnostics',
+                onClick: () => setActiveTab('diagnostics'),
+              },
+              {
+                id: 'symptoms',
+                name: 'Symptoms',
+                nameHe: 'סימפטומים',
+                icon: Brain,
+                color: 'text-cyan-600',
+                borderColor: 'border-cyan-300',
+                isActive: activeTab === 'symptoms',
+                onClick: () => setActiveTab('symptoms'),
+              },
+              {
+                id: 'treatment',
+                name: 'Treat',
+                nameHe: 'טיפול',
+                icon: Pill,
+                color: 'text-emerald-600',
+                borderColor: 'border-emerald-300',
+                isActive: activeTab === 'treatment',
+                onClick: () => setActiveTab('treatment'),
+              },
+              {
+                id: 'bodymap',
+                name: 'Body Map',
+                nameHe: 'מפת גוף',
+                icon: UserIcon,
+                color: 'text-indigo-600',
+                borderColor: 'border-indigo-300',
+                isActive: activeTab === 'bodymap',
+                onClick: () => setActiveTab('bodymap'),
+              },
+              {
+                id: 'session',
+                name: 'Notes',
+                nameHe: 'הערות',
+                icon: FileText,
+                color: 'text-amber-600',
+                borderColor: 'border-amber-300',
+                isActive: activeTab === 'session',
+                onClick: () => setActiveTab('session'),
+              },
+              {
+                id: 'history',
+                name: 'History',
+                nameHe: 'היסטוריה',
+                icon: Clock,
+                color: 'text-blue-600',
+                borderColor: 'border-blue-300',
+                isActive: activeTab === 'history',
+                onClick: () => setActiveTab('history'),
+              },
+              {
+                id: 'qa',
+                name: 'Q&A',
+                nameHe: 'שאלות',
+                icon: Heart,
+                color: 'text-rose-600',
+                borderColor: 'border-rose-300',
+                isActive: showQASuggestions,
+                badge: qaFavoritesCount > 0 ? qaFavoritesCount : undefined,
+                onClick: () => setShowQASuggestions(!showQASuggestions),
+              },
+              {
+                id: 'voice',
+                name: 'Voice',
+                nameHe: 'קולי',
+                icon: Mic,
+                color: 'text-violet-600',
+                borderColor: 'border-violet-300',
+                onClick: () => toast.info('Voice Commands: Say "generate summary", "save session", "next tab"', { duration: 5000 }),
+              },
+              {
+                id: 'print',
+                name: 'Print',
+                nameHe: 'הדפס',
+                icon: Printer,
+                color: 'text-gray-600',
+                borderColor: 'border-gray-300',
+                onClick: () => quickActionsRef.current?.printReport(),
+              },
+              {
+                id: 'email',
+                name: 'Email',
+                nameHe: 'אימייל',
+                icon: Mail,
+                color: 'text-blue-600',
+                borderColor: 'border-blue-300',
+                onClick: () => toast.info('Use Session tab to email report'),
+              },
+              {
+                id: 'whatsapp',
+                name: 'WhatsApp',
+                nameHe: 'וואטסאפ',
+                icon: MessageCircle,
+                color: 'text-green-600',
+                borderColor: 'border-green-300',
+                onClick: () => quickActionsRef.current?.shareWhatsApp(),
+              },
+              {
+                id: 'knowledge',
+                name: 'Knowledge',
+                nameHe: 'ידע',
+                icon: BookOpen,
+                color: 'text-jade',
+                borderColor: 'border-jade/50',
+                isActive: showKnowledgeAssets,
+                badge: activeAssets.length > 0 ? activeAssets.length : undefined,
+                onClick: () => setShowKnowledgeAssets(!showKnowledgeAssets),
+              },
+            ]}
+            size="sm"
+          />
+        </div>
+
+        {/* Main Toolbar - Now minimal since boxes handle most actions */}
         <TcmBrainToolbar
           sessionStatus={sessionStatus}
           sessionSeconds={sessionSeconds}
@@ -521,6 +742,9 @@ export default function TcmBrain() {
             )}
           </div>
         )}
+
+        {/* Help Guide */}
+        <FloatingHelpGuide isOpen={showHelpGuide} onOpenChange={setShowHelpGuide} />
       </div>
     </>
   );
