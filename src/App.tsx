@@ -14,7 +14,6 @@ import RequireTier from "@/components/auth/RequireTier";
 import { FloatingMusicPlayer } from "@/components/ui/FloatingMusicPlayer";
 import { OfflineBanner } from "@/components/ui/OfflineBanner";
 import { AccessibilityPanel } from "@/components/ui/AccessibilityPanel";
-import { FloatingVoiceButton } from "@/components/ui/FloatingVoiceButton";
 import { CRMErrorBoundary } from "@/components/crm/CRMErrorBoundary";
 
 import Index from "./pages/Index";
@@ -128,7 +127,6 @@ const App = () => (
                     </Routes>
                     <FloatingMusicPlayer />
                     <AccessibilityPanel />
-                    <FloatingVoiceButton />
                   </BrowserRouter>
                   </TooltipProvider>
                 </SessionLockProvider>
