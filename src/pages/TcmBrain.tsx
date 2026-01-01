@@ -47,7 +47,7 @@ import { IntakeReviewDialog } from '@/components/tcm-brain/IntakeReviewDialog';
 import { QuickActionsRef } from '@/components/tcm-brain/QuickActionsBar';
 import { QASuggestionsPanel } from '@/components/tcm/QASuggestionsPanel';
 import { ExternalAIFallbackCard, ExternalAIProvider } from '@/components/tcm/ExternalAIFallbackCard';
-import { SessionHeaderBoxes, SessionHeaderBox } from '@/components/session/SessionHeaderBoxes';
+import { SessionHeaderBoxes, SessionHeaderBox, SessionPhaseIndicator, getPhaseFromDuration } from '@/components/session';
 import { CrossPlatformBackButton } from '@/components/ui/CrossPlatformBackButton';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { TierBadge } from '@/components/layout/TierBadge';
@@ -355,6 +355,14 @@ export default function TcmBrain() {
             </div>
             <APIUsageMeter />
           </div>
+        </div>
+
+        {/* Session Phase Indicator - Unified with VideoSession */}
+        <div className="px-3 md:px-6 pt-3 pb-2 border-b bg-gradient-to-r from-jade/5 via-transparent to-jade/5">
+          <SessionPhaseIndicator
+            currentPhase={getPhaseFromDuration(sessionSeconds)}
+            className="max-w-2xl mx-auto"
+          />
         </div>
 
         {/* Header Boxes Row - Matching VideoSession style */}

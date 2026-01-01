@@ -106,6 +106,7 @@ import { VideoSessionHeaderBoxes } from '@/components/video/VideoSessionHeaderBo
 import { InlineMusicPlayer } from '@/components/video/InlineMusicPlayer';
 import { TcmBrainPanel } from '@/components/video/TcmBrainPanel';
 import { SessionWorkflowIndicator } from '@/components/video/SessionWorkflowIndicator';
+import { SessionPhaseIndicator, getPhaseFromDuration, SessionPhase } from '@/components/session';
 import { QATypeDropdown, QAType } from '@/components/video/QATypeDropdown';
 import { useLongPressTimer } from '@/hooks/useLongPressTimer';
 import { useSessionLock } from '@/contexts/SessionLockContext';
@@ -1191,7 +1192,15 @@ export default function VideoSession() {
           />
         </div>
 
-        {/* Workflow Progress Indicator */}
+        {/* Session Phase Indicator - Unified workflow */}
+        <div className="px-3 md:px-6 pt-3 pb-2 border-b bg-gradient-to-r from-jade/5 via-transparent to-jade/5">
+          <SessionPhaseIndicator
+            currentPhase={getPhaseFromDuration(sessionDuration)}
+            className="max-w-2xl mx-auto"
+          />
+        </div>
+
+        {/* Workflow Progress Indicator (legacy - task steps) */}
         <div className="px-3 md:px-4 pt-2 md:pt-3 hidden md:block">
           <SessionWorkflowIndicator
             hasPatient={!!selectedPatientId}
