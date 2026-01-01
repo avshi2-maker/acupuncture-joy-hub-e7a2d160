@@ -30,6 +30,7 @@ import { MedicationsSupplementsSelect } from './MedicationsSupplementsSelect';
 import { TongueDiagnosisSelect } from './TongueDiagnosisSelect';
 import { ConstitutionTypeSelect } from './ConstitutionTypeSelect';
 import { ChiefComplaintSelect } from './ChiefComplaintSelect';
+import { PregnancyQuestionSelect } from './PregnancyQuestionSelect';
 import { validateIsraeliId, looksLikeIsraeliId } from '@/utils/israeliIdValidation';
 import { useIntakeDraftAutosave } from '@/hooks/useIntakeDraftAutosave';
 
@@ -1376,20 +1377,24 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
                         />
                       </div>
 
-                      {/* Pregnancy-specific questions */}
+                      {/* Pregnancy-specific questions - Quick Picker */}
                       <div className="space-y-4">
-                        {pregnancyQuestions.map((q) => (
-                          q.type !== 'info' && (
-                            <div key={q.id} className="space-y-2">
-                              <Label htmlFor={q.id}>{q.label}</Label>
-                              <VoiceTextarea
-                                placeholder={q.placeholder}
-                                value={pregnancyAnswers[q.id] || ''}
-                                onChange={(e) => setPregnancyAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
-                              />
-                            </div>
-                          )
-                        ))}
+                        <Label>Pregnancy Details (Quick Select)</Label>
+                        <PregnancyQuestionSelect
+                          values={pregnancyAnswers}
+                          onChange={setPregnancyAnswers}
+                        />
+                        
+                        {/* Additional notes textarea */}
+                        <div className="space-y-2">
+                          <Label>Additional Pregnancy Notes</Label>
+                          <VoiceTextarea
+                            placeholder="Add any additional pregnancy notes, concerns, or details..."
+                            className="min-h-[80px]"
+                            value={pregnancyAnswers.additional_notes || ''}
+                            onChange={(e) => setPregnancyAnswers(prev => ({ ...prev, additional_notes: e.target.value }))}
+                          />
+                        </div>
                       </div>
                     </>
                   )}
