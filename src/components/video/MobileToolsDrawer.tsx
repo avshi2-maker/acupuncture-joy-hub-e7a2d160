@@ -14,8 +14,10 @@ import {
   Video,
   Settings,
   Sparkles,
-  MoreHorizontal
+  MoreHorizontal,
+  BookOpen
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 
 interface MobileToolsDrawerProps {
@@ -45,6 +47,7 @@ export function MobileToolsDrawer({
 }: MobileToolsDrawerProps) {
   const [open, setOpen] = useState(false);
   const haptic = useHapticFeedback();
+  const navigate = useNavigate();
 
   const handleAction = (action: () => void) => {
     haptic.light();
@@ -65,10 +68,10 @@ export function MobileToolsDrawer({
     {
       title: 'TCM Topics',
       tools: [
+        { icon: BookOpen, label: 'CAF Studies', color: 'text-jade bg-jade/10', action: () => navigate('/caf-browser') },
         { icon: Leaf, label: 'Herbs', color: 'text-amber-700 bg-amber-50', action: () => onAIQuery('herbs') },
         { icon: Apple, label: 'Nutrition', color: 'text-green-600 bg-green-50', action: () => onAIQuery('nutrition') },
         { icon: Stethoscope, label: 'Diagnosis', color: 'text-purple-600 bg-purple-50', action: () => onAIQuery('diagnosis') },
-        { icon: Heart, label: 'Mental Health', color: 'text-rose-600 bg-rose-50', action: () => onAIQuery('mental') },
       ],
     },
     {
