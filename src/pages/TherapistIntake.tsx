@@ -22,6 +22,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { validateIsraeliId, looksLikeIsraeliId } from '@/utils/israeliIdValidation';
 import { CrossPlatformBackButton } from '@/components/ui/CrossPlatformBackButton';
+import therapistIntakeBg from '@/assets/therapist-intake-bg.jpg';
 
 // Form schema
 const therapistIntakeSchema = z.object({
@@ -310,12 +311,23 @@ export default function TherapistIntake() {
   };
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4" dir="rtl">
+    <div 
+      className="min-h-screen py-8 px-4 md:px-6 flex items-start md:items-center justify-center"
+      dir="rtl"
+      style={{
+        backgroundImage: `url(${therapistIntakeBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center center',
+        backgroundAttachment: 'fixed',
+        backgroundColor: '#e0e5df',
+      }}
+    >
       <Helmet>
         <title>קליטת מטפל | מערכת ניהול קליניקה</title>
       </Helmet>
 
-      <div className="max-w-2xl mx-auto space-y-6">
+      {/* Glassmorphism Form Container */}
+      <div className="w-full max-w-2xl bg-white/92 backdrop-blur-md rounded-xl shadow-2xl p-6 md:p-10 my-4 md:my-8 space-y-6">
         <CrossPlatformBackButton fallbackPath="/dashboard" />
 
         {/* Progress Steps */}
@@ -343,7 +355,7 @@ export default function TherapistIntake() {
           <form className="space-y-6">
             {/* Step 1: Personal Details */}
             {step === 1 && (
-              <Card>
+              <Card className="bg-white/80 backdrop-blur-sm border-jade/20 shadow-lg">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <User className="h-5 w-5 text-jade" />
@@ -462,7 +474,7 @@ export default function TherapistIntake() {
 
             {/* Step 2: Professional Details */}
             {step === 2 && (
-              <Card>
+              <Card className="bg-white/80 backdrop-blur-sm border-jade/20 shadow-lg">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <GraduationCap className="h-5 w-5 text-jade" />
@@ -579,7 +591,7 @@ export default function TherapistIntake() {
 
             {/* Step 3: Clinic Details (Optional) */}
             {step === 3 && (
-              <Card>
+              <Card className="bg-white/80 backdrop-blur-sm border-jade/20 shadow-lg">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Building2 className="h-5 w-5 text-jade" />
@@ -650,7 +662,7 @@ export default function TherapistIntake() {
                 </Card>
 
                 {/* Disclaimer Points */}
-                <Card>
+                <Card className="bg-white/80 backdrop-blur-sm border-jade/20 shadow-lg">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Shield className="h-5 w-5 text-jade" />
@@ -694,7 +706,7 @@ export default function TherapistIntake() {
                 </Card>
 
                 {/* Signature */}
-                <Card>
+                <Card className="bg-white/80 backdrop-blur-sm border-jade/20 shadow-lg">
                   <CardHeader>
                     <CardTitle>חתימה דיגיטלית</CardTitle>
                     <CardDescription>אנא חתום/י למטה לאישור ההסכמה</CardDescription>
