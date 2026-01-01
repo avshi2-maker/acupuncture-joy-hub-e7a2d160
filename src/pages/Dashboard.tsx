@@ -38,7 +38,8 @@ import {
   ShieldOff,
   ShieldCheck,
   PauseCircle,
-  PlayCircle
+  PlayCircle,
+  ClipboardCheck
 } from 'lucide-react';
 import { PinSetupDialog } from '@/components/auth/PinSetupDialog';
 import { usePinAuth } from '@/hooks/usePinAuth';
@@ -443,7 +444,7 @@ export default function Dashboard() {
     navigate('/');
   };
 
-  // Row 1: Calendar, Patient Management
+  // Row 1: Calendar, Patient Management, Therapist Intake
   const row1Features = [
     {
       id: 'calendar',
@@ -462,6 +463,15 @@ export default function Dashboard() {
       feature: 'crm' as const,
       href: '/crm/patients',
       backgroundImage: calendarBg,
+    },
+    {
+      id: 'therapist_intake',
+      title: 'הצהרת מטפל',
+      description: 'ניהול טפסי הצהרה והסכמה למטפלים',
+      icon: <ClipboardCheck className="h-6 w-6 text-white" />,
+      feature: 'crm' as const,
+      href: '/therapist-disclaimer',
+      backgroundImage: deskBg,
     },
   ];
 
