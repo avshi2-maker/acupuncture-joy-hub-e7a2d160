@@ -146,10 +146,20 @@ interface FeatureCardProps {
   animationDelay?: number;
   locked?: boolean;
   lockMessage?: string;
+  statusBadge?: {
+    text: string;
+    variant: 'success' | 'warning' | 'pending';
+  };
 }
 
-function FeatureCard({ title, description, icon, available, href, highlighted, backgroundImage, animationDelay = 0, locked, lockMessage }: FeatureCardProps) {
+function FeatureCard({ title, description, icon, available, href, highlighted, backgroundImage, animationDelay = 0, locked, lockMessage, statusBadge }: FeatureCardProps) {
   const isLocked = locked || !available;
+  
+  const badgeStyles = {
+    success: 'bg-emerald-500/90 text-white',
+    warning: 'bg-amber-500/90 text-white',
+    pending: 'bg-orange-500/90 text-white',
+  };
   
   const content = (
     <Card 
@@ -164,6 +174,13 @@ function FeatureCard({ title, description, icon, available, href, highlighted, b
         } : {})
       }}
     >
+      {/* Status Badge */}
+      {statusBadge && (
+        <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-full text-xs font-medium ${badgeStyles[statusBadge.variant]}`}>
+          {statusBadge.text}
+        </div>
+      )}
+      
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${backgroundImage ? 'bg-white/20 backdrop-blur-sm' : !isLocked ? 'bg-jade-light' : 'bg-muted'}`}>
@@ -207,6 +224,12 @@ interface DashboardStats {
   sessionsThisWeek: number;
 }
 
+interface DisclaimerStatus {
+  isSigned: boolean;
+  expiresAt?: Date;
+  isExpired: boolean;
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const { tier, hasFeature, daysRemaining } = useTier();
@@ -228,9 +251,39 @@ export default function Dashboard() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [showPinSetup, setShowPinSetup] = useState(false);
   const [clockTheme, setClockTheme] = useState<ClockTheme>('gold');
+  const [disclaimerStatus, setDisclaimerStatus] = useState<DisclaimerStatus>({ isSigned: false, isExpired: false });
   const { progress, hasProgress, resetProgress } = useWorkflowProgress();
   const { lock, isPaused, pauseReason, pauseLock, resumeLock } = useSessionLock();
   const { hasPin } = usePinAuth();
+
+  // Check therapist disclaimer status
+  useEffect(() => {
+    const checkDisclaimerStatus = async () => {
+      // First check localStorage
+      const DISCLAIMER_STORAGE_KEY = 'therapist_disclaimer_signed';
+      const stored = localStorage.getItem(DISCLAIMER_STORAGE_KEY);
+      
+      if (stored) {
+        try {
+          const signedData = JSON.parse(stored);
+          const expiresAt = signedData.signedAt ? new Date(new Date(signedData.signedAt).getTime() + 365 * 24 * 60 * 60 * 1000) : undefined;
+          const isExpired = expiresAt ? expiresAt < new Date() : false;
+          
+          setDisclaimerStatus({
+            isSigned: !isExpired,
+            expiresAt,
+            isExpired
+          });
+        } catch {
+          setDisclaimerStatus({ isSigned: false, isExpired: false });
+        }
+      } else {
+        setDisclaimerStatus({ isSigned: false, isExpired: false });
+      }
+    };
+    
+    checkDisclaimerStatus();
+  }, []);
 
   // Load clock theme from settings
   useEffect(() => {
@@ -445,6 +498,16 @@ export default function Dashboard() {
   };
 
   // Row 1: Calendar, Patient Management, Therapist Intake
+  const getDisclaimerBadge = (): { text: string; variant: 'success' | 'warning' | 'pending' } | undefined => {
+    if (disclaimerStatus.isExpired) {
+      return { text: 'פג תוקף', variant: 'warning' };
+    }
+    if (disclaimerStatus.isSigned) {
+      return { text: 'חתום ✓', variant: 'success' };
+    }
+    return { text: 'לא חתום', variant: 'pending' };
+  };
+
   const row1Features = [
     {
       id: 'calendar',
@@ -467,11 +530,14 @@ export default function Dashboard() {
     {
       id: 'therapist_intake',
       title: 'הצהרת מטפל',
-      description: 'ניהול טפסי הצהרה והסכמה למטפלים',
+      description: disclaimerStatus.isSigned 
+        ? 'הצהרה חתומה - תקפה לשנה' 
+        : 'נדרשת חתימה על טופס הצהרה',
       icon: <ClipboardCheck className="h-6 w-6 text-white" />,
       feature: 'crm' as const,
       href: '/therapist-disclaimer',
       backgroundImage: deskBg,
+      statusBadge: getDisclaimerBadge(),
     },
   ];
 
@@ -1108,7 +1174,7 @@ export default function Dashboard() {
           </Link>
         </div>
 
-        {/* Row 1: Calendar, Patient Management, Reminders */}
+        {/* Row 1: Calendar, Patient Management, Therapist Intake */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
           {row1Features.map((feature, index) => (
             <FeatureCard
@@ -1120,6 +1186,7 @@ export default function Dashboard() {
               href={feature.href}
               backgroundImage={feature.backgroundImage}
               animationDelay={index * 100}
+              statusBadge={'statusBadge' in feature ? feature.statusBadge : undefined}
             />
           ))}
         </div>
