@@ -203,7 +203,7 @@ const BUILTIN_ASSETS = [
   },
   {
     id: 'womens-health-tcm',
-    label: 'womens-health-tcm.csv',
+    label: 'Women\'s Health TCM (Gynecology, Fertility, Pregnancy)',
     path: '/knowledge-assets/womens-health-tcm.csv',
     defaultCategory: 'womens_health',
     defaultLanguage: 'en',

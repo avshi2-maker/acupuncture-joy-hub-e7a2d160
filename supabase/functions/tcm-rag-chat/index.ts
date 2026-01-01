@@ -13,8 +13,12 @@ const AGE_GROUP_PROMPTS: Record<string, { context: string; filePatterns: string[
     filePatterns: ['tcm-newborn', 'newborn'],
   },
   children: {
-    context: 'This is a pediatric patient (3-13 years). Consider school stress, growth patterns, digestive development. Use gentler techniques and reduced dosages. Ask about screen time, sleep, concentration, and social factors.',
+    context: 'This is a pediatric patient (3-12 years). Consider school stress, growth patterns, digestive development. Use gentler techniques and reduced dosages. Ask about screen time, sleep, concentration, and social factors.',
     filePatterns: ['tcm-children', 'children', 'pediatric'],
+  },
+  teenage: {
+    context: 'This is a teenage patient (13-18 years). Consider academic pressure, hormonal changes, social/peer stress, identity development, and emotional regulation. Focus on Liver Qi stagnation, Heart-Kidney axis for anxiety, and sleep disruption from screen use. Be sensitive to mental health concerns including depression, anxiety, and exam stress.',
+    filePatterns: ['tcm-teenage', 'teenage', 'mental-health'],
   },
   adults_18_50: {
     context: 'This is an adult patient (18-50 years). Consider work stress, lifestyle, fertility/cycles where relevant. Focus on Liver Qi stagnation patterns, digestive issues from irregular eating, and sleep disruption from modern lifestyle.',
