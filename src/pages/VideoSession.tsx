@@ -195,6 +195,7 @@ export default function VideoSession() {
   // Anxiety Q&A inline state
   const [inlineAnxietyMessages, setInlineAnxietyMessages] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
   const [anxietyInput, setAnxietyInput] = useState('');
+  const inlineChatRef = useRef<HTMLDivElement>(null);
   
   // Current time for clock display
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -385,6 +386,13 @@ export default function VideoSession() {
       }
     };
   }, [sessionNotes, sessionStatus]);
+
+  // Auto-scroll inline chat when new messages arrive
+  useEffect(() => {
+    if (inlineChatRef.current) {
+      inlineChatRef.current.scrollTop = inlineChatRef.current.scrollHeight;
+    }
+  }, [inlineAnxietyMessages, aiQueryLoading]);
 
   // Reset background paused state when manually resumed
   useEffect(() => {
@@ -1579,7 +1587,10 @@ export default function VideoSession() {
                         )}
                         
                         {/* Messages Area */}
-                        <div className="flex-1 overflow-y-auto space-y-2 mb-3 min-h-[60px] max-h-[100px]">
+                        <div 
+                          ref={inlineChatRef}
+                          className="flex-1 overflow-y-auto space-y-2 mb-3 min-h-[60px] max-h-[100px] scroll-smooth"
+                        >
                           {inlineAnxietyMessages.length === 0 ? (
                             <div className="text-center text-muted-foreground text-xs py-2">
                               <p>בחר שאלה מהירה או כתוב משלך</p>
@@ -1587,12 +1598,25 @@ export default function VideoSession() {
                           ) : (
                             <>
                               {inlineAnxietyMessages.map((msg, idx) => (
-                                <div key={idx} className={`p-2 rounded-lg text-sm ${
+                                <div key={idx} className={`p-2 rounded-lg text-sm relative group ${
                                   msg.role === 'user' 
                                     ? 'bg-rose-100 text-rose-900 mr-8' 
                                     : 'bg-background/80 border ml-8'
                                 }`}>
                                   {msg.content}
+                                  {msg.role === 'assistant' && (
+                                    <button
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(msg.content);
+                                        toast.success('התשובה הועתקה');
+                                        haptic.light();
+                                      }}
+                                      className="absolute top-1 left-1 p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-muted transition-opacity"
+                                      title="העתק"
+                                    >
+                                      <FileText className="h-3 w-3 text-muted-foreground" />
+                                    </button>
+                                  )}
                                 </div>
                               ))}
                               {/* Typing Indicator */}
