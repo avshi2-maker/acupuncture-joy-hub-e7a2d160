@@ -57,6 +57,7 @@ import calendarBg from '@/assets/calendar-bg.png';
 import deskBg from '@/assets/desk-bg.png';
 import brainBg from '@/assets/brain-bg.png';
 import knowledgeBg from '@/assets/knowledge-bg.png';
+import videoMeetingBg from '@/assets/video-meeting-bg.jpg';
 
 
 // Phosphor-style glowing clock component (mobile - small version)
@@ -552,7 +553,7 @@ export default function Dashboard() {
       feature: 'video_sessions' as const,
       href: '/video-session',
       highlighted: true,
-      backgroundImage: deskBg,
+      backgroundImage: videoMeetingBg,
       locked: true,
       lockMessage: sessionLockMessage,
     },
