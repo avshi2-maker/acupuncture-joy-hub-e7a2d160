@@ -398,6 +398,13 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'dermatology',
     defaultLanguage: 'en',
   },
+  {
+    id: 'comprehensive-caf-studies',
+    label: '🏎️ CAF Master Studies (50 Clinical Frameworks - "Ferrari" Engine)',
+    path: '/knowledge-assets/comprehensive_caf_studies.csv',
+    defaultCategory: 'clinical_protocols',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 type QueueItemStatus = 'pending' | 'importing' | 'done' | 'error';
