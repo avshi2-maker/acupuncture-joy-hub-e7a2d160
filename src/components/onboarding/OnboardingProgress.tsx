@@ -71,7 +71,7 @@ export function OnboardingProgress() {
   }
 
   return (
-    <Card className="border-jade/20 bg-gradient-to-br from-jade/5 to-gold/5">
+    <Card className="border-jade/20 bg-gradient-to-br from-jade/5 to-gold/5 shadow-lg">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-medium flex items-center gap-2">
@@ -85,7 +85,7 @@ export function OnboardingProgress() {
         <Progress value={progressPercentage} className="h-2 mt-2" />
       </CardHeader>
       <CardContent className="space-y-3">
-        {steps.map((step, index) => (
+        {steps.map((step) => (
           <div
             key={step.id}
             className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
@@ -131,5 +131,53 @@ export function OnboardingProgress() {
         ))}
       </CardContent>
     </Card>
+  );
+}
+
+// Compact version for sidebar/header placement
+export function OnboardingProgressCompact() {
+  const { tier } = useTier();
+  
+  const tierSelected = !!tier;
+  const disclaimerSigned = (() => {
+    try {
+      const stored = localStorage.getItem('tcm_therapist_disclaimer_signed');
+      if (stored) {
+        const data = JSON.parse(stored);
+        return !!data.signedAt;
+      }
+    } catch {
+      return false;
+    }
+    return false;
+  })();
+  const profileCompleted = !!localStorage.getItem('therapist_profile');
+
+  const completedCount = [tierSelected, disclaimerSigned, profileCompleted].filter(Boolean).length;
+  const allComplete = completedCount === 3;
+
+  if (allComplete) {
+    return null;
+  }
+
+  const currentStep = !tierSelected ? '/gate' : !disclaimerSigned ? '/therapist-disclaimer' : '/therapist-profile';
+  const currentStepLabel = !tierSelected ? 'בחירת תוכנית' : !disclaimerSigned ? 'חתימה על הצהרה' : 'הגדרת פרופיל';
+
+  return (
+    <Link 
+      to={currentStep}
+      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gold/10 border border-gold/30 hover:bg-gold/20 transition-colors"
+    >
+      <div className="flex items-center gap-1">
+        {[1, 2, 3].map((step) => (
+          <div 
+            key={step}
+            className={`w-2 h-2 rounded-full ${step <= completedCount ? 'bg-jade' : 'bg-muted-foreground/30'}`}
+          />
+        ))}
+      </div>
+      <span className="text-sm font-medium text-gold-dark">{currentStepLabel}</span>
+      <ChevronRight className="h-4 w-4 text-gold" />
+    </Link>
   );
 }

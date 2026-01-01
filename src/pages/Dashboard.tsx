@@ -11,7 +11,7 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { WorkflowTutorial } from '@/components/onboarding/WorkflowTutorial';
-import { OnboardingProgress } from '@/components/onboarding/OnboardingProgress';
+import { OnboardingProgress, OnboardingProgressCompact } from '@/components/onboarding/OnboardingProgress';
 import { useWorkflowProgress } from '@/hooks/useWorkflowProgress';
 import { 
   Brain, 
@@ -782,6 +782,9 @@ export default function Dashboard() {
               title="שתפו את האפליקציה"
               description="סרקו את הקוד כדי להתקין את CM Clinic"
             />
+            
+            {/* Onboarding Progress Compact - in header */}
+            <OnboardingProgressCompact />
             
             <TierBadge />
             <LanguageSwitcher variant="ghost" isScrolled={true} />
