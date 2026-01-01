@@ -288,6 +288,18 @@ export function SessionReportDialog({
     return cleaned.replace('+', '');
   };
 
+  // Get therapist name from localStorage
+  const getTherapistDisplayName = () => {
+    try {
+      const intakeData = localStorage.getItem('therapist_intake_completed');
+      if (intakeData) {
+        const parsed = JSON.parse(intakeData);
+        return parsed.therapistName || 'המטפל/ת שלך';
+      }
+    } catch { /* ignore */ }
+    return 'ד"ר רוני ספיר';
+  };
+
   const sendViaWhatsApp = useCallback((type: 'pdf' | 'audio' | 'both') => {
     if (!patientPhone) {
       toast.error('לא נמצא מספר טלפון של המטופל');
@@ -296,6 +308,7 @@ export function SessionReportDialog({
 
     const formattedPhone = formatPhone(patientPhone);
     const textToSend = isEditing ? editedSummary : summary;
+    const therapistDisplayName = getTherapistDisplayName();
     
     let message = `שלום ${patientName}! 🌿\n\n`;
     message += `להלן סיכום הפגישה שלנו:\n\n`;
@@ -308,7 +321,7 @@ export function SessionReportDialog({
       message += `🎧 קובץ אודיו מצורף בנפרד\n`;
     }
     
-    message += `\nבברכה,\nד"ר רוני ספיר 💚`;
+    message += `\nבברכה,\n${therapistDisplayName} 💚`;
 
     const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');

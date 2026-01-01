@@ -207,25 +207,25 @@ export default function Gate() {
     const redirect = params.get('redirect');
     const question = params.get('question');
     
-    // Check if therapist disclaimer is completed
-    const disclaimerSigned = localStorage.getItem(DISCLAIMER_STORAGE_KEY);
-    let needsDisclaimer = true;
+    // Check if therapist intake is completed (mandatory after gate)
+    const intakeCompleted = localStorage.getItem('therapist_intake_completed');
+    let needsIntake = true;
     
-    if (disclaimerSigned) {
+    if (intakeCompleted) {
       try {
-        const signedData = JSON.parse(disclaimerSigned);
-        // Check if signed within the last year
-        if (signedData.signedAt && new Date(signedData.signedAt) > new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)) {
-          needsDisclaimer = false;
+        const intakeData = JSON.parse(intakeCompleted);
+        // Check if completed within the last year
+        if (intakeData.completedAt && new Date(intakeData.completedAt) > new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)) {
+          needsIntake = false;
         }
       } catch {
-        needsDisclaimer = true;
+        needsIntake = true;
       }
     }
     
-    // If disclaimer not completed, redirect to therapist-disclaimer
-    if (needsDisclaimer) {
-      return '/therapist-disclaimer';
+    // If intake not completed, redirect to therapist-intake (mandatory after payment)
+    if (needsIntake) {
+      return '/therapist-intake';
     }
     
     const hasProfile = localStorage.getItem('therapist_profile');

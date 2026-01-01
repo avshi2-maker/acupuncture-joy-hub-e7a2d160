@@ -16,6 +16,7 @@ interface WhatsAppReminderButtonProps {
   appointmentId: string;
   appointmentDate: string;
   appointmentTime?: string;
+  therapistName?: string;
   therapistPhone?: string;
   variant?: 'default' | 'outline' | 'ghost';
   size?: 'default' | 'sm' | 'lg' | 'icon';
@@ -27,10 +28,23 @@ export function WhatsAppReminderButton({
   appointmentId,
   appointmentDate,
   appointmentTime,
+  therapistName,
   therapistPhone = '972505231042',
   variant = 'outline',
   size = 'sm',
 }: WhatsAppReminderButtonProps) {
+  // Get therapist name from localStorage if not provided
+  const getTherapistDisplayName = () => {
+    if (therapistName) return therapistName;
+    try {
+      const intakeData = localStorage.getItem('therapist_intake_completed');
+      if (intakeData) {
+        const parsed = JSON.parse(intakeData);
+        return parsed.therapistName || 'המטפל/ת שלך';
+      }
+    } catch { /* ignore */ }
+    return 'המטפל/ת שלך';
+  };
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
@@ -103,8 +117,10 @@ export function WhatsAppReminderButton({
         month: 'long',
       });
 
+      const displayTherapistName = getTherapistDisplayName();
+      
       let message = `שלום ${patientName}! 🌿\n\n`;
-      message += `זוהי תזכורת לתור שלך בתאריך ${dateStr}`;
+      message += `זוהי תזכורת לתור שלך אצל ${displayTherapistName} בתאריך ${dateStr}`;
       if (appointmentTime) {
         message += ` בשעה ${appointmentTime}`;
       }
@@ -112,7 +128,7 @@ export function WhatsAppReminderButton({
       message += `*האם את/ה מגיע/ה?*\n\n`;
       message += `✅ לחץ/י כאן לאישור:\n${confirmUrl}&response=confirmed\n\n`;
       message += `❌ לחץ/י כאן לביטול:\n${confirmUrl}&response=cancelled\n\n`;
-      message += `תודה! 💚`;
+      message += `בברכה,\n${displayTherapistName} 💚`;
 
       const whatsappLink = `https://wa.me/${formattedPatientPhone}?text=${encodeURIComponent(message)}`;
       window.open(whatsappLink, '_blank');
