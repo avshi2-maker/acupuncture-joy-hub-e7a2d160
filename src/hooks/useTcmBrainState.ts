@@ -8,6 +8,7 @@ import { SelectedPatient } from '@/components/crm/PatientSelectorDropdown';
 import { ExternalAIProvider } from '@/components/tcm/ExternalAIFallbackCard';
 import { toast } from 'sonner';
 import { parsePointReferences } from '@/components/acupuncture/BodyFigureSelector';
+import { detectAgeGroup } from '@/utils/ageGroupDetection';
 import {
   herbsQuestions,
   conditionsQuestions,
@@ -163,7 +164,7 @@ export function useTcmBrainState() {
       try {
         const { data, error } = await supabase
           .from('patients')
-          .select('id, full_name, email, phone')
+          .select('id, full_name, email, phone, date_of_birth, age_group')
           .eq('therapist_id', session.user.id)
           .order('full_name');
         if (error) throw error;
@@ -291,6 +292,12 @@ export function useTcmBrainState() {
     }
 
     try {
+      // Detect age group from patient data
+      const ageGroupInfo = selectedPatient ? detectAgeGroup({
+        date_of_birth: selectedPatient.date_of_birth,
+        age_group: selectedPatient.age_group
+      }) : null;
+      
       const response = await fetch(RAG_CHAT_URL, {
         method: 'POST',
         headers: {
@@ -300,7 +307,9 @@ export function useTcmBrainState() {
         body: JSON.stringify({ 
           query: userMessage,
           messages: [...messages, userMsg],
-          includeChunkDetails: true 
+          includeChunkDetails: true,
+          ageGroup: ageGroupInfo?.group,
+          patientContext: selectedPatient ? `Patient: ${selectedPatient.name}${ageGroupInfo ? `, Age Group: ${ageGroupInfo.label}` : ''}` : undefined
         }),
       });
 

@@ -6,6 +6,38 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Age group configuration with system prompts
+const AGE_GROUP_PROMPTS: Record<string, { context: string; filePatterns: string[] }> = {
+  newborn: {
+    context: 'This is a newborn/infant patient (0-2 years). Treatment must be extremely gentle: minimal needling (often avoid), prefer tuina, moxa, herbal baths. Focus on supporting natural development. Reduce herb doses significantly (1/10-1/20 adult dose).',
+    filePatterns: ['tcm-newborn', 'newborn'],
+  },
+  children: {
+    context: 'This is a pediatric patient (3-13 years). Consider school stress, growth patterns, digestive development. Use gentler techniques and reduced dosages. Ask about screen time, sleep, concentration, and social factors.',
+    filePatterns: ['tcm-children', 'children', 'pediatric'],
+  },
+  adults_18_50: {
+    context: 'This is an adult patient (18-50 years). Consider work stress, lifestyle, fertility/cycles where relevant. Focus on Liver Qi stagnation patterns, digestive issues from irregular eating, and sleep disruption from modern lifestyle.',
+    filePatterns: ['tcm-adults-18-50', 'adults_18_50'],
+  },
+  adults_50_70: {
+    context: 'This is a middle-aged patient (50-70 years). Consider chronic disease history, medications, hormonal changes (menopause/andropause). Focus on Kidney Yin/Yang balance, joint health, cardiovascular patterns. Ask about medication interactions.',
+    filePatterns: ['adults_50_70', 'adults-50-70'],
+  },
+  elderly: {
+    context: 'This is an elderly patient (70+ years). Treatment must be gentle: shallow needling, fewer points (5-8 max), shorter retention. Reduce herb doses to 1/3-1/2 normal. Focus on quality of life, fall prevention, medication interactions. Coordinate with Western medical care.',
+    filePatterns: ['tcm-elderly', 'elderly', 'elderly-lifestyle'],
+  },
+};
+
+function getAgeGroupSystemPrompt(ageGroup: string): string {
+  return AGE_GROUP_PROMPTS[ageGroup]?.context || '';
+}
+
+function getAgeGroupFilePatterns(ageGroup: string): string[] {
+  return AGE_GROUP_PROMPTS[ageGroup]?.filePatterns || [];
+}
+
 const TCM_RAG_SYSTEM_PROMPT = `You are Dr. Sapir's TCM Knowledge Assistant, powered EXCLUSIVELY by proprietary materials from Dr. Roni Sapir's clinical knowledge base.
 
 CRITICAL RULES:
@@ -61,15 +93,51 @@ serve(async (req) => {
       });
     }
 
-    const { query, messages, useExternalAI, includeChunkDetails } = await req.json();
+    const { query, messages, useExternalAI, includeChunkDetails, ageGroup, patientContext } = await req.json();
     const searchQuery = query || messages?.[messages.length - 1]?.content || '';
     const searchTerms = searchQuery.split(' ').slice(0, 5).join(' | ');
+    
+    // Age group context for specialized knowledge
+    const ageGroupContext = ageGroup ? getAgeGroupSystemPrompt(ageGroup) : '';
 
     console.log('=== RAG TRACE START ===');
     console.log('Query:', searchQuery);
     console.log('Search terms:', searchTerms);
+    console.log('Age group:', ageGroup || 'not specified');
     console.log('Using external AI:', useExternalAI || false);
     console.log('Include chunk details:', includeChunkDetails || false);
+
+    // Get age-specific file patterns for prioritized search
+    const ageFilePatterns = ageGroup ? getAgeGroupFilePatterns(ageGroup) : [];
+    
+    // Priority 0: Age-specific knowledge (if age group provided)
+    let ageSpecificChunks: any[] = [];
+    let ageError: any = null;
+    
+    if (ageGroup && ageFilePatterns.length > 0) {
+      const agePatternQuery = ageFilePatterns.map(p => `file_name.ilike.%${p}%`).join(',');
+      const { data, error } = await supabaseClient
+        .from('knowledge_chunks')
+        .select(`
+          id,
+          content,
+          question,
+          answer,
+          chunk_index,
+          metadata,
+          document:knowledge_documents!inner(id, file_name, original_name, category)
+        `)
+        .or(agePatternQuery, { referencedTable: 'document' })
+        .textSearch('content', searchTerms, {
+          type: 'websearch',
+          config: 'english'
+        })
+        .limit(6);
+      
+      ageSpecificChunks = data || [];
+      ageError = error;
+      console.log(`Age-specific chunks (${ageGroup}): ${ageSpecificChunks.length}`);
+    }
 
     // Search for relevant chunks using full-text search
     // Priority 1: Diagnostics file (should be used first in sessions)
@@ -204,12 +272,13 @@ serve(async (req) => {
       })
       .limit(5);
 
-    if (searchError || diagError || pulseError || zangfuError || acuError || qaError || treatmentError) {
-      console.error('Search error:', searchError || diagError || pulseError || zangfuError || acuError || qaError || treatmentError);
+    if (searchError || diagError || pulseError || zangfuError || acuError || qaError || treatmentError || ageError) {
+      console.error('Search error:', searchError || diagError || pulseError || zangfuError || acuError || qaError || treatmentError || ageError);
     }
 
-    // Merge with priority order: diagnostics, pulse/tongue, zang-fu, acupoints, QA, treatment protocols, then others
+    // Merge with priority order: age-specific, diagnostics, pulse/tongue, zang-fu, acupoints, QA, treatment protocols, then others
     const prioritizedIds = new Set([
+      ...ageSpecificChunks.map(c => c.id),
       ...(diagnosticsChunks || []).map(c => c.id),
       ...(pulseChunks || []).map(c => c.id),
       ...(zangfuChunks || []).map(c => c.id),
@@ -219,6 +288,7 @@ serve(async (req) => {
     ]);
     
     const chunks = [
+      ...ageSpecificChunks,
       ...(diagnosticsChunks || []),
       ...(pulseChunks || []),
       ...(zangfuChunks || []),
@@ -226,9 +296,9 @@ serve(async (req) => {
       ...(qaChunks || []),
       ...(treatmentChunks || []),
       ...(otherChunks || []).filter(c => !prioritizedIds.has(c.id))
-    ].slice(0, 15);
+    ].slice(0, 18);
 
-    console.log(`Priority chunks - Diagnostics: ${diagnosticsChunks?.length || 0}, Pulse/Tongue: ${pulseChunks?.length || 0}, Zang-Fu: ${zangfuChunks?.length || 0}, Acupoints: ${acuChunks?.length || 0}, QA: ${qaChunks?.length || 0}, Treatment: ${treatmentChunks?.length || 0}, Other: ${otherChunks?.length || 0}`);
+    console.log(`Priority chunks - Age-Specific: ${ageSpecificChunks.length}, Diagnostics: ${diagnosticsChunks?.length || 0}, Pulse/Tongue: ${pulseChunks?.length || 0}, Zang-Fu: ${zangfuChunks?.length || 0}, Acupoints: ${acuChunks?.length || 0}, QA: ${qaChunks?.length || 0}, Treatment: ${treatmentChunks?.length || 0}, Other: ${otherChunks?.length || 0}`);
 
     // Build context from retrieved chunks
     let context = '';
@@ -292,14 +362,18 @@ ${chunk.content}`;
     // Build messages for AI
     let systemMessage: string;
     
+    // Build age-specific context prefix if available
+    const ageContextPrefix = ageGroupContext ? `\n\n=== PATIENT AGE GROUP CONTEXT ===\n${ageGroupContext}\n=== END AGE CONTEXT ===\n` : '';
+    const patientContextPrefix = patientContext ? `\n\n=== PATIENT INFORMATION ===\n${patientContext}\n=== END PATIENT INFO ===\n` : '';
+    
     if (useExternalAI) {
       // Using external AI - no RAG context, use general knowledge
-      systemMessage = EXTERNAL_AI_SYSTEM_PROMPT;
+      systemMessage = EXTERNAL_AI_SYSTEM_PROMPT + ageContextPrefix + patientContextPrefix;
       console.log('Using external AI mode - no RAG context');
     } else if (context) {
-      systemMessage = `${TCM_RAG_SYSTEM_PROMPT}\n\n=== CONTEXT FROM DR. SAPIR'S KNOWLEDGE BASE ===\n\n${context}\n\n=== END CONTEXT ===`;
+      systemMessage = `${TCM_RAG_SYSTEM_PROMPT}${ageContextPrefix}${patientContextPrefix}\n\n=== CONTEXT FROM DR. SAPIR'S KNOWLEDGE BASE ===\n\n${context}\n\n=== END CONTEXT ===`;
     } else {
-      systemMessage = `${TCM_RAG_SYSTEM_PROMPT}\n\nNOTE: No relevant entries found in the knowledge base for this query.`;
+      systemMessage = `${TCM_RAG_SYSTEM_PROMPT}${ageContextPrefix}${patientContextPrefix}\n\nNOTE: No relevant entries found in the knowledge base for this query.`;
     }
 
     const chatMessages = [

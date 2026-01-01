@@ -17,6 +17,8 @@ export interface PatientOption {
   full_name: string;
   email?: string | null;
   phone?: string | null;
+  date_of_birth?: string | null;
+  age_group?: string | null;
 }
 
 export interface SelectedPatient {
@@ -24,6 +26,8 @@ export interface SelectedPatient {
   name: string;
   email?: string;
   phone?: string;
+  date_of_birth?: string | null;
+  age_group?: string | null;
 }
 
 interface PatientSelectorDropdownProps {
