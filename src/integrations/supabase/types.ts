@@ -296,6 +296,83 @@ export type Database = {
         }
         Relationships: []
       }
+      caf_master_studies: {
+        Row: {
+          acupoints_display: string | null
+          created_at: string | null
+          deep_thinking_note: string | null
+          id: number
+          key_symptoms: string | null
+          pharmacopeia_formula: string | null
+          pulse_tongue: string | null
+          system_category: string
+          tcm_pattern: string
+          treatment_principle: string | null
+          updated_at: string | null
+          western_label: string
+        }
+        Insert: {
+          acupoints_display?: string | null
+          created_at?: string | null
+          deep_thinking_note?: string | null
+          id: number
+          key_symptoms?: string | null
+          pharmacopeia_formula?: string | null
+          pulse_tongue?: string | null
+          system_category: string
+          tcm_pattern: string
+          treatment_principle?: string | null
+          updated_at?: string | null
+          western_label: string
+        }
+        Update: {
+          acupoints_display?: string | null
+          created_at?: string | null
+          deep_thinking_note?: string | null
+          id?: number
+          key_symptoms?: string | null
+          pharmacopeia_formula?: string | null
+          pulse_tongue?: string | null
+          system_category?: string
+          tcm_pattern?: string
+          treatment_principle?: string | null
+          updated_at?: string | null
+          western_label?: string
+        }
+        Relationships: []
+      }
+      caf_study_acupoints: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_primary_point: boolean | null
+          point_code: string
+          study_id: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_primary_point?: boolean | null
+          point_code: string
+          study_id: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_primary_point?: boolean | null
+          point_code?: string
+          study_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caf_study_acupoints_study_id_fkey"
+            columns: ["study_id"]
+            isOneToOne: false
+            referencedRelation: "caf_master_studies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_feedback: {
         Row: {
           created_at: string
