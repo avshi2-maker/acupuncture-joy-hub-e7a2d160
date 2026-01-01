@@ -1513,6 +1513,8 @@ export default function VideoSession() {
                   autoPlay={sessionStatus === 'running'}
                   interval={6000}
                   language="he"
+                  sessionDuration={sessionDuration}
+                  autoSync={true}
                 />
               </div>
 
@@ -1990,6 +1992,8 @@ export default function VideoSession() {
                   autoPlay={sessionStatus === 'running'}
                   interval={6000}
                   language="he"
+                  sessionDuration={sessionDuration}
+                  autoSync={true}
                 />
               </div>
             </div>

@@ -115,6 +115,10 @@ const QUICK_TIPS: QuickTip[] = [
   { id: 'vs-three-finger', tip: 'Three-finger tap toggles between Notes and AI Chat panels on mobile', tipHe: 'הקשת שלוש אצבעות מחליפה בין הערות וצ\'אט AI במובייל', icon: Activity, category: 'Video Session' },
   { id: 'vs-long-press', tip: 'Long-press the timer for quick actions menu with shortcuts to all tools', tipHe: 'לחיצה ארוכה על הטיימר פותחת תפריט פעולות מהירות', icon: Star, category: 'Video Session' },
   { id: 'vs-autosave', tip: 'Session notes auto-save every second. Look for the green checkmark indicator', tipHe: 'הערות נשמרות אוטומטית כל שניה. חפש את סימן הוי הירוק', icon: CheckCircle2, category: 'Video Session' },
+  { id: 'vs-header-tools', tip: 'All session tools are in the header row - scroll horizontally to see Zoom, Calendar, Q&A, Voice, Guide, AI Tips, Report', tipHe: 'כל הכלים בשורת הכותרת - גלול הצידה לזום, יומן, שאלות, הקלטה, מדריך, טיפים AI, דוח', icon: Settings, category: 'Video Session' },
+  { id: 'vs-carousel', tip: 'The inspiration carousel auto-syncs with your session phase and shows relevant tips', tipHe: 'הקרוסלה מסתנכרנת אוטומטית עם שלב הטיפול ומציגה טיפים רלוונטיים', icon: Sparkles, category: 'Video Session' },
+  { id: 'vs-qa-inline', tip: 'Use the inline Q&A chat on the right to ask AI questions during the session without leaving the page', tipHe: 'השתמש בצ\'אט Q&A המשובץ בימין לשאלות AI במהלך הטיפול', icon: MessageCircle, category: 'Video Session' },
+  { id: 'vs-quick-chips', tip: 'Click quick question chips below the Q&A input for instant common questions', tipHe: 'לחץ על שבבי השאלות המהירות מתחת לקלט לשאלות נפוצות', icon: Lightbulb, category: 'Video Session' },
   
   // General Tips
   { id: 'voice-anywhere', tip: 'Use the floating microphone button to dictate text into any input field across the app', tipHe: 'השתמש בכפתור המיקרופון הצף להקלטת טקסט בכל שדה קלט באפליקציה', icon: Mic, category: 'Productivity' },

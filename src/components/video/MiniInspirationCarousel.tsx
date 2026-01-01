@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronLeft, 
@@ -14,12 +14,16 @@ import {
   X,
   Save,
   RotateCcw,
-  Settings
+  Settings,
+  Clock,
+  Heart,
+  Calendar
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
 // Import your custom therapy session images
@@ -28,48 +32,104 @@ import therapySession2 from '@/assets/carousel/therapy-session-2.jpg';
 import therapySession3 from '@/assets/carousel/therapy-session-3.jpg';
 import therapySession4 from '@/assets/carousel/therapy-session-4.png';
 
-// Default session tips that rotate with images
-const DEFAULT_SLIDES = [
+// Session phase definitions (in minutes)
+const SESSION_PHASES = [
+  { id: 'opening', startMin: 0, endMin: 5, nameHe: 'פתיחה', nameEn: 'Opening' },
+  { id: 'diagnosis', startMin: 5, endMin: 15, nameHe: 'אבחון', nameEn: 'Diagnosis' },
+  { id: 'treatment', startMin: 15, endMin: 35, nameHe: 'טיפול', nameEn: 'Treatment' },
+  { id: 'closing', startMin: 35, endMin: 45, nameHe: 'סיום', nameEn: 'Closing' },
+];
+
+// Default session tips organized by phase
+const DEFAULT_SLIDES: CarouselSlide[] = [
+  // Opening Phase (0-5 min)
   {
     id: 'welcome',
     image: therapySession1,
-    tipHe: 'השתמשו בטכניקות שכנוע פסיכולוגיות מבוססות מחקר',
-    tipEn: 'Use research-based psychological persuasion techniques',
-    phase: 'טכניקות',
-    phaseEn: 'Techniques',
+    tipHe: 'ברכו את המטופל בחום ושאלו על מצבו מאז הפגישה האחרונה',
+    tipEn: 'Greet warmly and ask how they have been since last session',
+    phase: 'פתיחה',
+    phaseEn: 'Opening',
     icon: 'MessageSquare',
-    color: 'jade'
+    color: 'jade',
+    sessionPhase: 'opening',
+    minRange: [0, 5] as [number, number]
   },
+  // Diagnosis Phase (5-15 min)
   {
-    id: 'stats',
+    id: 'diagnosis',
     image: therapySession2,
     tipHe: 'הציגו נתוני הצלחה: כאב כרוני 75-85%, מיגרנה 70-80%',
     tipEn: 'Present success rates: Chronic pain 75-85%, Migraine 70-80%',
-    phase: 'נתונים',
-    phaseEn: 'Statistics',
+    phase: 'אבחון',
+    phaseEn: 'Diagnosis',
     icon: 'Target',
-    color: 'purple'
+    color: 'purple',
+    sessionPhase: 'diagnosis',
+    minRange: [5, 15] as [number, number]
   },
   {
-    id: 'video-session',
+    id: 'listen',
+    image: therapySession3,
+    tipHe: 'הקשיבו לתלונה העיקרית והשתמשו בשיקוף רגשי',
+    tipEn: 'Listen to chief complaint and use emotional mirroring',
+    phase: 'הקשבה',
+    phaseEn: 'Listening',
+    icon: 'Heart',
+    color: 'rose',
+    sessionPhase: 'diagnosis',
+    minRange: [5, 15] as [number, number]
+  },
+  // Treatment Phase (15-35 min)
+  {
+    id: 'treatment',
+    image: therapySession4,
+    tipHe: 'הסבירו את תוכנית הטיפול בעזרת הדגמה ויזואלית',
+    tipEn: 'Explain treatment plan with visual demonstration',
+    phase: 'טיפול',
+    phaseEn: 'Treatment',
+    icon: 'Zap',
+    color: 'amber',
+    sessionPhase: 'treatment',
+    minRange: [15, 35] as [number, number]
+  },
+  {
+    id: 'video-tips',
     image: therapySession3,
     tipHe: 'שמרו על קשר עין גם בפגישות וידאו מרחוק',
     tipEn: 'Maintain eye contact even in remote video sessions',
     phase: 'וידאו',
     phaseEn: 'Video',
     icon: 'Eye',
-    color: 'blue'
+    color: 'blue',
+    sessionPhase: 'treatment',
+    minRange: [15, 35] as [number, number]
+  },
+  // Closing Phase (35-45 min)
+  {
+    id: 'closing',
+    image: therapySession1,
+    tipHe: 'סכמו את הטיפול ותאמו מועד המשך לפני סיום הפגישה',
+    tipEn: 'Summarize treatment and schedule follow-up before ending',
+    phase: 'סיום',
+    phaseEn: 'Closing',
+    icon: 'Calendar',
+    color: 'green',
+    sessionPhase: 'closing',
+    minRange: [35, 45] as [number, number]
   },
   {
-    id: 'consultation',
-    image: therapySession4,
-    tipHe: 'הסבירו את תוכנית הטיפול בעזרת הדגמה ויזואלית',
-    tipEn: 'Explain treatment plan with visual demonstration',
-    phase: 'הדגמה',
-    phaseEn: 'Demo',
-    icon: 'Zap',
-    color: 'amber'
-  }
+    id: 'commitment',
+    image: therapySession2,
+    tipHe: 'בקשו מחויבות קטנה: "נסה רק מפגש אחד"',
+    tipEn: 'Ask for small commitment: "Just try one session"',
+    phase: 'מחויבות',
+    phaseEn: 'Commitment',
+    icon: 'BookOpen',
+    color: 'orange',
+    sessionPhase: 'closing',
+    minRange: [35, 45] as [number, number]
+  },
 ];
 
 const STORAGE_KEY = 'therapist-carousel-tips';
@@ -83,6 +143,8 @@ export interface CarouselSlide {
   phaseEn: string;
   icon: string;
   color: string;
+  sessionPhase?: string;
+  minRange?: [number, number];
 }
 
 interface MiniInspirationCarouselProps {
@@ -90,6 +152,8 @@ interface MiniInspirationCarouselProps {
   interval?: number;
   language?: 'he' | 'en';
   className?: string;
+  sessionDuration?: number; // in seconds - for auto-sync
+  autoSync?: boolean; // Enable phase-based auto-sync
 }
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -97,14 +161,19 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Target,
   Eye,
   Zap,
-  BookOpen
+  BookOpen,
+  Heart,
+  Calendar,
+  Clock
 };
 
 export function MiniInspirationCarousel({
   autoPlay = true,
   interval = 5000,
   language = 'he',
-  className
+  className,
+  sessionDuration = 0,
+  autoSync = true
 }: MiniInspirationCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -112,7 +181,44 @@ export function MiniInspirationCarousel({
   const [editingSlide, setEditingSlide] = useState<CarouselSlide | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const [direction, setDirection] = useState(0); // -1 for left, 1 for right
+  const [direction, setDirection] = useState(0);
+  const lastPhaseRef = useRef<string | null>(null);
+
+  // Calculate current session phase based on duration
+  const currentSessionMinute = Math.floor(sessionDuration / 60);
+  const currentPhase = useMemo(() => {
+    return SESSION_PHASES.find(
+      phase => currentSessionMinute >= phase.startMin && currentSessionMinute < phase.endMin
+    ) || SESSION_PHASES[0];
+  }, [currentSessionMinute]);
+
+  // Get slides relevant to current phase
+  const phaseRelevantSlides = useMemo(() => {
+    if (!autoSync || sessionDuration === 0) return slides;
+    return slides.filter(slide => 
+      !slide.minRange || 
+      (currentSessionMinute >= slide.minRange[0] && currentSessionMinute < slide.minRange[1])
+    );
+  }, [slides, currentSessionMinute, autoSync, sessionDuration]);
+
+  // Auto-sync: Jump to phase-relevant slide when phase changes
+  useEffect(() => {
+    if (autoSync && sessionDuration > 0 && currentPhase.id !== lastPhaseRef.current) {
+      lastPhaseRef.current = currentPhase.id;
+      // Find first slide matching current phase
+      const phaseSlideIndex = slides.findIndex(s => s.sessionPhase === currentPhase.id);
+      if (phaseSlideIndex !== -1 && phaseSlideIndex !== currentIndex) {
+        setDirection(1);
+        setCurrentIndex(phaseSlideIndex);
+        toast.info(
+          language === 'he' 
+            ? `שלב: ${currentPhase.nameHe}` 
+            : `Phase: ${currentPhase.nameEn}`,
+          { duration: 2000, icon: '🎯' }
+        );
+      }
+    }
+  }, [currentPhase.id, autoSync, sessionDuration, slides, language]);
 
   // Load saved tips from localStorage
   useEffect(() => {
@@ -122,7 +228,7 @@ export function MiniInspirationCarousel({
         const parsed = JSON.parse(saved);
         // Merge saved tips with default images (in case images change)
         const merged = DEFAULT_SLIDES.map((defaultSlide, idx) => {
-          const savedSlide = parsed[idx];
+          const savedSlide = parsed.find((s: CarouselSlide) => s.id === defaultSlide.id) || parsed[idx];
           if (savedSlide) {
             return {
               ...defaultSlide,
@@ -141,16 +247,17 @@ export function MiniInspirationCarousel({
     }
   }, []);
 
-  const currentSlide = slides[currentIndex];
+  const displaySlides = autoSync && sessionDuration > 0 ? phaseRelevantSlides : slides;
+  const currentSlide = displaySlides[currentIndex % displaySlides.length] || slides[0];
 
   const goToNext = () => {
     setDirection(1);
-    setCurrentIndex((prev) => (prev + 1) % slides.length);
+    setCurrentIndex((prev) => (prev + 1) % displaySlides.length);
   };
 
   const goToPrev = () => {
     setDirection(-1);
-    setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
+    setCurrentIndex((prev) => (prev - 1 + displaySlides.length) % displaySlides.length);
   };
 
   // Auto-play logic
@@ -163,7 +270,7 @@ export function MiniInspirationCarousel({
         clearInterval(timerRef.current);
       }
     };
-  }, [autoPlay, isPaused, interval, showSettings]);
+  }, [autoPlay, isPaused, interval, showSettings, displaySlides.length]);
 
   const saveTips = (updatedSlides: CarouselSlide[]) => {
     setSlides(updatedSlides);
@@ -192,14 +299,15 @@ export function MiniInspirationCarousel({
       blue: 'bg-blue-600/90 text-white',
       amber: 'bg-amber-500/90 text-white',
       green: 'bg-green-600/90 text-white',
-      orange: 'bg-orange-600/90 text-white'
+      orange: 'bg-orange-600/90 text-white',
+      rose: 'bg-rose-600/90 text-white'
     };
     return colors[color] || colors.jade;
   };
 
   const Icon = ICON_MAP[currentSlide.icon] || MessageSquare;
 
-  // Animation variants for smooth transitions
+  // Animation variants
   const slideVariants = {
     enter: (direction: number) => ({
       x: direction > 0 ? 300 : -300,
@@ -256,6 +364,19 @@ export function MiniInspirationCarousel({
         </motion.div>
       </AnimatePresence>
 
+      {/* Session Phase Indicator (when auto-sync is active) */}
+      {autoSync && sessionDuration > 0 && (
+        <div className="absolute top-1.5 left-2 z-10">
+          <Badge 
+            variant="outline" 
+            className="bg-black/50 text-white border-white/30 text-[9px] backdrop-blur-sm"
+          >
+            <Clock className="h-2.5 w-2.5 mr-1" />
+            {language === 'he' ? currentPhase.nameHe : currentPhase.nameEn}
+          </Badge>
+        </div>
+      )}
+
       {/* Content Overlay */}
       <div className="absolute inset-0 flex items-center px-3 md:px-4" dir={language === 'he' ? 'rtl' : 'ltr'}>
         {/* Phase Badge with bounce animation */}
@@ -275,7 +396,7 @@ export function MiniInspirationCarousel({
           </span>
         </motion.div>
 
-        {/* Tip Text with typewriter effect */}
+        {/* Tip Text */}
         <motion.p
           key={`tip-${currentSlide.id}`}
           initial={{ opacity: 0, y: 15 }}
@@ -288,7 +409,7 @@ export function MiniInspirationCarousel({
 
         {/* Progress Dots */}
         <div className="flex gap-1.5 shrink-0">
-          {slides.map((_, idx) => (
+          {displaySlides.map((_, idx) => (
             <motion.button
               key={idx}
               onClick={() => {
@@ -299,7 +420,7 @@ export function MiniInspirationCarousel({
               whileTap={{ scale: 0.9 }}
               className={cn(
                 'w-2 h-2 md:w-2.5 md:h-2.5 rounded-full transition-all duration-300',
-                idx === currentIndex
+                idx === currentIndex % displaySlides.length
                   ? 'bg-white scale-125 shadow-glow'
                   : 'bg-white/40 hover:bg-white/70'
               )}
@@ -308,7 +429,7 @@ export function MiniInspirationCarousel({
         </div>
       </div>
 
-      {/* Navigation Arrows - Show on hover */}
+      {/* Navigation Arrows */}
       <motion.button
         onClick={goToPrev}
         whileHover={{ scale: 1.2 }}
@@ -357,13 +478,20 @@ export function MiniInspirationCarousel({
             </DialogHeader>
             
             <div className="space-y-4 mt-4">
-              {slides.map((slide, idx) => (
+              {slides.map((slide) => (
                 <div key={slide.id} className="p-3 border rounded-lg bg-muted/30">
                   <div className="flex items-center gap-2 mb-2">
                     <img src={slide.image} alt="" className="w-16 h-10 object-cover rounded" />
-                    <span className="font-semibold text-sm">
-                      {language === 'he' ? slide.phase : slide.phaseEn}
-                    </span>
+                    <div>
+                      <span className="font-semibold text-sm">
+                        {language === 'he' ? slide.phase : slide.phaseEn}
+                      </span>
+                      {slide.minRange && (
+                        <p className="text-[10px] text-muted-foreground">
+                          {slide.minRange[0]}-{slide.minRange[1]} min
+                        </p>
+                      )}
+                    </div>
                   </div>
                   
                   {editingSlide?.id === slide.id ? (
@@ -447,7 +575,7 @@ export function MiniInspirationCarousel({
           ease: 'linear',
           repeat: Infinity 
         }}
-        key={currentIndex}
+        key={`progress-${currentIndex}`}
       />
     </div>
   );
