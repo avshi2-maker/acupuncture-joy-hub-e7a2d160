@@ -117,6 +117,8 @@ import { useSessionLock } from '@/contexts/SessionLockContext';
 import { useVideoSessionShortcuts } from '@/hooks/useVideoSessionShortcuts';
 import { useAccessibility } from '@/contexts/AccessibilityContext';
 import { useVoiceCommands, COMMON_COMMAND_PATTERNS, VoiceCommand } from '@/hooks/useVoiceCommands';
+import { useVoiceCommandAudio } from '@/hooks/useVoiceCommandAudio';
+import { VoiceCommandCheatSheet } from '@/components/video/VoiceCommandCheatSheet';
 import { cn } from '@/lib/utils';
 import aiGeneratorBg from '@/assets/ai-generator-bg.png';
 import animatedMicGif from '@/assets/mic-animated.gif';
@@ -183,6 +185,9 @@ export default function VideoSession() {
   
   // Audio feedback hook from enhancements
   const { enabled: audioEnabled } = useVideoSessionAudio();
+  
+  // Voice command audio feedback hook
+  const voiceAudio = useVoiceCommandAudio({ enabled: audioEnabled });
   
   // AI Query states
   const [activeAiQuery, setActiveAiQuery] = useState<ToolbarItemId | null>(null);
@@ -698,11 +703,18 @@ export default function VideoSession() {
     }, description: 'Add thick coating', category: 'ai' },
   ], [handleVoiceCommand, showMusicPlayer, sessionDuration, sessionNotes, setNotes, haptic]);
 
-  // Voice command recognition callback
+  // Voice command recognition callback with audio feedback
   const handleVoiceRecognized = useCallback((transcript: string, matched: VoiceCommand | null) => {
     // Clear any existing timeout
     if (voiceFeedbackTimeoutRef.current) {
       clearTimeout(voiceFeedbackTimeoutRef.current);
+    }
+    
+    // Play audio feedback
+    if (matched) {
+      voiceAudio.playSuccess();
+    } else {
+      voiceAudio.playFailure();
     }
     
     // Set feedback
@@ -716,7 +728,17 @@ export default function VideoSession() {
     voiceFeedbackTimeoutRef.current = setTimeout(() => {
       setVoiceFeedback(null);
     }, 3000);
-  }, []);
+  }, [voiceAudio]);
+
+  // Play audio when voice listening starts/stops
+  const handleToggleAlwaysOnVoice = useCallback(() => {
+    if (!voiceAlwaysOn) {
+      voiceAudio.playListeningStart();
+    } else {
+      voiceAudio.playListeningStop();
+    }
+    setVoiceAlwaysOn(!voiceAlwaysOn);
+  }, [voiceAlwaysOn, voiceAudio]);
 
   const { isListening: isAlwaysOnListening, isSupported: isVoiceSupported, toggleListening: toggleAlwaysOnVoice, lastCommand } = useVoiceCommands({
     commands: alwaysOnVoiceCommands,
@@ -1375,17 +1397,21 @@ export default function VideoSession() {
                     ? "bg-jade text-jade-foreground animate-pulse" 
                     : "bg-muted text-muted-foreground"
                 )}
-                onClick={() => {
-                  setVoiceAlwaysOn(!voiceAlwaysOn);
-                  if (!voiceAlwaysOn) toggleAlwaysOnVoice();
-                }}
+                onClick={handleToggleAlwaysOnVoice}
                 disabled={!isVoiceSupported}
                 title={voiceAlwaysOn ? "Voice commands active" : "Enable voice commands"}
               >
                 <Mic className="h-3.5 w-3.5" />
               </Button>
               
-              {/* 7. Help - Mobile */}
+              {/* 7. Voice Cheat Sheet - Mobile */}
+              <VoiceCommandCheatSheet 
+                isListening={isAlwaysOnListening}
+                onToggleVoice={handleToggleAlwaysOnVoice}
+                className="h-8 px-2"
+              />
+              
+              {/* 8. Help - Mobile */}
               <Button 
                 size="icon" 
                 className="h-8 w-8 shrink-0 touch-manipulation bg-gradient-to-br from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600" 
@@ -1399,10 +1425,7 @@ export default function VideoSession() {
             <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-2">
               {/* Always-On Voice Toggle - Desktop */}
               <Button
-                onClick={() => {
-                  setVoiceAlwaysOn(!voiceAlwaysOn);
-                  if (!voiceAlwaysOn) toggleAlwaysOnVoice();
-                }}
+                onClick={handleToggleAlwaysOnVoice}
                 size="icon"
                 disabled={!isVoiceSupported}
                 className={cn(
@@ -1415,6 +1438,12 @@ export default function VideoSession() {
               >
                 <Mic className="h-6 w-6" />
               </Button>
+
+              {/* Voice Command Cheat Sheet - Desktop */}
+              <VoiceCommandCheatSheet 
+                isListening={isAlwaysOnListening}
+                onToggleVoice={handleToggleAlwaysOnVoice}
+              />
 
               <Button
                 onClick={() => setShowHelpGuide((v) => !v)}
