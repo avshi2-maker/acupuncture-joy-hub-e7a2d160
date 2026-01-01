@@ -377,6 +377,13 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'tcm_diagnosis',
     defaultLanguage: 'en',
   },
+  {
+    id: 'tcm-skin-renewal-100qa',
+    label: 'TCM Skin Renewal & Anti-Aging (100 Q&A - Dermatology/Cosmetic)',
+    path: '/knowledge-assets/tcm-skin-renewal-100qa.csv',
+    defaultCategory: 'dermatology',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 type QueueItemStatus = 'pending' | 'importing' | 'done' | 'error';
