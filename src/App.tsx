@@ -58,6 +58,7 @@ import PointCoordinateEditor from "./pages/PointCoordinateEditor";
 import Contact from "./pages/Contact";
 import AdminPasswordGenerator from "./pages/AdminPasswordGenerator";
 import CAFBrowser from "./pages/CAFBrowser";
+import TherapistProfileEdit from "./pages/TherapistProfileEdit";
 
 const queryClient = new QueryClient();
 
@@ -107,6 +108,7 @@ const App = () => (
                       <Route path="/crm/patients/:patientId/consent" element={<RequireTier><CRMErrorBoundary><PatientConsentForm /></CRMErrorBoundary></RequireTier>} />
 
                       <Route path="/therapist-profile" element={<RequireTier><TherapistProfile /></RequireTier>} />
+                      <Route path="/therapist-profile/edit" element={<RequireTier><TherapistProfileEdit /></RequireTier>} />
 
                       <Route path="/admin" element={<RequireTier><Admin /></RequireTier>} />
                       <Route path="/admin/feedback" element={<RequireTier><AdminFeedback /></RequireTier>} />

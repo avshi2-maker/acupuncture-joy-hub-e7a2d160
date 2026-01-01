@@ -892,13 +892,35 @@ function CalendarContent() {
     );
   }
 
+  // Get therapist name
+  const getTherapistName = () => {
+    try {
+      const intakeData = localStorage.getItem('therapist_intake_completed');
+      if (intakeData) {
+        const parsed = JSON.parse(intakeData);
+        return parsed.therapistName || null;
+      }
+    } catch { /* ignore */ }
+    return null;
+  };
+
+  const therapistName = getTherapistName();
+
   // Desktop View - Grid layout
   return (
     <div className="space-y-4 w-full">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl sm:text-2xl font-display font-semibold">Calendar</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-display font-semibold">Calendar</h1>
+              {therapistName && (
+                <Badge variant="outline" className="hidden sm:flex text-jade border-jade/30 text-xs">
+                  <User className="h-3 w-3 mr-1" />
+                  {therapistName}
+                </Badge>
+              )}
+            </div>
             <p className="text-xs sm:text-sm text-muted-foreground">
               {viewMode === 'day'
                 ? format(selectedDate, 'EEE, MMM d, yyyy')

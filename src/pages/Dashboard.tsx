@@ -532,11 +532,11 @@ export default function Dashboard() {
       id: 'therapist_intake',
       title: 'קליטת מטפל',
       description: disclaimerStatus.isSigned 
-        ? 'טופס קליטה הושלם בהצלחה' 
+        ? 'לחץ לעריכת פרטי המטפל' 
         : 'נדרש למלא טופס קליטה והצהרה',
       icon: <ClipboardCheck className="h-6 w-6 text-white" />,
       feature: 'crm' as const,
-      href: '/therapist-intake',
+      href: disclaimerStatus.isSigned ? '/therapist-profile/edit' : '/therapist-intake',
       backgroundImage: deskBg,
       statusBadge: getDisclaimerBadge(),
     },
