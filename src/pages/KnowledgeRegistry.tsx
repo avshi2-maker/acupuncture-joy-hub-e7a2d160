@@ -363,6 +363,13 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'mental_health',
     defaultLanguage: 'en',
   },
+  {
+    id: 'four-examinations-qa',
+    label: 'Four Examinations (Si Zhen) - 40 Diagnostic Signs',
+    path: '/knowledge-assets/four-examinations-qa.csv',
+    defaultCategory: 'tcm_diagnosis',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 type QueueItemStatus = 'pending' | 'importing' | 'done' | 'error';
