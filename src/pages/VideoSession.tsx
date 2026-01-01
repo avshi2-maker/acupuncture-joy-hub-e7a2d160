@@ -60,7 +60,7 @@ import { AnxietyQADialog } from '@/components/video/AnxietyQADialog';
 import { QuickPatientDialog } from '@/components/video/QuickPatientDialog';
 import { QuickAppointmentDialog } from '@/components/video/QuickAppointmentDialog';
 import { ZoomInviteDialog } from '@/components/video/ZoomInviteDialog';
-import { TherapistSettingsDialog, getAudioAlertsEnabled } from '@/components/video/TherapistSettingsDialog';
+import { TherapistSettingsDialog, getAudioAlertsEnabled, getVoiceWakeWord, getVoiceWakeWordEnabled } from '@/components/video/TherapistSettingsDialog';
 import { FollowUpPlanDialog } from '@/components/video/FollowUpPlanDialog';
 import { VoiceDictationDialog } from '@/components/video/VoiceDictationDialog';
 import { CalendarInviteDialog } from '@/components/video/CalendarInviteDialog';
@@ -166,6 +166,9 @@ export default function VideoSession() {
   const [showHelpGuide, setShowHelpGuide] = useState(false);
   const [showTcmBrainPanel, setShowTcmBrainPanel] = useState(false);
   const [voiceAlwaysOn, setVoiceAlwaysOn] = useState(false);
+  const [voiceWakeWord, setVoiceWakeWord] = useState(() => getVoiceWakeWord());
+  const [voiceWakeWordEnabled, setVoiceWakeWordEnabled] = useState(() => getVoiceWakeWordEnabled());
+  const [isVoiceAwake, setIsVoiceAwake] = useState(false);
   const [voiceFeedback, setVoiceFeedback] = useState<{ text: string; matched: boolean; description?: string } | null>(null);
   const voiceFeedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [selectedQAType, setSelectedQAType] = useState<QAType | null>(null);
@@ -740,13 +743,33 @@ export default function VideoSession() {
     setVoiceAlwaysOn(!voiceAlwaysOn);
   }, [voiceAlwaysOn, voiceAudio]);
 
-  const { isListening: isAlwaysOnListening, isSupported: isVoiceSupported, toggleListening: toggleAlwaysOnVoice, lastCommand } = useVoiceCommands({
+  const { isListening: isAlwaysOnListening, isSupported: isVoiceSupported, isAwake: voiceIsAwake, toggleListening: toggleAlwaysOnVoice, lastCommand } = useVoiceCommands({
     commands: alwaysOnVoiceCommands,
     enabled: voiceAlwaysOn,
     language: 'he-IL',
     showToasts: false, // We'll handle feedback visually
     onCommandRecognized: handleVoiceRecognized,
+    wakeWord: voiceWakeWord,
+    wakeWordEnabled: voiceWakeWordEnabled,
+    wakeWordTimeout: 5000,
+    onWakeWordDetected: () => {
+      setIsVoiceAwake(true);
+      voiceAudio.playSuccess();
+    },
   });
+
+  // Sync awake state
+  useEffect(() => {
+    setIsVoiceAwake(voiceIsAwake);
+  }, [voiceIsAwake]);
+
+  // Reload wake word settings when settings dialog closes
+  useEffect(() => {
+    if (!showSettings) {
+      setVoiceWakeWord(getVoiceWakeWord());
+      setVoiceWakeWordEnabled(getVoiceWakeWordEnabled());
+    }
+  }, [showSettings]);
 
   // Check access
   // Clock update effect
@@ -1193,11 +1216,26 @@ export default function VideoSession() {
         {/* Floating Voice Feedback Indicator */}
         {voiceAlwaysOn && (
           <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
-            {/* Listening indicator */}
-            {isAlwaysOnListening && !voiceFeedback && (
+            {/* Wake word waiting indicator */}
+            {isAlwaysOnListening && voiceWakeWordEnabled && !isVoiceAwake && !voiceFeedback && (
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/90 text-muted-foreground shadow-lg backdrop-blur-sm">
+                <Mic className="h-4 w-4" />
+                <span className="text-sm font-medium">Say "{voiceWakeWord}"</span>
+                <div className="flex gap-0.5">
+                  <span className="w-1 h-2 bg-muted-foreground/40 rounded-full animate-[pulse_1.5s_ease-in-out_infinite]" />
+                  <span className="w-1 h-3 bg-muted-foreground/40 rounded-full animate-[pulse_1.5s_ease-in-out_infinite_0.2s]" />
+                  <span className="w-1 h-2 bg-muted-foreground/40 rounded-full animate-[pulse_1.5s_ease-in-out_infinite_0.4s]" />
+                </div>
+              </div>
+            )}
+
+            {/* Awake / Active listening indicator */}
+            {isAlwaysOnListening && (!voiceWakeWordEnabled || isVoiceAwake) && !voiceFeedback && (
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-jade/90 text-jade-foreground shadow-lg backdrop-blur-sm animate-pulse">
                 <Mic className="h-4 w-4" />
-                <span className="text-sm font-medium">Listening...</span>
+                <span className="text-sm font-medium">
+                  {voiceWakeWordEnabled ? 'Awake! Say command...' : 'Listening...'}
+                </span>
                 <div className="flex gap-0.5">
                   <span className="w-1 h-3 bg-jade-foreground/60 rounded-full animate-[pulse_0.6s_ease-in-out_infinite]" />
                   <span className="w-1 h-4 bg-jade-foreground/80 rounded-full animate-[pulse_0.6s_ease-in-out_infinite_0.1s]" />
