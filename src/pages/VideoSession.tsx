@@ -48,7 +48,8 @@ import {
   BookOpen,
   Accessibility,
   Music,
-  HelpCircle
+  HelpCircle,
+  Mic
 } from 'lucide-react';
 import { AnimatedMic } from '@/components/ui/AnimatedMic';
 import { toast } from 'sonner';
@@ -92,6 +93,7 @@ import { CustomizableToolbar, ToolbarItemId } from '@/components/video/Customiza
 import { FloatingHelpGuide } from '@/components/ui/FloatingHelpGuide';
 import { SessionGuideTeleprompter } from '@/components/video/SessionGuideTeleprompter';
 import { AISessionSuggestions } from '@/components/video/AISessionSuggestions';
+import { MiniInspirationCarousel } from '@/components/video/MiniInspirationCarousel';
 import { 
   VideoSessionAPIMeter, 
   VideoSessionEngineIndicator,
@@ -1278,7 +1280,36 @@ export default function VideoSession() {
                   borderColor: 'border-jade/50',
                   onClick: () => setShowFollowUpPlan(true),
                 },
-                // 5. Session Guide
+                // 8. Q&A / Questions
+                {
+                  id: 'qa',
+                  name: 'Q&A',
+                  nameHe: 'שאלות',
+                  icon: HelpCircle,
+                  color: 'text-cyan-600',
+                  borderColor: 'border-cyan-300',
+                  isActive: showAnxietyQA || showTcmBrainPanel,
+                  onClick: () => {
+                    if (showTcmBrainPanel) {
+                      setShowTcmBrainPanel(false);
+                    } else if (showAnxietyQA) {
+                      setShowAnxietyQA(false);
+                    } else {
+                      setShowAnxietyQA(true);
+                    }
+                  },
+                },
+                // 9. Voice Recording
+                {
+                  id: 'voice',
+                  name: 'Voice',
+                  nameHe: 'הקלטה',
+                  icon: Mic,
+                  color: 'text-amber-600',
+                  borderColor: 'border-amber-300',
+                  onClick: () => setShowVoiceDictation(true),
+                },
+                // 10. Session Guide
                 {
                   id: 'guide',
                   name: 'Guide',
@@ -1944,46 +1975,14 @@ export default function VideoSession() {
                 </Card>
               )}
 
-              {/* Quick Actions */}
-              <Card>
-                <CardHeader className="pb-2 pt-3">
-                  <CardTitle className="text-sm">כלים מהירים</CardTitle>
-                </CardHeader>
-                <CardContent className="grid grid-cols-2 gap-1 pb-3">
-                  <Button variant="outline" size="sm" onClick={() => setShowFollowUpPlan(true)} className="gap-0.5 bg-jade/10 hover:bg-jade/20 text-jade border-jade/30 h-7 text-[10px] px-1.5">
-                    <ClipboardList className="h-3 w-3 flex-shrink-0" />
-                    <span className="truncate">המשך</span>
-                  </Button>
-                  <QATypeDropdown
-                    onSelect={handleQATypeSelect}
-                    onReset={handleQATypeReset}
-                    isActive={showAnxietyQA || showTcmBrainPanel}
-                    selectedType={selectedQAType}
-                    variant="compact"
-                    triggerClassName="h-7 text-[10px] px-1.5"
-                  />
-                  <Button variant="outline" size="sm" onClick={() => setShowVoiceDictation(true)} className="gap-0.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200 h-7 text-[10px] px-1.5">
-                    <AnimatedMic size="sm" />
-                    <span className="truncate">הקלטה</span>
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => setShowQuickAppointment(true)} className="gap-0.5 h-7 text-[10px] px-1.5">
-                    <Calendar className="h-3 w-3 flex-shrink-0" />
-                    <span className="truncate">תור</span>
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => setShowCalendarInvite(true)} className="gap-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 h-7 text-[10px] px-1.5">
-                    <CalendarPlus className="h-3 w-3 flex-shrink-0" />
-                    <span className="truncate">יומן</span>
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => setShowZoomInvite(true)} className="gap-0.5 h-7 text-[10px] px-1.5">
-                    <VideoIcon className="h-3 w-3 flex-shrink-0" />
-                    <span className="truncate">Zoom</span>
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => setShowSessionReport(true)} disabled={!selectedPatientId || !sessionNotes} className="gap-0.5 col-span-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 h-7 text-[10px] px-1.5">
-                    <Sparkles className="h-3 w-3 flex-shrink-0" />
-                    <span className="truncate">דו"ח AI + MP3</span>
-                  </Button>
-                </CardContent>
-              </Card>
+              {/* Mini Inspiration Carousel - Session Tips */}
+              <div className="mt-2">
+                <MiniInspirationCarousel 
+                  autoPlay={sessionStatus === 'running'}
+                  interval={6000}
+                  language="he"
+                />
+              </div>
             </div>
           </div>
         </main>
