@@ -1,4 +1,5 @@
 import { ReactNode, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { CRMSidebar } from './CRMSidebar';
 import { CRMBreadcrumb } from './CRMBreadcrumb';
@@ -61,8 +62,13 @@ function DesktopHeader({ onHelpClick }: HeaderContentProps) {
 }
 
 export function CRMLayout({ children }: CRMLayoutProps) {
+  const location = useLocation();
   const [helpOpen, setHelpOpen] = useState(false);
-  
+
+  const isPatientIntakePage =
+    location.pathname === '/crm/patients/new' ||
+    (location.pathname.startsWith('/crm/patients/') && location.pathname.endsWith('/edit'));
+
   return (
     <SessionTimerProvider>
       <SidebarProvider defaultOpen={true}>
@@ -76,7 +82,10 @@ export function CRMLayout({ children }: CRMLayoutProps) {
             </main>
           </SidebarInset>
           {/* Session Timer Widget - Always visible */}
-          <SessionTimerWidget position="bottom-right" />
+          <SessionTimerWidget
+            position="bottom-right"
+            className={isPatientIntakePage ? 'bottom-24' : undefined}
+          />
           {/* Help Guide - controlled from header */}
           <FloatingHelpGuide isOpen={helpOpen} onOpenChange={setHelpOpen} />
         </div>
