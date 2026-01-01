@@ -237,6 +237,13 @@ const BUILTIN_ASSETS = [
     defaultLanguage: 'en',
   },
   {
+    id: 'musculoskeletal-orthopedic',
+    label: 'Orthopedic MSK Protocols (25 Conditions + Acute vs Chronic)',
+    path: '/knowledge-assets/musculoskeletal-orthopedic.csv',
+    defaultCategory: 'clinical_protocols',
+    defaultLanguage: 'en',
+  },
+  {
     id: 'acupoint-reference-50',
     label: 'Acupoint Reference (50 Essential Points with Locations & Actions)',
     path: '/knowledge-assets/acupoint-reference-50.csv',
