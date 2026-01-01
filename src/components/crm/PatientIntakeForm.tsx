@@ -149,9 +149,38 @@ interface PatientIntakeFormProps {
   patientId?: string;
   onSuccess?: () => void;
   returnTo?: string; // e.g. '/video-session' to show back button
+  testMode?: boolean; // Enable test mode with demo data
 }
 
-export function PatientIntakeForm({ patientId, onSuccess, returnTo }: PatientIntakeFormProps) {
+// Demo data for test mode
+const DEMO_PATIENT_DATA: Partial<PatientFormData> = {
+  id_number: '123456782', // Valid Israeli ID checksum
+  full_name: 'Test Patient Demo',
+  email: 'test@demo.com',
+  phone: '050-1234567',
+  date_of_birth: '1985-06-15',
+  gender: 'female',
+  address: '123 Test Street, Tel Aviv',
+  occupation: 'Software Developer',
+  emergency_contact: 'Demo Emergency',
+  emergency_phone: '050-9876543',
+  medical_history: 'No significant medical history',
+  allergies: 'None known',
+  medications: 'Vitamin D',
+  chief_complaint: 'Lower back pain',
+  diet_notes: 'Vegetarian diet',
+  sleep_quality: 'good',
+  stress_level: 'moderate',
+  exercise_frequency: 'weekly',
+  lifestyle_notes: 'Works from home, sits a lot',
+  constitution_type: 'Qi Deficiency',
+  tongue_notes: 'Pale tongue, thin white coating',
+  pulse_notes: 'Weak pulse, especially on left side',
+  is_pregnant: false,
+  consent_signed: false, // User must still consent
+};
+
+export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = false }: PatientIntakeFormProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -313,6 +342,23 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo }: PatientInt
     }
   };
 
+  // Focus on the first invalid field
+  const focusFirstInvalidField = (fieldsToCheck: (keyof PatientFormData)[]) => {
+    const errors = form.formState.errors;
+    const firstErrorField = fieldsToCheck.find(field => errors[field]);
+    
+    if (firstErrorField) {
+      // Try to find and focus the input element
+      const fieldElement = document.querySelector(`[name="${firstErrorField}"]`) as HTMLElement;
+      if (fieldElement) {
+        fieldElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => {
+          fieldElement.focus();
+        }, 300);
+      }
+    }
+  };
+
   // Validate current step before proceeding
   const validateCurrentStep = async (): Promise<boolean> => {
     const fieldsToValidate = stepFields[currentStep];
@@ -330,11 +376,19 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo }: PatientInt
       if (firstErrorField && errors[firstErrorField]) {
         toast.error(`Please fix: ${errors[firstErrorField]?.message}`);
       }
+      // Auto-scroll and focus to the first invalid field
+      focusFirstInvalidField(fieldsToValidate);
     }
 
     // Additional check for ID duplicate
     if (currentStep === 0 && isIdDuplicate) {
       toast.error('ID number already exists in system');
+      // Focus the ID field
+      const idField = document.querySelector('[name="id_number"]') as HTMLElement;
+      if (idField) {
+        idField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => idField.focus(), 300);
+      }
       return false;
     }
 
@@ -354,6 +408,64 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo }: PatientInt
       setCurrentStep(prev => prev - 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  };
+
+  // Fill form with demo data (test mode)
+  const fillDemoData = () => {
+    form.reset({
+      ...form.getValues(),
+      ...DEMO_PATIENT_DATA,
+    } as PatientFormData);
+    setAgeGroup('adult');
+    toast.success('Demo data filled! Review and modify as needed.');
+  };
+
+  // Reset form to empty state
+  const resetFormToEmpty = () => {
+    form.reset({
+      id_number: '',
+      full_name: '',
+      email: '',
+      phone: '',
+      date_of_birth: '',
+      gender: 'female',
+      address: '',
+      occupation: '',
+      emergency_contact: '',
+      emergency_phone: '',
+      medical_history: '',
+      allergies: '',
+      medications: '',
+      chief_complaint: '',
+      diet_notes: '',
+      sleep_quality: undefined,
+      stress_level: undefined,
+      exercise_frequency: undefined,
+      lifestyle_notes: '',
+      constitution_type: '',
+      tongue_notes: '',
+      pulse_notes: '',
+      is_pregnant: false,
+      pregnancy_weeks: null,
+      due_date: null,
+      pregnancy_notes: '',
+      obstetric_history: '',
+      consent_signed: false,
+    });
+    setCurrentStep(0);
+    setAgeGroup(null);
+    setAgeSpecificAnswers({});
+    setPregnancyAnswers({});
+    setSignatureDataUrl(null);
+    setDietHabits([]);
+    setPulseFindings([]);
+    setSelectedAllergies([]);
+    setSelectedMedications([]);
+    setTongueFindings([]);
+    setIdCheckStatus('idle');
+    setIsIdDuplicate(false);
+    setIdChecksumError(null);
+    toast.info('Form reset to empty state');
   };
 
   const onSubmit = async (data: PatientFormData) => {
@@ -511,17 +623,61 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo }: PatientInt
   const currentAgeQuestions = ageGroup ? ageGroupQuestions[ageGroup] : [];
   const showPregnancySection = watchGender === 'female' && watchIsPregnant;
 
-  // Handle form errors - show toast with first error
+  // Handle form errors - show toast with first error and focus field
   const handleFormErrors = (errors: any) => {
     const firstErrorKey = Object.keys(errors)[0];
     const firstError = errors[firstErrorKey];
     const errorMessage = firstError?.message || 'Please fill in all required fields';
     toast.error(`Validation Error: ${errorMessage}`);
+    
+    // Focus the first error field
+    const fieldElement = document.querySelector(`[name="${firstErrorKey}"]`) as HTMLElement;
+    if (fieldElement) {
+      fieldElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => fieldElement.focus(), 300);
+    }
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit, handleFormErrors)} className="space-y-6">
+        {/* Test Mode Banner */}
+        {testMode && (
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg p-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
+                <div>
+                  <p className="font-medium text-amber-800 dark:text-amber-200">Test Mode Active</p>
+                  <p className="text-sm text-amber-600 dark:text-amber-400">Use demo data to test the intake flow</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={fillDemoData}
+                  className="border-amber-400 text-amber-700 hover:bg-amber-100"
+                >
+                  <BrainCircuit className="h-4 w-4 mr-1" />
+                  Fill Demo Data
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={resetFormToEmpty}
+                  className="text-amber-700 hover:bg-amber-100"
+                >
+                  <XCircle className="h-4 w-4 mr-1" />
+                  Reset
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Progress Bar & Step Indicator */}
         <div className="sticky top-0 z-20 -mx-4 px-4 py-4 bg-background/95 backdrop-blur border-b space-y-3">
           <div className="space-y-3">
