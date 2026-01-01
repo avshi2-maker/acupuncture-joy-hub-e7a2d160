@@ -31,6 +31,7 @@ import { TongueDiagnosisSelect } from './TongueDiagnosisSelect';
 import { ConstitutionTypeSelect } from './ConstitutionTypeSelect';
 import { ChiefComplaintSelect } from './ChiefComplaintSelect';
 import { PregnancyQuestionSelect } from './PregnancyQuestionSelect';
+import { LifestyleQuickSelect } from './LifestyleQuickSelect';
 import { validateIsraeliId, looksLikeIsraeliId } from '@/utils/israeliIdValidation';
 import { useIntakeDraftAutosave } from '@/hooks/useIntakeDraftAutosave';
 
@@ -245,6 +246,9 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
 
   // Track whether draft has been shown/dismissed
   const [draftDismissed, setDraftDismissed] = useState(false);
+  
+  // Track shake animation for error steps
+  const [shakeErrors, setShakeErrors] = useState(false);
 
   // Sync current step to URL for sharing/bookmarking
   useEffect(() => {
@@ -451,6 +455,49 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
         }, 300);
       }
     }
+  };
+
+  // Find first step with validation errors
+  const findFirstErrorStep = (): number | null => {
+    for (let i = 0; i < stepTitles.length; i++) {
+      const fieldsInStep = stepFields[i] || [];
+      const hasError = fieldsInStep.some(field => !!form.formState.errors[field]);
+      if (hasError) return i;
+    }
+    return null;
+  };
+
+  // Jump to first error step and focus the field
+  const jumpToFirstError = async () => {
+    // Trigger full form validation to populate errors
+    await form.trigger();
+    
+    const errorStep = findFirstErrorStep();
+    if (errorStep !== null) {
+      // Trigger shake animation
+      setShakeErrors(true);
+      setTimeout(() => setShakeErrors(false), 500);
+      
+      setCurrentStep(errorStep);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      // Focus first invalid field after navigation
+      setTimeout(() => {
+        const fieldsInStep = stepFields[errorStep] || [];
+        focusFirstInvalidField(fieldsInStep);
+      }, 300);
+      
+      toast.error(`Step ${errorStep + 1} has validation errors`);
+    } else {
+      toast.success('No validation errors found!');
+    }
+  };
+
+  // Check if any step has errors
+  const hasAnyErrors = () => {
+    return Object.values(stepFields).some(fields => 
+      fields.some(field => !!form.formState.errors[field])
+    );
   };
 
   // Validate current step before proceeding
@@ -873,7 +920,7 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
               </span>
             </div>
             <Progress value={progress} className="h-2" />
-            <div className="flex justify-between gap-1">
+            <div className={`flex justify-between gap-1 ${shakeErrors ? 'animate-shake' : ''}`}>
               {stepTitles.map((step, index) => {
                 const StepIcon = step.icon;
                 const isCompleted = index < currentStep;
@@ -896,7 +943,7 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
                     }}
                     className={`flex flex-col items-center gap-0.5 text-xs px-1.5 sm:px-2 py-1 rounded-lg transition-colors cursor-pointer min-w-0 flex-1 ${
                       hasErrors
-                        ? 'bg-destructive/20 text-destructive font-medium ring-2 ring-destructive/50'
+                        ? `bg-destructive/20 text-destructive font-medium ring-2 ring-destructive/50 ${shakeErrors ? 'animate-shake' : ''}`
                         : isCurrent 
                           ? 'bg-jade/20 text-jade font-medium' 
                           : isCompleted 
@@ -941,6 +988,20 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
                 );
               })}
             </div>
+            
+            {/* Jump to First Error Button */}
+            {hasAnyErrors() && (
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={jumpToFirstError}
+                className="w-full mt-2 animate-pulse"
+              >
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                Jump to First Error
+              </Button>
+            )}
           </div>
         </div>
 
@@ -1460,113 +1521,70 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
                   <FormField
                     control={form.control}
                     name="sleep_quality"
-                    render={({ field }) => {
-                      const labels: Record<string, string> = { excellent: 'Excellent', good: 'Good', fair: 'Fair', poor: 'Poor' };
-                      const hint = field.value ? `Selected: ${labels[field.value]}. Add notes...` : 'Additional details...';
-                      return (
-                        <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <Moon className="h-4 w-4" />
-                            Sleep Quality
-                          </FormLabel>
-                          <FormControl>
-                            <SimpleSelect
-                              value={field.value}
-                              onValueChange={field.onChange}
-                              placeholder="Select..."
-                              options={[
-                                { value: 'excellent', label: 'Excellent' },
-                                { value: 'good', label: 'Good' },
-                                { value: 'fair', label: 'Fair' },
-                                { value: 'poor', label: 'Poor' },
-                              ]}
-                            />
-                          </FormControl>
-                          <Input
-                            placeholder={hint}
-                            className="mt-2"
-                            value={customNotes.sleep_quality}
-                            onChange={(e) => setCustomNotes(prev => ({ ...prev, sleep_quality: e.target.value }))}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Moon className="h-4 w-4" />
+                          Sleep Quality
+                        </FormLabel>
+                        <FormControl>
+                          <LifestyleQuickSelect
+                            type="sleep"
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            notes={customNotes.sleep_quality}
+                            onNotesChange={(notes) => setCustomNotes(prev => ({ ...prev, sleep_quality: notes }))}
                           />
-                          <FormMessage />
-                        </FormItem>
-                      );
-                    }}
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
 
                   <FormField
                     control={form.control}
                     name="stress_level"
-                    render={({ field }) => {
-                      const labels: Record<string, string> = { low: 'Low', moderate: 'Moderate', high: 'High', severe: 'Severe' };
-                      const hint = field.value ? `Selected: ${labels[field.value]}. Add notes...` : 'Additional details...';
-                      return (
-                        <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <Brain className="h-4 w-4" />
-                            Stress Level
-                          </FormLabel>
-                          <FormControl>
-                            <SimpleSelect
-                              value={field.value}
-                              onValueChange={field.onChange}
-                              placeholder="Select..."
-                              options={[
-                                { value: 'low', label: 'Low' },
-                                { value: 'moderate', label: 'Moderate' },
-                                { value: 'high', label: 'High' },
-                                { value: 'severe', label: 'Severe' },
-                              ]}
-                            />
-                          </FormControl>
-                          <Input
-                            placeholder={hint}
-                            className="mt-2"
-                            value={customNotes.stress_level}
-                            onChange={(e) => setCustomNotes(prev => ({ ...prev, stress_level: e.target.value }))}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Brain className="h-4 w-4" />
+                          Stress Level
+                        </FormLabel>
+                        <FormControl>
+                          <LifestyleQuickSelect
+                            type="stress"
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            notes={customNotes.stress_level}
+                            onNotesChange={(notes) => setCustomNotes(prev => ({ ...prev, stress_level: notes }))}
                           />
-                          <FormMessage />
-                        </FormItem>
-                      );
-                    }}
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
 
                   <FormField
                     control={form.control}
                     name="exercise_frequency"
-                    render={({ field }) => {
-                      const labels: Record<string, string> = { daily: 'Daily', weekly: 'Weekly', occasionally: 'Occasionally', rarely: 'Rarely', never: 'Never' };
-                      const hint = field.value ? `Selected: ${labels[field.value]}. Add notes...` : 'Additional details...';
-                      return (
-                        <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <Activity className="h-4 w-4" />
-                            Exercise Frequency
-                          </FormLabel>
-                          <FormControl>
-                            <SimpleSelect
-                              value={field.value}
-                              onValueChange={field.onChange}
-                              placeholder="Select..."
-                              options={[
-                                { value: 'daily', label: 'Daily' },
-                                { value: 'weekly', label: 'Weekly' },
-                                { value: 'occasionally', label: 'Occasionally' },
-                                { value: 'rarely', label: 'Rarely' },
-                                { value: 'never', label: 'Never' },
-                              ]}
-                            />
-                          </FormControl>
-                          <Input
-                            placeholder={hint}
-                            className="mt-2"
-                            value={customNotes.exercise_frequency}
-                            onChange={(e) => setCustomNotes(prev => ({ ...prev, exercise_frequency: e.target.value }))}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Activity className="h-4 w-4" />
+                          Exercise Frequency
+                        </FormLabel>
+                        <FormControl>
+                          <LifestyleQuickSelect
+                            type="exercise"
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            notes={customNotes.exercise_frequency}
+                            onNotesChange={(notes) => setCustomNotes(prev => ({ ...prev, exercise_frequency: notes }))}
                           />
-                          <FormMessage />
-                        </FormItem>
-                      );
-                    }}
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
 
