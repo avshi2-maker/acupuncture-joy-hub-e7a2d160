@@ -1546,22 +1546,64 @@ export default function VideoSession() {
                           </Button>
                         </div>
                         
+                        {/* Quick Question Chips */}
+                        {inlineAnxietyMessages.length === 0 && (
+                          <div className="flex flex-wrap gap-1.5 mb-3">
+                            {(selectedQAType === 'anxiety' ? [
+                              'איך להתמודד עם חרדה?',
+                              'טכניקות הרגעה',
+                              'מה עוזר לשינה?',
+                              'תסמיני לחץ'
+                            ] : selectedQAType === 'tcm-brain' ? [
+                              'נקודות לכאב ראש',
+                              'איזון אנרגיה',
+                              'דופק חלש',
+                              'לשון לבנה'
+                            ] : [
+                              'שאלה כללית',
+                              'עצה טיפולית',
+                              'המלצה'
+                            ]).map((q, i) => (
+                              <button
+                                key={i}
+                                onClick={() => {
+                                  setAnxietyInput(q);
+                                  haptic.light();
+                                }}
+                                className="px-2 py-1 text-xs bg-rose-100/80 hover:bg-rose-200 text-rose-700 rounded-full transition-colors"
+                              >
+                                {q}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        
                         {/* Messages Area */}
-                        <div className="flex-1 overflow-y-auto space-y-2 mb-3 min-h-[80px] max-h-[120px]">
+                        <div className="flex-1 overflow-y-auto space-y-2 mb-3 min-h-[60px] max-h-[100px]">
                           {inlineAnxietyMessages.length === 0 ? (
-                            <div className="text-center text-muted-foreground text-sm py-4">
-                              <p>שאל שאלות לגבי {selectedQAType === 'anxiety' ? 'חרדה, לחץ נפשי, או רגשות' : 'הנושא'}</p>
+                            <div className="text-center text-muted-foreground text-xs py-2">
+                              <p>בחר שאלה מהירה או כתוב משלך</p>
                             </div>
                           ) : (
-                            inlineAnxietyMessages.map((msg, idx) => (
-                              <div key={idx} className={`p-2 rounded-lg text-sm ${
-                                msg.role === 'user' 
-                                  ? 'bg-rose-100 text-rose-900 mr-8' 
-                                  : 'bg-background/80 border ml-8'
-                              }`}>
-                                {msg.content}
-                              </div>
-                            ))
+                            <>
+                              {inlineAnxietyMessages.map((msg, idx) => (
+                                <div key={idx} className={`p-2 rounded-lg text-sm ${
+                                  msg.role === 'user' 
+                                    ? 'bg-rose-100 text-rose-900 mr-8' 
+                                    : 'bg-background/80 border ml-8'
+                                }`}>
+                                  {msg.content}
+                                </div>
+                              ))}
+                              {/* Typing Indicator */}
+                              {aiQueryLoading && (
+                                <div className="bg-background/80 border ml-8 p-2 rounded-lg flex items-center gap-1.5">
+                                  <span className="w-2 h-2 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                  <span className="w-2 h-2 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                  <span className="w-2 h-2 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                                </div>
+                              )}
+                            </>
                           )}
                         </div>
                         
