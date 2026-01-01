@@ -20,7 +20,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { User, Heart, Baby, Activity, Utensils, Moon, Brain, AlertTriangle, FileSignature, PenTool, CheckCircle2, XCircle, Loader2, Calendar, BrainCircuit, ChevronLeft, ChevronRight } from 'lucide-react';
+import { User, Heart, Baby, Activity, Utensils, Moon, Brain, AlertTriangle, FileSignature, PenTool, CheckCircle2, XCircle, Loader2, Calendar, BrainCircuit, ChevronLeft, ChevronRight, FileText, Eye, Edit2, CircleDot } from 'lucide-react';
 import { SignaturePad } from './SignaturePad';
 import { MedicalDocumentUpload } from './MedicalDocumentUpload';
 import { DietNutritionSelect } from './DietNutritionSelect';
@@ -84,7 +84,17 @@ const stepFields: Record<number, (keyof PatientFormData)[]> = {
   0: ['id_number', 'full_name', 'phone', 'date_of_birth', 'gender'],
   1: ['chief_complaint'],
   2: [], // Lifestyle is all optional
-  3: ['consent_signed'],
+  3: [], // Preview step - no validation needed
+  4: ['consent_signed'],
+};
+
+// All trackable fields per step (for completion indicators)
+const stepAllFields: Record<number, (keyof PatientFormData)[]> = {
+  0: ['id_number', 'full_name', 'phone', 'date_of_birth', 'gender', 'email', 'address', 'occupation', 'emergency_contact', 'emergency_phone'],
+  1: ['chief_complaint', 'medical_history', 'allergies', 'medications'],
+  2: ['diet_notes', 'sleep_quality', 'stress_level', 'exercise_frequency', 'lifestyle_notes', 'constitution_type', 'tongue_notes', 'pulse_notes'],
+  3: [], // Preview step
+  4: ['consent_signed'],
 };
 
 // Which steps can be skipped (have no required fields)
@@ -94,6 +104,7 @@ const stepTitles = [
   { title: 'Personal Info', icon: User },
   { title: 'Medical History', icon: Heart },
   { title: 'Lifestyle', icon: Activity },
+  { title: 'Preview', icon: FileText },
   { title: 'Consent', icon: FileSignature },
 ];
 
@@ -623,6 +634,31 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
   const currentAgeQuestions = ageGroup ? ageGroupQuestions[ageGroup] : [];
   const showPregnancySection = watchGender === 'female' && watchIsPregnant;
 
+  // Calculate field completion for each step
+  const getStepCompletion = (stepIndex: number): { filled: number; total: number; percentage: number } => {
+    const fields = stepAllFields[stepIndex] || [];
+    if (fields.length === 0) return { filled: 0, total: 0, percentage: 100 };
+    
+    const values = form.getValues();
+    let filled = 0;
+    
+    fields.forEach(field => {
+      const value = values[field];
+      if (value !== undefined && value !== null && value !== '') {
+        filled++;
+      }
+    });
+    
+    return {
+      filled,
+      total: fields.length,
+      percentage: fields.length > 0 ? Math.round((filled / fields.length) * 100) : 100
+    };
+  };
+
+  // Get all form values for preview
+  const formValues = form.watch();
+
   // Handle form errors - show toast with first error and focus field
   const handleFormErrors = (errors: any) => {
     const firstErrorKey = Object.keys(errors)[0];
@@ -694,21 +730,24 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
               </span>
             </div>
             <Progress value={progress} className="h-2" />
-            <div className="flex justify-between">
+            <div className="flex justify-between gap-1">
               {stepTitles.map((step, index) => {
                 const StepIcon = step.icon;
                 const isCompleted = index < currentStep;
                 const isCurrent = index === currentStep;
+                const completion = getStepCompletion(index);
+                const hasRequiredFields = (stepFields[index] || []).length > 0;
+                const isPreviewStep = index === 3;
+                
                 return (
                   <button
                     key={index}
                     type="button"
                     onClick={() => {
-                      // Allow navigating to any step (both back and forward for flexibility)
                       setCurrentStep(index);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full transition-colors cursor-pointer ${
+                    className={`flex flex-col items-center gap-0.5 text-xs px-1.5 sm:px-2 py-1 rounded-lg transition-colors cursor-pointer min-w-0 flex-1 ${
                       isCurrent 
                         ? 'bg-jade/20 text-jade font-medium' 
                         : isCompleted 
@@ -716,12 +755,34 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
                           : 'text-muted-foreground hover:bg-muted/50'
                     }`}
                   >
-                    {isCompleted ? (
-                      <CheckCircle2 className="h-3 w-3" />
-                    ) : (
-                      <StepIcon className="h-3 w-3" />
+                    <div className="flex items-center gap-1">
+                      {isCompleted ? (
+                        <CheckCircle2 className="h-3 w-3" />
+                      ) : (
+                        <StepIcon className="h-3 w-3" />
+                      )}
+                      <span className="hidden sm:inline truncate">{step.title}</span>
+                    </div>
+                    {/* Completion indicator */}
+                    {!isPreviewStep && completion.total > 0 && (
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <div className="w-8 h-1 bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full transition-all ${
+                              completion.percentage === 100 
+                                ? 'bg-jade' 
+                                : hasRequiredFields && completion.percentage < 50 
+                                  ? 'bg-amber-500' 
+                                  : 'bg-jade/60'
+                            }`}
+                            style={{ width: `${completion.percentage}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground hidden sm:inline">
+                          {completion.filled}/{completion.total}
+                        </span>
+                      </div>
                     )}
-                    <span className="hidden sm:inline">{step.title}</span>
                   </button>
                 );
               })}
@@ -1537,8 +1598,240 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
           </>
         )}
 
-        {/* Step 3: Consent */}
+        {/* Step 3: Preview/Summary */}
         {currentStep === 3 && (
+          <Card className="border-blue-300 bg-blue-50/30 dark:bg-blue-900/10">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Eye className="h-5 w-5 text-blue-600" />
+                Review Your Information
+              </CardTitle>
+              <CardDescription>
+                Please review all entered data before proceeding to consent
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Personal Info Summary */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <User className="h-4 w-4 text-jade" />
+                    Personal Information
+                  </h4>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCurrentStep(0)}
+                    className="text-xs gap-1"
+                  >
+                    <Edit2 className="h-3 w-3" />
+                    Edit
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-3 rounded-lg bg-background border text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Name:</span>
+                    <p className="font-medium">{formValues.full_name || '—'}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">ID:</span>
+                    <p className="font-medium">{formValues.id_number || '—'}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Phone:</span>
+                    <p className="font-medium">{formValues.phone || '—'}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">DOB:</span>
+                    <p className="font-medium">{formValues.date_of_birth || '—'}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Gender:</span>
+                    <p className="font-medium capitalize">{formValues.gender || '—'}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Email:</span>
+                    <p className="font-medium">{formValues.email || '—'}</p>
+                  </div>
+                  {formValues.address && (
+                    <div className="col-span-2">
+                      <span className="text-muted-foreground">Address:</span>
+                      <p className="font-medium">{formValues.address}</p>
+                    </div>
+                  )}
+                  {formValues.occupation && (
+                    <div>
+                      <span className="text-muted-foreground">Occupation:</span>
+                      <p className="font-medium">{formValues.occupation}</p>
+                    </div>
+                  )}
+                </div>
+                {(formValues.emergency_contact || formValues.emergency_phone) && (
+                  <div className="p-2 rounded bg-amber-50 dark:bg-amber-900/20 border border-amber-200 text-sm">
+                    <span className="text-amber-700 dark:text-amber-300 font-medium">Emergency:</span>{' '}
+                    {formValues.emergency_contact} {formValues.emergency_phone && `(${formValues.emergency_phone})`}
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Medical History Summary */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <Heart className="h-4 w-4 text-rose-500" />
+                    Medical History
+                  </h4>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCurrentStep(1)}
+                    className="text-xs gap-1"
+                  >
+                    <Edit2 className="h-3 w-3" />
+                    Edit
+                  </Button>
+                </div>
+                <div className="grid gap-3 p-3 rounded-lg bg-background border text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Chief Complaint:</span>
+                    <p className="font-medium text-rose-600 dark:text-rose-400">{formValues.chief_complaint || '—'}</p>
+                  </div>
+                  {formValues.medical_history && (
+                    <div>
+                      <span className="text-muted-foreground">Medical History:</span>
+                      <p className="font-medium whitespace-pre-wrap">{formValues.medical_history}</p>
+                    </div>
+                  )}
+                  {formValues.allergies && (
+                    <div>
+                      <span className="text-muted-foreground">Allergies:</span>
+                      <p className="font-medium text-amber-600">{formValues.allergies}</p>
+                    </div>
+                  )}
+                  {formValues.medications && (
+                    <div>
+                      <span className="text-muted-foreground">Medications:</span>
+                      <p className="font-medium">{formValues.medications}</p>
+                    </div>
+                  )}
+                </div>
+                {formValues.is_pregnant && (
+                  <div className="p-2 rounded bg-pink-50 dark:bg-pink-900/20 border border-pink-200 text-sm">
+                    <span className="text-pink-700 dark:text-pink-300 font-medium flex items-center gap-1">
+                      <Baby className="h-4 w-4" />
+                      Pregnant
+                    </span>
+                    {formValues.pregnancy_weeks && ` - ${formValues.pregnancy_weeks} weeks`}
+                    {formValues.due_date && ` (Due: ${formValues.due_date})`}
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Lifestyle Summary */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-green-600" />
+                    Lifestyle & TCM Assessment
+                  </h4>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCurrentStep(2)}
+                    className="text-xs gap-1"
+                  >
+                    <Edit2 className="h-3 w-3" />
+                    Edit
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 rounded-lg bg-background border text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Sleep:</span>
+                    <p className="font-medium capitalize">{formValues.sleep_quality || '—'}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Stress:</span>
+                    <p className="font-medium capitalize">{formValues.stress_level || '—'}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Exercise:</span>
+                    <p className="font-medium capitalize">{formValues.exercise_frequency || '—'}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Constitution:</span>
+                    <p className="font-medium">{formValues.constitution_type || '—'}</p>
+                  </div>
+                </div>
+                {(formValues.tongue_notes || formValues.pulse_notes) && (
+                  <div className="grid md:grid-cols-2 gap-3">
+                    {formValues.tongue_notes && (
+                      <div className="p-2 rounded bg-rose-50 dark:bg-rose-900/20 border text-sm">
+                        <span className="text-muted-foreground">Tongue:</span>
+                        <p className="font-medium">{formValues.tongue_notes}</p>
+                      </div>
+                    )}
+                    {formValues.pulse_notes && (
+                      <div className="p-2 rounded bg-purple-50 dark:bg-purple-900/20 border text-sm">
+                        <span className="text-muted-foreground">Pulse:</span>
+                        <p className="font-medium">{formValues.pulse_notes}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {formValues.diet_notes && (
+                  <div className="p-2 rounded bg-green-50 dark:bg-green-900/20 border text-sm">
+                    <span className="text-muted-foreground">Diet Notes:</span>
+                    <p className="font-medium">{formValues.diet_notes}</p>
+                  </div>
+                )}
+                {formValues.lifestyle_notes && (
+                  <div className="p-2 rounded bg-background border text-sm">
+                    <span className="text-muted-foreground">Lifestyle Notes:</span>
+                    <p className="font-medium whitespace-pre-wrap">{formValues.lifestyle_notes}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Completion Summary */}
+              <div className="p-4 rounded-lg bg-jade/10 border border-jade/30">
+                <h4 className="font-medium flex items-center gap-2 mb-3">
+                  <CircleDot className="h-4 w-4 text-jade" />
+                  Form Completion Summary
+                </h4>
+                <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                  {[0, 1, 2].map((stepIdx) => {
+                    const completion = getStepCompletion(stepIdx);
+                    return (
+                      <div key={stepIdx} className="p-2 rounded bg-background border">
+                        <p className="text-xs text-muted-foreground">{stepTitles[stepIdx].title}</p>
+                        <p className={`font-bold ${completion.percentage === 100 ? 'text-jade' : 'text-amber-600'}`}>
+                          {completion.filled}/{completion.total}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <Alert>
+                <CheckCircle2 className="h-4 w-4" />
+                <AlertDescription>
+                  If everything looks correct, click <strong>Next</strong> to proceed to the consent form.
+                </AlertDescription>
+              </Alert>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step 4: Consent */}
+        {currentStep === 4 && (
           <Card className="border-jade/30 bg-jade/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
