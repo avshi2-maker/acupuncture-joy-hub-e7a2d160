@@ -1229,151 +1229,182 @@ export default function VideoSession() {
           />
         </div>
 
-        {/* Header Boxes with Circular Icons - Organized by Category */}
+        {/* Header Boxes with Circular Icons - Organized by Category with Separators */}
         <div className="px-3 md:px-4 pt-2 md:pt-4 pb-2 border-b bg-gradient-to-b from-jade/5 to-transparent">
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            <VideoSessionHeaderBoxes
-              boxes={[
-                // === SESSION CONTROLS ===
-                {
-                  id: 'new-meeting',
-                  name: sessionStatus === 'idle' ? 'Start' : 'Reset',
-                  nameHe: sessionStatus === 'idle' ? 'התחל' : 'איפוס',
-                  icon: sessionStatus === 'idle' ? Play : RotateCcw,
-                  color: 'text-jade',
-                  borderColor: 'border-jade',
-                  isActive: sessionStatus === 'running',
-                  onClick: sessionStatus === 'idle' ? handleStart : handleRepeat,
-                },
-                // === AI & DIAGNOSIS ===
-                {
-                  id: 'ai-tips',
-                  name: 'AI Brain',
-                  nameHe: 'מוח AI',
-                  icon: Brain,
-                  color: 'text-purple-600',
-                  borderColor: 'border-purple-300',
-                  isActive: showAISuggestions || showTcmBrainPanel,
-                  onClick: () => {
-                    if (showTcmBrainPanel) setShowTcmBrainPanel(false);
-                    else setShowTcmBrainPanel(true);
+          <VideoSessionHeaderBoxes
+            groups={[
+              {
+                id: 'session-controls',
+                boxes: [
+                  {
+                    id: 'new-meeting',
+                    name: sessionStatus === 'idle' ? 'Start' : 'Reset',
+                    nameHe: sessionStatus === 'idle' ? 'התחל' : 'איפוס',
+                    icon: sessionStatus === 'idle' ? Play : RotateCcw,
+                    color: 'text-jade',
+                    borderColor: 'border-jade',
+                    isActive: sessionStatus === 'running',
+                    tooltip: sessionStatus === 'idle' ? 'Start a new session' : 'Reset and start fresh',
+                    onClick: sessionStatus === 'idle' ? handleStart : handleRepeat,
                   },
-                },
-                {
-                  id: 'qa',
-                  name: 'Q&A',
-                  nameHe: 'שאלות',
-                  icon: HelpCircle,
-                  color: 'text-cyan-600',
-                  borderColor: 'border-cyan-300',
-                  isActive: showAnxietyQA,
-                  onClick: () => setShowAnxietyQA(!showAnxietyQA),
-                },
-                {
-                  id: 'guide',
-                  name: 'Guide',
-                  nameHe: 'מדריך',
-                  icon: BookOpen,
-                  color: 'text-amber-600',
-                  borderColor: 'border-amber-300',
-                  isActive: showSessionGuide,
-                  onClick: () => setShowSessionGuide(!showSessionGuide),
-                },
-                // === CALENDAR & SCHEDULING ===
-                {
-                  id: 'calendar',
-                  name: 'Calendar',
-                  nameHe: 'יומן',
-                  icon: Calendar,
-                  color: 'text-blue-600',
-                  borderColor: 'border-blue-300',
-                  onClick: () => navigate('/crm/calendar'),
-                },
-                {
-                  id: 'calendar-invite',
-                  name: 'Invite',
-                  nameHe: 'הזמנה',
-                  icon: CalendarPlus,
-                  color: 'text-emerald-600',
-                  borderColor: 'border-emerald-300',
-                  onClick: () => setShowCalendarInvite(true),
-                },
-                {
-                  id: 'appointment',
-                  name: 'Appoint',
-                  nameHe: 'תור חדש',
-                  icon: ClipboardList,
-                  color: 'text-teal-600',
-                  borderColor: 'border-teal-300',
-                  onClick: () => setShowQuickAppointment(true),
-                },
-                {
-                  id: 'followup',
-                  name: 'Follow-up',
-                  nameHe: 'המשך',
-                  icon: ArrowRight,
-                  color: 'text-jade',
-                  borderColor: 'border-jade/50',
-                  onClick: () => setShowFollowUpPlan(true),
-                },
-                // === COMMUNICATION & RECORDING ===
-                {
-                  id: 'zoom',
-                  name: 'Zoom',
-                  nameHe: 'זום',
-                  icon: VideoIcon,
-                  color: 'text-blue-500',
-                  borderColor: 'border-blue-300',
-                  onClick: () => setShowZoomInvite(true),
-                },
-                {
-                  id: 'voice',
-                  name: 'Voice',
-                  nameHe: 'הקלטה',
-                  icon: Mic,
-                  color: 'text-amber-600',
-                  borderColor: 'border-amber-300',
-                  onClick: () => setShowVoiceDictation(true),
-                },
-                // === UTILITIES ===
-                {
-                  id: 'report',
-                  name: 'Report',
-                  nameHe: 'דוח',
-                  icon: FileText,
-                  color: 'text-indigo-600',
-                  borderColor: 'border-indigo-300',
-                  onClick: () => setShowSessionReport(true),
-                },
-                {
-                  id: 'music',
-                  name: 'Music',
-                  nameHe: 'מוזיקה',
-                  icon: Music,
-                  color: showMusicPlayer ? 'text-white' : 'text-amber-600',
-                  borderColor: showMusicPlayer ? 'border-amber-500 bg-amber-500' : 'border-amber-300',
-                  isActive: showMusicPlayer,
-                  onClick: () => setShowMusicPlayer(!showMusicPlayer),
-                },
-                {
-                  id: 'accessibility',
-                  name: 'Access',
-                  nameHe: 'נגישות',
-                  icon: Accessibility,
-                  color: highContrast ? 'text-white' : 'text-jade',
-                  borderColor: highContrast ? 'border-jade bg-jade' : 'border-jade/50',
-                  isActive: highContrast,
-                  onClick: () => {
-                    setHighContrast(!highContrast);
-                    toast.success(highContrast ? 'ניגודיות רגילה' : 'ניגודיות גבוהה', { 
-                      description: highContrast ? 'High contrast disabled' : 'High contrast enabled',
-                      duration: 2000 
-                    });
+                ],
+              },
+              {
+                id: 'ai-diagnosis',
+                boxes: [
+                  {
+                    id: 'ai-tips',
+                    name: 'AI Brain',
+                    nameHe: 'מוח AI',
+                    icon: Brain,
+                    color: 'text-purple-600',
+                    borderColor: 'border-purple-300',
+                    isActive: showAISuggestions || showTcmBrainPanel,
+                    tooltip: 'Open TCM Brain AI assistant panel',
+                    onClick: () => {
+                      if (showTcmBrainPanel) setShowTcmBrainPanel(false);
+                      else setShowTcmBrainPanel(true);
+                    },
                   },
-                },
-              ]}
-            />
-          </div>
+                  {
+                    id: 'qa',
+                    name: 'Q&A',
+                    nameHe: 'שאלות',
+                    icon: HelpCircle,
+                    color: 'text-cyan-600',
+                    borderColor: 'border-cyan-300',
+                    isActive: showAnxietyQA,
+                    tooltip: 'Open clinical Q&A questionnaires',
+                    onClick: () => setShowAnxietyQA(!showAnxietyQA),
+                  },
+                  {
+                    id: 'guide',
+                    name: 'Guide',
+                    nameHe: 'מדריך',
+                    icon: BookOpen,
+                    color: 'text-amber-600',
+                    borderColor: 'border-amber-300',
+                    isActive: showSessionGuide,
+                    tooltip: 'Session teleprompter guide',
+                    onClick: () => setShowSessionGuide(!showSessionGuide),
+                  },
+                ],
+              },
+              {
+                id: 'calendar-scheduling',
+                boxes: [
+                  {
+                    id: 'calendar',
+                    name: 'Calendar',
+                    nameHe: 'יומן',
+                    icon: Calendar,
+                    color: 'text-blue-600',
+                    borderColor: 'border-blue-300',
+                    tooltip: 'Open calendar view',
+                    onClick: () => navigate('/crm/calendar'),
+                  },
+                  {
+                    id: 'calendar-invite',
+                    name: 'Invite',
+                    nameHe: 'הזמנה',
+                    icon: CalendarPlus,
+                    color: 'text-emerald-600',
+                    borderColor: 'border-emerald-300',
+                    tooltip: 'Send calendar invite to patient',
+                    onClick: () => setShowCalendarInvite(true),
+                  },
+                  {
+                    id: 'appointment',
+                    name: 'Appoint',
+                    nameHe: 'תור חדש',
+                    icon: ClipboardList,
+                    color: 'text-teal-600',
+                    borderColor: 'border-teal-300',
+                    tooltip: 'Schedule a new appointment',
+                    onClick: () => setShowQuickAppointment(true),
+                  },
+                  {
+                    id: 'followup',
+                    name: 'Follow-up',
+                    nameHe: 'המשך',
+                    icon: ArrowRight,
+                    color: 'text-jade',
+                    borderColor: 'border-jade/50',
+                    tooltip: 'Plan follow-up treatment',
+                    onClick: () => setShowFollowUpPlan(true),
+                  },
+                ],
+              },
+              {
+                id: 'communication',
+                boxes: [
+                  {
+                    id: 'zoom',
+                    name: 'Zoom',
+                    nameHe: 'זום',
+                    icon: VideoIcon,
+                    color: 'text-blue-500',
+                    borderColor: 'border-blue-300',
+                    tooltip: 'Create Zoom meeting invite',
+                    onClick: () => setShowZoomInvite(true),
+                  },
+                  {
+                    id: 'voice',
+                    name: 'Voice',
+                    nameHe: 'הקלטה',
+                    icon: Mic,
+                    color: 'text-amber-600',
+                    borderColor: 'border-amber-300',
+                    tooltip: 'Voice dictation for notes',
+                    onClick: () => setShowVoiceDictation(true),
+                  },
+                ],
+              },
+              {
+                id: 'utilities',
+                boxes: [
+                  {
+                    id: 'report',
+                    name: 'Report',
+                    nameHe: 'דוח',
+                    icon: FileText,
+                    color: 'text-indigo-600',
+                    borderColor: 'border-indigo-300',
+                    tooltip: 'Generate session report',
+                    onClick: () => setShowSessionReport(true),
+                  },
+                  {
+                    id: 'music',
+                    name: 'Music',
+                    nameHe: 'מוזיקה',
+                    icon: Music,
+                    color: showMusicPlayer ? 'text-white' : 'text-amber-600',
+                    borderColor: showMusicPlayer ? 'border-amber-500 bg-amber-500' : 'border-amber-300',
+                    isActive: showMusicPlayer,
+                    tooltip: 'Background music player',
+                    onClick: () => setShowMusicPlayer(!showMusicPlayer),
+                  },
+                  {
+                    id: 'accessibility',
+                    name: 'Access',
+                    nameHe: 'נגישות',
+                    icon: Accessibility,
+                    color: highContrast ? 'text-white' : 'text-jade',
+                    borderColor: highContrast ? 'border-jade bg-jade' : 'border-jade/50',
+                    isActive: highContrast,
+                    tooltip: 'Toggle high contrast mode',
+                    onClick: () => {
+                      setHighContrast(!highContrast);
+                      toast.success(highContrast ? 'ניגודיות רגילה' : 'ניגודיות גבוהה', { 
+                        description: highContrast ? 'High contrast disabled' : 'High contrast enabled',
+                        duration: 2000 
+                      });
+                    },
+                  },
+                ],
+              },
+            ]}
+          />
           
           {/* CAF Asset Boxes - Customizable Toolbar */}
           <div className="mt-3">
