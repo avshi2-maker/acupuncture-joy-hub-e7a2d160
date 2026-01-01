@@ -131,13 +131,17 @@ export default function TherapistDisclaimer() {
   const canProceed = confirmLicensed && confirmRead && signature && isSaved && hasRequiredFields;
 
   useEffect(() => {
-    // Check if already signed
+    // Check if already signed - redirect to dashboard, not tcm-brain
     const signed = localStorage.getItem(DISCLAIMER_STORAGE_KEY);
     if (signed) {
-      const signedData = JSON.parse(signed);
-      if (signedData.signedAt && new Date(signedData.signedAt) > new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)) {
-        // Valid for 1 year
-        navigate('/tcm-brain');
+      try {
+        const signedData = JSON.parse(signed);
+        if (signedData.signedAt && new Date(signedData.signedAt) > new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)) {
+          // Valid for 1 year - redirect to dashboard (standalone form, not tied to TCM Brain)
+          navigate('/dashboard');
+        }
+      } catch {
+        // Invalid JSON, ignore
       }
     }
   }, [navigate]);
