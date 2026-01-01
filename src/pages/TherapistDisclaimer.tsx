@@ -307,6 +307,23 @@ This is an automated message from the TCM Practice Support System.
         console.error('Error saving disclaimer to database:', error);
         // Continue anyway - localStorage is the primary storage
       }
+
+      // Send WhatsApp notification to Dr. Roni about completed disclaimer
+      try {
+        const whatsappMessage = encodeURIComponent(
+          `🎉 מטפל חדש חתם על הצהרה משפטית!\n\n` +
+          `👤 שם: ${therapistName}\n` +
+          `📋 מספר רישיון: ${licenseNumber}\n` +
+          `🌐 שפה: ${language.toUpperCase()}\n` +
+          `📅 תאריך: ${new Date().toLocaleString('he-IL')}\n\n` +
+          `המטפל מוכן להתחיל לעבוד במערכת!`
+        );
+        
+        // Open WhatsApp in new tab to notify Dr. Roni
+        window.open(`https://wa.me/972505231042?text=${whatsappMessage}`, '_blank');
+      } catch (whatsappError) {
+        console.log('WhatsApp notification skipped:', whatsappError);
+      }
     } catch (err) {
       console.error('Error saving disclaimer:', err);
     }
@@ -320,7 +337,7 @@ This is an automated message from the TCM Practice Support System.
     }));
     
     toast.success(content.success);
-    navigate('/tcm-brain');
+    navigate('/dashboard');
   };
 
   return (

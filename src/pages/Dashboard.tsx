@@ -11,6 +11,7 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { WorkflowTutorial } from '@/components/onboarding/WorkflowTutorial';
+import { OnboardingProgress } from '@/components/onboarding/OnboardingProgress';
 import { useWorkflowProgress } from '@/hooks/useWorkflowProgress';
 import { 
   Brain, 
@@ -876,6 +877,11 @@ export default function Dashboard() {
               {tier === 'premium' && 'אתם בתוכנית פרימיום. כל הפיצ׳רים זמינים עבורכם!'}
             </p>
           </div>
+        </div>
+
+        {/* Onboarding Progress Tracker - shows until all steps complete */}
+        <div className="mb-8 opacity-0 animate-fade-in" style={{ animationDelay: '380ms', animationFillMode: 'forwards' }}>
+          <OnboardingProgress />
         </div>
 
         {/* Workflow Stepper Guide */}
