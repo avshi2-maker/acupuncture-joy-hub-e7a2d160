@@ -108,7 +108,7 @@ import {
 import { VideoSessionHeaderBoxes } from '@/components/video/VideoSessionHeaderBoxes';
 import { InlineMusicPlayer } from '@/components/video/InlineMusicPlayer';
 import { TcmBrainPanel } from '@/components/video/TcmBrainPanel';
-import { PregnancySafetyDialog } from '@/components/clinical';
+import { PregnancySafetyDialog, ElderlyLifestyleDialog } from '@/components/clinical';
 
 import { SessionWorkflowIndicator } from '@/components/video/SessionWorkflowIndicator';
 import { SessionPhaseIndicator } from '@/components/session';
@@ -168,6 +168,7 @@ export default function VideoSession() {
   const [showHelpGuide, setShowHelpGuide] = useState(false);
   const [showTcmBrainPanel, setShowTcmBrainPanel] = useState(false);
   const [showPregnancyCalc, setShowPregnancyCalc] = useState(false);
+  const [showElderlyGuide, setShowElderlyGuide] = useState(false);
   const [voiceAlwaysOn, setVoiceAlwaysOn] = useState(false);
   const [voiceWakeWord, setVoiceWakeWord] = useState(() => getVoiceWakeWord());
   const [voiceWakeWordEnabled, setVoiceWakeWordEnabled] = useState(() => getVoiceWakeWordEnabled());
@@ -569,6 +570,7 @@ export default function VideoSession() {
     { patterns: ['settings', 'הגדרות'], action: () => setShowSettings(true), description: 'Open settings', category: 'navigation' },
     { patterns: ['brain', 'מוח', 'tcm', 'ai'], action: () => setShowTcmBrainPanel(true), description: 'Open TCM Brain', category: 'ai' },
     { patterns: ['pregnancy', 'הריון', 'pregnant', 'בהריון', 'gestation'], action: () => setShowPregnancyCalc(true), description: 'Pregnancy calculator', category: 'ai' },
+    { patterns: ['elderly', 'קשישים', 'seniors', 'lifestyle', 'aging', 'healthy aging'], action: () => setShowElderlyGuide(true), description: 'Elderly lifestyle guide', category: 'ai' },
     { patterns: ['anxiety', 'חרדה', 'qa', 'questions'], action: () => setShowAnxietyQA(true), description: 'Anxiety Q&A', category: 'ai' },
     { patterns: ['guide', 'מדריך', 'teleprompter'], action: () => setShowSessionGuide(true), description: 'Session guide', category: 'navigation' },
     { patterns: ['music', 'מוזיקה'], action: () => setShowMusicPlayer(!showMusicPlayer), description: 'Toggle music', category: 'utility' },
@@ -1653,6 +1655,17 @@ export default function VideoSession() {
                     tooltip: 'Pregnancy safety calculator',
                     onClick: () => setShowPregnancyCalc(true),
                   },
+                  {
+                    id: 'elderly',
+                    name: 'Elderly',
+                    nameHe: 'קשישים',
+                    icon: Heart,
+                    color: 'text-emerald-500',
+                    borderColor: 'border-emerald-300',
+                    isActive: showElderlyGuide,
+                    tooltip: 'Healthy lifestyle guide for adults 70+',
+                    onClick: () => setShowElderlyGuide(true),
+                  },
                 ],
               },
               {
@@ -2453,6 +2466,12 @@ export default function VideoSession() {
         patientName={selectedPatientName || undefined}
         patientId={selectedPatientId || undefined}
         therapistName={localStorage.getItem('therapist_display_name') || undefined}
+      />
+      
+      {/* Elderly Lifestyle Guide Dialog */}
+      <ElderlyLifestyleDialog 
+        open={showElderlyGuide} 
+        onOpenChange={setShowElderlyGuide}
       />
       
       {/* Floating Quick Actions - Long press on timer */}

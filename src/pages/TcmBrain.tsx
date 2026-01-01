@@ -54,7 +54,7 @@ import { CrossPlatformBackButton } from '@/components/ui/CrossPlatformBackButton
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { TierBadge } from '@/components/layout/TierBadge';
 import { FloatingHelpGuide } from '@/components/ui/FloatingHelpGuide';
-import { PregnancySafetyDialog } from '@/components/clinical';
+import { PregnancySafetyDialog, ElderlyLifestyleDialog } from '@/components/clinical';
 import { toast } from 'sonner';
 import clockImg from '@/assets/clock.png';
 
@@ -66,6 +66,7 @@ export default function TcmBrain() {
   const [showIntakeReview, setShowIntakeReview] = useState(false);
   const [showHelpGuide, setShowHelpGuide] = useState(false);
   const [showPregnancyCalc, setShowPregnancyCalc] = useState(false);
+  const [showElderlyGuide, setShowElderlyGuide] = useState(false);
   const [qaFavoritesCount, setQaFavoritesCount] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
   const quickActionsRef = useRef<QuickActionsRef>(null);
@@ -485,6 +486,17 @@ export default function TcmBrain() {
                     tooltip: 'Pregnancy safety calculator',
                     onClick: () => setShowPregnancyCalc(true),
                   },
+                  {
+                    id: 'elderly',
+                    name: 'Elderly',
+                    nameHe: 'קשישים',
+                    icon: Heart,
+                    color: 'text-emerald-500',
+                    borderColor: 'border-emerald-300',
+                    isActive: showElderlyGuide,
+                    tooltip: 'Healthy lifestyle guide for adults 70+',
+                    onClick: () => setShowElderlyGuide(true),
+                  },
                 ],
               },
               {
@@ -826,6 +838,12 @@ export default function TcmBrain() {
           open={showPregnancyCalc} 
           onOpenChange={setShowPregnancyCalc}
           patientName={selectedPatient?.name}
+        />
+        
+        {/* Elderly Lifestyle Guide */}
+        <ElderlyLifestyleDialog 
+          open={showElderlyGuide} 
+          onOpenChange={setShowElderlyGuide}
         />
       </div>
     </>
