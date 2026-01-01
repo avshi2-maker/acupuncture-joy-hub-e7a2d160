@@ -250,8 +250,8 @@ export default function TcmBrain() {
   return (
     <>
       <Helmet>
-        <title>TCM Brain - Clinical Assistant</title>
-        <meta name="description" content="AI-powered TCM clinical assistant" />
+        <title>CM Brain - Clinical Assistant</title>
+        <meta name="description" content="AI-powered Chinese Medicine clinical assistant" />
       </Helmet>
 
       <div className="min-h-screen bg-background flex flex-col">
@@ -273,7 +273,7 @@ export default function TcmBrain() {
                   </div>
                   <div className="hidden sm:block">
                     <h1 className="font-display text-lg md:text-xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
-                      TCM BRAIN
+                      CM BRAIN
                     </h1>
                     <p className="text-xs text-muted-foreground">Clinical AI Assistant</p>
                   </div>

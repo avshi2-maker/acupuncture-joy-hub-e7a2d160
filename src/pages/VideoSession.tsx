@@ -1329,12 +1329,12 @@ export default function VideoSession() {
                 size="icon"
                 className="md:hidden h-9 w-9"
               />
-              <Link to="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+                <Link to="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
                 <div className="w-8 h-8 md:w-10 md:h-10 bg-jade-light rounded-full flex items-center justify-center">
                   <Leaf className="h-4 w-4 md:h-5 md:w-5 text-jade" />
                 </div>
                 <div className="hidden sm:block">
-                  <h1 className="font-display text-lg md:text-xl">TCM Clinic</h1>
+                  <h1 className="font-display text-lg md:text-xl">CM Clinic</h1>
                   <p className="text-xs md:text-sm text-muted-foreground">פגישת וידאו</p>
                 </div>
               </Link>
@@ -1605,7 +1605,7 @@ export default function VideoSession() {
                 ],
               },
               {
-                id: 'ai-diagnosis',
+                id: 'ai-clinical',
                 boxes: [
                   {
                     id: 'ai-tips',
@@ -1615,22 +1615,11 @@ export default function VideoSession() {
                     color: 'text-purple-600',
                     borderColor: 'border-purple-300',
                     isActive: showAISuggestions || showTcmBrainPanel,
-                    tooltip: 'Open TCM Brain AI assistant panel',
+                    tooltip: 'Open CM Brain AI assistant panel',
                     onClick: () => {
                       if (showTcmBrainPanel) setShowTcmBrainPanel(false);
                       else setShowTcmBrainPanel(true);
                     },
-                  },
-                  {
-                    id: 'pregnancy',
-                    name: 'Pregnancy',
-                    nameHe: 'הריון',
-                    icon: Baby,
-                    color: 'text-pink-500',
-                    borderColor: 'border-pink-300',
-                    isActive: showPregnancyCalc,
-                    tooltip: 'Pregnancy safety calculator for TCM',
-                    onClick: () => setShowPregnancyCalc(true),
                   },
                   {
                     id: 'qa',
@@ -1654,6 +1643,17 @@ export default function VideoSession() {
                     tooltip: 'Session teleprompter guide',
                     onClick: () => setShowSessionGuide(!showSessionGuide),
                   },
+                  {
+                    id: 'pregnancy',
+                    name: 'Pregnancy',
+                    nameHe: 'הריון',
+                    icon: Baby,
+                    color: 'text-pink-500',
+                    borderColor: 'border-pink-300',
+                    isActive: showPregnancyCalc,
+                    tooltip: 'Pregnancy safety calculator',
+                    onClick: () => setShowPregnancyCalc(true),
+                  },
                 ],
               },
               {
@@ -1668,16 +1668,6 @@ export default function VideoSession() {
                     borderColor: 'border-blue-300',
                     tooltip: 'Open calendar view',
                     onClick: () => navigate('/crm/calendar'),
-                  },
-                  {
-                    id: 'calendar-invite',
-                    name: 'Invite',
-                    nameHe: 'הזמנה',
-                    icon: CalendarPlus,
-                    color: 'text-emerald-600',
-                    borderColor: 'border-emerald-300',
-                    tooltip: 'Send calendar invite to patient',
-                    onClick: () => setShowCalendarInvite(true),
                   },
                   {
                     id: 'appointment',
@@ -1699,6 +1689,16 @@ export default function VideoSession() {
                     tooltip: 'Plan follow-up treatment',
                     onClick: () => setShowFollowUpPlan(true),
                   },
+                  {
+                    id: 'calendar-invite',
+                    name: 'Invite',
+                    nameHe: 'הזמנה',
+                    icon: CalendarPlus,
+                    color: 'text-emerald-600',
+                    borderColor: 'border-emerald-300',
+                    tooltip: 'Send calendar invite to patient',
+                    onClick: () => setShowCalendarInvite(true),
+                  },
                 ],
               },
               {
@@ -1714,11 +1714,6 @@ export default function VideoSession() {
                     tooltip: 'Create Zoom meeting invite',
                     onClick: () => setShowZoomInvite(true),
                   },
-                ],
-              },
-              {
-                id: 'utilities',
-                boxes: [
                   {
                     id: 'report',
                     name: 'Report',
@@ -1729,6 +1724,11 @@ export default function VideoSession() {
                     tooltip: 'Generate session report',
                     onClick: () => setShowSessionReport(true),
                   },
+                ],
+              },
+              {
+                id: 'utilities',
+                boxes: [
                   {
                     id: 'music',
                     name: 'Music',
@@ -2452,6 +2452,7 @@ export default function VideoSession() {
         open={showPregnancyCalc} 
         onOpenChange={setShowPregnancyCalc}
         patientName={selectedPatientName || undefined}
+        patientId={selectedPatientId || undefined}
         therapistName={localStorage.getItem('therapist_display_name') || undefined}
       />
       
