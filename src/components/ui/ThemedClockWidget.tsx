@@ -87,11 +87,11 @@ export function ThemedClockWidget({ theme = 'gold', className = '' }: ThemedCloc
   const styles = themeStyles[theme];
 
   return (
-    <div className={`flex items-center gap-3 px-4 py-2 bg-gradient-to-r ${styles.container} rounded-xl border backdrop-blur-sm ${className}`}>
+    <div className={`flex items-center gap-3 px-4 py-2 bg-card bg-gradient-to-r ${styles.container} rounded-xl border backdrop-blur-sm ${className}`}>
       {/* Analog Clock */}
-      <div className={`relative w-12 h-12 rounded-full bg-gradient-to-br ${styles.clockFace} border-2 flex items-center justify-center shadow-[0_0_15px_rgba(0,0,0,0.1),inset_0_1px_3px_rgba(255,255,255,0.3)]`}>
-        {/* Clock face */}
-        <div className={`absolute inset-1 rounded-full bg-gradient-to-br ${styles.innerFace}`} />
+      <div className={`relative w-12 h-12 rounded-full bg-card bg-gradient-to-br ${styles.clockFace} border-2 flex items-center justify-center shadow-[0_0_15px_rgba(0,0,0,0.1),inset_0_1px_3px_rgba(255,255,255,0.3)]`}>
+        {/* Clock face - solid background */}
+        <div className={`absolute inset-1 rounded-full bg-card bg-gradient-to-br ${styles.innerFace}`} />
         
         {/* Hour markers */}
         {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((deg) => (
