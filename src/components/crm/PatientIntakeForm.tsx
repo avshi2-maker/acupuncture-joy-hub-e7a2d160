@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { format, differenceInYears } from 'date-fns';
+import { format, differenceInYears, formatDistanceToNow } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -20,7 +20,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { User, Heart, Baby, Activity, Utensils, Moon, Brain, AlertTriangle, FileSignature, PenTool, CheckCircle2, XCircle, Loader2, Calendar, BrainCircuit, ChevronLeft, ChevronRight, FileText, Eye, Edit2, CircleDot } from 'lucide-react';
+import { User, Heart, Baby, Activity, Utensils, Moon, Brain, AlertTriangle, FileSignature, PenTool, CheckCircle2, XCircle, Loader2, Calendar, BrainCircuit, ChevronLeft, ChevronRight, FileText, Eye, Edit2, CircleDot, RotateCcw, Save, Clock } from 'lucide-react';
 import { SignaturePad } from './SignaturePad';
 import { MedicalDocumentUpload } from './MedicalDocumentUpload';
 import { DietNutritionSelect } from './DietNutritionSelect';
@@ -31,6 +31,7 @@ import { TongueDiagnosisSelect } from './TongueDiagnosisSelect';
 import { ConstitutionTypeSelect } from './ConstitutionTypeSelect';
 import { ChiefComplaintSelect } from './ChiefComplaintSelect';
 import { validateIsraeliId, looksLikeIsraeliId } from '@/utils/israeliIdValidation';
+import { useIntakeDraftAutosave } from '@/hooks/useIntakeDraftAutosave';
 
 // Base patient schema
 const basePatientSchema = z.object({
@@ -228,6 +229,9 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
   const totalSteps = stepTitles.length;
   const progress = ((currentStep + 1) / totalSteps) * 100;
 
+  // Track whether draft has been shown/dismissed
+  const [draftDismissed, setDraftDismissed] = useState(false);
+
   // Function to check if ID number is unique and valid
   const checkIdUniqueness = async (idNumber: string) => {
     if (!idNumber || idNumber.length < 5) {
@@ -311,6 +315,52 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
   const watchGender = form.watch('gender');
   const watchIsPregnant = form.watch('is_pregnant');
 
+  // Auto-save hook
+  const {
+    lastSaved,
+    isSaving,
+    hasDraft,
+    clearDraft,
+    restoreDraft,
+  } = useIntakeDraftAutosave({
+    form,
+    customNotes,
+    selectedAllergies,
+    selectedMedications,
+    dietHabits,
+    pulseFindings,
+    tongueFindings,
+    ageSpecificAnswers,
+    pregnancyAnswers,
+    currentStep,
+    patientId,
+  });
+
+  // Handle draft restoration
+  const handleRestoreDraft = useCallback(() => {
+    const draft = restoreDraft();
+    if (draft && typeof draft === 'object') {
+      // Restore additional state not in form
+      if (draft.customNotes) setCustomNotes(draft.customNotes);
+      if (draft.selectedAllergies) setSelectedAllergies(draft.selectedAllergies);
+      if (draft.selectedMedications) setSelectedMedications(draft.selectedMedications);
+      if (draft.dietHabits) setDietHabits(draft.dietHabits);
+      if (draft.pulseFindings) setPulseFindings(draft.pulseFindings);
+      if (draft.tongueFindings) setTongueFindings(draft.tongueFindings);
+      if (draft.ageSpecificAnswers) setAgeSpecificAnswers(draft.ageSpecificAnswers);
+      if (draft.pregnancyAnswers) setPregnancyAnswers(draft.pregnancyAnswers);
+      if (typeof draft.currentStep === 'number') setCurrentStep(draft.currentStep);
+      
+      toast.success('Draft restored successfully');
+      setDraftDismissed(true);
+    }
+  }, [restoreDraft]);
+
+  const handleDismissDraft = useCallback(() => {
+    clearDraft();
+    setDraftDismissed(true);
+    toast.info('Draft discarded');
+  }, [clearDraft]);
 
   // Update age group when DOB changes
   useEffect(() => {
@@ -615,7 +665,8 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
         if (error) throw error;
         resultPatientId = insertedPatient?.id;
         toast.success('Patient created successfully');
-        // Patient saved successfully
+        // Clear draft on successful save
+        clearDraft();
       }
 
       onSuccess?.();
@@ -677,6 +728,60 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit, handleFormErrors)} className="space-y-6">
+        {/* Draft Restore Banner */}
+        {hasDraft && !draftDismissed && !patientId && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-lg p-4 animate-in slide-in-from-top-2 duration-300">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <RotateCcw className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <div>
+                  <p className="font-medium text-blue-800 dark:text-blue-200">Unsaved Draft Found</p>
+                  <p className="text-sm text-blue-600 dark:text-blue-400">You have an unsaved intake form. Would you like to restore it?</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="default"
+                  size="sm"
+                  onClick={handleRestoreDraft}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <RotateCcw className="h-4 w-4 mr-1" />
+                  Restore Draft
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleDismissDraft}
+                  className="text-blue-700 hover:bg-blue-100 dark:text-blue-300 dark:hover:bg-blue-900/30"
+                >
+                  <XCircle className="h-4 w-4 mr-1" />
+                  Discard
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Auto-save Indicator */}
+        {!patientId && (lastSaved || isSaving) && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            {isSaving ? (
+              <>
+                <Loader2 className="h-3 w-3 animate-spin" />
+                <span>Saving draft...</span>
+              </>
+            ) : lastSaved ? (
+              <>
+                <Clock className="h-3 w-3" />
+                <span>Draft auto-saved {formatDistanceToNow(lastSaved, { addSuffix: true })}</span>
+              </>
+            ) : null}
+          </div>
+        )}
+
         {/* Test Mode Banner */}
         {testMode && (
           <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg p-4">

@@ -413,3 +413,50 @@ body {
   55% { height: 20%; }
   80% { height: 75%; }
 }
+
+/* Required field highlighting with animation */
+@keyframes shake-subtle {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  50% { transform: translateX(3px); }
+  75% { transform: translateX(-3px); }
+}
+
+@keyframes pulse-border {
+  0%, 100% { 
+    border-color: hsl(0 84.2% 60.2%);
+    box-shadow: 0 0 0 0 hsl(0 84.2% 60.2% / 0.4);
+  }
+  50% { 
+    border-color: hsl(0 84.2% 60.2%);
+    box-shadow: 0 0 0 4px hsl(0 84.2% 60.2% / 0);
+  }
+}
+
+.animate-shake-subtle {
+  animation: shake-subtle 0.4s ease-in-out;
+}
+
+.animate-pulse-border {
+  animation: pulse-border 1s ease-in-out infinite;
+}
+
+/* Required field asterisk styling */
+.required-asterisk {
+  @apply text-destructive font-bold ml-0.5;
+}
+
+/* Form field error state styling */
+.form-field-error input,
+.form-field-error textarea,
+.form-field-error select,
+.form-field-error [role="combobox"] {
+  @apply border-destructive ring-destructive/20 ring-2;
+  animation: shake-subtle 0.4s ease-in-out, pulse-border 1s ease-in-out 1;
+}
+
+/* Focus ring enhancement for required fields */
+.form-field-required:focus-within input:not(:valid),
+.form-field-required:focus-within textarea:not(:valid) {
+  @apply ring-2 ring-amber-500/30;
+}
