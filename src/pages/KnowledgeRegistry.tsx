@@ -370,6 +370,13 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'tcm_diagnosis',
     defaultLanguage: 'en',
   },
+  {
+    id: 'tcm-pattern-differentiation-100qa',
+    label: 'TCM Pattern Differentiation (100 Q&A with Points & Formulas)',
+    path: '/knowledge-assets/tcm-pattern-differentiation-100qa.csv',
+    defaultCategory: 'tcm_diagnosis',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 type QueueItemStatus = 'pending' | 'importing' | 'done' | 'error';
