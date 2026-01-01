@@ -1496,33 +1496,114 @@ export default function VideoSession() {
 
                 {/* Featured Q&A Discussion Box */}
                 <Card 
-                  className="relative overflow-hidden border-rose-200/50"
+                  className="relative overflow-hidden border-rose-200/50 animate-fade-in"
                   style={{
                     backgroundImage: `linear-gradient(rgba(255,255,255,0.75), rgba(255,255,255,0.75)), url(${anxietySessionBg})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center'
                   }}
                 >
-                  <CardContent className="p-4 flex flex-col items-center justify-center min-h-[180px] md:min-h-[200px]">
-                    <div className="text-center mb-4">
-                      <Heart className="h-8 w-8 text-rose-500 mx-auto mb-2" />
-                      <h3 className="text-lg font-semibold text-foreground">התחל דיון בנושא</h3>
-                      <p className="text-sm text-muted-foreground mt-1">בחר סוג שיחה להתחיל</p>
-                    </div>
-                    <QATypeDropdown
-                      variant="tile"
-                      selectedType={selectedQAType}
-                      onSelect={(type) => {
-                        setSelectedQAType(type);
-                        if (type === 'anxiety') {
-                          setShowAnxietyQA(true);
-                        } else if (type === 'tcm-brain') {
-                          setShowTcmBrainPanel(true);
-                        }
-                        haptic.medium();
-                      }}
-                      onReset={() => setSelectedQAType(null)}
-                    />
+                  <CardContent className="p-4 flex flex-col min-h-[180px] md:min-h-[250px]">
+                    {!selectedQAType ? (
+                      <div className="flex flex-col items-center justify-center flex-1 animate-fade-in">
+                        <Heart className="h-8 w-8 text-rose-500 mx-auto mb-2" />
+                        <h3 className="text-lg font-semibold text-foreground">התחל דיון בנושא</h3>
+                        <p className="text-sm text-muted-foreground mt-1 mb-4">בחר סוג שיחה להתחיל</p>
+                        <QATypeDropdown
+                          variant="tile"
+                          selectedType={selectedQAType}
+                          onSelect={(type) => {
+                            setSelectedQAType(type);
+                            haptic.medium();
+                          }}
+                          onReset={() => setSelectedQAType(null)}
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex flex-col h-full animate-fade-in">
+                        {/* Header with reset */}
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <Heart className="h-5 w-5 text-rose-500" />
+                            <span className="font-medium text-sm">
+                              {selectedQAType === 'anxiety' ? 'שאלון חרדה' : 
+                               selectedQAType === 'tcm-brain' ? 'TCM Brain' :
+                               selectedQAType === 'diagnostics' ? 'אבחון' : 'כללי'}
+                            </span>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedQAType(null);
+                              setInlineAnxietyMessages([]);
+                              setAnxietyInput('');
+                            }}
+                            className="h-7 text-xs"
+                          >
+                            <RotateCcw className="h-3 w-3 mr-1" />
+                            החלף
+                          </Button>
+                        </div>
+                        
+                        {/* Messages Area */}
+                        <div className="flex-1 overflow-y-auto space-y-2 mb-3 min-h-[80px] max-h-[120px]">
+                          {inlineAnxietyMessages.length === 0 ? (
+                            <div className="text-center text-muted-foreground text-sm py-4">
+                              <p>שאל שאלות לגבי {selectedQAType === 'anxiety' ? 'חרדה, לחץ נפשי, או רגשות' : 'הנושא'}</p>
+                            </div>
+                          ) : (
+                            inlineAnxietyMessages.map((msg, idx) => (
+                              <div key={idx} className={`p-2 rounded-lg text-sm ${
+                                msg.role === 'user' 
+                                  ? 'bg-rose-100 text-rose-900 mr-8' 
+                                  : 'bg-background/80 border ml-8'
+                              }`}>
+                                {msg.content}
+                              </div>
+                            ))
+                          )}
+                        </div>
+                        
+                        {/* Input Area */}
+                        <div className="flex gap-2 items-end">
+                          <div className="flex-1 relative">
+                            <Textarea
+                              value={anxietyInput}
+                              onChange={(e) => setAnxietyInput(e.target.value)}
+                              placeholder="שאל שאלה..."
+                              rows={1}
+                              className="text-sm pr-10 resize-none bg-background/80"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                  e.preventDefault();
+                                  handleAnxietyQuestion();
+                                }
+                              }}
+                            />
+                            <button 
+                              onClick={() => setShowVoiceDictation(true)}
+                              className="absolute bottom-1.5 right-2 p-1 rounded-full hover:bg-rose-100 transition-colors"
+                              title="Voice input"
+                            >
+                              <img 
+                                src={animatedMicGif} 
+                                alt="Voice input" 
+                                className="h-5 w-5 object-contain"
+                              />
+                            </button>
+                          </div>
+                          <Button 
+                            onClick={handleAnxietyQuestion} 
+                            disabled={aiQueryLoading || !anxietyInput.trim()}
+                            size="sm"
+                            className="bg-rose-600 hover:bg-rose-700 h-9"
+                          >
+                            {aiQueryLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
