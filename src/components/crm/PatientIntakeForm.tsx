@@ -34,6 +34,7 @@ import { PregnancyQuestionSelect } from './PregnancyQuestionSelect';
 import { LifestyleQuickSelect } from './LifestyleQuickSelect';
 import { validateIsraeliId, looksLikeIsraeliId } from '@/utils/israeliIdValidation';
 import { useIntakeDraftAutosave } from '@/hooks/useIntakeDraftAutosave';
+import intakeBg from '@/assets/intake-lotus-bg.jpg';
 
 // Base patient schema
 const basePatientSchema = z.object({
@@ -819,8 +820,20 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit, handleFormErrors)} className="space-y-6">
+    <div 
+      className="relative min-h-screen"
+      style={{
+        backgroundImage: `url(${intakeBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'bottom right',
+        backgroundAttachment: 'fixed',
+      }}
+    >
+      {/* Semi-transparent overlay for text readability */}
+      <div className="absolute inset-0 bg-background/85 backdrop-blur-[1px]" />
+      
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit, handleFormErrors)} className="relative z-10 space-y-6 p-4 md:p-6">
         {/* Draft Restore Banner */}
         {hasDraft && !draftDismissed && !patientId && (
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-lg p-4 animate-in slide-in-from-top-2 duration-300">
@@ -2229,6 +2242,7 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
           </div>
         </DialogContent>
       </Dialog>
-    </Form>
+      </Form>
+    </div>
   );
 }
