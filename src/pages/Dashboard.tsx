@@ -58,6 +58,7 @@ import deskBg from '@/assets/desk-bg.png';
 import brainBg from '@/assets/brain-bg.png';
 import knowledgeBg from '@/assets/knowledge-bg.png';
 import videoMeetingBg from '@/assets/video-meeting-bg.jpg';
+import retreatQuizBg from '@/assets/retreat-quiz-bg.png';
 
 
 // Phosphor-style glowing clock component (mobile - small version)
@@ -570,7 +571,7 @@ export default function Dashboard() {
     },
   ];
 
-  // Row 3: Knowledge Registry + Treatment Planner
+  // Row 3: Knowledge Registry + Treatment Planner + Retreat Quiz
   const row3Features = [
     {
       id: 'knowledge_registry',
@@ -589,6 +590,15 @@ export default function Dashboard() {
       href: '/treatment-planner',
       alwaysAvailable: true,
       backgroundImage: knowledgeBg,
+    },
+    {
+      id: 'retreat_quiz',
+      title: 'שאלון ריטריט',
+      description: 'הערכת צורך בהתחדשות עמוקה',
+      icon: <Leaf className="h-6 w-6 text-white" />,
+      href: '/retreat-quiz',
+      alwaysAvailable: true,
+      backgroundImage: retreatQuizBg,
     },
   ];
 
