@@ -277,6 +277,27 @@ serve(async (req) => {
       })
       .limit(5);
 
+    // Priority 8: Vagus Nerve knowledge base
+    const { data: vagusChunks, error: vagusError } = await supabaseClient
+      .from('knowledge_chunks')
+      .select(`
+        id,
+        content,
+        question,
+        answer,
+        chunk_index,
+        metadata,
+        document:knowledge_documents!inner(id, file_name, original_name, category)
+      `)
+      .or('file_name.ilike.%vagus%,file_name.ilike.%vagal%,content_type.eq.vagus-nerve', { referencedTable: 'document' })
+      .textSearch('content', searchTerms, {
+        type: 'websearch',
+        config: 'english'
+      })
+      .limit(5);
+    
+    console.log(`Vagus Nerve chunks: ${vagusChunks?.length || 0}`);
+
     // Also query CAF Master Studies table directly for pattern matching
     let cafStudies: any[] = [];
     try {
@@ -352,13 +373,14 @@ serve(async (req) => {
       })
       .limit(5);
 
-    if (searchError || diagError || pulseError || zangfuError || acuError || qaError || treatmentError || ageError || cafError) {
-      console.error('Search error:', searchError || diagError || pulseError || zangfuError || acuError || qaError || treatmentError || ageError || cafError);
+    if (searchError || diagError || pulseError || zangfuError || acuError || qaError || treatmentError || ageError || cafError || vagusError) {
+      console.error('Search error:', searchError || diagError || pulseError || zangfuError || acuError || qaError || treatmentError || ageError || cafError || vagusError);
     }
 
-    // Merge with priority order: CAF studies, age-specific, diagnostics, pulse/tongue, zang-fu, acupoints, QA, treatment protocols, then others
+    // Merge with priority order: CAF studies, vagus nerve, age-specific, diagnostics, pulse/tongue, zang-fu, acupoints, QA, treatment protocols, then others
     const prioritizedIds = new Set([
       ...(cafChunks || []).map(c => c.id),
+      ...(vagusChunks || []).map(c => c.id),
       ...ageSpecificChunks.map(c => c.id),
       ...(diagnosticsChunks || []).map(c => c.id),
       ...(pulseChunks || []).map(c => c.id),
@@ -370,6 +392,7 @@ serve(async (req) => {
     
     const chunks = [
       ...(cafChunks || []),
+      ...(vagusChunks || []),
       ...ageSpecificChunks,
       ...(diagnosticsChunks || []),
       ...(pulseChunks || []),
@@ -378,7 +401,7 @@ serve(async (req) => {
       ...(qaChunks || []),
       ...(treatmentChunks || []),
       ...(otherChunks || []).filter(c => !prioritizedIds.has(c.id))
-    ].slice(0, 18);
+    ].slice(0, 20);
 
     // Add CAF studies context as structured clinical data
     let cafStudiesContext = '';

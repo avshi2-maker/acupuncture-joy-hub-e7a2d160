@@ -9,3 +9,5 @@ export { PediatricInfographicCard } from './PediatricInfographicCard';
 export { VagusNerveAssessment } from './VagusNerveAssessment';
 export { VagusNerveDialog } from './VagusNerveDialog';
 export { VagusNerveCard } from './VagusNerveCard';
+export { VagusStimulationGuide } from './VagusStimulationGuide';
+export { VagusStimulationDialog } from './VagusStimulationDialog';
