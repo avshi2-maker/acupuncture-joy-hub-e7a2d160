@@ -1,15 +1,18 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lock, Mic, Shield, Zap, AlertTriangle, Gem, Star, User, Clock, Heart } from 'lucide-react';
+import { Lock, Mic, Shield, Zap, User, Clock, Heart, History, Trash2, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useLongPressTimer } from '@/hooks/useLongPressTimer';
+import { format } from 'date-fns';
 import vaultBg from '@/assets/vault-bg.png';
 
 const VAULT_PASSWORD = '1234';
+const STORAGE_KEY = 'patient-valuator-history';
 
 type TimeRespect = 'punctual' | 'mixed' | 'late' | 'ghost';
 type Commitment = 'warrior' | 'standard' | 'chaos' | 'sos';
@@ -22,6 +25,31 @@ interface EvaluationResult {
   recommendation: string;
 }
 
+interface SavedEvaluation {
+  id: string;
+  patientName: string;
+  sessions: number;
+  months: number;
+  timeRespect: TimeRespect;
+  commitment: Commitment;
+  energyDrain: number;
+  result: EvaluationResult;
+  createdAt: string;
+}
+
+const loadHistory = (): SavedEvaluation[] => {
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveHistory = (evaluations: SavedEvaluation[]) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(evaluations));
+};
+
 const calculateScore = (
   sessions: number,
   months: number,
@@ -29,18 +57,14 @@ const calculateScore = (
   commitment: Commitment,
   energyDrain: number
 ): EvaluationResult => {
-  // Base score from sessions and consistency
   let score = 0;
   
-  // Sessions weight (max 25 points)
   const sessionScore = Math.min(sessions / 20, 1) * 25;
   score += sessionScore;
   
-  // Duration loyalty (max 15 points)
   const durationScore = Math.min(months / 12, 1) * 15;
   score += durationScore;
   
-  // Time respect (max 20 points)
   const timeScores: Record<TimeRespect, number> = {
     punctual: 20,
     mixed: 12,
@@ -49,7 +73,6 @@ const calculateScore = (
   };
   score += timeScores[timeRespect];
   
-  // Commitment (max 20 points)
   const commitmentScores: Record<Commitment, number> = {
     warrior: 20,
     standard: 12,
@@ -58,15 +81,11 @@ const calculateScore = (
   };
   score += commitmentScores[commitment];
   
-  // Energy drain/gain (max 20 points, can be negative)
-  // -50 to +50 maps to -20 to +20
   const energyScore = (energyDrain / 50) * 20;
   score += energyScore;
   
-  // Clamp to 0-100
   score = Math.max(0, Math.min(100, score));
   
-  // Determine tier
   if (score >= 85) {
     return {
       score,
@@ -114,6 +133,10 @@ export default function PatientValuator() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [password, setPassword] = useState('');
   const [showError, setShowError] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  
+  // History state
+  const [history, setHistory] = useState<SavedEvaluation[]>([]);
   
   // Form state
   const [patientName, setPatientName] = useState('');
@@ -132,6 +155,11 @@ export default function PatientValuator() {
   // Result
   const [result, setResult] = useState<EvaluationResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+
+  // Load history on mount
+  useEffect(() => {
+    setHistory(loadHistory());
+  }, []);
 
   const handlePasswordSubmit = () => {
     if (password === VAULT_PASSWORD) {
@@ -187,7 +215,46 @@ export default function PatientValuator() {
       );
       setResult(evaluation);
       setIsCalculating(false);
+      
+      // Save to history
+      const newEntry: SavedEvaluation = {
+        id: crypto.randomUUID(),
+        patientName: patientName || 'Anonymous',
+        sessions,
+        months,
+        timeRespect,
+        commitment,
+        energyDrain: energyDrain[0],
+        result: evaluation,
+        createdAt: new Date().toISOString()
+      };
+      
+      const updatedHistory = [newEntry, ...history].slice(0, 50); // Keep last 50
+      setHistory(updatedHistory);
+      saveHistory(updatedHistory);
     }, 1500);
+  };
+
+  const deleteFromHistory = (id: string) => {
+    const updatedHistory = history.filter(e => e.id !== id);
+    setHistory(updatedHistory);
+    saveHistory(updatedHistory);
+  };
+
+  const clearAllHistory = () => {
+    setHistory([]);
+    saveHistory([]);
+  };
+
+  const loadFromHistory = (entry: SavedEvaluation) => {
+    setPatientName(entry.patientName);
+    setSessions(entry.sessions);
+    setMonths(entry.months);
+    setTimeRespect(entry.timeRespect);
+    setCommitment(entry.commitment);
+    setEnergyDrain([entry.energyDrain]);
+    setResult(entry.result);
+    setShowHistory(false);
   };
 
   const resetForm = () => {
@@ -253,11 +320,13 @@ export default function PatientValuator() {
       </AnimatePresence>
 
       {/* Main App */}
-      <AnimatePresence>
-        {isUnlocked && (
+      <AnimatePresence mode="wait">
+        {isUnlocked && !showHistory && (
           <motion.div
+            key="evaluator"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, x: -100 }}
             className="w-full max-w-xl rounded-2xl p-6 md:p-8"
             style={{
               backgroundColor: 'rgba(30, 30, 30, 0.95)',
@@ -265,11 +334,22 @@ export default function PatientValuator() {
               boxShadow: '0 0 50px rgba(0, 188, 212, 0.1)'
             }}
           >
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-700">
-              <Shield className="w-6 h-6 text-cyan-400" />
-              <h2 className="text-xl font-light tracking-wide text-cyan-400">
-                Patient Evaluator
-              </h2>
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-700">
+              <div className="flex items-center gap-3">
+                <Shield className="w-6 h-6 text-cyan-400" />
+                <h2 className="text-xl font-light tracking-wide text-cyan-400">
+                  Patient Evaluator
+                </h2>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowHistory(true)}
+                className="text-gray-400 hover:text-cyan-400"
+              >
+                <History className="w-5 h-5 mr-2" />
+                History ({history.length})
+              </Button>
             </div>
 
             {/* Form */}
@@ -461,6 +541,110 @@ export default function PatientValuator() {
                 )}
               </AnimatePresence>
             </div>
+          </motion.div>
+        )}
+
+        {/* History Panel */}
+        {isUnlocked && showHistory && (
+          <motion.div
+            key="history"
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            className="w-full max-w-xl rounded-2xl p-6 md:p-8"
+            style={{
+              backgroundColor: 'rgba(30, 30, 30, 0.95)',
+              border: '1px solid #333',
+              boxShadow: '0 0 50px rgba(0, 188, 212, 0.1)'
+            }}
+          >
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-700">
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowHistory(false)}
+                  className="text-gray-400 hover:text-cyan-400 p-1"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </Button>
+                <History className="w-6 h-6 text-cyan-400" />
+                <h2 className="text-xl font-light tracking-wide text-cyan-400">
+                  Evaluation History
+                </h2>
+              </div>
+              {history.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearAllHistory}
+                  className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Clear All
+                </Button>
+              )}
+            </div>
+
+            {history.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <History className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                <p>No evaluations saved yet</p>
+                <p className="text-sm mt-2">Generate your first report to see it here</p>
+              </div>
+            ) : (
+              <ScrollArea className="h-[500px] pr-4">
+                <div className="space-y-3">
+                  {history.map((entry) => (
+                    <motion.div
+                      key={entry.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-4 rounded-lg cursor-pointer transition-all hover:bg-[#333]"
+                      style={{
+                        backgroundColor: '#252525',
+                        borderLeft: `4px solid ${entry.result.color}`
+                      }}
+                      onClick={() => loadFromHistory(entry)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">{entry.result.emoji}</span>
+                          <div>
+                            <p className="font-medium text-white">{entry.patientName}</p>
+                            <p className="text-xs text-gray-500">
+                              {format(new Date(entry.createdAt), 'MMM d, yyyy · HH:mm')}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div 
+                            className="text-2xl font-bold"
+                            style={{ color: entry.result.color }}
+                          >
+                            {Math.round(entry.result.score)}
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteFromHistory(entry.id);
+                            }}
+                            className="text-gray-500 hover:text-red-400 p-1"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-2">
+                        {entry.result.tier} · {entry.sessions} sessions · {entry.months} months
+                      </p>
+                    </motion.div>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
