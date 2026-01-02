@@ -122,10 +122,10 @@ export default function CRMDashboard() {
   };
 
   const statCards = [
-    { title: 'Patients', shortTitle: 'Patients', value: stats.totalPatients, icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    { title: "Today's Appts", shortTitle: 'Today', value: stats.todayAppointments, icon: Calendar, color: 'text-jade', bg: 'bg-jade/10' },
-    { title: 'Upcoming', shortTitle: 'Soon', value: stats.upcomingAppointments, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-    { title: 'This Week', shortTitle: 'Week', value: stats.weeklyVisits, icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+    { title: 'Patients', shortTitle: 'Patients', value: stats.totalPatients, icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10', showReminder: false },
+    { title: "Today's Appts", shortTitle: 'Today', value: stats.todayAppointments, icon: Calendar, color: 'text-jade', bg: 'bg-jade/10', showReminder: stats.todayAppointments > 0 },
+    { title: 'Upcoming', shortTitle: 'Soon', value: stats.upcomingAppointments, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-500/10', showReminder: false },
+    { title: 'This Week', shortTitle: 'Week', value: stats.weeklyVisits, icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-500/10', showReminder: false },
   ];
 
   return (
@@ -204,7 +204,17 @@ export default function CRMDashboard() {
         {/* Stats Grid - Mobile Optimized */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
           {statCards.map((stat) => (
-            <Card key={stat.title} className="border-border/50 active:scale-[0.98] transition-transform touch-manipulation">
+            <Card key={stat.title} className="border-border/50 active:scale-[0.98] transition-transform touch-manipulation relative">
+              {/* Blinking reminder dot for today's appointments */}
+              {stat.showReminder && (
+                <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-jade opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-jade"></span>
+                  </span>
+                  <span className="text-[10px] text-jade font-medium hidden sm:inline">Due Today</span>
+                </div>
+              )}
               <CardContent className="p-3 md:p-6">
                 <div className="flex items-center justify-between gap-1 md:gap-2">
                   <div className="min-w-0 flex-1">
