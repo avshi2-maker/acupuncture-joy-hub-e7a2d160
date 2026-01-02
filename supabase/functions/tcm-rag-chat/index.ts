@@ -400,13 +400,49 @@ serve(async (req) => {
         type: 'websearch',
         config: 'english'
       })
-      .limit(5);
+      .limit(8);
+
+    // Fallback: If text search returns few results, try ilike search on key words
+    let fallbackChunks: any[] = [];
+    const searchWords = searchQuery.toLowerCase().split(/\s+/).filter((w: string) => w.length > 3);
+    const totalPriorityChunks = (neuroChunks?.length || 0) + (cafChunks?.length || 0) + 
+      (vagusChunks?.length || 0) + (ageSpecificChunks?.length || 0) + 
+      (diagnosticsChunks?.length || 0) + (pulseChunks?.length || 0) + 
+      (zangfuChunks?.length || 0) + (acuChunks?.length || 0) + 
+      (qaChunks?.length || 0) + (treatmentChunks?.length || 0) + 
+      (otherChunks?.length || 0);
+
+    if (totalPriorityChunks < 3 && searchWords.length > 0) {
+      console.log('Low chunk count, running fallback ilike search...');
+      const ilikeConditions = searchWords.slice(0, 3).map((w: string) => 
+        `content.ilike.%${w}%,question.ilike.%${w}%,answer.ilike.%${w}%`
+      ).join(',');
+      
+      const { data: fallbackData, error: fallbackError } = await supabaseClient
+        .from('knowledge_chunks')
+        .select(`
+          id,
+          content,
+          question,
+          answer,
+          chunk_index,
+          metadata,
+          document:knowledge_documents(id, file_name, original_name, category)
+        `)
+        .or(ilikeConditions)
+        .limit(10);
+      
+      if (!fallbackError && fallbackData) {
+        fallbackChunks = fallbackData;
+        console.log(`Fallback search found: ${fallbackChunks.length} chunks`);
+      }
+    }
 
     if (searchError || diagError || pulseError || zangfuError || acuError || qaError || treatmentError || ageError || cafError || vagusError) {
       console.error('Search error:', searchError || diagError || pulseError || zangfuError || acuError || qaError || treatmentError || ageError || cafError || vagusError);
     }
 
-    // Merge with priority order: Neurodegenerative (if relevant), CAF studies, vagus nerve, age-specific, diagnostics, pulse/tongue, zang-fu, acupoints, QA, treatment protocols, then others
+    // Merge with priority order: Neurodegenerative (if relevant), CAF studies, vagus nerve, age-specific, diagnostics, pulse/tongue, zang-fu, acupoints, QA, treatment protocols, fallback, then others
     const prioritizedIds = new Set([
       ...neuroChunks.map(c => c.id),
       ...(cafChunks || []).map(c => c.id),
@@ -417,7 +453,8 @@ serve(async (req) => {
       ...(zangfuChunks || []).map(c => c.id),
       ...(acuChunks || []).map(c => c.id),
       ...(qaChunks || []).map(c => c.id),
-      ...(treatmentChunks || []).map(c => c.id)
+      ...(treatmentChunks || []).map(c => c.id),
+      ...(otherChunks || []).map(c => c.id)
     ]);
     
     const chunks = [
@@ -431,8 +468,11 @@ serve(async (req) => {
       ...(acuChunks || []),
       ...(qaChunks || []),
       ...(treatmentChunks || []),
-      ...(otherChunks || []).filter(c => !prioritizedIds.has(c.id))
-    ].slice(0, 20);
+      ...(otherChunks || []).filter(c => !prioritizedIds.has(c.id)),
+      ...fallbackChunks.filter(c => !prioritizedIds.has(c.id))
+    ].slice(0, 25);
+
+    console.log(`Total chunks after merge: ${chunks.length} (fallback contributed: ${fallbackChunks.filter(c => !prioritizedIds.has(c.id)).length})`);
 
     // Add CAF studies context as structured clinical data
     let cafStudiesContext = '';

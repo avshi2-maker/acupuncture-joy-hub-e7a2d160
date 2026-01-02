@@ -11,9 +11,29 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { FileText, Download, CheckCircle, Clock, AlertCircle, Shield, Database, FileCheck, Upload, Trash2, Pause, Play, RotateCcw, XCircle, ArrowLeft } from 'lucide-react';
+import { FileText, Download, CheckCircle, Clock, AlertCircle, Shield, Database, FileCheck, Upload, Trash2, Pause, Play, RotateCcw, XCircle, ArrowLeft, ShieldAlert, Loader2 } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { format } from 'date-fns';
+
+// Hook to check if user has admin role
+function useIsAdmin() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['user-admin-role', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return false;
+      const { data, error } = await supabase
+        .rpc('has_role', { _user_id: user.id, _role: 'admin' });
+      if (error) {
+        console.error('Admin role check error:', error);
+        return false;
+      }
+      return data === true;
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+}
 
 // Simple CSV parser
 function parseCSV(text: string): { headers: string[]; rows: Record<string, string>[] } {
@@ -466,6 +486,7 @@ interface QueueItem {
 
 export default function KnowledgeRegistry() {
   const { user, isLoading: authLoading } = useAuth();
+  const { data: isAdmin, isLoading: adminLoading } = useIsAdmin();
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -504,6 +525,40 @@ export default function KnowledgeRegistry() {
       navigate(`/auth?redirect=${redirect}`, { replace: true });
     }
   }, [user, authLoading, navigate, location.pathname, location.search]);
+
+  // Admin access check - show loading while checking, or access denied if not admin
+  if (authLoading || adminLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Checking access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Card className="max-w-md mx-auto">
+          <CardHeader className="text-center">
+            <ShieldAlert className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <CardTitle className="text-destructive">Access Denied</CardTitle>
+            <CardDescription>
+              This page is restricted to administrators only.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <Button onClick={() => navigate('/dashboard')} variant="outline">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const { data: documents, isLoading } = useQuery({
     queryKey: ['knowledge-documents'],
