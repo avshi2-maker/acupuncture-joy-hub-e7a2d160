@@ -6,12 +6,13 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Stethoscope, Heart, Brain, Pill, Baby, Sparkles, 
   Sun, Dumbbell, Activity, Apple, BookOpen,
   Clipboard, Eye, Hand, Thermometer, Leaf, Users,
   FileText, Zap, Shield, LayoutGrid, List, ChevronDown,
-  Search, Star, X
+  Search, Star, X, Cable, Video, BookText
 } from 'lucide-react';
 
 export type AssetCategory = 'diagnostics' | 'treatment' | 'specialties' | 'lifestyle' | 'reference';
@@ -277,7 +278,20 @@ export const KNOWLEDGE_ASSETS: KnowledgeAsset[] = [
     file: 'QA_Professional_Corrected_4Columns.csv',
     category: 'reference'
   },
+  { 
+    id: 'energy-channels', 
+    name: 'Energy Channels', 
+    nameHe: 'ערוצי אנרגיה',
+    icon: Cable, 
+    color: 'text-teal-600', 
+    bgColor: 'bg-teal-50 dark:bg-teal-950/30', 
+    borderColor: 'border-teal-300 dark:border-teal-700',
+    file: 'energy-channels-100-qa.csv',
+    category: 'treatment'
+  },
 ];
+
+export type ContentMode = 'standard' | 'video';
 
 interface KnowledgeAssetTabsProps {
   activeAssets: string[];
@@ -285,6 +299,8 @@ interface KnowledgeAssetTabsProps {
   className?: string;
   showLabels?: boolean;
   defaultView?: 'scroll' | 'grid';
+  contentMode?: ContentMode;
+  onContentModeChange?: (mode: ContentMode) => void;
 }
 
 // Single asset card component
@@ -397,7 +413,9 @@ export function KnowledgeAssetTabs({
   onAssetClick,
   className,
   showLabels = false,
-  defaultView = 'scroll'
+  defaultView = 'scroll',
+  contentMode = 'standard',
+  onContentModeChange
 }: KnowledgeAssetTabsProps) {
   const [flashingAssets, setFlashingAssets] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'scroll' | 'grid'>(defaultView);
@@ -464,8 +482,22 @@ export function KnowledgeAssetTabs({
   return (
     <TooltipProvider delayDuration={200}>
       <div className={cn("w-full", className)}>
-        {/* View Toggle - Removed Search */}
+        {/* Content Mode Tabs + View Toggle */}
         <div className="flex items-center gap-2 px-3 py-2 border-b">
+          {/* Standard / Video Tabs */}
+          <Tabs value={contentMode} onValueChange={(v) => onContentModeChange?.(v as ContentMode)} className="flex-shrink-0">
+            <TabsList className="h-7 p-0.5">
+              <TabsTrigger value="standard" className="h-6 px-2 text-xs gap-1">
+                <BookText className="h-3 w-3" />
+                Standard
+              </TabsTrigger>
+              <TabsTrigger value="video" className="h-6 px-2 text-xs gap-1">
+                <Video className="h-3 w-3" />
+                Video
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
           {favorites.length > 0 && (
             <Badge variant="secondary" className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
               <Star className="h-3 w-3 mr-1 fill-current" />

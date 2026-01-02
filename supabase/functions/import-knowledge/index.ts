@@ -274,6 +274,17 @@ serve(async (req) => {
             answer = `**Scientific Mechanism (Vagus):** ${scientificMechanism}\n**Acupuncture Points:** ${acupoints}\n**Herbal Formula:** ${formula || 'None (Lifestyle)'}`;
             content = `Vagus Nerve Q&A\nSymptom/Question: ${questionSymptom}\nScientific Mechanism: ${scientificMechanism}\nAcupoints: ${acupoints}\nFormula: ${formula || 'None'}`;
             contentType = 'vagus-nerve';
+          } else if (row.Question_Symptom && row.Channel_Physiological_Mechanism && row.TCM_Dot_Numbers_Acupoints) {
+            // Energy Channels Q&A format (Meridians = Fascial Planes)
+            const questionSymptom = row.Question_Symptom || '';
+            const channelMechanism = row.Channel_Physiological_Mechanism || '';
+            const acupoints = row.TCM_Dot_Numbers_Acupoints || '';
+            const formula = row.Pharmacopeia_Formula || '';
+            
+            question = questionSymptom;
+            answer = `**Channel/Physiological Mechanism:** ${channelMechanism}\n**Acupuncture Points:** ${acupoints}\n**Herbal Formula:** ${formula || 'None'}`;
+            content = `Energy Channel Q&A (Fascial Planes)\nSymptom/Question: ${questionSymptom}\nChannel/Mechanism: ${channelMechanism}\nAcupoints: ${acupoints}\nFormula: ${formula || 'None'}`;
+            contentType = 'energy-channel';
           } else {
             // Generic: join all values
             content = Object.values(row).filter(Boolean).join(' | ');
