@@ -18,10 +18,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Settings, Video, Save, Bell, Shield, Clock, Fingerprint, EyeOff, Smartphone, Palette, Mic } from 'lucide-react';
+import { Settings, Video, Save, Bell, Shield, Clock, Fingerprint, EyeOff, Smartphone, Palette, Mic, Trash2, FileDown, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSessionLock } from '@/contexts/SessionLockContext';
 import { usePinAuth } from '@/hooks/usePinAuth';
+import { clearSafetyLog, getSafetyLog, exportSafetyLogToPDF } from '@/components/session/SafetyGateModal';
 
 interface TherapistSettingsDialogProps {
   open: boolean;
@@ -458,6 +459,60 @@ export function TherapistSettingsDialog({
               </p>
             </div>
           )}
+
+          {/* Safety Log Management */}
+          <div className="space-y-3 p-3 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              <Label className="text-sm font-medium">יומן בטיחות</Label>
+            </div>
+            
+            <p className="text-xs text-muted-foreground">
+              נהל את יומן בדיקות הבטיחות של מפגשים
+            </p>
+            
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-2"
+                onClick={() => {
+                  const log = getSafetyLog();
+                  if (log.length === 0) {
+                    toast.error('אין רשומות ביומן');
+                    return;
+                  }
+                  exportSafetyLogToPDF();
+                  toast.success('יומן הבטיחות יוצא ל-PDF');
+                }}
+              >
+                <FileDown className="h-4 w-4" />
+                ייצוא PDF
+              </Button>
+              
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={() => {
+                  const log = getSafetyLog();
+                  if (log.length === 0) {
+                    toast.error('אין רשומות למחיקה');
+                    return;
+                  }
+                  if (confirm('האם למחוק את כל היסטוריית יומן הבטיחות?')) {
+                    clearSafetyLog();
+                    toast.success('יומן הבטיחות נמחק');
+                  }
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+                נקה יומן
+              </Button>
+            </div>
+          </div>
 
           {/* Info box */}
           <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
