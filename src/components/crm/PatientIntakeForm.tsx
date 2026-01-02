@@ -18,9 +18,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { User, Heart, Baby, Activity, Utensils, Moon, Brain, AlertTriangle, FileSignature, PenTool, CheckCircle2, XCircle, Loader2, Calendar, BrainCircuit, ChevronLeft, ChevronRight, FileText, Eye, Edit2, CircleDot, RotateCcw, Save, Clock, Sun, MoonIcon } from 'lucide-react';
+import { User, Heart, Baby, Activity, Utensils, Moon, Brain, AlertTriangle, FileSignature, PenTool, CheckCircle2, XCircle, Loader2, Calendar, BrainCircuit, ChevronLeft, ChevronRight, FileText, Eye, Edit2, CircleDot, RotateCcw, Save, Clock, Sun, MoonIcon, SkipForward, Info } from 'lucide-react';
 import { SignaturePad } from './SignaturePad';
 import { MedicalDocumentUpload } from './MedicalDocumentUpload';
 import { DietNutritionSelect } from './DietNutritionSelect';
@@ -103,6 +103,26 @@ const stepAllFields: Record<number, (keyof PatientFormData)[]> = {
 
 // Which steps can be skipped (have no required fields)
 const skippableSteps = [2]; // Only Lifestyle step is skippable
+
+// Non-critical (skippable) fields with human-readable labels
+const skippableFields: Record<string, { label: string; step: number }> = {
+  email: { label: 'Email Address', step: 0 },
+  address: { label: 'Address', step: 0 },
+  occupation: { label: 'Occupation', step: 0 },
+  emergency_contact: { label: 'Emergency Contact Name', step: 0 },
+  emergency_phone: { label: 'Emergency Contact Phone', step: 0 },
+  medical_history: { label: 'Medical History', step: 1 },
+  allergies: { label: 'Allergies', step: 1 },
+  medications: { label: 'Current Medications', step: 1 },
+  diet_notes: { label: 'Diet Notes', step: 2 },
+  sleep_quality: { label: 'Sleep Quality', step: 2 },
+  stress_level: { label: 'Stress Level', step: 2 },
+  exercise_frequency: { label: 'Exercise Frequency', step: 2 },
+  lifestyle_notes: { label: 'Lifestyle Notes', step: 2 },
+  constitution_type: { label: 'TCM Constitution Type', step: 2 },
+  tongue_notes: { label: 'Tongue Diagnosis', step: 2 },
+  pulse_notes: { label: 'Pulse Diagnosis', step: 2 },
+};
 
 const stepTitles = [
   { title: 'Personal Info', icon: User },
@@ -227,6 +247,9 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
   // Post-save navigation dialog
   const [showNavigationDialog, setShowNavigationDialog] = useState(false);
   const [savedPatientId, setSavedPatientId] = useState<string | null>(null);
+  
+  // Track skipped fields
+  const [skippedFields, setSkippedFields] = useState<Set<string>>(new Set());
   
   // ID Number validation state
   const [idCheckStatus, setIdCheckStatus] = useState<'idle' | 'checking' | 'valid' | 'duplicate' | 'invalid_checksum'>('idle');
@@ -804,6 +827,73 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
   // Get all form values for preview
   const formValues = form.watch();
 
+  // Handle skipping a field
+  const handleSkipField = (fieldName: string) => {
+    setSkippedFields(prev => new Set([...prev, fieldName]));
+    toast.info(`${skippableFields[fieldName]?.label || fieldName} marked as skipped`);
+  };
+
+  // Remove field from skipped list
+  const handleUnskipField = (fieldName: string) => {
+    setSkippedFields(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(fieldName);
+      return newSet;
+    });
+  };
+
+  // Get list of missing (unfilled & not explicitly skipped) non-critical fields
+  const getMissingOptionalFields = (): { field: string; label: string; step: number }[] => {
+    const missing: { field: string; label: string; step: number }[] = [];
+    const values = form.getValues();
+    
+    Object.entries(skippableFields).forEach(([field, info]) => {
+      const value = values[field as keyof PatientFormData];
+      const isEmpty = value === undefined || value === null || value === '';
+      const isSkipped = skippedFields.has(field);
+      
+      if (isEmpty && !isSkipped) {
+        missing.push({ field, label: info.label, step: info.step });
+      }
+    });
+    
+    return missing;
+  };
+
+  // Render skip button for optional fields
+  const renderSkipButton = (fieldName: string) => {
+    if (!skippableFields[fieldName]) return null;
+    const isSkipped = skippedFields.has(fieldName);
+    
+    if (isSkipped) {
+      return (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => handleUnskipField(fieldName)}
+          className="text-xs text-muted-foreground hover:text-foreground gap-1 h-6 px-2"
+        >
+          <RotateCcw className="h-3 w-3" />
+          Unskip
+        </Button>
+      );
+    }
+    
+    return (
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={() => handleSkipField(fieldName)}
+        className="text-xs text-muted-foreground hover:text-amber-600 gap-1 h-6 px-2"
+      >
+        <SkipForward className="h-3 w-3" />
+        Skip
+      </Button>
+    );
+  };
+
   // Handle form errors - show toast with first error and focus field
   const handleFormErrors = (errors: any) => {
     const firstErrorKey = Object.keys(errors)[0];
@@ -1191,9 +1281,18 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <div className="flex items-center justify-between">
+                        <FormLabel>Email</FormLabel>
+                        {renderSkipButton('email')}
+                      </div>
                       <FormControl>
-                        <Input type="email" placeholder="email@example.com" {...field} />
+                        <Input 
+                          type="email" 
+                          placeholder="email@example.com" 
+                          {...field} 
+                          disabled={skippedFields.has('email')}
+                          className={skippedFields.has('email') ? 'opacity-50' : ''}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1205,9 +1304,17 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
                   name="occupation"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Occupation</FormLabel>
+                      <div className="flex items-center justify-between">
+                        <FormLabel>Occupation</FormLabel>
+                        {renderSkipButton('occupation')}
+                      </div>
                       <FormControl>
-                        <Input placeholder="e.g., Teacher, Engineer" {...field} />
+                        <Input 
+                          placeholder="e.g., Teacher, Engineer" 
+                          {...field} 
+                          disabled={skippedFields.has('occupation')}
+                          className={skippedFields.has('occupation') ? 'opacity-50' : ''}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1219,9 +1326,17 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
                   name="address"
                   render={({ field }) => (
                     <FormItem className="md:col-span-2">
-                      <FormLabel>Address</FormLabel>
+                      <div className="flex items-center justify-between">
+                        <FormLabel>Address</FormLabel>
+                        {renderSkipButton('address')}
+                      </div>
                       <FormControl>
-                        <Input placeholder="Full address" {...field} />
+                        <Input 
+                          placeholder="Full address" 
+                          {...field} 
+                          disabled={skippedFields.has('address')}
+                          className={skippedFields.has('address') ? 'opacity-50' : ''}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1244,9 +1359,17 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
                   name="emergency_contact"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Contact Name</FormLabel>
+                      <div className="flex items-center justify-between">
+                        <FormLabel>Contact Name</FormLabel>
+                        {renderSkipButton('emergency_contact')}
+                      </div>
                       <FormControl>
-                        <Input placeholder="Emergency contact name" {...field} />
+                        <Input 
+                          placeholder="Emergency contact name" 
+                          {...field} 
+                          disabled={skippedFields.has('emergency_contact')}
+                          className={skippedFields.has('emergency_contact') ? 'opacity-50' : ''}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1258,9 +1381,17 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
                   name="emergency_phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Contact Phone</FormLabel>
+                      <div className="flex items-center justify-between">
+                        <FormLabel>Contact Phone</FormLabel>
+                        {renderSkipButton('emergency_phone')}
+                      </div>
                       <FormControl>
-                        <Input placeholder="Emergency contact phone" {...field} />
+                        <Input 
+                          placeholder="Emergency contact phone" 
+                          {...field} 
+                          disabled={skippedFields.has('emergency_phone')}
+                          className={skippedFields.has('emergency_phone') ? 'opacity-50' : ''}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1319,12 +1450,17 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
                     name="medical_history"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Past Medical History</FormLabel>
+                        <div className="flex items-center justify-between">
+                          <FormLabel>Past Medical History</FormLabel>
+                          {renderSkipButton('medical_history')}
+                        </div>
                         <FormControl>
                           <VoiceTextarea 
                             placeholder="Previous illnesses, surgeries, hospitalizations..." 
                             value={field.value}
                             onChange={field.onChange}
+                            disabled={skippedFields.has('medical_history')}
+                            className={skippedFields.has('medical_history') ? 'opacity-50' : ''}
                           />
                         </FormControl>
                         <FormMessage />
@@ -1337,37 +1473,47 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
                     name="allergies"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Allergies</FormLabel>
-                        <AllergiesSelect
-                          value={selectedAllergies}
-                          onChange={(newAllergies) => {
-                            setSelectedAllergies(newAllergies);
-                            const existingNotes = field.value || '';
-                            const selectedText = newAllergies.join('; ');
-                            field.onChange(selectedText + (existingNotes && !existingNotes.startsWith(selectedText) ? '\n\nNotes: ' + existingNotes : ''));
-                          }}
-                        />
-                        <Input
-                          placeholder="Or type allergies here..."
-                          className="mt-1 border-dashed border-amber-400"
-                          onChange={(e) => {
-                            if (e.target.value) {
-                              setSelectedAllergies([e.target.value]);
-                              field.onChange(e.target.value);
-                            }
-                          }}
-                        />
-                        <FormControl>
-                          <VoiceTextarea 
-                            placeholder="Additional allergy notes, reactions, severity details..." 
-                            className="mt-2"
-                            value={field.value?.includes('\n\nNotes: ') ? field.value.split('\n\nNotes: ')[1] : (selectedAllergies.length === 0 ? field.value : '')}
-                            onChange={(e) => {
-                              const selectedText = selectedAllergies.join('; ');
-                              field.onChange(selectedText ? selectedText + (e.target.value ? '\n\nNotes: ' + e.target.value : '') : e.target.value);
-                            }}
-                          />
-                        </FormControl>
+                        <div className="flex items-center justify-between">
+                          <FormLabel>Allergies</FormLabel>
+                          {renderSkipButton('allergies')}
+                        </div>
+                        {!skippedFields.has('allergies') && (
+                          <>
+                            <AllergiesSelect
+                              value={selectedAllergies}
+                              onChange={(newAllergies) => {
+                                setSelectedAllergies(newAllergies);
+                                const existingNotes = field.value || '';
+                                const selectedText = newAllergies.join('; ');
+                                field.onChange(selectedText + (existingNotes && !existingNotes.startsWith(selectedText) ? '\n\nNotes: ' + existingNotes : ''));
+                              }}
+                            />
+                            <Input
+                              placeholder="Or type allergies here..."
+                              className="mt-1 border-dashed border-amber-400"
+                              onChange={(e) => {
+                                if (e.target.value) {
+                                  setSelectedAllergies([e.target.value]);
+                                  field.onChange(e.target.value);
+                                }
+                              }}
+                            />
+                            <FormControl>
+                              <VoiceTextarea 
+                                placeholder="Additional allergy notes, reactions, severity details..." 
+                                className="mt-2"
+                                value={field.value?.includes('\n\nNotes: ') ? field.value.split('\n\nNotes: ')[1] : (selectedAllergies.length === 0 ? field.value : '')}
+                                onChange={(e) => {
+                                  const selectedText = selectedAllergies.join('; ');
+                                  field.onChange(selectedText ? selectedText + (e.target.value ? '\n\nNotes: ' + e.target.value : '') : e.target.value);
+                                }}
+                              />
+                            </FormControl>
+                          </>
+                        )}
+                        {skippedFields.has('allergies') && (
+                          <p className="text-sm text-muted-foreground italic">Skipped by patient</p>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1379,27 +1525,37 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
                   name="medications"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Current Medications & Supplements</FormLabel>
-                      <MedicationsSupplementsSelect
-                        value={selectedMedications}
-                        onChange={(newMedications) => {
-                          setSelectedMedications(newMedications);
-                          const existingNotes = field.value || '';
-                          const selectedText = newMedications.join('; ');
-                          field.onChange(selectedText + (existingNotes && !existingNotes.startsWith(selectedText) ? '\n\nDosage Notes: ' + existingNotes : ''));
-                        }}
-                      />
-                      <FormControl>
-                        <VoiceTextarea 
-                          placeholder="Add dosage details, frequency, or other medication notes..." 
-                          className="mt-2"
-                          value={field.value?.includes('\n\nDosage Notes: ') ? field.value.split('\n\nDosage Notes: ')[1] : (selectedMedications.length === 0 ? field.value : '')}
-                          onChange={(e) => {
-                            const selectedText = selectedMedications.join('; ');
-                            field.onChange(selectedText ? selectedText + (e.target.value ? '\n\nDosage Notes: ' + e.target.value : '') : e.target.value);
-                          }}
-                        />
-                      </FormControl>
+                      <div className="flex items-center justify-between">
+                        <FormLabel>Current Medications & Supplements</FormLabel>
+                        {renderSkipButton('medications')}
+                      </div>
+                      {!skippedFields.has('medications') && (
+                        <>
+                          <MedicationsSupplementsSelect
+                            value={selectedMedications}
+                            onChange={(newMedications) => {
+                              setSelectedMedications(newMedications);
+                              const existingNotes = field.value || '';
+                              const selectedText = newMedications.join('; ');
+                              field.onChange(selectedText + (existingNotes && !existingNotes.startsWith(selectedText) ? '\n\nDosage Notes: ' + existingNotes : ''));
+                            }}
+                          />
+                          <FormControl>
+                            <VoiceTextarea 
+                              placeholder="Add dosage details, frequency, or other medication notes..." 
+                              className="mt-2"
+                              value={field.value?.includes('\n\nDosage Notes: ') ? field.value.split('\n\nDosage Notes: ')[1] : (selectedMedications.length === 0 ? field.value : '')}
+                              onChange={(e) => {
+                                const selectedText = selectedMedications.join('; ');
+                                field.onChange(selectedText ? selectedText + (e.target.value ? '\n\nDosage Notes: ' + e.target.value : '') : e.target.value);
+                              }}
+                            />
+                          </FormControl>
+                        </>
+                      )}
+                      {skippedFields.has('medications') && (
+                        <p className="text-sm text-muted-foreground italic">Skipped by patient</p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -2038,6 +2194,40 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
                 </div>
               </div>
 
+              {/* Missing Fields Alert */}
+              {(() => {
+                const missingFields = getMissingOptionalFields();
+                if (missingFields.length > 0) {
+                  return (
+                    <Alert className="border-amber-300 bg-amber-50 dark:bg-amber-900/20">
+                      <Info className="h-4 w-4 text-amber-600" />
+                      <AlertTitle className="text-amber-800 dark:text-amber-200">
+                        {missingFields.length} Optional Field{missingFields.length > 1 ? 's' : ''} Not Filled
+                      </AlertTitle>
+                      <AlertDescription className="space-y-2">
+                        <p className="text-sm text-amber-700 dark:text-amber-300">
+                          The following non-critical details were not provided. You can still proceed, but completing them may improve treatment quality.
+                        </p>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {missingFields.map(({ field, label, step }) => (
+                            <button
+                              key={field}
+                              type="button"
+                              onClick={() => setCurrentStep(step)}
+                              className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-amber-100 hover:bg-amber-200 dark:bg-amber-800/50 dark:hover:bg-amber-700/50 text-amber-800 dark:text-amber-200 rounded-md transition-colors"
+                            >
+                              {label}
+                              <Edit2 className="h-3 w-3" />
+                            </button>
+                          ))}
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  );
+                }
+                return null;
+              })()}
+
               <Alert>
                 <CheckCircle2 className="h-4 w-4" />
                 <AlertDescription>
@@ -2058,6 +2248,44 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Missing Fields Alert on Consent Page */}
+              {(() => {
+                const missingFields = getMissingOptionalFields();
+                if (missingFields.length > 0) {
+                  return (
+                    <Alert className="border-amber-300 bg-amber-50 dark:bg-amber-900/20 mb-4">
+                      <AlertTriangle className="h-4 w-4 text-amber-600" />
+                      <AlertTitle className="text-amber-800 dark:text-amber-200">
+                        Incomplete Patient Information
+                      </AlertTitle>
+                      <AlertDescription className="space-y-2">
+                        <p className="text-sm text-amber-700 dark:text-amber-300">
+                          The following optional details are missing. You can still save, but consider completing them for better patient care:
+                        </p>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {missingFields.slice(0, 8).map(({ field, label, step }) => (
+                            <button
+                              key={field}
+                              type="button"
+                              onClick={() => setCurrentStep(step)}
+                              className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-amber-100 hover:bg-amber-200 dark:bg-amber-800/50 dark:hover:bg-amber-700/50 text-amber-800 dark:text-amber-200 rounded-md transition-colors"
+                            >
+                              {label}
+                              <Edit2 className="h-3 w-3" />
+                            </button>
+                          ))}
+                          {missingFields.length > 8 && (
+                            <span className="text-xs text-amber-600 dark:text-amber-400 px-2 py-1">
+                              +{missingFields.length - 8} more
+                            </span>
+                          )}
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  );
+                }
+                return null;
+              })()}
               <div className="p-4 rounded-lg bg-background/80 border text-sm space-y-3">
                 <p><strong>Treatment Consent:</strong> I understand that Traditional Chinese Medicine (TCM), including acupuncture, cupping, moxibustion, and herbal medicine, are forms of healthcare that may provide benefits but also carry certain risks.</p>
                 <p><strong>Acupuncture:</strong> May cause minor bruising, bleeding, or temporary discomfort. Rare risks include infection or nerve damage.</p>
