@@ -101,8 +101,8 @@ const tiers = [
     nameHe: 'סטנדרט',
     price: '₪40',
     period: '/ חודש',
-    periodSub: 'כולל מע״מ',
-    description: 'כולל תזכורות אוטומטיות למטופלים + מע״מ',
+    periodSub: '+ מע״מ',
+    description: 'כולל תזכורות אוטומטיות למטופלים',
     features: [
       { name: 'מאגר ידע - TCM Brain', included: true },
       { name: 'יומן תורים', included: true },
@@ -119,8 +119,8 @@ const tiers = [
     nameHe: 'פרימיום',
     price: '₪50',
     period: '/ חודש',
-    periodSub: 'כולל פגישות וידאו + מע״מ',
-    description: 'כל הפיצ׳רים כולל פגישות וידאו + מע״מ',
+    periodSub: '+ מע״מ',
+    description: 'כל הפיצ׳רים כולל פגישות וידאו',
     features: [
       { name: 'מאגר ידע - TCM Brain', included: true },
       { name: 'יומן תורים', included: true },
