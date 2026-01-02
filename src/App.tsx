@@ -38,6 +38,7 @@ import CRMStaff from "./pages/crm/CRMStaff";
 import CRMClinics from "./pages/crm/CRMClinics";
 import PatientConsentForm from "./pages/crm/PatientConsentForm";
 import AppointmentConfirm from "./pages/AppointmentConfirm";
+import AppointmentLanding from "./pages/AppointmentLanding";
 import TherapistProfile from "./pages/TherapistProfile";
 import InstallApp from "./pages/InstallApp";
 import AdminFeedback from "./pages/AdminFeedback";
@@ -85,6 +86,7 @@ const App = () => (
                       <Route path="/gate" element={<Gate />} />
                       <Route path="/auth" element={<Auth />} />
                       <Route path="/confirm" element={<AppointmentConfirm />} />
+                      <Route path="/appointment" element={<AppointmentLanding />} />
                       <Route path="/install" element={<InstallApp />} />
                       <Route path="/contact" element={<Contact />} />
                       <Route path="/therapist-disclaimer" element={<TherapistDisclaimer />} />
