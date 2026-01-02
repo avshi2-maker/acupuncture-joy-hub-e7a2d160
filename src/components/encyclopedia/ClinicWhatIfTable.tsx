@@ -26,6 +26,9 @@ const FIXED_COSTS = {
 
 const TOTAL_FIXED_MONTHLY = Object.values(FIXED_COSTS).reduce((a, b) => a + b, 0);
 
+// Payment collection service fee (2.5% of revenue)
+const PAYMENT_COLLECTION_FEE_RATE = 0.025;
+
 // AI cost per query for CRM
 const AI_COST_PER_QUERY = 0.002;
 const AVG_QUERIES_PER_PATIENT = 20; // Per month per patient
@@ -134,8 +137,11 @@ export function ClinicWhatIfTable() {
     const totalAICost = israelAICost + globalAICost;
     const totalPatients = israelPatients + globalPatients;
 
-    // Total costs and profit
-    const totalCost = TOTAL_FIXED_MONTHLY + totalAICost;
+    // Payment collection fee (2.5% of revenue)
+    const paymentCollectionFee = totalRevenue * PAYMENT_COLLECTION_FEE_RATE;
+
+    // Total costs and profit (now includes payment collection fee)
+    const totalCost = TOTAL_FIXED_MONTHLY + totalAICost + paymentCollectionFee;
     const netProfit = totalRevenue - totalCost;
     const profitMargin = totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : '0';
 
@@ -156,6 +162,7 @@ export function ClinicWhatIfTable() {
       totalRevenue,
       totalAICost,
       totalPatients,
+      paymentCollectionFee,
       totalCost,
       netProfit,
       profitMargin,

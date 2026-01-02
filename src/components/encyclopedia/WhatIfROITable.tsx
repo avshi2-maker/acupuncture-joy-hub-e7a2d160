@@ -26,6 +26,9 @@ const FIXED_COSTS = {
 
 const TOTAL_FIXED_MONTHLY = Object.values(FIXED_COSTS).reduce((a, b) => a + b, 0);
 
+// Payment collection service fee (2.5% of revenue)
+const PAYMENT_COLLECTION_FEE_RATE = 0.025;
+
 // AI cost per query
 const AI_COST_PER_QUERY = 0.002;
 
@@ -126,8 +129,11 @@ export function WhatIfROITable() {
     const researcherAICost = subscribers.researcher * TIER_PRICING.researcher.avgQueries * AI_COST_PER_QUERY;
     const totalAICost = studentAICost + practitionerAICost + researcherAICost;
 
+    // Payment collection fee (2.5% of revenue)
+    const paymentCollectionFee = totalRevenue * PAYMENT_COLLECTION_FEE_RATE;
+
     // Total costs
-    const totalVariableCost = totalAICost;
+    const totalVariableCost = totalAICost + paymentCollectionFee;
     const totalCost = TOTAL_FIXED_MONTHLY + totalVariableCost;
 
     // Profit
@@ -146,6 +152,7 @@ export function WhatIfROITable() {
       practitionerAICost,
       researcherAICost,
       totalAICost,
+      paymentCollectionFee,
       totalVariableCost,
       totalCost,
       netProfit,
