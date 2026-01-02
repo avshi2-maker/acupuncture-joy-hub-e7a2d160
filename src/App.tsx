@@ -61,6 +61,7 @@ import AdminPasswordGenerator from "./pages/AdminPasswordGenerator";
 import CAFBrowser from "./pages/CAFBrowser";
 import TherapistProfileEdit from "./pages/TherapistProfileEdit";
 import RetreatQuiz from "./pages/RetreatQuiz";
+import CRMSessionManager from "./pages/crm/CRMSessionManager";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -108,6 +109,7 @@ const App = () => (
                       <Route path="/crm/rooms" element={<RequireTier><CRMErrorBoundary><CRMRooms /></CRMErrorBoundary></RequireTier>} />
                       <Route path="/crm/staff" element={<RequireTier><CRMErrorBoundary><CRMStaff /></CRMErrorBoundary></RequireTier>} />
                       <Route path="/crm/clinics" element={<RequireTier><CRMErrorBoundary><CRMClinics /></CRMErrorBoundary></RequireTier>} />
+                      <Route path="/crm/session-manager" element={<RequireTier><CRMErrorBoundary><CRMSessionManager /></CRMErrorBoundary></RequireTier>} />
                       <Route path="/crm/patients/:patientId/consent" element={<RequireTier><CRMErrorBoundary><PatientConsentForm /></CRMErrorBoundary></RequireTier>} />
 
                       <Route path="/therapist-profile" element={<RequireTier><TherapistProfile /></RequireTier>} />

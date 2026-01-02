@@ -25,6 +25,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Zap,
   X,
   ArrowLeft,
 } from 'lucide-react';
@@ -34,6 +35,7 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 const mainNavItems = [
   { title: 'Dashboard', url: '/crm', icon: LayoutDashboard },
+  { title: 'Session Manager', url: '/crm/session-manager', icon: Zap },
   { title: 'Calendar', url: '/crm/calendar', icon: Calendar },
   { title: 'Patients', url: '/crm/patients', icon: Users },
 ];
