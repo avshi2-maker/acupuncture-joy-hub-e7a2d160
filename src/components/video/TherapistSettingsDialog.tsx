@@ -8,6 +8,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -22,7 +32,7 @@ import { Settings, Video, Save, Bell, Shield, Clock, Fingerprint, EyeOff, Smartp
 import { toast } from 'sonner';
 import { useSessionLock } from '@/contexts/SessionLockContext';
 import { usePinAuth } from '@/hooks/usePinAuth';
-import { clearSafetyLog, getSafetyLog, exportSafetyLogToPDF } from '@/components/session/SafetyGateModal';
+import { clearSafetyLog, getSafetyLog, exportSafetyLogToPDF, SafetyLogEntry } from '@/components/session/SafetyGateModal';
 
 interface TherapistSettingsDialogProps {
   open: boolean;
@@ -145,6 +155,8 @@ export function TherapistSettingsDialog({
   const [wakeWordEnabled, setWakeWordEnabled] = useState(false);
   const [wakeWord, setWakeWord] = useState('hey doctor');
   const [customWakeWord, setCustomWakeWord] = useState('');
+  const [showClearLogDialog, setShowClearLogDialog] = useState(false);
+  const [logSummary, setLogSummary] = useState<{ total: number; cleared: number; sos: number }>({ total: 0, cleared: 0, sos: 0 });
   
   const { timeoutMinutes, setTimeoutMinutes } = useSessionLock();
   const { hasPin } = usePinAuth();
@@ -502,10 +514,10 @@ export function TherapistSettingsDialog({
                     toast.error('אין רשומות למחיקה');
                     return;
                   }
-                  if (confirm('האם למחוק את כל היסטוריית יומן הבטיחות?')) {
-                    clearSafetyLog();
-                    toast.success('יומן הבטיחות נמחק');
-                  }
+                  const sosCount = log.filter(e => e.status === 'sos').length;
+                  const clearedCount = log.filter(e => e.status === 'cleared').length;
+                  setLogSummary({ total: log.length, cleared: clearedCount, sos: sosCount });
+                  setShowClearLogDialog(true);
                 }}
               >
                 <Trash2 className="h-4 w-4" />
@@ -529,6 +541,58 @@ export function TherapistSettingsDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Clear Safety Log Confirmation Dialog */}
+      <AlertDialog open={showClearLogDialog} onOpenChange={setShowClearLogDialog}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-destructive" />
+              מחיקת יומן בטיחות
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>האם אתה בטוח שברצונך למחוק את כל היסטוריית יומן הבטיחות?</p>
+                
+                <div className="bg-muted rounded-lg p-3 space-y-2">
+                  <p className="font-medium text-foreground text-sm">סיכום רשומות למחיקה:</p>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="bg-background rounded p-2">
+                      <p className="text-lg font-bold text-foreground">{logSummary.total}</p>
+                      <p className="text-xs text-muted-foreground">סה״כ</p>
+                    </div>
+                    <div className="bg-green-50 dark:bg-green-950/30 rounded p-2">
+                      <p className="text-lg font-bold text-green-600">{logSummary.cleared}</p>
+                      <p className="text-xs text-muted-foreground">אושרו</p>
+                    </div>
+                    <div className="bg-red-50 dark:bg-red-950/30 rounded p-2">
+                      <p className="text-lg font-bold text-destructive">{logSummary.sos}</p>
+                      <p className="text-xs text-muted-foreground">SOS</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <p className="text-destructive text-sm font-medium">
+                  ⚠️ פעולה זו אינה ניתנת לביטול!
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row-reverse gap-2">
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90"
+              onClick={() => {
+                clearSafetyLog();
+                toast.success('יומן הבטיחות נמחק');
+                setShowClearLogDialog(false);
+              }}
+            >
+              מחק הכל
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
