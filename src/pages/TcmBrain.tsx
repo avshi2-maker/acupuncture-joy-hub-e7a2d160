@@ -58,7 +58,7 @@ import { CrossPlatformBackButton } from '@/components/ui/CrossPlatformBackButton
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { TierBadge } from '@/components/layout/TierBadge';
 import { FloatingHelpGuide } from '@/components/ui/FloatingHelpGuide';
-import { PregnancySafetyDialog, ElderlyLifestyleDialog, PediatricAcupunctureDialog, VagusNerveDialog, VagusStimulationDialog } from '@/components/clinical';
+import { PregnancySafetyDialog, ElderlyLifestyleDialog, PediatricAcupunctureDialog, VagusNerveDialog, VagusStimulationDialog, HRVTrackerDialog } from '@/components/clinical';
 import { SessionBriefPanel } from '@/components/video/SessionBriefPanel';
 import { toast } from 'sonner';
 import clockImg from '@/assets/clock.png';
@@ -75,6 +75,7 @@ export default function TcmBrain() {
   const [showPediatricGuide, setShowPediatricGuide] = useState(false);
   const [showVagusAssessment, setShowVagusAssessment] = useState(false);
   const [showVagusStimulation, setShowVagusStimulation] = useState(false);
+  const [showHRVTracker, setShowHRVTracker] = useState(false);
   const [showSessionBrief, setShowSessionBrief] = useState(false);
   const [qaFavoritesCount, setQaFavoritesCount] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -564,6 +565,17 @@ export default function TcmBrain() {
                     onClick: () => setShowVagusStimulation(true),
                   },
                   {
+                    id: 'hrv-tracker',
+                    name: 'HRV',
+                    nameHe: 'HRV',
+                    icon: Heart,
+                    color: 'text-rose-500',
+                    borderColor: 'border-rose-300',
+                    isActive: showHRVTracker,
+                    tooltip: 'Heart Rate Variability Tracker - Measure vagal tone over time',
+                    onClick: () => setShowHRVTracker(true),
+                  },
+                  {
                     id: 'session-brief',
                     name: 'Brief',
                     nameHe: 'תקציר',
@@ -970,6 +982,13 @@ export default function TcmBrain() {
         <VagusStimulationDialog 
           open={showVagusStimulation} 
           onOpenChange={setShowVagusStimulation}
+        />
+        
+        {/* HRV Tracker */}
+        <HRVTrackerDialog 
+          open={showHRVTracker} 
+          onOpenChange={setShowHRVTracker}
+          patientId={selectedPatient?.id}
         />
         
         {/* Session Brief Panel */}

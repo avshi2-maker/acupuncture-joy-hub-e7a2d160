@@ -11,3 +11,5 @@ export { VagusNerveDialog } from './VagusNerveDialog';
 export { VagusNerveCard } from './VagusNerveCard';
 export { VagusStimulationGuide } from './VagusStimulationGuide';
 export { VagusStimulationDialog } from './VagusStimulationDialog';
+export { HRVTracker } from './HRVTracker';
+export { HRVTrackerDialog } from './HRVTrackerDialog';
