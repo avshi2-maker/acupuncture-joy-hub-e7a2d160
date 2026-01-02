@@ -1,0 +1,101 @@
+Question_Assessment,TCM_Pattern_Diagnosis,CM_Dot_Numbers_Acupoints,Pharmacopeia_Formula
+"Does the child have delayed speech development compared to peers?",Heart/Kidney Qi Deficiency,HT5 (Tongli) + KI3 (Taixi) + DU20 (Baihui),Bu Nao Wan (Brain Tonic)
+"Is the child hyperactive and unable to sit still in class?",Liver Yang Rising / Heat,LR3 (Taichong) + LI4 (Hegu) + DU20 (Baihui),Kong Sheng Zhen Zhong Dan
+"Does the child experience night terrors or scream during sleep?",Heart Heat / Liver Fire,HT7 (Shenmen) + LR2 (Xingjian) + Yintang,Dao Chi San (Guide Out Red)
+"Is the child prone to bedwetting past age 5?",Kidney Qi Deficiency,UB23 (Shenshu) + CV4 (Guanyuan) + KI3 (Taixi),Sang Piao Xiao San
+"Does the child have poor memory or difficulty focusing on homework?",Spleen/Heart Blood Deficiency,SP6 (Sanyinjiao) + HT7 (Shenmen) + Sishencong,Gui Pi Tang (Restore the Spleen)
+"Does the teenager exhibit extreme mood swings and irritability?",Liver Qi Stagnation,LR3 (Taichong) + GB34 (Yanglingquan) + PC6 (Neiguan),Xiao Yao San (Free & Easy Wanderer)
+"Is the teenager suffering from acne worsened by stress?",Lung/Stomach Heat,LI11 (Quchi) + LU5 (Chize) + BL13 (Feishu),Pi Pa Qing Fei Yin
+"Does the teenager have trouble falling asleep due to racing thoughts?",Heart Yin Deficiency,HT7 (Shenmen) + SP6 (Sanyinjiao) + Anmian,Tian Wang Bu Xin Dan
+"Does the teenager experience exam anxiety with palpitations?",Heart/Gallbladder Qi Deficiency,HT7 (Shenmen) + GB40 (Qiuxu) + PC6 (Neiguan),An Shen Ding Zhi Wan
+"Is the teenager lethargic and unmotivated (dampness signs)?",Spleen Qi Deficiency with Damp,SP9 (Yinlingquan) + ST40 (Fenglong) + ST36 (Zusanli),Shen Ling Bai Zhu San
+"Does the young adult experience frequent tension headaches?",Liver Yang Rising,GB20 (Fengchi) + LR3 (Taichong) + Taiyang,Tian Ma Gou Teng Yin
+"Is the patient experiencing burnout from a high-pressure job?",Kidney/Heart Yin Deficiency,KI3 (Taixi) + HT7 (Shenmen) + CV4 (Guanyuan),Liu Wei Di Huang Wan
+"Does the patient rely on caffeine to function in the morning?",Kidney Yang Deficiency,UB23 (Shenshu) + GV4 (Mingmen) + KI7 (Fuliu),You Gui Wan
+"Is there brain fog after eating lunch?",Spleen Qi Deficiency,ST36 (Zusanli) + SP3 (Taibai) + CV12 (Zhongwan),Xiang Sha Liu Jun Zi Tang
+"Does the patient have difficulty making decisions (Gallbladder issue)?",Gallbladder Qi Deficiency,GB40 (Qiuxu) + GB34 (Yanglingquan),Wen Dan Tang (Warm the Gallbladder)
+"Is the patient easily startled or fearful?",Kidney/Heart Disharmony,KI3 (Taixi) + HT7 (Shenmen) + PC6 (Neiguan),Ding Zhi Wan
+"Does the patient experience visual fatigue or dry eyes from screens?",Liver Blood Deficiency,UB18 (Ganshu) + ST1 (Chengqi) + GB37 (Guangming),Qi Ju Di Huang Wan
+"Is there chronic neck stiffness affecting concentration?",Taiyang Meridian Stagnation,SI3 (Houxi) + UB10 (Tianzhu) + GB20 (Fengchi),Ge Gen Tang
+"Does the patient wake up between 1 AM and 3 AM?",Liver Fire / Stagnation,LR2 (Xingjian) + LR14 (Qimen),Long Dan Xie Gan Tang
+"Is the patient experiencing postpartum memory loss ('Mommy Brain')?",Blood Deficiency,ST36 (Zusanli) + SP10 (Xuehai) + CV4 (Guanyuan),Ba Zhen Tang (Eight Treasures)
+"Does the patient feel a 'lump in the throat' when stressed?",Liver Qi Stagnation (Plum Pit Qi),CV22 (Tiantu) + PC6 (Neiguan) + LR3 (Taichong),Ban Xia Hou Po Tang
+"Is there anxiety accompanied by shortness of breath?",Lung/Kidney Qi Deficiency,LU9 (Taiyuan) + KI6 (Zhaohai) + CV17 (Danzhong),Su Zi Jiang Qi Tang
+"Does the patient have obsessive looping thoughts?",Spleen Qi Knotting,SP3 (Taibai) + HT7 (Shenmen) + Yi She (BL49),Gui Pi Tang
+"Is the patient grieving a significant loss?",Lung Qi Stagnation / Po Soul,LU7 (Lieque) + UB13 (Feishu) + DU20 (Baihui),Gan Mai Da Zao Tang
+"Does the patient have cold hands and feet with mental fatigue?",Yang Deficiency,GV14 (Dazhui) + CV6 (Qihai) + ST36 (Zusanli),Si Ni Tang (Frigid Extremities)
+"Is the patient irritable with red eyes and a bitter taste in mouth?",Liver Fire Blazing,LR2 (Xingjian) + GB20 (Fengchi) + GB34 (Yanglingquan),Long Dan Xie Gan Tang
+"Does the patient experience dizziness or vertigo?",Phlegm Dampness / Liver Wind,ST40 (Fenglong) + GV20 (Baihui) + PC6 (Neiguan),Ban Xia Bai Zhu Tian Ma Tang
+"Is the patient suffering from insomnia (waking early)?",Heart/Gallbladder Deficiency,HT7 (Shenmen) + GB40 (Qiuxu),Suan Zao Ren Tang
+"Does the patient have lower back pain associated with mental fatigue?",Kidney Deficiency,UB23 (Shenshu) + KI3 (Taixi) + DU4 (Mingmen),Du Huo Ji Sheng Tang
+"Is the patient recovering from a concussion or head trauma?",Blood Stagnation,GB20 (Fengchi) + DU20 (Baihui) + SP10 (Xuehai),Tong Qiao Huo Xue Tang
+"Does the patient feel 'manic' or unable to stop talking?",Phlegm Fire Misting the Heart,PC5 (Jianshi) + ST40 (Fenglong) + HT7 (Shenmen),Wen Dan Tang
+"Is the patient withdrawing socially (depression signs)?",Liver Qi Stagnation / Shen disturbance,LR3 (Taichong) + DU20 (Baihui) + Yintang,Chai Hu Shu Gan San
+"Does the patient have tremors or tics?",Liver Wind Agitating,LR3 (Taichong) + GB20 (Fengchi) + GB34 (Yanglingquan),Tian Ma Gou Teng Yin
+"Is the patient experiencing tinnitus (high pitched)?",Kidney Yin Deficiency,KI3 (Taixi) + SI19 (Tinggong) + SJ3 (Zhongzhu),Er Long Zuo Ci Wan
+"Is the patient experiencing tinnitus (low roar)?",Phlegm Damp / Liver Fire,ST40 (Fenglong) + LR2 (Xingjian) + SJ17 (Yifeng),Long Dan Xie Gan Tang
+"Does the patient feel heavy and lethargic in humid weather?",Dampness Encumbering Spleen,SP9 (Yinlingquan) + ST8 (Touwei) + ST36 (Zusanli),Huo Xiang Zheng Qi San
+"Is the patient experiencing panic attacks?",Heart Qi Deficiency / Shock,HT7 (Shenmen) + PC6 (Neiguan) + CV14 (Juque),Gui Pi Tang + Long Gu
+"Does the patient have a history of drug/alcohol use affecting cognition?",Toxic Heat / Dampness,KI9 (Zhubin) + LR3 (Taichong) + ST40 (Fenglong),Ge Hua Jie Cheng San
+"Is the patient prone to excessive sighing?",Liver Qi Stagnation,LR3 (Taichong) + PC6 (Neiguan),Yue Ju Wan
+"Does the patient have vivid, disturbing dreams?",Heart/Liver Fire,HT8 (Shaofu) + LR2 (Xingjian) + BL15 (Xinshu),Zhu Sha An Shen Wan (Modified)
+"Is the patient experiencing menopause-related brain fog?",Kidney Yin/Yang Deficiency,KI3 (Taixi) + SP6 (Sanyinjiao) + DU20 (Baihui),Er Xian Tang (Two Immortals)
+"Does the patient have difficulty finding words (aphasia signs)?",Heart blood stasis / Phlegm,HT5 (Tongli) + DU15 (Yamen) + CV23 (Lianquan),Bu Yang Huan Wu Tang
+"Is the patient experiencing numbness in extremities?",Blood Deficiency / Wind,LI4 (Hegu) + LR3 (Taichong) + SI3 (Houxi),Bu Yang Huan Wu Tang
+"Does the patient have a pale face and weak voice?",Lung/Spleen Qi Deficiency,LU9 (Taiyuan) + SP3 (Taibai) + CV6 (Qihai),Bu Zhong Yi Qi Tang
+"Is the patient constantly thirsty but water doesn't help?",Yin Deficiency / Diabetes signs,KI3 (Taixi) + SP6 (Sanyinjiao) + CV4 (Guanyuan),Yu Quan Wan
+"Does the patient have chronic sinusitis affecting clarity?",Lung Heat / Phlegm,LI20 (Yingxiang) + LU7 (Lieque) + Yintang,Cang Er Zi San
+"Is the patient experiencing loss of balance (cerebellar)?",Kidney Essence Deficiency,GB20 (Fengchi) + DU16 (Fengfu) + KI3 (Taixi),Zuo Gui Wan
+"Does the patient have difficulty hearing in noisy environments?",Kidney Qi Deficiency,SJ21 (Ermen) + SI19 (Tinggong) + KI3 (Taixi),Er Long Zuo Ci Wan
+"Is the patient prone to explosive anger?",Liver Yang Rising / Fire,LR2 (Xingjian) + GB20 (Fengchi) + LI4 (Hegu),Long Dan Xie Gan Tang
+"Does the patient feel hopeless or full of grief?",Lung Qi Deficiency,LU9 (Taiyuan) + UB13 (Feishu) + DU20 (Baihui),Bu Fei Tang
+"Is the elderly patient showing signs of early dementia?",Kidney Essence (Jing) Deficiency,GB39 (Xuanzhong) + KI3 (Taixi) + DU20 (Baihui),Yi Zhi Yi Qi Tang
+"Does the elderly patient have sundowning syndrome (confusion at night)?",Yin Deficiency with Empty Heat,HT6 (Yinxi) + KI6 (Zhaohai) + Anmian,Tian Wang Bu Xin Dan
+"Is the elderly patient repeating stories frequently?",Heart Blood Deficiency,HT7 (Shenmen) + PC6 (Neiguan) + Sishencong,Gui Pi Tang
+"Does the elderly patient have difficulty walking (atrophy)?",Liver/Kidney Deficiency,GB34 (Yanglingquan) + ST31 (Biguan) + KI3 (Taixi),Du Huo Ji Sheng Tang
+"Is the patient experiencing post-stroke paralysis?",Qi Deficiency and Blood Stasis,LI15 (Jianyu) + LI11 (Quchi) + ST36 (Zusanli),Bu Yang Huan Wu Tang
+"Does the patient have facial paralysis (Bell's Palsy)?",Wind-Cold attacking Channels,ST4 (Dicang) + ST6 (Jiache) + LI4 (Hegu),Qian Zheng San
+"Is the patient experiencing loss of taste or smell?",Lung Qi Deficiency,LI20 (Yingxiang) + LU7 (Lieque) + ST36 (Zusanli),Cang Er Zi San
+"Does the patient have chronic constipation affecting mood?",Large Intestine Dryness,ST25 (Tianshu) + SJ6 (Zhigou) + KI6 (Zhaohai),Ma Zi Ren Wan
+"Is the patient experiencing incontinence?",Kidney Yang Deficiency,CV4 (Guanyuan) + UB23 (Shenshu) + CV6 (Qihai),Suo Quan Wan
+"Does the patient have restless leg syndrome at night?",Liver Blood Deficiency,GB31 (Fengshi) + SP10 (Xuehai) + LR3 (Taichong),Shao Yao Gan Cao Tang
+"Is the patient experiencing joint pain worse with cold?",Cold-Damp Bi Syndrome,ST35 (Dubi) + GB34 (Yanglingquan) + Moxa,Juan Bi Tang
+"Does the patient have hot flashes with anxiety?",Kidney Yin Deficiency,KI2 (Rangu) + HT6 (Yinxi) + SP6 (Sanyinjiao),Zhi Bai Di Huang Wan
+"Is the patient experiencing loose stools with anxiety?",Spleen Qi Deficiency / Liver overact,ST25 (Tianshu) + SP3 (Taibai) + LR3 (Taichong),Tong Xie Yao Fang
+"Does the patient have low libido affecting mental state?",Kidney Yang/Jing Deficiency,GV4 (Mingmen) + CV4 (Guanyuan) + UB23 (Shenshu),You Gui Wan
+"Is the patient experiencing hair loss (Alopecia)?",Blood Deficiency / Stasis,UB17 (Geshu) + SP10 (Xuehai) + Seven Star Needle,Tong Qiao Huo Xue Tang
+"Does the patient have weak knees and lower back?",Kidney Qi Deficiency,UB23 (Shenshu) + UB40 (Weizhong) + KI3 (Taixi),Jin Gui Shen Qi Wan
+"Is the patient experiencing palpitations after exertion?",Heart Qi Deficiency,HT5 (Tongli) + PC6 (Neiguan) + UB15 (Xinshu),Yang Xin Tang
+"Does the patient have a pale, swollen tongue?",Spleen/Kidney Yang Deficiency,SP9 (Yinlingquan) + ST36 (Zusanli) + CV12 (Zhongwan),Fu Zi Li Zhong Wan
+"Is the patient experiencing acid reflux with stress?",Liver invading Stomach,LR14 (Qimen) + ST36 (Zusanli) + PC6 (Neiguan),Zuo Jin Wan
+"Does the patient have frequent urination with pale urine?",Kidney Yang Deficiency,CV3 (Zhongji) + UB23 (Shenshu) + KI3 (Taixi),Jin Gui Shen Qi Wan
+"Is the patient experiencing dry skin and itchiness?",Blood Deficiency generating Wind,SP10 (Xuehai) + LI11 (Quchi) + SP6 (Sanyinjiao),Xiao Feng San
+"Does the patient have a red tongue with no coating?",Stomach/Kidney Yin Deficiency,ST44 (Neiting) + KI6 (Zhaohai) + ST36 (Zusanli),Sha Shen Mai Men Dong Tang
+"Is the patient experiencing drooling (especially elderly/kids)?",Spleen Qi Deficiency,ST4 (Dicang) + ST6 (Jiache) + SP3 (Taibai),Liu Jun Zi Tang
+"Does the patient have a sensation of heat in palms/soles?",Yin Deficiency,PC8 (Laogong) + KI1 (Yongquan) + HT8 (Shaofu),Zhi Bai Di Huang Wan
+"Is the patient experiencing chronic fatigue syndrome?",Qi and Yin Deficiency,ST36 (Zusanli) + CV6 (Qihai) + KI3 (Taixi),Sheng Mai San
+"Does the patient have a weak immune system (frequent colds)?",Wei Qi Deficiency,LU9 (Taiyuan) + LI4 (Hegu) + ST36 (Zusanli),Yu Ping Feng San
+"Is the patient experiencing difficulty swallowing (Plum Pit)?",Qi Stagnation / Phlegm,CV22 (Tiantu) + PC6 (Neiguan) + ST40 (Fenglong),Ban Xia Hou Po Tang
+"Does the patient have sharp, stabbing headaches?",Blood Stasis,Ah Shi Points + LI4 (Hegu) + SP10 (Xuehai),Xue Fu Zhu Yu Tang
+"Is the patient experiencing floaters in vision?",Liver Blood/Kidney Yin Def,UB18 (Ganshu) + UB23 (Shenshu) + GB37 (Guangming),Ming Mu Di Huang Wan
+"Does the patient have excessive phlegm (profuse/white)?",Spleen Dampness,ST40 (Fenglong) + SP9 (Yinlingquan) + CV12 (Zhongwan),Er Chen Tang
+"Is the patient experiencing excessive sweating (daytime)?",Lung Qi Deficiency,LU9 (Taiyuan) + KI7 (Fuliu) + LI4 (Hegu),Yu Ping Feng San
+"Does the patient have night sweats?",Yin Deficiency,HT6 (Yinxi) + KI7 (Fuliu) + SI3 (Houxi),Dang Gui Liu Huang Tang
+"Is the patient experiencing jaw clenching (TMJ)?",Liver Tension / Stomach Fire,ST6 (Jiache) + ST7 (Xiaguan) + LR3 (Taichong),Shao Yao Gan Cao Tang
+"Does the patient have cold abdominal pain?",Spleen Yang Deficiency,CV12 (Zhongwan) + ST36 (Zusanli) + Moxa,Li Zhong Wan
+"Is the patient experiencing edema in legs?",Kidney/Spleen Yang Deficiency,SP9 (Yinlingquan) + KI7 (Fuliu) + CV9 (Shuifen),Zhen Wu Tang
+"Does the patient have a purple hue to lips/nails?",Heart Blood Stasis,PC6 (Neiguan) + HT7 (Shenmen) + UB17 (Geshu),Xue Fu Zhu Yu Tang
+"Is the patient experiencing chronic hiccups?",Stomach Qi Rebellious,PC6 (Neiguan) + CV12 (Zhongwan) + ST36 (Zusanli),Ju Pi Zhu Ru Tang
+"Does the patient have difficulty staying asleep (waking frequently)?",Heart/Kidney Disharmony,HT7 (Shenmen) + KI3 (Taixi) + SP6 (Sanyinjiao),Jiao Tai Wan
+"Is the patient experiencing morning stiffness?",Bi Syndrome (Damp/Cold),GB34 (Yanglingquan) + SP9 (Yinlingquan) + Ah Shi,Du Huo Ji Sheng Tang
+"Does the patient have wandering pain?",Wind Bi Syndrome,GB20 (Fengchi) + UB12 (Fengmen) + SP10 (Xuehai),Fang Feng Tang
+"Is the patient experiencing heavy menstrual bleeding?",Spleen Qi Not Holding Blood,SP1 (Yinbai) + CV6 (Qihai) + ST36 (Zusanli),Gui Pi Tang
+"Does the patient have scanty menstrual flow?",Blood Deficiency / Stasis,CV4 (Guanyuan) + SP6 (Sanyinjiao) + ST29 (Guilai),Si Wu Tang
+"Is the patient experiencing nausea during pregnancy?",Stomach Qi Rebellious,PC6 (Neiguan) + ST36 (Zusanli) + KI21 (Youmen),Zi Su Yin
+"Does the patient have carpal tunnel syndrome?",Tendon Bi / Stagnation,PC7 (Daling) + PC6 (Neiguan) + TW5 (Waiguan),Huang Qi Gui Zhi Wu Wu Tang
+"Is the patient experiencing plantar fasciitis?",Kidney Deficiency / Stasis,KI3 (Taixi) + KI1 (Yongquan) + UB57 (Chengshan),Liu Wei Di Huang Wan (+ topical)
+"Does the patient have pain in the hypochondriac region?",Liver Qi Stagnation,LR14 (Qimen) + SJ6 (Zhigou) + GB34 (Yanglingquan),Chai Hu Shu Gan San
+"Is the patient experiencing excessive hunger (polyphagia)?",Stomach Fire,ST44 (Neiting) + ST36 (Zusanli) + CV12 (Zhongwan),Bai Hu Tang
+"Does the patient have a rigid tongue/slurred speech?",Wind-Phlegm Obstructing Channels,HT5 (Tongli) + DU15 (Yamen) + CV23 (Lianquan),Jie Yu Dan
+"Is the patient experiencing apathy and withdrawal?",Phlegm Misting the Mind,ST40 (Fenglong) + PC5 (Jianshi) + DU26 (Renzhong),Di Tan Tang
+"Does the patient have shaking hands (Parkinson's signs)?",Internal Wind / Yin Def,LR3 (Taichong) + GB34 (Yanglingquan) + SI3 (Houxi),Da Ding Feng Zhu

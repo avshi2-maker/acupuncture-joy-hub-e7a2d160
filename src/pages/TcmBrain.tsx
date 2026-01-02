@@ -30,7 +30,9 @@ import {
   Heart,
   Mic,
   Baby,
-  Sparkles
+  Sparkles,
+  Apple,
+  Activity
 } from 'lucide-react';
 import { APIUsageMeter } from '@/components/tcm-brain/APIUsageMeter';
 import { useTcmBrainState } from '@/hooks/useTcmBrainState';
@@ -534,6 +536,31 @@ export default function TcmBrain() {
                     isActive: showSessionBrief,
                     tooltip: 'AI Session Brief with patient analysis & visit history',
                     onClick: () => setShowSessionBrief(!showSessionBrief),
+                  },
+                ],
+              },
+              {
+                id: 'wellness-category',
+                boxes: [
+                  {
+                    id: 'nutrition',
+                    name: 'Nutrition',
+                    nameHe: 'תזונה',
+                    icon: Apple,
+                    color: 'text-green-600',
+                    borderColor: 'border-green-300',
+                    tooltip: 'Diet & nutrition TCM guidance',
+                    onClick: () => toast.info('Nutrition guidance available in Knowledge assets'),
+                  },
+                  {
+                    id: 'brain-health',
+                    name: 'Brain',
+                    nameHe: 'מוח',
+                    icon: Activity,
+                    color: 'text-violet-600',
+                    borderColor: 'border-violet-300',
+                    tooltip: 'Pediatric, adult & geriatric brain health protocols',
+                    onClick: () => toast.info('Brain health TCM protocols - 100 Q&A for all ages'),
                   },
                 ],
               },

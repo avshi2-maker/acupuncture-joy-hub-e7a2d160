@@ -252,6 +252,17 @@ serve(async (req) => {
             answer = `**Western Condition:** ${westernLabel}\n**TCM Pattern:** ${tcmPattern}\n**System:** ${system}\n\n**Key Symptoms:** ${keySymptoms}\n**Pulse/Tongue:** ${pulseTongue}\n\n**Treatment Principle:** ${treatmentPrinciple}\n**Acupoints:** ${acupoints}\n**Formula:** ${pharmacopeia}\n\n**Clinical Insight (Deep Thinking):** ${deepThinking}`;
             content = `CAF Clinical Study: ${westernLabel} - ${tcmPattern}\nSystem: ${system}\nSymptoms: ${keySymptoms}\nPulse/Tongue: ${pulseTongue}\nPrinciple: ${treatmentPrinciple}\nPoints: ${acupoints}\nFormula: ${pharmacopeia}\nDeep Thinking: ${deepThinking}`;
             contentType = 'caf-study';
+          } else if (row.Question_Assessment && row.TCM_Pattern_Diagnosis && row.CM_Dot_Numbers_Acupoints) {
+            // Brain Health TCM format (pediatric/adult/geriatric cognitive health)
+            const questionAssessment = row.Question_Assessment || '';
+            const tcmPattern = row.TCM_Pattern_Diagnosis || '';
+            const acupoints = row.CM_Dot_Numbers_Acupoints || '';
+            const formula = row.Pharmacopeia_Formula || '';
+            
+            question = questionAssessment;
+            answer = `**TCM Pattern:** ${tcmPattern}\n**Acupuncture Points:** ${acupoints}\n**Herbal Formula:** ${formula}`;
+            content = `Brain Health TCM Assessment\nQ: ${questionAssessment}\nTCM Pattern: ${tcmPattern}\nAcupoints: ${acupoints}\nFormula: ${formula}`;
+            contentType = 'brain-health';
           } else {
             // Generic: join all values
             content = Object.values(row).filter(Boolean).join(' | ');

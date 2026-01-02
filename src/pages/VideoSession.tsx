@@ -1708,6 +1708,31 @@ export default function VideoSession() {
                 ],
               },
               {
+                id: 'wellness-category',
+                boxes: [
+                  {
+                    id: 'nutrition',
+                    name: 'Nutrition',
+                    nameHe: 'תזונה',
+                    icon: Apple,
+                    color: 'text-green-600',
+                    borderColor: 'border-green-300',
+                    tooltip: 'Diet & nutrition TCM guidance',
+                    onClick: () => toast.info('Nutrition & Diet guidance - access TCM Brain for details'),
+                  },
+                  {
+                    id: 'brain-health',
+                    name: 'Brain',
+                    nameHe: 'מוח',
+                    icon: Activity,
+                    color: 'text-violet-600',
+                    borderColor: 'border-violet-300',
+                    tooltip: 'Pediatric, adult & geriatric brain health protocols',
+                    onClick: () => toast.info('Brain Health TCM - 100 Q&A for all life stages'),
+                  },
+                ],
+              },
+              {
                 id: 'calendar-scheduling',
                 boxes: [
                   {
