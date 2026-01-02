@@ -112,7 +112,7 @@ import { SessionBriefPanel } from '@/components/video/SessionBriefPanel';
 import { PregnancySafetyDialog, ElderlyLifestyleDialog } from '@/components/clinical';
 
 import { SessionWorkflowIndicator } from '@/components/video/SessionWorkflowIndicator';
-import { SessionPhaseIndicator } from '@/components/session';
+import { SessionPhaseIndicator, useSafetyGate } from '@/components/session';
 import { useSessionPhase } from '@/hooks/useSessionPhase';
 import { QATypeDropdown, QAType } from '@/components/video/QATypeDropdown';
 import { useLongPressTimer } from '@/hooks/useLongPressTimer';
@@ -947,12 +947,18 @@ export default function VideoSession() {
   const isZoomWarning = sessionDuration >= ZOOM_WARNING_SECONDS;
   const isZoomExpired = sessionDuration >= ZOOM_FREE_LIMIT_SECONDS;
 
+  // Safety Gate for pre-session check
+  const { showGate, openGate, SafetyGateModal } = useSafetyGate();
+
   const handleStart = () => {
-    startSession();
-    pauseLock('Treatment session active'); // Pause auto-lock during session
-    playSessionSound('start', audioEnabled);
-    triggerSessionHaptic('start');
-    toast.success('פגישת וידאו התחילה');
+    // Open safety gate first - pass the actual start as callback
+    openGate(() => {
+      startSession();
+      pauseLock('Treatment session active');
+      playSessionSound('start', audioEnabled);
+      triggerSessionHaptic('start');
+      toast.success('פגישת וידאו התחילה');
+    });
   };
 
   const handlePause = () => {
@@ -2473,6 +2479,7 @@ export default function VideoSession() {
       </div>
 
       {/* Dialogs */}
+      <SafetyGateModal patientName={selectedPatientName || undefined} />
       <AnxietyQADialog open={showAnxietyQA} onOpenChange={setShowAnxietyQA} onConversationSave={setAnxietyConversation} />
       <QuickPatientDialog open={showQuickPatient} onOpenChange={setShowQuickPatient} onPatientCreated={handlePatientCreated} />
       <QuickAppointmentDialog open={showQuickAppointment} onOpenChange={setShowQuickAppointment} patientId={selectedPatientId || undefined} patientName={selectedPatientName || undefined} />
