@@ -106,11 +106,11 @@ export function WhatsAppReminderButton({
         return;
       }
 
-      // Build confirmation URL
+      // Build appointment landing page URL
       const baseUrl = window.location.origin;
-      const confirmUrl = `${baseUrl}/confirm?token=${token}`;
+      const landingUrl = `${baseUrl}/appointment?token=${token}&lang=he`;
 
-      // Create WhatsApp message with confirmation links
+      // Create WhatsApp message with landing page link
       const dateStr = new Date(appointmentDate).toLocaleDateString('he-IL', {
         weekday: 'long',
         day: 'numeric',
@@ -125,9 +125,7 @@ export function WhatsAppReminderButton({
         message += ` בשעה ${appointmentTime}`;
       }
       message += `.\n\n`;
-      message += `*האם את/ה מגיע/ה?*\n\n`;
-      message += `✅ לחץ/י כאן לאישור:\n${confirmUrl}&response=confirmed\n\n`;
-      message += `❌ לחץ/י כאן לביטול:\n${confirmUrl}&response=cancelled\n\n`;
+      message += `📍 לחץ/י כאן לפרטי הגעה ואישור:\n${landingUrl}\n\n`;
       message += `בברכה,\n${displayTherapistName} 💚`;
 
       const whatsappLink = `https://wa.me/${formattedPatientPhone}?text=${encodeURIComponent(message)}`;
