@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -23,6 +23,7 @@ type AuthForm = z.infer<typeof authSchema>;
 
 export default function Auth() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, signIn, signUp, isLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
@@ -37,9 +38,12 @@ export default function Auth() {
 
   useEffect(() => {
     if (user) {
-      navigate('/admin');
+      const params = new URLSearchParams(location.search);
+      const redirectParam = params.get('redirect');
+      const safeRedirect = redirectParam && redirectParam.startsWith('/') ? redirectParam : '/admin';
+      navigate(safeRedirect, { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, navigate, location.search]);
 
   const onSubmit = async (data: AuthForm) => {
     setIsSubmitting(true);

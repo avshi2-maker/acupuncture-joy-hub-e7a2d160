@@ -497,11 +497,11 @@ export default function KnowledgeRegistry() {
     isPausedRef.current = isPaused;
   }, [isPaused]);
 
-  // If auth session is missing/expired, route to Gate (password-based access)
+  // If auth session is missing/expired, route to Auth (admin login)
   useEffect(() => {
     if (!authLoading && !user) {
       const redirect = encodeURIComponent(location.pathname + location.search);
-      navigate(`/gate?redirect=${redirect}`, { replace: true });
+      navigate(`/auth?redirect=${redirect}`, { replace: true });
     }
   }, [user, authLoading, navigate, location.pathname, location.search]);
 
