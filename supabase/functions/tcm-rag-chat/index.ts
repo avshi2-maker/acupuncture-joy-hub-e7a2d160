@@ -402,9 +402,13 @@ serve(async (req) => {
       })
       .limit(8);
 
-    // Fallback: If text search returns few results, try ilike search on key words
+    // Enhanced fallback: Always run ilike search for better coverage
     let fallbackChunks: any[] = [];
-    const searchWords = searchQuery.toLowerCase().split(/\s+/).filter((w: string) => w.length > 3);
+    // Extract meaningful words (>3 chars) and TCM-specific terms
+    const searchWords = searchQuery.toLowerCase()
+      .split(/\s+/)
+      .filter((w: string) => w.length > 2 && !['the', 'and', 'for', 'with', 'how', 'what', 'why', 'can', 'are', 'this', 'that', 'have', 'has'].includes(w));
+    
     const totalPriorityChunks = (neuroChunks?.length || 0) + (cafChunks?.length || 0) + 
       (vagusChunks?.length || 0) + (ageSpecificChunks?.length || 0) + 
       (diagnosticsChunks?.length || 0) + (pulseChunks?.length || 0) + 
@@ -412,11 +416,16 @@ serve(async (req) => {
       (qaChunks?.length || 0) + (treatmentChunks?.length || 0) + 
       (otherChunks?.length || 0);
 
-    if (totalPriorityChunks < 3 && searchWords.length > 0) {
-      console.log('Low chunk count, running fallback ilike search...');
-      const ilikeConditions = searchWords.slice(0, 3).map((w: string) => 
-        `content.ilike.%${w}%,question.ilike.%${w}%,answer.ilike.%${w}%`
-      ).join(',');
+    // Always run fallback if we have less than 5 chunks or search words exist
+    if ((totalPriorityChunks < 5 || searchWords.length > 0) && searchWords.length > 0) {
+      console.log(`Running enhanced ilike search with words: ${searchWords.slice(0, 5).join(', ')}`);
+      
+      // Build comprehensive ilike conditions for up to 5 words
+      const ilikeConditions = searchWords.slice(0, 5).flatMap((w: string) => [
+        `content.ilike.%${w}%`,
+        `question.ilike.%${w}%`,
+        `answer.ilike.%${w}%`
+      ]).join(',');
       
       const { data: fallbackData, error: fallbackError } = await supabaseClient
         .from('knowledge_chunks')
@@ -430,11 +439,13 @@ serve(async (req) => {
           document:knowledge_documents(id, file_name, original_name, category)
         `)
         .or(ilikeConditions)
-        .limit(10);
+        .limit(15);
       
       if (!fallbackError && fallbackData) {
         fallbackChunks = fallbackData;
-        console.log(`Fallback search found: ${fallbackChunks.length} chunks`);
+        console.log(`Enhanced fallback search found: ${fallbackChunks.length} chunks`);
+      } else if (fallbackError) {
+        console.error('Fallback search error:', fallbackError);
       }
     }
 
