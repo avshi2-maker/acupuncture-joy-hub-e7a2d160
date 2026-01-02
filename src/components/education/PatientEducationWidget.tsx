@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { ChevronDown, Printer, MessageCircle, Leaf, Mail, Users } from 'lucide-react';
+import { ChevronDown, Printer, MessageCircle, Leaf, Mail, Users, Languages } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -48,7 +50,7 @@ const ARTICLE_CONTENT = {
 };
 
 // English version for WhatsApp/Email sharing
-const SHARE_MESSAGE = `🌱 *The Logic of Long-Term Care*
+const SHARE_MESSAGE_EN = `🌱 *The Logic of Long-Term Care*
 
 Many patients view Acupuncture like a painkiller: "I have pain, I go once, the pain stops, I stop."
 
@@ -61,12 +63,29 @@ Many patients view Acupuncture like a painkiller: "I have pain, I go once, the p
 
 *Invest in your foundation, not just your symptoms.*`;
 
+// Hebrew version for WhatsApp/Email sharing
+const SHARE_MESSAGE_HE = `🌱 *ההיגיון של טיפול ארוך טווח*
+
+מטופלים רבים רואים באקופונקטורה כמו משכך כאבים: "יש לי כאב, הולך פעם אחת, הכאב נעלם, אני מפסיק."
+
+*המדע:*
+✓ חלון 72 השעות: ההשפעה האנטי-דלקתית מגיעה לשיא ב-24 שעות ודועכת אחרי 72.
+✓ נוירופלסטיות: כאב כרוני הוא 'הרגל נלמד'. לשכוח אותו דורש 4-6 שבועות של קלט עקבי.
+✓ האפקט המצטבר: טיפול 2 בונה על טיפול 1. עד טיפול 5, אנחנו בונים מחדש יסודות.
+
+💡 "בדיוק כמו שספורטאי לא יכול להתאמן לאיירונמן בסוף שבוע אחד, הגוף שלך לא יכול להפוך שנים של מתח בשעה אחת."
+
+*השקיעו ביסודות, לא רק בסימפטומים.*`;
+
 export function PatientEducationWidget({ patientPhone, patientName, patientEmail, className }: PatientEducationWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatientId, setSelectedPatientId] = useState<string>('');
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [isHebrew, setIsHebrew] = useState(true);
   const { user } = useAuth();
+
+  const shareMessage = isHebrew ? SHARE_MESSAGE_HE : SHARE_MESSAGE_EN;
 
   // Fetch patients for the selector
   useEffect(() => {
@@ -169,9 +188,10 @@ export function PatientEducationWidget({ patientPhone, patientName, patientEmail
       ? `972${phoneNumber.slice(1)}` 
       : phoneNumber;
     
+    const greeting = isHebrew ? `שלום ${activeName || ''},` : `Hello ${activeName || ''},`;
     const personalizedMessage = activeName 
-      ? `שלום ${activeName},\n\n${SHARE_MESSAGE}`
-      : SHARE_MESSAGE;
+      ? `${greeting}\n\n${shareMessage}`
+      : shareMessage;
     
     const url = formattedPhone 
       ? `https://wa.me/${formattedPhone}?text=${encodeURIComponent(personalizedMessage)}`
@@ -181,11 +201,16 @@ export function PatientEducationWidget({ patientPhone, patientName, patientEmail
   };
 
   const handleEmailShare = () => {
-    const subject = encodeURIComponent('The Logic of Long-Term Care - ההיגיון של טיפול ארוך טווח');
+    const subject = encodeURIComponent(
+      isHebrew 
+        ? 'ההיגיון של טיפול ארוך טווח' 
+        : 'The Logic of Long-Term Care'
+    );
+    const greeting = isHebrew ? `שלום ${activeName || ''},` : `Hello ${activeName || ''},`;
     const body = encodeURIComponent(
       activeName 
-        ? `שלום ${activeName},\n\n${SHARE_MESSAGE}`
-        : SHARE_MESSAGE
+        ? `${greeting}\n\n${shareMessage}`
+        : shareMessage
     );
     
     const mailto = activeEmail 
@@ -292,31 +317,53 @@ export function PatientEducationWidget({ patientPhone, patientName, patientEmail
           </div>
         )}
 
-        {/* Footer Actions */}
-        <div className="p-4 border-t border-border bg-card flex flex-wrap gap-3">
-          <Button
-            variant="outline"
-            className="flex-1 min-w-[120px] gap-2"
-            onClick={handlePrint}
-          >
-            <Printer className="h-4 w-4" />
-            הדפס
-          </Button>
-          <Button
-            className="flex-1 min-w-[120px] gap-2 bg-[#25D366] hover:bg-[#20BA5C] text-white"
-            onClick={handleWhatsAppShare}
-          >
-            <MessageCircle className="h-4 w-4" />
-            WhatsApp
-          </Button>
-          <Button
-            variant="outline"
-            className="flex-1 min-w-[120px] gap-2"
-            onClick={handleEmailShare}
-          >
-            <Mail className="h-4 w-4" />
-            Email
-          </Button>
+        {/* Language Toggle & Footer Actions */}
+        <div className="p-4 border-t border-border bg-card space-y-4">
+          {/* Language Toggle */}
+          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg" dir="rtl">
+            <div className="flex items-center gap-2">
+              <Languages className="h-4 w-4 text-muted-foreground" />
+              <Label htmlFor="language-toggle" className="text-sm font-medium">
+                שפת ההודעה:
+              </Label>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className={cn("text-sm", !isHebrew && "font-semibold text-jade")}>EN</span>
+              <Switch
+                id="language-toggle"
+                checked={isHebrew}
+                onCheckedChange={setIsHebrew}
+              />
+              <span className={cn("text-sm", isHebrew && "font-semibold text-jade")}>עב</span>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-3">
+            <Button
+              variant="outline"
+              className="flex-1 min-w-[120px] gap-2"
+              onClick={handlePrint}
+            >
+              <Printer className="h-4 w-4" />
+              הדפס
+            </Button>
+            <Button
+              className="flex-1 min-w-[120px] gap-2 bg-[#25D366] hover:bg-[#20BA5C] text-white"
+              onClick={handleWhatsAppShare}
+            >
+              <MessageCircle className="h-4 w-4" />
+              WhatsApp
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 min-w-[120px] gap-2"
+              onClick={handleEmailShare}
+            >
+              <Mail className="h-4 w-4" />
+              Email
+            </Button>
+          </div>
         </div>
       </div>
     </div>
