@@ -426,6 +426,13 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'digestive',
     defaultLanguage: 'en',
   },
+  {
+    id: 'vagus-nerve-100qa',
+    label: '🧠 Vagus Nerve Q&A (100 Symptoms, Mechanisms, Points & Formulas)',
+    path: '/knowledge-assets/vagus_nerve_100_qa.csv',
+    defaultCategory: 'neurology',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 type QueueItemStatus = 'pending' | 'importing' | 'done' | 'error';

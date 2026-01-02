@@ -263,6 +263,17 @@ serve(async (req) => {
             answer = `**TCM Pattern:** ${tcmPattern}\n**Acupuncture Points:** ${acupoints}\n**Herbal Formula:** ${formula}`;
             content = `Brain Health TCM Assessment\nQ: ${questionAssessment}\nTCM Pattern: ${tcmPattern}\nAcupoints: ${acupoints}\nFormula: ${formula}`;
             contentType = 'brain-health';
+          } else if (row.Question_Symptom && row.Scientific_Mechanism_Vagus && row.TCM_Dot_Numbers_Acupoints) {
+            // Vagus Nerve Q&A format
+            const questionSymptom = row.Question_Symptom || '';
+            const scientificMechanism = row.Scientific_Mechanism_Vagus || '';
+            const acupoints = row.TCM_Dot_Numbers_Acupoints || '';
+            const formula = row.Pharmacopeia_Formula || '';
+            
+            question = questionSymptom;
+            answer = `**Scientific Mechanism (Vagus):** ${scientificMechanism}\n**Acupuncture Points:** ${acupoints}\n**Herbal Formula:** ${formula || 'None (Lifestyle)'}`;
+            content = `Vagus Nerve Q&A\nSymptom/Question: ${questionSymptom}\nScientific Mechanism: ${scientificMechanism}\nAcupoints: ${acupoints}\nFormula: ${formula || 'None'}`;
+            contentType = 'vagus-nerve';
           } else {
             // Generic: join all values
             content = Object.values(row).filter(Boolean).join(' | ');
