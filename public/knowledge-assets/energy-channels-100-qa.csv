@@ -1,0 +1,101 @@
+Question_Symptom,Channel_Physiological_Mechanism,TCM_Dot_Numbers_Acupoints,Pharmacopeia_Formula
+"Do you have pain radiating down the back of your leg (Sciatica)?",Bladder Channel / Sciatic Nerve fascial entrapment,BL23 (Shenshu) + BL40 (Weizhong) + GB30 (Huantiao),Du Huo Ji Sheng Tang
+"Do you have temporal migraines (side of head)?",Gallbladder Channel / Trigeminal Nerve sensitization,GB8 (Shuaigu) + GB20 (Fengchi) + SJ5 (Waiguan),Tian Ma Gou Teng Yin
+"Do you have pain in the front of the shoulder?",Large Intestine Channel / Bicipital tendon groove inflammation,LI15 (Jianyu) + LI11 (Quchi) + LI4 (Hegu),Juan Bi Tang
+"Do you have thumb pain or Texting Thumb?",Lung Channel / Radial Nerve pathway tension,LU7 (Lieque) + LU9 (Taiyuan) + LI4 (Hegu),Gui Zhi Tang
+"Do you wake up with a stiff neck/unable to turn head?",Small Intestine Channel / Levator Scapulae myofascial trigger,SI3 (Houxi) + SI11 (Tianzong) + UB10 (Tianzhu),Ge Gen Tang
+"Do you have chronic acid reflux or heartburn?",Stomach Channel / Vagal-Esophageal motor dysfunction,ST36 (Zusanli) + CV12 (Zhongwan) + PC6 (Neiguan),Ban Xia Xie Xin Tang
+"Do you have weak knees or difficulty climbing stairs?",Stomach Channel / Quadriceps tendon insertion weakness,ST35 (Dubi) + ST34 (Liangqiu) + SP10 (Xuehai),Bu Yang Huan Wu Tang
+"Do you have heavy, swollen legs (Edema)?",Spleen Channel / Lymphatic return insufficiency,SP9 (Yinlingquan) + SP6 (Sanyinjiao) + ST40 (Fenglong),Wu Ling San
+"Do you have Carpal Tunnel Syndrome?",Pericardium Channel / Median Nerve compression,PC7 (Daling) + PC6 (Neiguan) + LU7 (Lieque),Huang Qi Gui Zhi Wu Wu Tang
+"Do you have pinky finger numbness?",Heart Channel / Ulnar Nerve entrapment,HT7 (Shenmen) + HT3 (Shaohai) + SI3 (Houxi),Shao Yao Gan Cao Tang
+"Do you have chronic lower back pain (Dull ache)?",Kidney Channel / Lumbar fascia ischemia,UB23 (Shenshu) + KD3 (Taixi) + GV4 (Mingmen),Jin Gui Shen Qi Wan
+"Do you have rib-side pain or intercostal neuralgia?",Liver Channel / Intercostal nerve compression,LR14 (Qimen) + SJ6 (Zhigou) + GB34 (Yanglingquan),Chai Hu Shu Gan San
+"Do you have pain along the spine itself?",Du Mai (Governing Vessel) / Dural tube tension,GV14 (Dazhui) + GV3 (Yaoyangguan) + Hua Tuo Jia Ji,Du Huo Ji Sheng Tang
+"Do you have frontal headaches (Forehead)?",Stomach Channel / Supraorbital nerve tension,ST8 (Touwei) + ST44 (Neiting) + LI4 (Hegu),Bai Zhi (Single herb addition)
+"Do you have pain at the vertex (Top of head)?",Liver Channel / Vertex fascial convergence tension,LR3 (Taichong) + GV20 (Baihui) + SI3 (Houxi),Wu Zhu Yu Tang
+"Do you have tightness in the chest (Anxiety/Asthma)?",Lung/Pericardium fascia restriction in mediastinum,CV17 (Danzhong) + LU1 (Zhongfu) + PC6 (Neiguan),Xue Fu Zhu Yu Tang
+"Do you have jaw pain or TMJ clicking?",Stomach/Gallbladder myofascial tension (Masseter),ST6 (Jiache) + ST7 (Xiaguan) + LI4 (Hegu),Shao Yao Gan Cao Tang
+"Do you have plantar fasciitis (Heel pain)?",Kidney/Bladder fascial chain tightness,KD3 (Taixi) + UB57 (Chengshan) + KD1 (Yongquan),Liu Wei Di Huang Wan
+"Do you have pain on the inside of the knee?",Spleen/Liver Channel / Pes Anserine bursitis,SP9 (Yinlingquan) + LR8 (Ququan) + SP10 (Xuehai),Dang Gui Nian Tong Tang
+"Do you have frozen shoulder (can't lift arm side)?",San Jiao Channel / Deltoid fascia adhesion,SJ14 (Jianliao) + SJ5 (Waiguan) + GB21 (Jianjing),Juan Bi Tang
+"Do you have sinus congestion and pressure?",Large Intestine Channel / Maxillary sinus inflammation,LI20 (Yingxiang) + ST2 (Sibai) + LI4 (Hegu),Cang Er Zi San
+"Do you have toothache (Lower jaw)?",Large Intestine Channel / Inferior Alveolar nerve,LI4 (Hegu) + ST6 (Jiache) + ST44 (Neiting),Qing Wei San
+"Do you have toothache (Upper jaw)?",Stomach Channel / Superior Alveolar nerve,ST44 (Neiting) + ST7 (Xiaguan) + LI20 (Yingxiang),Yu Nu Jian
+"Do you have Bell's Palsy (Facial droop)?",Yang Channels / Facial Nerve (CN VII) inflammation,ST4 (Dicang) + ST6 (Jiache) + GB14 (Yangbai),Qian Zheng San
+"Do you have ringing in the ears (High pitch)?",Kidney Channel / Auditory nerve micro-circulation,KD3 (Taixi) + SJ21 (Ermen) + SI19 (Tinggong),Er Long Zuo Ci Wan
+"Do you have ringing in the ears (Low pitch/Roar)?",Gallbladder Channel / Eustachian tube dysfunction,GB2 (Tinghui) + SJ3 (Zhongzhu) + GB43 (Xiaxi),Long Dan Xie Gan Tang
+"Do you have blurry vision or dry eyes?",Liver Channel / Optic nerve blood supply,UB18 (Ganshu) + GB37 (Guangming) + ST1 (Chengqi),Qi Ju Di Huang Wan
+"Do you have loss of smell?",Lung Channel / Olfactory nerve inflammation,LI20 (Yingxiang) + LU7 (Lieque) + GV23 (Shangxing),Bi Yan Pian
+"Do you have difficulty swallowing (Globus)?",Ren Mai / Esophageal sphincter tension,CV22 (Tiantu) + PC6 (Neiguan) + LU7 (Lieque),Ban Xia Hou Po Tang
+"Do you have chronic constipation (Dry)?",Large Intestine Channel / Enteric dehydration,ST25 (Tianshu) + SJ6 (Zhigou) + KD6 (Zhaohai),Ma Zi Ren Wan
+"Do you have loose stools or diarrhea?",Spleen Channel / Vagal motor over-activity,ST36 (Zusanli) + SP3 (Taibai) + CV12 (Zhongwan),Shen Ling Bai Zhu San
+"Do you have urinary incontinence?",Bladder/Kidney Channel / Pelvic floor muscle weakness,CV3 (Zhongji) + CV4 (Guanyuan) + KD3 (Taixi),Suo Quan Wan
+"Do you have urinary retention/difficulty peeing?",Bladder Channel / Sphincter spasm,UB28 (Pangguangshu) + SP9 (Yinlingquan) + SP6 (Sanyinjiao),Ba Zheng San
+"Do you have erectile dysfunction?",Liver Channel / Pudendal nerve blood flow,LR3 (Taichong) + CV4 (Guanyuan) + ST36 (Zusanli),You Gui Wan
+"Do you have menstrual cramps (Dysmenorrhea)?",Spleen/Liver Channel / Uterine smooth muscle spasm,SP8 (Diji) + LR3 (Taichong) + LI4 (Hegu),Tao Hong Si Wu Tang
+"Do you have irregular periods?",Chong Mai / Hormonal axis dysregulation,SP6 (Sanyinjiao) + CV4 (Guanyuan) + PC6 (Neiguan),Xiao Yao San
+"Do you have infertility issues?",Ren Mai / Endometrial receptivity,CV3 (Zhongji) + KD13 (Qixue) + Zi Gong (Extra),Yu Lin Zhu
+"Do you have morning sickness?",Chong Mai / Gastric slow waves (Rebellious Qi),PC6 (Neiguan) + ST36 (Zusanli) + KD21 (Youmen),Zi Su Yin
+"Do you have insufficient lactation?",Small Intestine Channel / Prolactin signaling,SI1 (Shaoze) + CV17 (Danzhong) + ST18 (Rugen),Tong Ru Dan
+"Do you have mastitis or breast pain?",Liver/Stomach Channel / Lymphatic stasis in breast,ST18 (Rugen) + LR14 (Qimen) + GB21 (Jianjing),Gua Lou Niu Bang Tang
+"Do you have palpitations (racing heart)?",Heart Channel / Sympathetic cardiac innervation,HT7 (Shenmen) + PC6 (Neiguan) + UB15 (Xinshu),Tian Wang Bu Xin Dan
+"Do you have cold hands and feet (Raynaud's)?",Liver Channel / Peripheral vasoconstriction,LR3 (Taichong) + LI4 (Hegu) + ST36 (Zusanli),Si Ni San
+"Do you have varicose veins?",Spleen Channel / Venous valve insufficiency,SP10 (Xuehai) + SP6 (Sanyinjiao) + Local Bleeding,Bu Yang Huan Wu Tang
+"Do you have heavy sensation in the body?",Spleen Channel / Interstitial fluid accumulation (Damp),SP9 (Yinlingquan) + ST40 (Fenglong) + CV12 (Zhongwan),Ping Wei San
+"Do you have vertigo (Room spinning)?",Gallbladder Channel / Vestibular nerve imbalance,GB20 (Fengchi) + PC6 (Neiguan) + ST36 (Zusanli),Ban Xia Bai Zhu Tian Ma Tang
+"Do you have insomnia (Can't fall asleep)?",Liver Channel / Circadian cortisol dysregulation,LR2 (Xingjian) + HT7 (Shenmen) + Yin Tang,Suan Zao Ren Tang
+"Do you have insomnia (Wake frequently)?",Kidney/Heart Channel / Parasympathetic withdrawal,KD6 (Zhaohai) + HT7 (Shenmen) + SP6 (Sanyinjiao),Jiao Tai Wan
+"Do you have excessive dreaming/nightmares?",Heart/Liver Channel / Limbic system overactivity,HT8 (Shaofu) + LR2 (Xingjian) + UB15 (Xinshu),Dao Chi San
+"Do you have sleep apnea?",Lung/Stomach Channel / Pharyngeal muscle collapse,ST9 (Renying) + ST40 (Fenglong) + LU7 (Lieque),Bu Fei Tang
+"Do you have chronic fatigue (Low energy)?",Spleen/Lung Channel / Mitochondrial efficiency (Qi),ST36 (Zusanli) + CV6 (Qihai) + UB20 (Pishu),Bu Zhong Yi Qi Tang
+"Do you have shortness of breath on exertion?",Kidney/Lung Channel / Diaphragm weakness,KD3 (Taixi) + CV17 (Danzhong) + LU9 (Taiyuan),Sheng Mai San
+"Do you have excessive sweating (Spontaneous)?",Lung Channel / Autonomic pore regulation (Wei Qi),LI4 (Hegu) + KD7 (Fuliu) + LU9 (Taiyuan),Yu Ping Feng San
+"Do you have night sweats?",Heart/Kidney Channel / Nocturnal thermoregulation,HT6 (Yinxi) + KD7 (Fuliu) + SI3 (Houxi),Dang Gui Liu Huang Tang
+"Do you have hot flashes (Menopause)?",Kidney Channel / Hypothalamic thermostat reset,KD3 (Taixi) + SP6 (Sanyinjiao) + KD2 (Rangu),Zhi Bai Di Huang Wan
+"Do you have acne (Forehead/Nose)?",Stomach/Lung Channel / Sebum inflammation,LI11 (Quchi) + ST44 (Neiting) + UB13 (Feishu),Pi Pa Qing Fei Yin
+"Do you have eczema or itchy skin?",Large Intestine Channel / Histamine response,LI11 (Quchi) + SP10 (Xuehai) + UB40 (Weizhong),Xiao Feng San
+"Do you have shingles pain (Herpes Zoster)?",Liver/Gallbladder Channel / Nerve root inflammation,LR2 (Xingjian) + SJ6 (Zhigou) + GB34 (Yanglingquan),Long Dan Xie Gan Tang
+"Do you have psoriasis?",Blood level / Rapid keratinocyte turnover,UB17 (Geshu) + SP10 (Xuehai) + LI11 (Quchi),Liang Xue Di Huang Tang
+"Do you have hair loss (Alopecia)?",Kidney Channel / Micro-circulation to follicles,KD3 (Taixi) + UB17 (Geshu) + GB20 (Fengchi),Qi Bao Mei Ran Dan
+"Do you have brittle nails?",Liver Channel / Protein matrix synthesis,LR8 (Ququan) + SP6 (Sanyinjiao) + CV4 (Guanyuan),Si Wu Tang
+"Do you have tennis elbow (Lateral pain)?",Large Intestine Channel / Extensor tendonitis,LI11 (Quchi) + LI10 (Shousanli) + SJ5 (Waiguan),Huo Luo Xiao Ling Dan
+"Do you have golfer's elbow (Medial pain)?",Heart/Small Intestine Channel / Flexor tendonitis,HT3 (Shaohai) + SI8 (Xiaohai) + PC3 (Quze),Tao Hong Si Wu Tang
+"Do you have hip pain (Lateral)?",Gallbladder Channel / Trochanteric bursitis,GB30 (Huantiao) + GB31 (Fengshi) + GB34 (Yanglingquan),Du Huo Ji Sheng Tang
+"Do you have hip pain (Groin)?",Liver Channel / Hip flexor (Psoas) tension,LR12 (Jimai) + ST30 (Qichong) + SP12 (Chongmen),Shao Fu Zhu Yu Tang
+"Do you have tailbone pain (Coccydynia)?",Du Mai / Coccygeal nerve irritation,GV1 (Changqiang) + UB57 (Chengshan) + UB32 (Ciliao),Shen Tong Zhu Yu Tang
+"Do you have ankle sprain (Outer)?",Gallbladder/Bladder Channel / Ligament strain,GB40 (Qiuxu) + UB62 (Shenmai) + GB39 (Xuanzhong),Die Da Wan
+"Do you have ankle sprain (Inner)?",Kidney/Spleen Channel / Deltoid ligament strain,KD3 (Taixi) + SP5 (Shangqiu) + KD6 (Zhaohai),San Huang San (Topical)
+"Do you have bunions?",Spleen Channel / 1st MTP joint deformity,SP2 (Dadu) + SP3 (Taibai) + LR3 (Taichong),Tong Qiao Huo Xue Tang
+"Do you have hemorrhoids?",Bladder/Du Mai / Rectal venous pressure,GV1 (Changqiang) + UB57 (Chengshan) + Er Bai (Extra),Huai Jiao Wan
+"Do you have rectal prolapse?",Du Mai / Pelvic floor muscle tone,GV20 (Baihui) + GV1 (Changqiang) + ST36 (Zusanli),Bu Zhong Yi Qi Tang
+"Do you have poor memory/foggy thinking?",Heart/Spleen Channel / Cerebral blood flow,HT7 (Shenmen) + GV20 (Baihui) + SP6 (Sanyinjiao),Gui Pi Tang
+"Do you have excessive anger/irritability?",Liver Channel / Amygdala over-activation,LR2 (Xingjian) + GB13 (Benshen) + LR3 (Taichong),Long Dan Xie Gan Tang
+"Do you have excessive fear/anxiety?",Kidney Channel / Adrenal stress response,KD3 (Taixi) + UB52 (Zhishi) + CV4 (Guanyuan),Zhi Bai Di Huang Wan
+"Do you have excessive worry/overthinking?",Spleen Channel / Prefrontal cortex looping,SP3 (Taibai) + HT7 (Shenmen) + ST36 (Zusanli),Gui Pi Tang
+"Do you have depression (Lack of motivation)?",Liver/Lung Channel / Dopamine pathway suppression,LR3 (Taichong) + LU9 (Taiyuan) + GV20 (Baihui),Yue Ju Wan
+"Do you have manic episodes (Bipolar)?",Yang Channels / Neurotransmitter storm,GV14 (Dazhui) + ST40 (Fenglong) + PC5 (Jianshi),Wen Dan Tang
+"Do you have ADD/ADHD?",Du Mai / Executive function regulation,GV20 (Baihui) + Sishencong + KD3 (Taixi),Kong Sheng Zhen Zhong Dan
+"Do you have post-stroke paralysis?",Yang Ming Channels / Motor cortex pathway damage,LI15 (Jianyu) + LI11 (Quchi) + ST36 (Zusanli),Bu Yang Huan Wu Tang
+"Do you have tremors (Parkinson's)?",Liver Channel / Basal ganglia dysfunction (Wind),LR3 (Taichong) + GB34 (Yanglingquan) + SI3 (Houxi),Da Ding Feng Zhu
+"Do you have epilepsy/seizures?",Du Mai / Electrical discharge instability,GV26 (Renzhong) + GV14 (Dazhui) + KD1 (Yongquan),Ding Xian Wan
+"Do you have thyroid nodules (Goiter)?",San Jiao/Stomach Channel / Immune lymphatic stagnation,SJ13 (Naohui) + ST9 (Renying) + LI4 (Hegu),Hai Zao Yu Hu Tang
+"Do you have hypothyroidism (Slow metabolism)?",Kidney/Spleen Channel / Metabolic rate down-regulation,KD7 (Fuliu) + CV4 (Guanyuan) + GV4 (Mingmen),You Gui Wan
+"Do you have hyperthyroidism (Graves)?",Liver/Heart Channel / Metabolic rate up-regulation,LR2 (Xingjian) + HT7 (Shenmen) + KD3 (Taixi),Zhi Bai Di Huang Wan
+"Do you have diabetes (Type 2)?",Spleen/Kidney Channel / Insulin resistance,SP3 (Taibai) + KD3 (Taixi) + Wei Guan Xia Shu,Yu Quan Wan
+"Do you have high blood pressure?",Liver Channel / Vascular resistance (Yang rising),LR3 (Taichong) + LI11 (Quchi) + GB20 (Fengchi),Tian Ma Gou Teng Yin
+"Do you have high cholesterol?",Spleen/Stomach Channel / Lipid metabolism,ST40 (Fenglong) + SP9 (Yinlingquan) + CV12 (Zhongwan),Xue Fu Zhu Yu Tang
+"Do you have seasonal allergies (Hay fever)?",Lung Channel / Histamine response,LI20 (Yingxiang) + LU7 (Lieque) + LI4 (Hegu),Yu Ping Feng San
+"Do you have a weak immune system (Catch colds often)?",Lung Channel / IgA mucosal defense,LU9 (Taiyuan) + ST36 (Zusanli) + GV14 (Dazhui),Yu Ping Feng San
+"Do you have autoimmune fatigue (Lupus/RA)?",Kidney/Liver Channel / Systemic inflammation,KD3 (Taixi) + LR3 (Taichong) + SP6 (Sanyinjiao),Du Huo Ji Sheng Tang
+"Do you have dry cough?",Lung Channel / Bronchial hydration,LU5 (Chize) + LU9 (Taiyuan) + KD6 (Zhaohai),Bai He Gu Jin Tang
+"Do you have productive cough (Phlegm)?",Spleen/Lung Channel / Mucus hypersecretion,ST40 (Fenglong) + LU5 (Chize) + CV22 (Tiantu),Er Chen Tang
+"Do you have asthma (Acute)?",Lung Channel / Bronchospasm,LU6 (Kongzui) + Ding Chuan (Extra) + CV17 (Danzhong),Ding Chuan Tang
+"Do you have asthma (Chronic)?",Kidney Channel / Adrenal bronchodilation failure,KD3 (Taixi) + KD25 (Shencang) + UB23 (Shenshu),Jin Gui Shen Qi Wan
+"Do you have knee buckling?",Kidney Channel / Proprioceptive loss,KD10 (Yingu) + UB40 (Weizhong) + KD3 (Taixi),Liu Wei Di Huang Wan
+"Do you have Baker's cyst (Behind knee)?",Bladder Channel / Synovial fluid drainage block,UB40 (Weizhong) + UB39 (Weiyang) + SP9 (Yinlingquan),Fang Ji Huang Qi Tang
+"Do you have shin splints?",Stomach Channel / Tibialis Anterior muscle strain,ST36 (Zusanli) + ST37 (Shangjuxu) + SP6 (Sanyinjiao),Shao Yao Gan Cao Tang
+"Do you have achilles tendonitis?",Bladder/Kidney Channel / Tendon inflammation,UB60 (Kunlun) + KD3 (Taixi) + UB57 (Chengshan),Zhuang Gu Guan Jie Wan
+"Do you have gout (Big toe)?",Spleen/Liver Channel / Uric acid crystallization,SP2 (Dadu) + SP3 (Taibai) + ST44 (Neiting),San Miao Wan
+"Do you have burning urination (UTI)?",Bladder Channel / Urethral inflammation (Damp Heat),CV3 (Zhongji) + SP9 (Yinlingquan) + UB28 (Pangguangshu),Ba Zheng San
+"Do you have prostate enlargement (BPH)?",Liver Channel / Pelvic congestion,LR5 (Ligou) + CV4 (Guanyuan) + SP6 (Sanyinjiao),Gui Zhi Fu Ling Wan
