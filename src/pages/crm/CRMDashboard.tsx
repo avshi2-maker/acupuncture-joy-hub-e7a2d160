@@ -1,16 +1,15 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Users, Clock, TrendingUp, Plus, ArrowRight, Video, FileText, Trash2, BookOpen, Leaf } from 'lucide-react';
+import { Calendar, Users, Clock, TrendingUp, Plus, ArrowRight, Video, FileText, Trash2, BookOpen, Leaf, Volume2, VolumeX } from 'lucide-react';
 import { WhatsAppReminderButton } from '@/components/crm/WhatsAppReminderButton';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow, differenceInMinutes, differenceInSeconds } from 'date-fns';
 import { CRMLayout } from '@/components/crm/CRMLayout';
 import { PullToRefreshContainer } from '@/components/ui/PullToRefreshContainer';
 import { QuickPatientSearch } from '@/components/crm/QuickPatientSearch';
 import { toast } from 'sonner';
-
 interface DashboardStats {
   totalPatients: number;
   todayAppointments: number;
@@ -51,6 +50,13 @@ export default function CRMDashboard() {
   const [todayAppts, setTodayAppts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [draftInfo, setDraftInfo] = useState<DraftInfo | null>(null);
+  const [countdown, setCountdown] = useState<string>('');
+  const [nextAppt, setNextAppt] = useState<any>(null);
+  const [audioEnabled, setAudioEnabled] = useState(() => {
+    return localStorage.getItem('appt_audio_reminder') !== 'false';
+  });
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const reminderShownRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     fetchDashboardData();
@@ -65,6 +71,103 @@ export default function CRMDashboard() {
 
   const handleContinueDraft = () => {
     navigate('/crm/patients/new');
+  };
+
+  // Play audio reminder
+  const playReminderSound = useCallback(() => {
+    if (!audioEnabled) return;
+    try {
+      // Create a simple notification beep using Web Audio API
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+      
+      // Play a second beep
+      setTimeout(() => {
+        const osc2 = audioContext.createOscillator();
+        const gain2 = audioContext.createGain();
+        osc2.connect(gain2);
+        gain2.connect(audioContext.destination);
+        osc2.frequency.value = 1000;
+        osc2.type = 'sine';
+        gain2.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        osc2.start(audioContext.currentTime);
+        osc2.stop(audioContext.currentTime + 0.5);
+      }, 200);
+    } catch (e) {
+      console.log('Audio not supported');
+    }
+  }, [audioEnabled]);
+
+  // Update countdown timer
+  useEffect(() => {
+    if (todayAppts.length === 0) return;
+
+    const updateCountdown = () => {
+      const now = new Date();
+      const upcomingAppts = todayAppts.filter(appt => new Date(appt.start_time) > now);
+      
+      if (upcomingAppts.length === 0) {
+        setNextAppt(null);
+        setCountdown('');
+        return;
+      }
+
+      const next = upcomingAppts[0];
+      setNextAppt(next);
+      
+      const startTime = new Date(next.start_time);
+      const diffMins = differenceInMinutes(startTime, now);
+      const diffSecs = differenceInSeconds(startTime, now) % 60;
+      
+      if (diffMins < 60) {
+        setCountdown(`Starts in ${diffMins}m ${diffSecs}s`);
+      } else {
+        const hours = Math.floor(diffMins / 60);
+        const mins = diffMins % 60;
+        setCountdown(`Starts in ${hours}h ${mins}m`);
+      }
+
+      // Audio reminder at 15 min and 5 min
+      const reminderKey15 = `${next.id}-15`;
+      const reminderKey5 = `${next.id}-5`;
+      
+      if (diffMins === 15 && !reminderShownRef.current.has(reminderKey15)) {
+        reminderShownRef.current.add(reminderKey15);
+        playReminderSound();
+        toast.info(`Appointment in 15 minutes: ${next.patients?.full_name || next.title}`, { duration: 5000 });
+      }
+      
+      if (diffMins === 5 && !reminderShownRef.current.has(reminderKey5)) {
+        reminderShownRef.current.add(reminderKey5);
+        playReminderSound();
+        toast.warning(`Appointment in 5 minutes: ${next.patients?.full_name || next.title}`, { duration: 8000 });
+      }
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [todayAppts, playReminderSound]);
+
+  const toggleAudio = () => {
+    const newValue = !audioEnabled;
+    setAudioEnabled(newValue);
+    localStorage.setItem('appt_audio_reminder', String(newValue));
+    toast.success(newValue ? 'Audio reminders enabled' : 'Audio reminders disabled');
+    if (newValue) playReminderSound();
   };
 
   const fetchDashboardData = useCallback(async () => {
@@ -122,10 +225,10 @@ export default function CRMDashboard() {
   };
 
   const statCards = [
-    { title: 'Patients', shortTitle: 'Patients', value: stats.totalPatients, icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10', showReminder: false },
-    { title: "Today's Appts", shortTitle: 'Today', value: stats.todayAppointments, icon: Calendar, color: 'text-jade', bg: 'bg-jade/10', showReminder: stats.todayAppointments > 0 },
-    { title: 'Upcoming', shortTitle: 'Soon', value: stats.upcomingAppointments, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-500/10', showReminder: false },
-    { title: 'This Week', shortTitle: 'Week', value: stats.weeklyVisits, icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-500/10', showReminder: false },
+    { title: 'Patients', shortTitle: 'Patients', value: stats.totalPatients, icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10', showReminder: false, countdown: '' },
+    { title: "Today's Appts", shortTitle: 'Today', value: stats.todayAppointments, icon: Calendar, color: 'text-jade', bg: 'bg-jade/10', showReminder: stats.todayAppointments > 0, countdown },
+    { title: 'Upcoming', shortTitle: 'Soon', value: stats.upcomingAppointments, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-500/10', showReminder: false, countdown: '' },
+    { title: 'This Week', shortTitle: 'Week', value: stats.weeklyVisits, icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-500/10', showReminder: false, countdown: '' },
   ];
 
   return (
@@ -225,6 +328,25 @@ export default function CRMDashboard() {
                     <p className="text-xl md:text-3xl font-semibold mt-0.5 md:mt-1">
                       {loading ? '—' : stat.value}
                     </p>
+                    {/* Countdown timer */}
+                    {stat.countdown && (
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <p className="text-[10px] md:text-xs text-jade font-medium animate-pulse">
+                          {stat.countdown}
+                        </p>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); toggleAudio(); }}
+                          className="p-0.5 hover:bg-muted rounded"
+                          title={audioEnabled ? 'Disable audio reminders' : 'Enable audio reminders'}
+                        >
+                          {audioEnabled ? (
+                            <Volume2 className="h-3 w-3 text-jade" />
+                          ) : (
+                            <VolumeX className="h-3 w-3 text-muted-foreground" />
+                          )}
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <div className={`p-1.5 md:p-3 rounded-lg md:rounded-xl ${stat.bg} shrink-0`}>
                     <stat.icon className={`h-4 w-4 md:h-6 md:w-6 ${stat.color}`} />
