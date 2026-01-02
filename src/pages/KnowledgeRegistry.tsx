@@ -508,6 +508,33 @@ export default function KnowledgeRegistry() {
   const [isPaused, setIsPaused] = useState(false);
   const isPausedRef = useRef(false);
 
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
+  // Data fetching hooks
+  const { data: documents, isLoading } = useQuery({
+    queryKey: ['knowledge-documents'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('knowledge_documents')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as KnowledgeDocument[];
+    },
+    enabled: !!isAdmin, // Only fetch when admin
+  });
+
+  const { data: chunkStats } = useQuery({
+    queryKey: ['knowledge-chunks-stats'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('knowledge_chunks')
+        .select('*', { count: 'exact', head: true });
+      if (error) throw error;
+      return { totalChunks: count || 0 };
+    },
+    enabled: !!isAdmin, // Only fetch when admin
+  });
+
   // Keep latest queue in a ref so async processing never uses stale state
   useEffect(() => {
     queueRef.current = queue;
@@ -559,29 +586,6 @@ export default function KnowledgeRegistry() {
       </div>
     );
   }
-
-  const { data: documents, isLoading } = useQuery({
-    queryKey: ['knowledge-documents'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('knowledge_documents')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as KnowledgeDocument[];
-    },
-  });
-
-  const { data: chunkStats } = useQuery({
-    queryKey: ['knowledge-chunks-stats'],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from('knowledge_chunks')
-        .select('*', { count: 'exact', head: true });
-      if (error) throw error;
-      return { totalChunks: count || 0 };
-    },
-  });
 
   const generateReport = async () => {
     setGeneratingReport(true);
