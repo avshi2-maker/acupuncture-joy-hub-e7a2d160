@@ -396,27 +396,29 @@ serve(async (req) => {
         .textSearch('content', searchTerms, { type: 'websearch', config: 'simple' })
         .limit(8),
 
-      // PILLAR 3: Nutrition - Diet, foods, recipes
+      // PILLAR 3: Nutrition - Searches ALL ASSETS for nutrition-related content
+      // Not limited to "nutrition" files - extracts diet info from ANY document
       supabaseClient
         .from('knowledge_chunks')
         .select(`
           id, content, question, answer, chunk_index, metadata,
-          document:knowledge_documents!inner(id, file_name, original_name, category)
+          document:knowledge_documents(id, file_name, original_name, category)
         `)
-        .or('file_name.ilike.%nutrition%,file_name.ilike.%diet%,file_name.ilike.%food%,file_name.ilike.%lifestyle%,content.ilike.%diet%,content.ilike.%food%,content.ilike.%eat%', { referencedTable: 'document' })
+        .or('content.ilike.%diet%,content.ilike.%food%,content.ilike.%eat%,content.ilike.%nutrition%,content.ilike.%avoid%,content.ilike.%warming%,content.ilike.%cooling%,content.ilike.%damp%,content.ilike.%phlegm%,content.ilike.%spleen%,content.ilike.%digest%,content.ilike.%meal%,content.ilike.%recipe%,answer.ilike.%diet%,answer.ilike.%food%,answer.ilike.%eat%,answer.ilike.%avoid%')
         .textSearch('content', searchTerms, { type: 'websearch', config: 'simple' })
-        .limit(8),
+        .limit(12),
 
-      // PILLAR 4: Lifestyle/Sport - Exercise, sleep, stress
+      // PILLAR 4: Lifestyle/Sport - Searches ALL ASSETS for lifestyle-related content
+      // Not limited to "lifestyle" files - extracts exercise/sleep info from ANY document
       supabaseClient
         .from('knowledge_chunks')
         .select(`
           id, content, question, answer, chunk_index, metadata,
-          document:knowledge_documents!inner(id, file_name, original_name, category)
+          document:knowledge_documents(id, file_name, original_name, category)
         `)
-        .or('file_name.ilike.%lifestyle%,file_name.ilike.%exercise%,file_name.ilike.%sport%,file_name.ilike.%sleep%,file_name.ilike.%yoga%,file_name.ilike.%qigong%,content.ilike.%exercise%,content.ilike.%stretch%', { referencedTable: 'document' })
+        .or('content.ilike.%exercise%,content.ilike.%stretch%,content.ilike.%sleep%,content.ilike.%rest%,content.ilike.%stress%,content.ilike.%yoga%,content.ilike.%qigong%,content.ilike.%tai chi%,content.ilike.%walk%,content.ilike.%posture%,content.ilike.%relax%,content.ilike.%breathing%,content.ilike.%meditation%,answer.ilike.%exercise%,answer.ilike.%sleep%,answer.ilike.%stress%,answer.ilike.%stretch%')
         .textSearch('content', searchTerms, { type: 'websearch', config: 'simple' })
-        .limit(8),
+        .limit(12),
 
       // Age-specific knowledge
       ageGroup && ageFilePatterns.length > 0
