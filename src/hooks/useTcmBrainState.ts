@@ -319,56 +319,144 @@ export function useTcmBrainState() {
         else if (response.status === 402) toast.error('Credits exhausted. Please add credits.');
         else toast.error('AI service error');
         setIsLoading(false);
+        setLoadingStartTime(null);
         return;
       }
 
-      const data = await response.json();
-      
-      setLastRagStats({
-        chunksFound: data.chunksFound || 0,
-        documentsSearched: data.documentsSearched || 0,
-        searchTerms: data.searchTermsUsed || '',
-        timestamp: new Date(),
-        isExternal: !!data.isExternal,
-        auditLogged: !!data.auditLogged,
-        auditLogId: data.auditLogId ?? null,
-        auditLoggedAt: data.auditLoggedAt ?? null,
-      });
-      
-      const alertType = data.isExternal 
-        ? 'external' 
-        : (data.chunksFound || 0) > 0 
-          ? 'proprietary' 
-          : 'no-match';
+      // Handle SSE streaming response
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('No response body');
+      }
 
-      // Offer external AI option only when there is no KB match
-      if (alertType === 'no-match' && !data.isExternal) {
-        setExternalFallbackQuery(userMessage);
-      } else {
-        setExternalFallbackQuery(null);
+      const decoder = new TextDecoder();
+      let assistantContent = '';
+      let metadata: any = null;
+      let textBuffer = '';
+
+      // Add empty assistant message that we'll update
+      setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        textBuffer += decoder.decode(value, { stream: true });
+
+        // Process complete SSE lines
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+
+          if (line.endsWith('\r')) line = line.slice(0, -1);
+          if (line.startsWith(':') || line.trim() === '') continue;
+          if (!line.startsWith('data: ')) continue;
+
+          const jsonStr = line.slice(6).trim();
+          if (!jsonStr || jsonStr === '[DONE]') continue;
+
+          try {
+            const parsed = JSON.parse(jsonStr);
+            
+            if (parsed.type === 'metadata') {
+              metadata = parsed;
+              setLastRagStats({
+                chunksFound: parsed.chunksFound || 0,
+                documentsSearched: parsed.documentsSearched || 0,
+                searchTerms: parsed.searchTermsUsed || '',
+                timestamp: new Date(),
+                isExternal: !!parsed.isExternal,
+                auditLogged: false,
+                auditLogId: null,
+                auditLoggedAt: null,
+              });
+
+              const alertType = parsed.isExternal 
+                ? 'external' 
+                : (parsed.chunksFound || 0) > 0 
+                  ? 'proprietary' 
+                  : 'no-match';
+
+              if (alertType === 'no-match' && !parsed.isExternal) {
+                setExternalFallbackQuery(userMessage);
+              } else {
+                setExternalFallbackQuery(null);
+              }
+
+              setSourceAlert({
+                visible: true,
+                type: alertType,
+                auditLogId: null,
+                chunksFound: parsed.chunksFound || 0,
+              });
+
+              setTimeout(() => {
+                setSourceAlert(prev => ({ ...prev, visible: false }));
+              }, 5000);
+
+              if (parsed.isExternal) {
+                toast.warning('External AI used — not from proprietary materials');
+              } else if ((parsed.chunksFound || 0) > 0) {
+                toast.success(`Verified KB: ${parsed.chunksFound} chunks / ${parsed.documentsSearched} docs matched`);
+              } else {
+                toast.info('0 matches in proprietary knowledge base. External AI option available.');
+              }
+            } else if (parsed.type === 'delta' && parsed.content) {
+              assistantContent += parsed.content;
+              // Update the last assistant message with accumulated content
+              setMessages(prev => {
+                const updated = [...prev];
+                if (updated.length > 0 && updated[updated.length - 1].role === 'assistant') {
+                  updated[updated.length - 1] = { role: 'assistant', content: assistantContent };
+                }
+                return updated;
+              });
+            } else if (parsed.type === 'done') {
+              // Update audit info
+              setLastRagStats(prev => prev ? {
+                ...prev,
+                auditLogged: !!parsed.auditLogId,
+                auditLogId: parsed.auditLogId ?? null,
+                auditLoggedAt: parsed.auditLoggedAt ?? null,
+              } : null);
+              setSourceAlert(prev => ({
+                ...prev,
+                auditLogId: parsed.auditLogId ?? null,
+              }));
+            }
+          } catch {
+            // Ignore parse errors for partial chunks
+          }
+        }
       }
-      
-      setSourceAlert({
-        visible: true,
-        type: alertType,
-        auditLogId: data.auditLogId ?? null,
-        chunksFound: data.chunksFound || 0,
-      });
-      
-      setTimeout(() => {
-        setSourceAlert(prev => ({ ...prev, visible: false }));
-      }, 5000);
-      
-      if (data.isExternal) {
-        toast.warning('External AI used — not from proprietary materials');
-      } else if ((data.chunksFound || 0) > 0) {
-        toast.success(`Verified KB: ${data.chunksFound} chunks / ${data.documentsSearched} docs matched`);
-      } else {
-        toast.info('0 matches in proprietary knowledge base. External AI option available.');
+
+      // Final flush of any remaining buffer
+      if (textBuffer.trim()) {
+        const lines = textBuffer.split('\n');
+        for (let raw of lines) {
+          if (!raw) continue;
+          if (raw.endsWith('\r')) raw = raw.slice(0, -1);
+          if (raw.startsWith(':') || raw.trim() === '') continue;
+          if (!raw.startsWith('data: ')) continue;
+          const jsonStr = raw.slice(6).trim();
+          if (!jsonStr || jsonStr === '[DONE]') continue;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            if (parsed.type === 'delta' && parsed.content) {
+              assistantContent += parsed.content;
+              setMessages(prev => {
+                const updated = [...prev];
+                if (updated.length > 0 && updated[updated.length - 1].role === 'assistant') {
+                  updated[updated.length - 1] = { role: 'assistant', content: assistantContent };
+                }
+                return updated;
+              });
+            }
+          } catch { /* ignore */ }
+        }
       }
-      
-      const assistantContent = data.response || 'No response generated';
-      setMessages(prev => [...prev, { role: 'assistant', content: assistantContent }]);
+
     } catch (error) {
       console.error('Chat error:', error);
       toast.error('Chat error');
@@ -376,7 +464,7 @@ export function useTcmBrainState() {
       setIsLoading(false);
       setLoadingStartTime(null);
     }
-  }, [disclaimerStatus, session, messages]);
+  }, [disclaimerStatus, session, messages, selectedPatient]);
 
   const dismissExternalFallback = useCallback(() => {
     setExternalFallbackQuery(null);

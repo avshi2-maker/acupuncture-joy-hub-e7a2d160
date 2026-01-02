@@ -674,11 +674,24 @@ ${chunk.content}`;
       ...(messages || [{ role: 'user', content: query }])
     ];
 
-    // Call Lovable AI Gateway
+    // Call Lovable AI Gateway with streaming
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY not configured');
     }
+
+    // Get unique documents used for metadata
+    const uniqueDocuments = [...new Set(sources.map(s => s.fileName))];
+
+    // Prepare metadata to send before streaming
+    const metadata = {
+      sources: useExternalAI ? [] : sources,
+      chunksFound: useExternalAI ? 0 : (chunks?.length || 0),
+      documentsSearched: useExternalAI ? 0 : uniqueDocuments.length,
+      documentsMatched: useExternalAI ? 0 : uniqueDocuments.length,
+      searchTermsUsed: searchTerms,
+      isExternal: useExternalAI || false,
+    };
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -689,7 +702,7 @@ ${chunk.content}`;
       body: JSON.stringify({
         model: 'google/gemini-2.5-pro',
         messages: chatMessages,
-        stream: false,
+        stream: true,
       }),
     });
 
@@ -711,52 +724,78 @@ ${chunk.content}`;
       throw new Error('AI service error');
     }
 
-    const aiData = await aiResponse.json();
-    const responseContent = aiData.choices?.[0]?.message?.content || 'No response generated';
+    // Create a TransformStream to process the SSE and add metadata
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
+    let fullResponse = '';
 
-    // Log the query for audit trail (use service role for insert)
-    const serviceClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const transformStream = new TransformStream({
+      start(controller) {
+        // Send metadata as first SSE event
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'metadata', ...metadata })}\n\n`));
+      },
+      async transform(chunk, controller) {
+        const text = decoder.decode(chunk, { stream: true });
+        // Parse SSE lines and extract content deltas
+        const lines = text.split('\n');
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const jsonStr = line.slice(6).trim();
+            if (jsonStr === '[DONE]') {
+              // Log the query for audit trail before sending DONE
+              try {
+                const serviceClient = createClient(
+                  Deno.env.get('SUPABASE_URL') ?? '',
+                  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+                );
+                const { data: logRow } = await serviceClient
+                  .from('rag_query_logs')
+                  .insert({
+                    user_id: user.id,
+                    query_text: searchQuery,
+                    search_terms: searchTerms,
+                    chunks_found: chunks?.length || 0,
+                    chunks_matched: chunksMatched,
+                    sources_used: useExternalAI ? [{ type: 'external_ai', liability_waived: true }] : sources.map(s => ({ fileName: s.fileName, category: s.category, chunkIndex: s.chunkIndex })),
+                    response_preview: fullResponse.substring(0, 500),
+                    ai_model: useExternalAI ? 'google/gemini-2.5-flash (external)' : 'google/gemini-2.5-flash'
+                  })
+                  .select('id, created_at')
+                  .single();
+                console.log('Query logged for audit trail', logRow?.id);
+                // Send audit info with DONE
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', auditLogId: logRow?.id, auditLoggedAt: logRow?.created_at })}\n\n`));
+              } catch (logErr) {
+                console.error('Failed to log query:', logErr);
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));
+              }
+            } else if (jsonStr) {
+              try {
+                const parsed = JSON.parse(jsonStr);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  fullResponse += content;
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'delta', content })}\n\n`));
+                }
+              } catch {
+                // Ignore parse errors for partial chunks
+              }
+            }
+          }
+        }
+      },
+    });
 
-    const { data: logRow, error: logError } = await serviceClient
-      .from('rag_query_logs')
-      .insert({
-        user_id: user.id,
-        query_text: searchQuery,
-        search_terms: searchTerms,
-        chunks_found: chunks?.length || 0,
-        chunks_matched: chunksMatched,
-        sources_used: useExternalAI ? [{ type: 'external_ai', liability_waived: true }] : sources.map(s => ({ fileName: s.fileName, category: s.category, chunkIndex: s.chunkIndex })),
-        response_preview: responseContent.substring(0, 500),
-        ai_model: useExternalAI ? 'google/gemini-2.5-flash (external)' : 'google/gemini-2.5-flash'
-      })
-      .select('id, created_at')
-      .single();
+    // Pipe the AI response through our transform
+    const readable = aiResponse.body?.pipeThrough(transformStream);
 
-    if (logError) {
-      console.error('Failed to log query:', logError);
-    } else {
-      console.log('Query logged for audit trail', logRow?.id);
-    }
-
-    // Get unique documents used
-    const uniqueDocuments = [...new Set(sources.map(s => s.fileName))];
-
-    return new Response(JSON.stringify({
-      response: responseContent,
-      sources: useExternalAI ? [] : sources,
-      chunksFound: useExternalAI ? 0 : (chunks?.length || 0),
-      documentsSearched: useExternalAI ? 0 : uniqueDocuments.length,
-      documentsMatched: useExternalAI ? 0 : uniqueDocuments.length,
-      searchTermsUsed: searchTerms,
-      auditLogged: !logError,
-      auditLogId: logRow?.id ?? null,
-      auditLoggedAt: logRow?.created_at ?? null,
-      isExternal: useExternalAI || false,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    return new Response(readable, {
+      headers: { 
+        ...corsHeaders, 
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
     });
 
   } catch (error) {
