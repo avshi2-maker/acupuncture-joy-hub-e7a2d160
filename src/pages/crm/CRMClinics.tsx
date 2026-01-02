@@ -2,7 +2,9 @@ import { useState } from "react";
 import { CRMLayout } from "@/components/crm/CRMLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Building2, Plus, MapPin, Phone, Mail, Settings, User, Image, ParkingCircle, Map, ExternalLink } from "lucide-react";
+import { Building2, Plus, MapPin, Phone, Mail, Settings, User, Image, ParkingCircle, Map, ExternalLink, Bell, MessageSquare } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -31,6 +33,11 @@ export default function CRMClinics() {
     landing_page_bg_url: '',
     parking_instructions: '',
     map_embed_url: '',
+  });
+  const [reminderSettings, setReminderSettings] = useState({
+    reminder_enabled: false,
+    reminder_timing: ['24h'] as string[],
+    reminder_channel: 'whatsapp',
   });
 
   const { data: clinics, isLoading } = useQuery({
@@ -73,13 +80,16 @@ export default function CRMClinics() {
   });
 
   const updateLandingMutation = useMutation({
-    mutationFn: async ({ clinicId, settings }: { clinicId: string; settings: typeof landingSettings }) => {
+    mutationFn: async ({ clinicId, settings, reminders }: { clinicId: string; settings: typeof landingSettings; reminders: typeof reminderSettings }) => {
       const { data, error } = await supabase
         .from('clinics')
         .update({
           landing_page_bg_url: settings.landing_page_bg_url || null,
           parking_instructions: settings.parking_instructions || null,
           map_embed_url: settings.map_embed_url || null,
+          reminder_enabled: reminders.reminder_enabled,
+          reminder_timing: reminders.reminder_timing,
+          reminder_channel: reminders.reminder_channel,
         })
         .eq('id', clinicId)
         .select()
@@ -92,7 +102,7 @@ export default function CRMClinics() {
       queryClient.invalidateQueries({ queryKey: ['clinics'] });
       setIsSettingsOpen(false);
       setEditingClinic(null);
-      toast.success('Landing page settings updated');
+      toast.success('Clinic settings updated');
     },
     onError: (error) => {
       toast.error('Failed to update settings: ' + error.message);
@@ -115,13 +125,27 @@ export default function CRMClinics() {
       parking_instructions: clinic.parking_instructions || '',
       map_embed_url: clinic.map_embed_url || '',
     });
+    setReminderSettings({
+      reminder_enabled: clinic.reminder_enabled || false,
+      reminder_timing: clinic.reminder_timing || ['24h'],
+      reminder_channel: clinic.reminder_channel || 'whatsapp',
+    });
     setIsSettingsOpen(true);
+  };
+
+  const toggleReminderTiming = (timing: string) => {
+    setReminderSettings(prev => ({
+      ...prev,
+      reminder_timing: prev.reminder_timing.includes(timing)
+        ? prev.reminder_timing.filter(t => t !== timing)
+        : [...prev.reminder_timing, timing]
+    }));
   };
 
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingClinic) {
-      updateLandingMutation.mutate({ clinicId: editingClinic.id, settings: landingSettings });
+      updateLandingMutation.mutate({ clinicId: editingClinic.id, settings: landingSettings, reminders: reminderSettings });
     }
   };
 
@@ -366,6 +390,72 @@ export default function CRMClinics() {
                 <p className="text-xs text-muted-foreground">
                   Get embed URL from Google Maps → Share → Embed a map
                 </p>
+              </div>
+
+              {/* Patient Reminder Settings */}
+              <div className="border-t pt-4 mt-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Bell className="h-4 w-4 text-primary" />
+                    <Label htmlFor="reminder_enabled" className="font-medium">Patient Reminders</Label>
+                  </div>
+                  <Switch
+                    id="reminder_enabled"
+                    checked={reminderSettings.reminder_enabled}
+                    onCheckedChange={(checked) => setReminderSettings({ ...reminderSettings, reminder_enabled: checked })}
+                  />
+                </div>
+
+                {reminderSettings.reminder_enabled && (
+                  <div className="space-y-4 pl-6">
+                    <div className="space-y-2">
+                      <Label className="text-sm">Reminder Timing</Label>
+                      <div className="flex flex-wrap gap-3">
+                        {['24h', '2h', '1h'].map((timing) => (
+                          <div key={timing} className="flex items-center gap-2">
+                            <Checkbox
+                              id={`timing-${timing}`}
+                              checked={reminderSettings.reminder_timing.includes(timing)}
+                              onCheckedChange={() => toggleReminderTiming(timing)}
+                            />
+                            <Label htmlFor={`timing-${timing}`} className="text-sm font-normal cursor-pointer">
+                              {timing === '24h' ? '24 hours before' : timing === '2h' ? '2 hours before' : '1 hour before'}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4" />
+                        Notification Channel
+                      </Label>
+                      <div className="flex gap-4">
+                        {[
+                          { value: 'whatsapp', label: 'WhatsApp' },
+                          { value: 'sms', label: 'SMS' },
+                          { value: 'both', label: 'Both' },
+                        ].map((channel) => (
+                          <div key={channel.value} className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              id={`channel-${channel.value}`}
+                              name="reminder_channel"
+                              value={channel.value}
+                              checked={reminderSettings.reminder_channel === channel.value}
+                              onChange={(e) => setReminderSettings({ ...reminderSettings, reminder_channel: e.target.value })}
+                              className="h-4 w-4 text-primary"
+                            />
+                            <Label htmlFor={`channel-${channel.value}`} className="text-sm font-normal cursor-pointer">
+                              {channel.label}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end gap-2 pt-4">

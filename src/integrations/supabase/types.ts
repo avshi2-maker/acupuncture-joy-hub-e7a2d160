@@ -453,6 +453,9 @@ export type Database = {
           owner_id: string
           parking_instructions: string | null
           phone: string | null
+          reminder_channel: string | null
+          reminder_enabled: boolean | null
+          reminder_timing: string[] | null
           timezone: string | null
           updated_at: string
         }
@@ -470,6 +473,9 @@ export type Database = {
           owner_id: string
           parking_instructions?: string | null
           phone?: string | null
+          reminder_channel?: string | null
+          reminder_enabled?: boolean | null
+          reminder_timing?: string[] | null
           timezone?: string | null
           updated_at?: string
         }
@@ -487,6 +493,9 @@ export type Database = {
           owner_id?: string
           parking_instructions?: string | null
           phone?: string | null
+          reminder_channel?: string | null
+          reminder_enabled?: boolean | null
+          reminder_timing?: string[] | null
           timezone?: string | null
           updated_at?: string
         }
