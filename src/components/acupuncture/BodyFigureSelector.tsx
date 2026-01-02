@@ -4,64 +4,90 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ArrowLeft, MapPin, Info, ZoomIn, ZoomOut, CheckSquare, Square, Sparkles, X, Trash2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, MapPin, ZoomIn, ZoomOut, CheckSquare, Square, Sparkles, X, Trash2, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
-// Import all body figure images (updated collection)
-import armFullImg from '@/assets/body-figures/arm_full.png';
-import chestImg from '@/assets/body-figures/chest.png';
-import childFrontImg from '@/assets/body-figures/child_front.png';
-import earImg from '@/assets/body-figures/ear.png';
-import elbowInnerImg from '@/assets/body-figures/elbow_inner.png';
+// Import all 37 body figure images from the master CSV
+import abdomenImg from '@/assets/body-figures/abdomen.png';
+import shoulderSideImg from '@/assets/body-figures/shoulder_side.png';
+import neckPosteriorImg from '@/assets/body-figures/neck_posterior.png';
+import handDorsumImg from '@/assets/body-figures/hand_dorsum.png';
+import scalpTopImg from '@/assets/body-figures/scalp_top.png';
 import faceFrontImg from '@/assets/body-figures/face_front.png';
-import footImg from '@/assets/body-figures/foot.png';
-import footSoleImg from '@/assets/body-figures/foot_sole.png';
-import handImg from '@/assets/body-figures/hand.png';
-import headLateralImg from '@/assets/body-figures/head_lateral.png';
 import kneeFrontImg from '@/assets/body-figures/knee_front.png';
+import ankleImg from '@/assets/body-figures/ankle.png';
+import sacrumBackImg from '@/assets/body-figures/sacrum_back.png';
+import neckFrontImg from '@/assets/body-figures/neck_front.png';
+import shoulderAnteriorImg from '@/assets/body-figures/shoulder_anterior.png';
+import ankleMedialImg from '@/assets/body-figures/ankle_medial.png';
 import kneeLateralImg from '@/assets/body-figures/knee_lateral.png';
 import kneeMedialImg from '@/assets/body-figures/knee_medial.png';
-import legsPosteriorImg from '@/assets/body-figures/legs_posterior.png';
-import neckFrontImg from '@/assets/body-figures/neck_front.png';
-import neckPosteriorImg from '@/assets/body-figures/neck_posterior.png';
-import sacrumImg from '@/assets/body-figures/sacrum.png';
-import scalpTopImg from '@/assets/body-figures/scalp_top.png';
-import shoulderAnteriorImg from '@/assets/body-figures/shoulder_anterior.png';
-import shoulderSideImg from '@/assets/body-figures/shoulder_side.png';
-import thighHipImg from '@/assets/body-figures/thigh_hip.png';
+import kneeBackImg from '@/assets/body-figures/knee_back.png';
+import headLateralImg from '@/assets/body-figures/head_lateral.png';
+import earImg from '@/assets/body-figures/ear.png';
 import tongueImg from '@/assets/body-figures/tongue.png';
+import chestImg from '@/assets/body-figures/chest.png';
 import upperBackImg from '@/assets/body-figures/upper_back.png';
+import lowerBackImg from '@/assets/body-figures/lower_back.png';
+import armFullImg from '@/assets/body-figures/arm_full.png';
+import elbowInnerImg from '@/assets/body-figures/elbow_inner.png';
 import wristImg from '@/assets/body-figures/wrist.png';
+import thighHipImg from '@/assets/body-figures/thigh_hip.png';
+import lowerLegImg from '@/assets/body-figures/lower_leg.png';
+import footTopImg from '@/assets/body-figures/foot_top.png';
+import footSoleImg from '@/assets/body-figures/foot_sole.png';
+import childFrontImg from '@/assets/body-figures/child_front.png';
+import childBackImg from '@/assets/body-figures/child_back.png';
+import abdomenZoomedImg from '@/assets/body-figures/abdomen_zoomed.png';
+import ankleSideImg from '@/assets/body-figures/ankle_side.png';
+import handImg from '@/assets/body-figures/hand.png';
+import footImg from '@/assets/body-figures/foot.png';
+import legsPosteriorImg from '@/assets/body-figures/legs_posterior.png';
+import sacrumImg from '@/assets/body-figures/sacrum.png';
+import abdomenFemaleImg from '@/assets/body-figures/abdomen_female.png';
 
-// Map image names to imports
+// Map image names to imports (all 37 body figures from master CSV)
 const imageMap: Record<string, string> = {
-  'arm_full.png': armFullImg,
-  'chest.png': chestImg,
-  'child_front.png': childFrontImg,
-  'ear.png': earImg,
-  'elbow_inner.png': elbowInnerImg,
+  'abdomen.png': abdomenImg,
+  'shoulder_side.png': shoulderSideImg,
+  'neck_posterior.png': neckPosteriorImg,
+  'hand_dorsum.png': handDorsumImg,
+  'scalp_top.png': scalpTopImg,
   'face_front.png': faceFrontImg,
-  'foot.png': footImg,
-  'foot_sole.png': footSoleImg,
-  'hand.png': handImg,
-  'head_lateral.png': headLateralImg,
   'knee_front.png': kneeFrontImg,
+  'ankle.png': ankleImg,
+  'sacrum_back.png': sacrumBackImg,
+  'neck_front.png': neckFrontImg,
+  'shoulder_anterior.png': shoulderAnteriorImg,
+  'ankle_medial.png': ankleMedialImg,
   'knee_lateral.png': kneeLateralImg,
   'knee_medial.png': kneeMedialImg,
-  'legs_posterior.png': legsPosteriorImg,
-  'neck_front.png': neckFrontImg,
-  'neck_posterior.png': neckPosteriorImg,
-  'sacrum.png': sacrumImg,
-  'scalp_top.png': scalpTopImg,
-  'shoulder_anterior.png': shoulderAnteriorImg,
-  'shoulder_side.png': shoulderSideImg,
-  'thigh_hip.png': thighHipImg,
+  'knee_back.png': kneeBackImg,
+  'head_lateral.png': headLateralImg,
+  'ear.png': earImg,
   'tongue.png': tongueImg,
+  'chest.png': chestImg,
   'upper_back.png': upperBackImg,
+  'lower_back.png': lowerBackImg,
+  'arm_full.png': armFullImg,
+  'elbow_inner.png': elbowInnerImg,
   'wrist.png': wristImg,
+  'thigh_hip.png': thighHipImg,
+  'lower_leg.png': lowerLegImg,
+  'foot_top.png': footTopImg,
+  'foot_sole.png': footSoleImg,
+  'child_front.png': childFrontImg,
+  'child_back.png': childBackImg,
+  'abdomen_zoomed.png': abdomenZoomedImg,
+  'ankle_side.png': ankleSideImg,
+  'hand.png': handImg,
+  'foot.png': footImg,
+  'legs_posterior.png': legsPosteriorImg,
+  'sacrum.png': sacrumImg,
+  'abdomen_female.png': abdomenFemaleImg,
 };
 
-// Body figure categories for better organization
+// Body figure categories based on master CSV - organized by clinical priority and body region
 const figureCategories = [
   {
     name: 'Head & Neck',
@@ -69,15 +95,15 @@ const figureCategories = [
   },
   {
     name: 'Upper Limbs',
-    figures: ['shoulder_anterior.png', 'shoulder_side.png', 'arm_full.png', 'elbow_inner.png', 'wrist.png', 'hand.png']
+    figures: ['shoulder_anterior.png', 'shoulder_side.png', 'arm_full.png', 'elbow_inner.png', 'wrist.png', 'hand.png', 'hand_dorsum.png']
   },
   {
     name: 'Torso',
-    figures: ['chest.png', 'upper_back.png', 'sacrum.png']
+    figures: ['chest.png', 'abdomen.png', 'abdomen_zoomed.png', 'abdomen_female.png', 'upper_back.png', 'lower_back.png', 'sacrum.png', 'sacrum_back.png']
   },
   {
     name: 'Lower Limbs',
-    figures: ['thigh_hip.png', 'knee_front.png', 'knee_lateral.png', 'knee_medial.png', 'legs_posterior.png', 'foot.png', 'foot_sole.png']
+    figures: ['thigh_hip.png', 'knee_front.png', 'knee_lateral.png', 'knee_medial.png', 'knee_back.png', 'legs_posterior.png', 'lower_leg.png', 'ankle.png', 'ankle_medial.png', 'ankle_side.png', 'foot.png', 'foot_top.png', 'foot_sole.png']
   },
   {
     name: 'Microsystems',
@@ -85,171 +111,8 @@ const figureCategories = [
   },
   {
     name: 'Pediatric',
-    figures: ['child_front.png']
+    figures: ['child_front.png', 'child_back.png']
   }
-];
-
-// Point coordinates data - maps point codes to body figures (updated for new images)
-const pointCoordinates = [
-  // Hand points
-  { point_code: 'LI4', image_name: 'hand.png', x: 35, y: 35 },
-  { point_code: 'PC8', image_name: 'hand.png', x: 50, y: 55 },
-  { point_code: 'HT8', image_name: 'hand.png', x: 55, y: 60 },
-  { point_code: 'LU10', image_name: 'hand.png', x: 25, y: 50 },
-  { point_code: 'SI3', image_name: 'hand.png', x: 75, y: 45 },
-  { point_code: 'TE3', image_name: 'hand.png', x: 60, y: 30 },
-  
-  // Wrist points
-  { point_code: 'PC7', image_name: 'wrist.png', x: 50, y: 45 },
-  { point_code: 'HT7', image_name: 'wrist.png', x: 65, y: 45 },
-  { point_code: 'LU9', image_name: 'wrist.png', x: 35, y: 45 },
-  { point_code: 'TE5', image_name: 'wrist.png', x: 50, y: 25 },
-  
-  // Arm full points
-  { point_code: 'LI10', image_name: 'arm_full.png', x: 55, y: 65 },
-  { point_code: 'LI11', image_name: 'arm_full.png', x: 50, y: 50 },
-  { point_code: 'LI15', image_name: 'arm_full.png', x: 45, y: 15 },
-  { point_code: 'TE6', image_name: 'arm_full.png', x: 50, y: 60 },
-  
-  // Elbow points
-  { point_code: 'PC3', image_name: 'elbow_inner.png', x: 50, y: 55 },
-  { point_code: 'HT3', image_name: 'elbow_inner.png', x: 60, y: 50 },
-  { point_code: 'LU5', image_name: 'elbow_inner.png', x: 40, y: 48 },
-  
-  // Shoulder anterior
-  { point_code: 'LU1', image_name: 'shoulder_anterior.png', x: 35, y: 40 },
-  { point_code: 'LU2', image_name: 'shoulder_anterior.png', x: 38, y: 35 },
-  { point_code: 'ST12', image_name: 'shoulder_anterior.png', x: 45, y: 25 },
-  { point_code: 'LI15', image_name: 'shoulder_anterior.png', x: 55, y: 45 },
-  
-  // Shoulder side/posterior
-  { point_code: 'SI9', image_name: 'shoulder_side.png', x: 50, y: 55 },
-  { point_code: 'SI10', image_name: 'shoulder_side.png', x: 48, y: 45 },
-  { point_code: 'TE14', image_name: 'shoulder_side.png', x: 55, y: 40 },
-  { point_code: 'GB21', image_name: 'shoulder_side.png', x: 40, y: 25 },
-  
-  // Face front
-  { point_code: 'ST2', image_name: 'face_front.png', x: 38, y: 42 },
-  { point_code: 'ST3', image_name: 'face_front.png', x: 35, y: 52 },
-  { point_code: 'ST4', image_name: 'face_front.png', x: 38, y: 62 },
-  { point_code: 'LI20', image_name: 'face_front.png', x: 42, y: 55 },
-  { point_code: 'BL1', image_name: 'face_front.png', x: 42, y: 38 },
-  { point_code: 'BL2', image_name: 'face_front.png', x: 40, y: 32 },
-  { point_code: 'GB1', image_name: 'face_front.png', x: 32, y: 40 },
-  { point_code: 'GV26', image_name: 'face_front.png', x: 50, y: 58 },
-  { point_code: 'Yintang', image_name: 'face_front.png', x: 50, y: 32 },
-  
-  // Head lateral / scalp
-  { point_code: 'GB4', image_name: 'head_lateral.png', x: 55, y: 30 },
-  { point_code: 'GB8', image_name: 'head_lateral.png', x: 40, y: 25 },
-  { point_code: 'GB20', image_name: 'head_lateral.png', x: 25, y: 55 },
-  { point_code: 'Taiyang', image_name: 'head_lateral.png', x: 65, y: 38 },
-  { point_code: 'GV20', image_name: 'scalp_top.png', x: 50, y: 50 },
-  { point_code: 'GV21', image_name: 'scalp_top.png', x: 50, y: 40 },
-  { point_code: 'Sishencong', image_name: 'scalp_top.png', x: 45, y: 45 },
-  
-  // Neck front
-  { point_code: 'CV22', image_name: 'neck_front.png', x: 50, y: 70 },
-  { point_code: 'CV23', image_name: 'neck_front.png', x: 50, y: 55 },
-  { point_code: 'ST9', image_name: 'neck_front.png', x: 35, y: 50 },
-  { point_code: 'ST10', image_name: 'neck_front.png', x: 38, y: 55 },
-  { point_code: 'LI17', image_name: 'neck_front.png', x: 32, y: 45 },
-  
-  // Neck posterior
-  { point_code: 'GB20', image_name: 'neck_posterior.png', x: 35, y: 45 },
-  { point_code: 'GV16', image_name: 'neck_posterior.png', x: 50, y: 35 },
-  { point_code: 'BL10', image_name: 'neck_posterior.png', x: 40, y: 50 },
-  { point_code: 'SI15', image_name: 'neck_posterior.png', x: 35, y: 60 },
-  { point_code: 'GV14', image_name: 'neck_posterior.png', x: 50, y: 70 },
-  
-  // Chest
-  { point_code: 'CV17', image_name: 'chest.png', x: 50, y: 50 },
-  { point_code: 'CV22', image_name: 'chest.png', x: 50, y: 12 },
-  { point_code: 'KI27', image_name: 'chest.png', x: 38, y: 18 },
-  { point_code: 'LV14', image_name: 'chest.png', x: 30, y: 70 },
-  
-  // Upper back
-  { point_code: 'BL11', image_name: 'upper_back.png', x: 38, y: 25 },
-  { point_code: 'BL13', image_name: 'upper_back.png', x: 38, y: 35 },
-  { point_code: 'BL15', image_name: 'upper_back.png', x: 38, y: 45 },
-  { point_code: 'BL17', image_name: 'upper_back.png', x: 38, y: 55 },
-  { point_code: 'GV14', image_name: 'upper_back.png', x: 50, y: 15 },
-  { point_code: 'SI11', image_name: 'upper_back.png', x: 28, y: 40 },
-  
-  // Sacrum
-  { point_code: 'BL31', image_name: 'sacrum.png', x: 40, y: 30 },
-  { point_code: 'BL32', image_name: 'sacrum.png', x: 40, y: 40 },
-  { point_code: 'BL33', image_name: 'sacrum.png', x: 40, y: 50 },
-  { point_code: 'BL34', image_name: 'sacrum.png', x: 40, y: 60 },
-  { point_code: 'GV4', image_name: 'sacrum.png', x: 50, y: 20 },
-  { point_code: 'GB30', image_name: 'sacrum.png', x: 30, y: 45 },
-  
-  // Thigh/Hip
-  { point_code: 'GB29', image_name: 'thigh_hip.png', x: 55, y: 25 },
-  { point_code: 'GB30', image_name: 'thigh_hip.png', x: 45, y: 30 },
-  { point_code: 'GB31', image_name: 'thigh_hip.png', x: 50, y: 55 },
-  { point_code: 'ST31', image_name: 'thigh_hip.png', x: 55, y: 35 },
-  { point_code: 'ST32', image_name: 'thigh_hip.png', x: 55, y: 50 },
-  
-  // Knee front
-  { point_code: 'ST34', image_name: 'knee_front.png', x: 55, y: 25 },
-  { point_code: 'ST35', image_name: 'knee_front.png', x: 55, y: 45 },
-  { point_code: 'ST36', image_name: 'knee_front.png', x: 55, y: 65 },
-  { point_code: 'SP10', image_name: 'knee_front.png', x: 45, y: 25 },
-  { point_code: 'Xiyan', image_name: 'knee_front.png', x: 45, y: 45 },
-  
-  // Knee lateral
-  { point_code: 'GB33', image_name: 'knee_lateral.png', x: 50, y: 35 },
-  { point_code: 'GB34', image_name: 'knee_lateral.png', x: 55, y: 55 },
-  { point_code: 'ST36', image_name: 'knee_lateral.png', x: 60, y: 65 },
-  
-  // Knee medial
-  { point_code: 'SP9', image_name: 'knee_medial.png', x: 45, y: 55 },
-  { point_code: 'SP10', image_name: 'knee_medial.png', x: 50, y: 30 },
-  { point_code: 'LV7', image_name: 'knee_medial.png', x: 42, y: 50 },
-  { point_code: 'LV8', image_name: 'knee_medial.png', x: 40, y: 45 },
-  { point_code: 'KI10', image_name: 'knee_medial.png', x: 35, y: 48 },
-  
-  // Legs posterior
-  { point_code: 'BL39', image_name: 'legs_posterior.png', x: 45, y: 25 },
-  { point_code: 'BL40', image_name: 'legs_posterior.png', x: 50, y: 25 },
-  { point_code: 'BL57', image_name: 'legs_posterior.png', x: 50, y: 55 },
-  { point_code: 'KI10', image_name: 'legs_posterior.png', x: 55, y: 28 },
-  
-  // Foot points
-  { point_code: 'ST41', image_name: 'foot.png', x: 50, y: 20 },
-  { point_code: 'ST44', image_name: 'foot.png', x: 45, y: 75 },
-  { point_code: 'SP3', image_name: 'foot.png', x: 25, y: 45 },
-  { point_code: 'LV2', image_name: 'foot.png', x: 40, y: 70 },
-  { point_code: 'LV3', image_name: 'foot.png', x: 35, y: 50 },
-  { point_code: 'KI3', image_name: 'foot.png', x: 15, y: 25 },
-  { point_code: 'KI6', image_name: 'foot.png', x: 12, y: 30 },
-  { point_code: 'BL60', image_name: 'foot.png', x: 85, y: 25 },
-  { point_code: 'BL62', image_name: 'foot.png', x: 82, y: 32 },
-  { point_code: 'GB40', image_name: 'foot.png', x: 75, y: 22 },
-  { point_code: 'GB41', image_name: 'foot.png', x: 60, y: 55 },
-  
-  // Foot sole
-  { point_code: 'KI1', image_name: 'foot_sole.png', x: 50, y: 35 },
-  
-  // Ear points
-  { point_code: 'Ear-Shenmen', image_name: 'ear.png', x: 35, y: 35 },
-  { point_code: 'Ear-Heart', image_name: 'ear.png', x: 50, y: 55 },
-  { point_code: 'Ear-Kidney', image_name: 'ear.png', x: 45, y: 70 },
-  { point_code: 'Ear-Liver', image_name: 'ear.png', x: 55, y: 45 },
-  { point_code: 'Ear-Lung', image_name: 'ear.png', x: 50, y: 65 },
-  { point_code: 'Ear-Stomach', image_name: 'ear.png', x: 60, y: 50 },
-  { point_code: 'Ear-Spleen', image_name: 'ear.png', x: 55, y: 60 },
-  
-  // Tongue diagnostic areas
-  { point_code: 'Tongue-Heart', image_name: 'tongue.png', x: 50, y: 25 },
-  { point_code: 'Tongue-Lung', image_name: 'tongue.png', x: 50, y: 35 },
-  { point_code: 'Tongue-Spleen', image_name: 'tongue.png', x: 50, y: 50 },
-  { point_code: 'Tongue-Kidney', image_name: 'tongue.png', x: 50, y: 75 },
-  { point_code: 'Tongue-Liver', image_name: 'tongue.png', x: 30, y: 50 },
-  
-  // Pediatric
-  { point_code: 'Kid-Tui', image_name: 'child_front.png', x: 50, y: 55 },
 ];
 
 interface AcuPoint {
@@ -277,22 +140,10 @@ interface BodyFigureSelectorProps {
   onGenerateProtocol?: (points: string[]) => void; // Callback to generate treatment protocol
 }
 
-// Get point coordinate info by point code
-export function getPointCoordinate(pointCode: string) {
-  return pointCoordinates.find(p => p.point_code === pointCode);
-}
-
-// Get all available point codes
-export function getAllPointCodes(): string[] {
-  return pointCoordinates.map(p => p.point_code);
-}
-
 /**
  * Map common point names / pinyin to standard codes.
- * Expand as needed.
  */
 const POINT_NAME_MAP: Record<string, string> = {
-  // Pinyin names (lower-cased for matching)
   zusanli: 'ST36',
   hegu: 'LI4',
   quchi: 'LI11',
@@ -322,49 +173,26 @@ const POINT_NAME_MAP: Record<string, string> = {
 };
 
 /**
- * Normalize a raw point string (e.g. "ST-36", "ST 36", "st36") to the canonical code format (e.g. "ST36").
- */
-function normalizePointCode(raw: string): string {
-  // Remove hyphens/spaces, uppercase
-  return raw.replace(/[-\s]/g, '').toUpperCase();
-}
-
-/**
  * Extract acupuncture point codes from AI-generated text.
- * Supports:
- *  - Canonical codes: ST36, LI4
- *  - Hyphenated: ST-36, LI-4
- *  - Spaced: ST 36, LI 4
- *  - Common pinyin names: Zusanli, Hegu, etc.
+ * Supports canonical codes, hyphenated, spaced, and common pinyin names.
  */
 export function parsePointReferences(text: string): string[] {
-  const knownCodes = getAllPointCodes();
-  const knownSet = new Set(knownCodes.map((c) => c.toUpperCase()));
   const found: Set<string> = new Set();
 
-  // 1) Match code-style patterns: ST36 / ST-36 / ST 36 (case-insensitive)
-  //    Allow 1-3 letters, optional hyphen/space, 1-2 digits
+  // Match code-style patterns: ST36 / ST-36 / ST 36 (case-insensitive)
   const codePattern = /\b([A-Za-z]{1,3})[-\s]?(\d{1,2})\b/g;
   let match: RegExpExecArray | null;
   while ((match = codePattern.exec(text)) !== null) {
     const normalized = `${match[1].toUpperCase()}${match[2]}`;
-    if (knownSet.has(normalized)) {
-      // Return the original canonical code from knownCodes (preserves casing like 'Yintang')
-      const original = knownCodes.find((c) => c.toUpperCase() === normalized);
-      if (original) found.add(original);
-    }
+    found.add(normalized);
   }
 
-  // 2) Match known point names (case-insensitive whole-word)
+  // Match known point names (case-insensitive whole-word)
   const lowerText = text.toLowerCase();
   for (const [name, code] of Object.entries(POINT_NAME_MAP)) {
-    // Whole-word boundary check
     const regex = new RegExp(`\\b${name}\\b`, 'i');
     if (regex.test(lowerText)) {
-      // Check if canonical code is in our known list
-      const upperCode = code.toUpperCase();
-      const original = knownCodes.find((c) => c.toUpperCase() === upperCode);
-      if (original) found.add(original);
+      found.add(code);
     }
   }
 
@@ -378,42 +206,11 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
   const [acuPoints, setAcuPoints] = useState<AcuPoint[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(true);
-  const [imageDimensions, setImageDimensions] = useState<{width: number, height: number}>({ width: 2800, height: 1400 });
   const imageRef = useRef<HTMLImageElement>(null);
   
   // Multi-select mode
   const [multiSelectMode, setMultiSelectMode] = useState(false);
   const [selectedPoints, setSelectedPoints] = useState<string[]>([]);
-
-  // Get figures that have highlighted points
-  const relevantFigures = useMemo(() => {
-    if (highlightedPoints.length === 0) return [];
-    const figures = new Set<string>();
-    highlightedPoints.forEach(pointCode => {
-      const coord = getPointCoordinate(pointCode);
-      if (coord) {
-        figures.add(coord.image_name);
-      }
-    });
-    return Array.from(figures);
-  }, [highlightedPoints]);
-
-  // Auto-select figure if highlighted points are provided
-  useEffect(() => {
-    if (highlightedPoints.length > 0 && !selectedFigure) {
-      const firstPoint = highlightedPoints[0];
-      const coord = getPointCoordinate(firstPoint);
-      if (coord) {
-        setSelectedFigure(coord.image_name);
-      }
-    }
-  }, [highlightedPoints, selectedFigure]);
-
-  // Handle image load to get actual dimensions
-  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const img = e.currentTarget;
-    setImageDimensions({ width: img.naturalWidth, height: img.naturalHeight });
-  };
 
   // Fetch acupuncture points from database
   useEffect(() => {
@@ -441,40 +238,30 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
     fetchPoints();
   }, []);
 
-  // Get points for selected figure
-  const figurePoints = useMemo(() => {
-    if (!selectedFigure) return [];
-    return pointCoordinates.filter(p => p.image_name === selectedFigure);
-  }, [selectedFigure]);
-
-  // Get point details from database (normalize codes for matching)
+  // Get point details from database
   const getPointDetails = (code: string): AcuPoint | undefined => {
-    // Normalize: remove hyphens/spaces and compare uppercase
     const normalizedCode = code.replace(/[-\s]/g, '').toUpperCase();
     return acuPoints.find(p => p.code.replace(/[-\s]/g, '').toUpperCase() === normalizedCode);
   };
 
-  // Handle point click
-  const handlePointClick = (point: typeof pointCoordinates[0]) => {
+  // Handle point click (for database points displayed on the figure)
+  const handlePointClick = (point: AcuPoint) => {
     if (multiSelectMode) {
-      // Toggle point selection in multi-select mode
       setSelectedPoints(prev => {
-        if (prev.includes(point.point_code)) {
-          return prev.filter(p => p !== point.point_code);
+        if (prev.includes(point.code)) {
+          return prev.filter(p => p !== point.code);
         } else {
-          return [...prev, point.point_code];
+          return [...prev, point.code];
         }
       });
     } else {
-      // Single select mode - show details
-      const details = getPointDetails(point.point_code);
       setSelectedPoint({
-        code: point.point_code,
-        x: point.x,
-        y: point.y,
-        details: details || null,
+        code: point.code,
+        x: 50,
+        y: 50,
+        details: point,
       });
-      onPointSelect?.(point.point_code);
+      onPointSelect?.(point.code);
     }
   };
 
@@ -484,25 +271,6 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
       .replace('.png', '')
       .replace(/_/g, ' ')
       .replace(/\b\w/g, l => l.toUpperCase());
-  };
-
-  // Count points per figure
-  const getPointCount = (filename: string) => {
-    return pointCoordinates.filter(p => p.image_name === filename).length;
-  };
-
-  // Check if figure has highlighted points
-  const getFigureHighlightedCount = (filename: string) => {
-    return pointCoordinates.filter(
-      p => p.image_name === filename && highlightedPoints.includes(p.point_code)
-    ).length;
-  };
-
-  // Get count of selected points on a figure
-  const getFigureSelectedCount = (filename: string) => {
-    return pointCoordinates.filter(
-      p => p.image_name === filename && selectedPoints.includes(p.point_code)
-    ).length;
   };
 
   // Handle generate protocol
@@ -521,23 +289,24 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
   const toggleMultiSelectMode = () => {
     setMultiSelectMode(!multiSelectMode);
     if (multiSelectMode) {
-      // Clear selected points when exiting multi-select mode
       setSelectedPoints([]);
     }
   };
 
+  // Get all available figures from imageMap
+  const allFigures = Object.keys(imageMap);
+
   if (selectedFigure) {
     return (
       <div className="space-y-4">
-      {/* Disclaimer Alert */}
+        {/* Disclaimer Alert */}
         {showDisclaimer && highlightedPoints.length > 0 && (
           <Alert className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
             <AlertTriangle className="h-4 w-4 text-amber-600" />
             <AlertTitle className="text-amber-800 dark:text-amber-400">AI Suggestion - Not Medical Advice</AlertTitle>
             <AlertDescription className="text-amber-700 dark:text-amber-300 text-sm">
               These acupuncture points are <strong>optional suggestions</strong> based on AI analysis. 
-              The final treatment decision must be made by a licensed therapist using their professional expertise, 
-              patient assessment, and clinical judgment.
+              The final treatment decision must be made by a licensed therapist.
             </AlertDescription>
             <Button 
               variant="ghost" 
@@ -566,7 +335,6 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
           </Button>
           
           <div className="flex items-center gap-2">
-            {/* Multi-select toggle */}
             <Button
               variant={multiSelectMode ? "default" : "outline"}
               size="sm"
@@ -577,7 +345,6 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
               Multi-Select
             </Button>
             
-            {/* Zoom controls */}
             <Button
               variant="outline"
               size="icon"
@@ -647,7 +414,7 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Image with points - Enhanced with thicker border */}
+          {/* Image display */}
           <Card className="lg:col-span-2 overflow-hidden border-4 border-jade/40 shadow-xl ring-2 ring-jade/20 bg-gradient-to-br from-card to-jade/5">
             <CardHeader className="py-4 bg-gradient-to-r from-jade/10 to-transparent border-b-2 border-jade/20">
               <CardTitle className="text-lg flex items-center gap-2 flex-wrap">
@@ -655,14 +422,6 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
                   <MapPin className="h-5 w-5 text-jade" />
                 </div>
                 {getFigureName(selectedFigure)}
-                <Badge variant="secondary" className="ml-2 bg-jade/10 border-jade/30">
-                  {figurePoints.length} points
-                </Badge>
-                {highlightedPoints.length > 0 && (
-                  <Badge variant="default" className="ml-1 bg-jade shadow-md">
-                    {figurePoints.filter(p => highlightedPoints.includes(p.point_code)).length} recommended
-                  </Badge>
-                )}
                 {multiSelectMode && (
                   <Badge variant="outline" className="ml-1 border-jade text-jade bg-jade/10">
                     Click points to select
@@ -685,349 +444,140 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
                     alt={getFigureName(selectedFigure)}
                     className="max-w-none"
                     style={{ maxWidth: '100%', height: 'auto' }}
-                    onLoad={handleImageLoad}
                   />
-                  
-                  {/* Acupuncture point markers */}
-                  {figurePoints.map((point) => {
-                    const isSelected = selectedPoint?.code === point.point_code;
-                    const isHighlighted = highlightedPoints.includes(point.point_code);
-                    const isMultiSelected = selectedPoints.includes(point.point_code);
-                    // Coordinates are now stored as direct percentages (0-100)
-                    // Simply clamp to ensure they stay within visible bounds
-                    const xPercent = Math.min(92, Math.max(8, point.x));
-                    const yPercent = Math.min(92, Math.max(8, point.y));
-                    
-                    return (
-                      <button
-                        key={point.point_code}
-                        onClick={() => handlePointClick(point)}
-                        className={`absolute w-5 h-5 -ml-2.5 -mt-2.5 rounded-full border-2 transition-all duration-200 flex items-center justify-center text-[8px] font-bold ${
-                          isMultiSelected
-                            ? 'bg-primary border-primary text-primary-foreground scale-110 ring-2 ring-primary/30'
-                            : isSelected 
-                            ? 'bg-primary border-primary text-primary-foreground scale-110 ring-2 ring-primary/30' 
-                            : isHighlighted
-                            ? 'bg-red-500 border-red-600 text-white scale-110 ring-2 ring-red-500/50 animate-pulse shadow-lg'
-                            : 'bg-destructive/80 border-destructive text-destructive-foreground hover:scale-105 hover:bg-destructive'
-                        }`}
-                        style={{
-                          left: `${xPercent}%`,
-                          top: `${yPercent}%`,
-                        }}
-                        title={point.point_code}
-                      >
-                        {isMultiSelected && <span className="text-[6px]">✓</span>}
-                        <span className="sr-only">{point.point_code}</span>
-                      </button>
-                    );
-                  })}
                 </div>
               </ScrollArea>
             </CardContent>
           </Card>
 
-          {/* Point details panel / Multi-select panel */}
-          <Card>
-            <CardHeader className="py-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Info className="h-5 w-5 text-primary" />
-                {multiSelectMode ? 'Selected Points' : 'Point Details'}
-              </CardTitle>
+          {/* Point details panel */}
+          <Card className="h-fit">
+            <CardHeader className="py-3 border-b">
+              <CardTitle className="text-sm font-medium">Point Details</CardTitle>
             </CardHeader>
-            <CardContent>
-              {multiSelectMode ? (
-                // Multi-select summary
-                <div className="space-y-4">
-                  {selectedPoints.length > 0 ? (
-                    <>
-                      <p className="text-sm text-muted-foreground">
-                        {selectedPoints.length} points selected for protocol generation
-                      </p>
-                      <ScrollArea className="h-64">
-                        <div className="space-y-3">
-                          {selectedPoints.map(code => {
-                            const details = getPointDetails(code);
-                            return (
-                              <div key={code} className="flex items-start gap-2 p-2 rounded-lg bg-muted/50">
-                                <Badge variant="default" className="shrink-0">{code}</Badge>
-                                <div className="flex-1 min-w-0">
-                                  {details ? (
-                                    <>
-                                      <p className="text-sm font-medium truncate">{details.name_english}</p>
-                                      <p className="text-xs text-muted-foreground">{details.meridian} Meridian</p>
-                                    </>
-                                  ) : (
-                                    <p className="text-xs text-muted-foreground">Details not in database</p>
-                                  )}
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 shrink-0"
-                                  onClick={() => setSelectedPoints(prev => prev.filter(p => p !== code))}
-                                >
-                                  <X className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </ScrollArea>
-                      <Button
-                        className="w-full gap-2 bg-jade hover:bg-jade/90"
-                        onClick={handleGenerateProtocol}
-                        disabled={!onGenerateProtocol}
-                      >
-                        <Sparkles className="h-4 w-4" />
-                        Generate Treatment Protocol
-                      </Button>
-                    </>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <CheckSquare className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                      <p>Click on points to select them</p>
-                      <p className="text-xs mt-2">
-                        Selected points will be used to generate a treatment protocol
-                      </p>
+            <CardContent className="p-4">
+              {selectedPoint?.details ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-jade hover:bg-jade">{selectedPoint.details.code}</Badge>
+                    <span className="text-sm font-medium">{selectedPoint.details.meridian}</span>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold">{selectedPoint.details.name_english}</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedPoint.details.name_pinyin} • {selectedPoint.details.name_chinese}
+                    </p>
+                  </div>
+                  <div>
+                    <h5 className="text-sm font-medium mb-1">Location</h5>
+                    <p className="text-sm text-muted-foreground">{selectedPoint.details.location}</p>
+                  </div>
+                  {selectedPoint.details.indications.length > 0 && (
+                    <div>
+                      <h5 className="text-sm font-medium mb-1">Indications</h5>
+                      <ul className="text-sm text-muted-foreground list-disc list-inside">
+                        {selectedPoint.details.indications.slice(0, 5).map((ind, i) => (
+                          <li key={i}>{ind}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {selectedPoint.details.actions.length > 0 && (
+                    <div>
+                      <h5 className="text-sm font-medium mb-1">Actions</h5>
+                      <ul className="text-sm text-muted-foreground list-disc list-inside">
+                        {selectedPoint.details.actions.slice(0, 5).map((act, i) => (
+                          <li key={i}>{act}</li>
+                        ))}
+                      </ul>
                     </div>
                   )}
                 </div>
-              ) : selectedPoint ? (
-                // Single point details
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-2xl font-bold text-primary">
-                      {selectedPoint.code}
-                    </h3>
-                    {selectedPoint.details ? (
-                      <>
-                        <p className="text-lg">{selectedPoint.details.name_english}</p>
-                        <p className="text-muted-foreground">
-                          {selectedPoint.details.name_pinyin} • {selectedPoint.details.name_chinese}
-                        </p>
-                      </>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">
-                        Point data not found in database
-                      </p>
-                    )}
-                  </div>
-
-                  {selectedPoint.details && (
-                    <>
-                      <div>
-                        <Badge variant="outline" className="mb-2">
-                          {selectedPoint.details.meridian} Meridian
-                        </Badge>
-                      </div>
-
-                      <div>
-                        <h4 className="font-semibold mb-1">Location</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {selectedPoint.details.location}
-                        </p>
-                      </div>
-
-                      {selectedPoint.details.actions.length > 0 && (
-                        <div>
-                          <h4 className="font-semibold mb-1">Actions</h4>
-                          <div className="flex flex-wrap gap-1">
-                            {selectedPoint.details.actions.map((action, i) => (
-                              <Badge key={i} variant="secondary" className="text-xs">
-                                {action}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {selectedPoint.details.indications.length > 0 && (
-                        <div>
-                          <h4 className="font-semibold mb-1">Indications</h4>
-                          <ScrollArea className="h-32">
-                            <ul className="text-sm text-muted-foreground space-y-1">
-                              {selectedPoint.details.indications.map((ind, i) => (
-                                <li key={i}>• {ind}</li>
-                              ))}
-                            </ul>
-                          </ScrollArea>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <MapPin className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>Click on a point marker to view details</p>
-                  {highlightedPoints.length > 0 && (
-                    <p className="text-xs mt-2 text-jade">
-                      Green points are recommended by AI
-                    </p>
-                  )}
-                </div>
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  Select a point from the list below to view details
+                </p>
               )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Points list */}
+        {/* Available points from database */}
         <Card>
           <CardHeader className="py-3">
-            <CardTitle className="text-sm">Points on this figure</CardTitle>
+            <CardTitle className="text-sm">Available Acupuncture Points</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {figurePoints.map((point) => {
-                const details = getPointDetails(point.point_code);
-                const isSelected = selectedPoint?.code === point.point_code;
-                const isHighlighted = highlightedPoints.includes(point.point_code);
-                const isMultiSelected = selectedPoints.includes(point.point_code);
-                return (
-                  <Button
-                    key={point.point_code}
-                    variant={isMultiSelected || isSelected ? "default" : isHighlighted ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handlePointClick(point)}
-                    className={`gap-1 ${
-                      isMultiSelected 
-                        ? 'bg-primary' 
-                        : isHighlighted && !isSelected 
-                        ? 'bg-jade hover:bg-jade/90' 
-                        : ''
-                    }`}
-                  >
-                    {isMultiSelected && <CheckSquare className="h-3 w-3" />}
-                    {!isMultiSelected && <MapPin className="h-3 w-3" />}
-                    {point.point_code}
-                    {details && (
-                      <span className="text-xs opacity-70">
-                        ({details.name_pinyin})
-                      </span>
-                    )}
-                  </Button>
-                );
-              })}
-            </div>
+          <CardContent className="p-4">
+            {loading ? (
+              <p className="text-sm text-muted-foreground">Loading points...</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {acuPoints.slice(0, 50).map(point => {
+                  const isHighlighted = highlightedPoints.includes(point.code);
+                  const isMultiSelected = selectedPoints.includes(point.code);
+                  return (
+                    <Badge
+                      key={point.id}
+                      variant={isHighlighted ? "default" : "outline"}
+                      className={`cursor-pointer transition-all ${
+                        isHighlighted 
+                          ? 'bg-jade hover:bg-jade/80' 
+                          : isMultiSelected 
+                            ? 'bg-jade/20 border-jade text-jade' 
+                            : 'hover:bg-muted'
+                      }`}
+                      onClick={() => handlePointClick(point)}
+                    >
+                      {point.code}
+                    </Badge>
+                  );
+                })}
+                {acuPoints.length > 50 && (
+                  <Badge variant="secondary">+{acuPoints.length - 50} more</Badge>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  // Figure selection grid
+  // Body part selection grid
   return (
     <div className="space-y-6">
-      {/* Disclaimer Alert for AI suggestions */}
-      {showDisclaimer && highlightedPoints.length > 0 && (
-        <Alert className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
-          <AlertTriangle className="h-4 w-4 text-amber-600" />
-          <AlertTitle className="text-amber-800 dark:text-amber-400">AI Suggestion - Not Medical Advice</AlertTitle>
-          <AlertDescription className="text-amber-700 dark:text-amber-300 text-sm">
-            These acupuncture points are <strong>optional suggestions</strong> based on AI analysis. 
-            The final treatment decision must be made by a licensed therapist using their professional expertise, 
-            patient assessment, and clinical judgment.
-          </AlertDescription>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="mt-2 text-amber-700"
-            onClick={() => setShowDisclaimer(false)}
-          >
-            I understand
-          </Button>
-        </Alert>
-      )}
-
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold mb-2">Interactive Body Map</h2>
-        <p className="text-muted-foreground">
-          {highlightedPoints.length > 0 
-            ? 'Showing body parts with recommended points'
-            : 'Select a body part to explore acupuncture points'}
+      <div className="text-center">
+        <h3 className="text-lg font-semibold mb-2">Select Body Region</h3>
+        <p className="text-sm text-muted-foreground">
+          Choose an anatomical view to explore ({allFigures.length} figures available)
         </p>
-        {highlightedPoints.length > 0 && (
-          <p className="text-sm text-jade mt-2">
-            {highlightedPoints.length} points recommended across {relevantFigures.length} body part{relevantFigures.length !== 1 ? 's' : ''}
-          </p>
-        )}
       </div>
 
-      {/* Multi-select summary bar */}
-      {selectedPoints.length > 0 && (
-        <Card className="bg-jade-light/20 border-jade/30">
-          <CardContent className="py-3">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="default" className="bg-jade">
-                  {selectedPoints.length} points selected
-                </Badge>
-                {selectedPoints.slice(0, 5).map(code => (
-                  <Badge key={code} variant="outline" className="gap-1">
-                    {code}
-                  </Badge>
-                ))}
-                {selectedPoints.length > 5 && (
-                  <Badge variant="outline">+{selectedPoints.length - 5} more</Badge>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearSelectedPoints}
-                  className="gap-1 text-muted-foreground"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Clear
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleGenerateProtocol}
-                  className="gap-1 bg-jade hover:bg-jade/90"
-                  disabled={!onGenerateProtocol}
-                >
-                  <Sparkles className="h-4 w-4" />
-                  Generate Protocol
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Show only relevant figures when highlighted points exist, otherwise show all */}
-      {highlightedPoints.length > 0 ? (
-        // Filtered view - only show relevant body parts
-        <div>
-          <h3 className="text-lg font-semibold mb-3 text-primary">
-            Relevant Body Parts
-          </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {relevantFigures.map((figure) => {
-              const pointCount = getPointCount(figure);
-              const highlightedCount = getFigureHighlightedCount(figure);
-              const selectedCount = getFigureSelectedCount(figure);
+      {figureCategories.map((category) => (
+        <div key={category.name} className="space-y-3">
+          <h4 className="text-sm font-medium text-muted-foreground border-b pb-1">
+            {category.name}
+          </h4>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+            {category.figures.map((filename) => {
+              if (!imageMap[filename]) return null;
               return (
                 <Card
-                  key={figure}
-                  className={`cursor-pointer transition-all overflow-hidden group ring-2 ring-jade hover:ring-jade/80`}
-                  onClick={() => setSelectedFigure(figure)}
+                  key={filename}
+                  className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-jade/20 hover:border-jade/50"
+                  onClick={() => setSelectedFigure(filename)}
                 >
-                  <div className="aspect-square relative bg-muted/30 overflow-hidden">
-                    <img
-                      src={imageMap[figure]}
-                      alt={getFigureName(figure)}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <Badge className="absolute top-2 right-2 bg-jade">
-                      {highlightedCount} recommended
-                    </Badge>
-                  </div>
-                  <CardContent className="p-3">
-                    <p className="text-sm font-medium text-center truncate">
-                      {getFigureName(figure)}
+                  <CardContent className="p-2">
+                    <div className="aspect-square bg-gradient-to-b from-jade/5 to-jade/10 rounded-lg overflow-hidden mb-1.5">
+                      <img
+                        src={imageMap[filename]}
+                        alt={getFigureName(filename)}
+                        className="w-full h-full object-contain p-1"
+                        loading="lazy"
+                      />
+                    </div>
+                    <p className="text-[10px] font-medium text-center truncate">
+                      {getFigureName(filename)}
                     </p>
                   </CardContent>
                 </Card>
@@ -1035,75 +585,7 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
             })}
           </div>
         </div>
-      ) : (
-        // Full view - show all categories
-        figureCategories.map((category) => {
-          const availableFigures = category.figures.filter(f => imageMap[f]);
-          if (availableFigures.length === 0) return null;
-
-          return (
-            <div key={category.name}>
-              <h3 className="text-lg font-semibold mb-3 text-primary">
-                {category.name}
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {availableFigures.map((figure) => {
-                  const pointCount = getPointCount(figure);
-                  const highlightedCount = getFigureHighlightedCount(figure);
-                  const selectedCount = getFigureSelectedCount(figure);
-                return (
-                  <Card
-                    key={figure}
-                    className={`cursor-pointer transition-all overflow-hidden group ${
-                      selectedCount > 0
-                        ? 'ring-2 ring-primary hover:ring-primary/80'
-                        : highlightedCount > 0 
-                        ? 'ring-2 ring-jade hover:ring-jade/80' 
-                        : 'hover:ring-2 hover:ring-primary/50'
-                    }`}
-                    onClick={() => setSelectedFigure(figure)}
-                  >
-                    <div className="aspect-square relative bg-muted/30 overflow-hidden">
-                      <img
-                        src={imageMap[figure]}
-                        alt={getFigureName(figure)}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      {selectedCount > 0 && (
-                        <Badge 
-                          className="absolute top-2 right-2 bg-primary"
-                        >
-                          {selectedCount} selected
-                        </Badge>
-                      )}
-                      {highlightedCount > 0 && selectedCount === 0 && (
-                        <Badge 
-                          className="absolute top-2 right-2 bg-jade"
-                        >
-                          {highlightedCount} recommended
-                        </Badge>
-                      )}
-                      {pointCount > 0 && highlightedCount === 0 && selectedCount === 0 && (
-                        <Badge 
-                          className="absolute top-2 right-2 bg-destructive"
-                        >
-                          {pointCount} pts
-                        </Badge>
-                      )}
-                    </div>
-                    <CardContent className="p-3">
-                      <p className="text-sm font-medium text-center truncate">
-                        {getFigureName(figure)}
-                      </p>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })
-      )}
+      ))}
     </div>
   );
 }
