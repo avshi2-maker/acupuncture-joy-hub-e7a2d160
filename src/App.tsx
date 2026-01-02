@@ -62,6 +62,7 @@ import CAFBrowser from "./pages/CAFBrowser";
 import TherapistProfileEdit from "./pages/TherapistProfileEdit";
 import RetreatQuiz from "./pages/RetreatQuiz";
 import CRMSessionManager from "./pages/crm/CRMSessionManager";
+import PatientValuator from "./pages/PatientValuator";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -133,6 +134,7 @@ const App = () => (
                       <Route path="/cm-brain-questions" element={<RequireTier><CMBrainQuestions /></RequireTier>} />
                       <Route path="/point-editor" element={<RequireTier><PointCoordinateEditor /></RequireTier>} />
                       <Route path="/caf-browser" element={<RequireTier><CAFBrowser /></RequireTier>} />
+                      <Route path="/patient-valuator" element={<RequireTier><PatientValuator /></RequireTier>} />
 
                       <Route path="*" element={<NotFound />} />
                     </Routes>
