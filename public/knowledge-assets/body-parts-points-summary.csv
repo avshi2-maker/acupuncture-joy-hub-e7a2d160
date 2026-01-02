@@ -1,0 +1,21 @@
+Body Part,Image File,Point Codes,Point Count,Category
+Hand,hand.png,"LI4, PC8, HT8, LU10, LU11, SI3, TE3",7,Upper Extremity
+Arm (Outer),arm.png,"LI10, LI11, LI15, TE6, TE14",5,Upper Extremity
+Arm (Inner),arm_inner.png,"PC3, PC6, HT3, LU5, LU7",5,Upper Extremity
+Wrist,wrist.png,"PC7, HT7, LU9, SI4, SI6, TE5",6,Upper Extremity
+Head (Front),head_front.png,"ST2, ST3, ST4, ST6, ST8, BL1, BL2, GB14, GV20, GV24, GV26, CV23, EX-HN1, EX-HN3, EX-HN5, Yintang",16,Head & Neck
+Head (Side),head_side.png,"ST7, GB1, GB2, GB8, GB20, Taiyang",6,Head & Neck
+Chest,chest.png,"LV14, KI27, CV17, CV22",4,Torso
+Body (Front),body_front.png,"ST25, SP15, LV13, CV3, CV4, CV6, CV8, CV12",8,Torso
+Body (Back),bodyback.png,"BL10, BL11, BL13, BL15, BL17, BL18, BL20, BL21, BL23, BL25, GB21, GB30, GV14, GV16",14,Torso
+Spine,spine.png,GV4,1,Torso
+Leg (Front),leg_front.png,"ST34, ST35, ST36, ST37, ST40, EX-LE10",6,Lower Extremity
+Leg (Inner),leg_inner.png,"SP6, SP9, SP10, LV8, KI7, KI10",6,Lower Extremity
+Leg (Outer),leg_outer.png,"BL40, BL57, GB31, GB34, GB39",5,Lower Extremity
+Foot (Top),foot.png,"ST41, ST44, SP3, SP4, LV2, LV3, KI3, KI6, BL60, BL62, GB40, GB41",12,Lower Extremity
+Foot (Sole),foot_sole.png,KI1,1,Lower Extremity
+Ear,ear.png,"Ear-Shenmen, Ear-Heart, Ear-Kidney, Ear-Liver, Ear-Lung, Ear-Stomach, Ear-Spleen",7,Microsystem
+Tongue,tongue.png,"Tongue-Heart, Tongue-Lung, Tongue-Spleen, Tongue-Kidney, Tongue-Liver",5,Microsystem
+Child (Front),child_front.png,Kid-Tui,1,Pediatric
+Child (Back),child_back.png,"Kid-Feishu, Kid-Pishu, Kid-Shenshu",3,Pediatric
+TOTAL,19 figures,108 points,108,6 categories
