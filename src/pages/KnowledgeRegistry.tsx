@@ -553,6 +553,124 @@ export default function KnowledgeRegistry() {
     }
   }, [user, authLoading, navigate, location.pathname, location.search]);
 
+  // ALL CALLBACKS MUST BE BEFORE CONDITIONAL RETURNS
+  const updateQueueItem = useCallback((id: string, updates: Partial<QueueItem>) => {
+    setQueue(prev => prev.map(item => (item.id === id ? { ...item, ...updates } : item)));
+  }, []);
+
+  // Process one queued file at a time
+  const processQueue = useCallback(async () => {
+    if (isProcessingRef.current) return;
+    if (isPausedRef.current) return;
+
+    const pendingItem = queueRef.current.find(item => item.status === 'pending');
+    if (!pendingItem) return;
+
+    isProcessingRef.current = true;
+    setIsProcessing(true);
+    updateQueueItem(pendingItem.id, { status: 'importing' });
+
+    try {
+      const docPayload = {
+        fileName: pendingItem.file.name,
+        category: pendingItem.category,
+        language: pendingItem.language,
+        rows: pendingItem.parsed?.rows || [],
+      };
+
+      const { data, error } = await supabase.functions.invoke('import-knowledge', {
+        body: { documents: [docPayload] },
+      });
+
+      if (error) throw error;
+
+      const result = data?.results?.[0];
+      if (result?.success) {
+        const alreadyIndexed = Boolean(result?.alreadyIndexed);
+        updateQueueItem(pendingItem.id, {
+          status: 'done',
+          chunksCreated: result.chunksCreated,
+          alreadyIndexed,
+          existingDocument: result.existingDocument,
+        });
+
+        if (alreadyIndexed) {
+          toast.info(`Already indexed: ${result.existingDocument?.original_name || pendingItem.file.name}`);
+        }
+      } else {
+        updateQueueItem(pendingItem.id, { status: 'error', error: result?.error || 'Unknown error' });
+      }
+    } catch (err: any) {
+      updateQueueItem(pendingItem.id, { status: 'error', error: err?.message || 'Import failed' });
+    } finally {
+      isProcessingRef.current = false;
+      setIsProcessing(false);
+      queryClient.invalidateQueries({ queryKey: ['knowledge-documents'] });
+      queryClient.invalidateQueries({ queryKey: ['knowledge-chunks-stats'] });
+    }
+  }, [queryClient, updateQueueItem]);
+
+  const importBuiltInAsset = useCallback(async () => {
+    if (authLoading) return;
+    if (!user) {
+      toast.error('Please sign in to import knowledge.');
+      navigate('/auth');
+      return;
+    }
+
+    const asset = BUILTIN_ASSETS.find(a => a.id === builtInAssetId);
+    if (!asset) {
+      toast.error('Unknown built-in file');
+      return;
+    }
+
+    setIsImportingBuiltIn(true);
+    try {
+      const res = await fetch(asset.path, { cache: 'no-cache' });
+      if (!res.ok) {
+        throw new Error(`Failed to load ${asset.label}`);
+      }
+
+      const text = await res.text();
+      const parsed = parseCSV(text);
+      if (parsed.rows.length === 0) {
+        throw new Error('CSV has no data rows');
+      }
+
+      const file = new File([text], asset.label, { type: 'text/csv' });
+      const item: QueueItem = {
+        id: crypto.randomUUID(),
+        file,
+        category: builtInCategory || asset.defaultCategory,
+        language: builtInLanguage || asset.defaultLanguage,
+        parsed,
+        status: 'pending',
+      };
+
+      isProcessingRef.current = false;
+      setIsProcessing(false);
+      isPausedRef.current = false;
+      setIsPaused(false);
+      queueRef.current = [item];
+      setQueue([item]);
+
+      setTimeout(() => processQueue(), 0);
+      toast.success(`Import started: ${asset.label}`);
+    } catch (err: any) {
+      console.error('Built-in import error:', err);
+      toast.error(err?.message || 'Failed to import built-in file');
+    } finally {
+      setIsImportingBuiltIn(false);
+    }
+  }, [authLoading, user, navigate, builtInAssetId, builtInCategory, builtInLanguage, processQueue]);
+
+  // Effect to keep processing when queue changes and not paused
+  useEffect(() => {
+    if (!isProcessing && !isPaused && queue.some(item => item.status === 'pending')) {
+      processQueue();
+    }
+  }, [queue, isProcessing, isPaused, processQueue]);
+
   // Admin access check - show loading while checking, or access denied if not admin
   if (authLoading || adminLoading) {
     return (
@@ -739,10 +857,6 @@ ${report.verificationInstructions || ''}
     }
   };
 
-  const updateQueueItem = useCallback((id: string, updates: Partial<QueueItem>) => {
-    setQueue(prev => prev.map(item => (item.id === id ? { ...item, ...updates } : item)));
-  }, []);
-
   const removeQueueItem = (id: string) => {
     setQueue(prev => prev.filter(item => item.id !== id));
   };
@@ -757,122 +871,6 @@ ${report.verificationInstructions || ''}
   const retryFailed = () => {
     setQueue(prev => prev.map(item => item.status === 'error' ? { ...item, status: 'pending' as QueueItemStatus, error: undefined } : item));
   };
-
-  // Process one queued file at a time (avoids stale-state infinite loops)
-  const processQueue = useCallback(async () => {
-    // Ref guard prevents double-start (e.g. auto effect + manual click) before state updates
-    if (isProcessingRef.current) return;
-    if (isPausedRef.current) return;
-
-    const pendingItem = queueRef.current.find(item => item.status === 'pending');
-    if (!pendingItem) return;
-
-    isProcessingRef.current = true;
-    setIsProcessing(true);
-    updateQueueItem(pendingItem.id, { status: 'importing' });
-
-    try {
-      const docPayload = {
-        fileName: pendingItem.file.name,
-        category: pendingItem.category,
-        language: pendingItem.language,
-        rows: pendingItem.parsed?.rows || [],
-      };
-
-      const { data, error } = await supabase.functions.invoke('import-knowledge', {
-        body: { documents: [docPayload] },
-      });
-
-      if (error) throw error;
-
-      const result = data?.results?.[0];
-      if (result?.success) {
-        const alreadyIndexed = Boolean(result?.alreadyIndexed);
-        updateQueueItem(pendingItem.id, {
-          status: 'done',
-          chunksCreated: result.chunksCreated,
-          alreadyIndexed,
-          existingDocument: result.existingDocument,
-        });
-
-        if (alreadyIndexed) {
-          toast.info(`Already indexed: ${result.existingDocument?.original_name || pendingItem.file.name}`);
-        }
-      } else {
-        updateQueueItem(pendingItem.id, { status: 'error', error: result?.error || 'Unknown error' });
-      }
-    } catch (err: any) {
-      updateQueueItem(pendingItem.id, { status: 'error', error: err?.message || 'Import failed' });
-    } finally {
-      isProcessingRef.current = false;
-      setIsProcessing(false);
-      queryClient.invalidateQueries({ queryKey: ['knowledge-documents'] });
-      queryClient.invalidateQueries({ queryKey: ['knowledge-chunks-stats'] });
-    }
-  }, [queryClient, updateQueueItem]);
-
-  const importBuiltInAsset = useCallback(async () => {
-    if (authLoading) return;
-    if (!user) {
-      toast.error('Please sign in to import knowledge.');
-      navigate('/auth');
-      return;
-    }
-
-    const asset = BUILTIN_ASSETS.find(a => a.id === builtInAssetId);
-    if (!asset) {
-      toast.error('Unknown built-in file');
-      return;
-    }
-
-    setIsImportingBuiltIn(true);
-    try {
-      const res = await fetch(asset.path, { cache: 'no-cache' });
-      if (!res.ok) {
-        throw new Error(`Failed to load ${asset.label}`);
-      }
-
-      const text = await res.text();
-      const parsed = parseCSV(text);
-      if (parsed.rows.length === 0) {
-        throw new Error('CSV has no data rows');
-      }
-
-      const file = new File([text], asset.label, { type: 'text/csv' });
-      const item: QueueItem = {
-        id: crypto.randomUUID(),
-        file,
-        category: builtInCategory || asset.defaultCategory,
-        language: builtInLanguage || asset.defaultLanguage,
-        parsed,
-        status: 'pending',
-      };
-
-      // Enforce one-at-a-time: replace the queue with this single file and start immediately
-      isProcessingRef.current = false;
-      setIsProcessing(false);
-      isPausedRef.current = false;
-      setIsPaused(false);
-      queueRef.current = [item];
-      setQueue([item]);
-
-      // Run immediately (queueRef is already updated)
-      setTimeout(() => processQueue(), 0);
-      toast.success(`Import started: ${asset.label}`);
-    } catch (err: any) {
-      console.error('Built-in import error:', err);
-      toast.error(err?.message || 'Failed to import built-in file');
-    } finally {
-      setIsImportingBuiltIn(false);
-    }
-  }, [authLoading, user, navigate, builtInAssetId, builtInCategory, builtInLanguage, processQueue]);
-
-  // Effect to keep processing when queue changes and not paused
-  useEffect(() => {
-    if (!isProcessing && !isPaused && queue.some(item => item.status === 'pending')) {
-      processQueue();
-    }
-  }, [queue, isProcessing, isPaused, processQueue]);
 
   const togglePause = () => {
     if (isPaused) {
