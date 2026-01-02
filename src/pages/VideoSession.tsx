@@ -108,6 +108,7 @@ import {
 import { VideoSessionHeaderBoxes } from '@/components/video/VideoSessionHeaderBoxes';
 import { InlineMusicPlayer } from '@/components/video/InlineMusicPlayer';
 import { TcmBrainPanel } from '@/components/video/TcmBrainPanel';
+import { SessionBriefPanel } from '@/components/video/SessionBriefPanel';
 import { PregnancySafetyDialog, ElderlyLifestyleDialog } from '@/components/clinical';
 
 import { SessionWorkflowIndicator } from '@/components/video/SessionWorkflowIndicator';
@@ -167,6 +168,7 @@ export default function VideoSession() {
   const [showMusicPlayer, setShowMusicPlayer] = useState(false);
   const [showHelpGuide, setShowHelpGuide] = useState(false);
   const [showTcmBrainPanel, setShowTcmBrainPanel] = useState(false);
+  const [showSessionBrief, setShowSessionBrief] = useState(false);
   const [showPregnancyCalc, setShowPregnancyCalc] = useState(false);
   const [showElderlyGuide, setShowElderlyGuide] = useState(false);
   const [voiceAlwaysOn, setVoiceAlwaysOn] = useState(false);
@@ -1025,13 +1027,24 @@ export default function VideoSession() {
   const handlePatientSelect = (patientId: string) => {
     if (patientId === 'none') {
       setPatient(null);
+      setShowSessionBrief(false);
       return;
     }
     const patient = patients.find(p => p.id === patientId);
     if (patient) {
       setPatient({ id: patient.id, name: patient.full_name, phone: patient.phone || undefined });
+      // Auto-open Session Brief panel when patient is selected
+      setShowSessionBrief(true);
+      toast.info('🧠 Generating session brief...', { duration: 2000 });
     }
   };
+
+  // Handle adding question from Session Brief to notes
+  const handleSessionBriefQuestion = useCallback((question: string) => {
+    const timestamp = formatDuration(sessionDuration);
+    setNotes(sessionNotes + `\n❓ [${timestamp}] ${question}`);
+    haptic.success();
+  }, [sessionDuration, sessionNotes, setNotes, haptic]);
 
   const handlePrint = () => {
     if (selectedPatientId && selectedPatientName) {
@@ -2457,6 +2470,16 @@ export default function VideoSession() {
         patientId={selectedPatientId || undefined}
         patientName={selectedPatientName || undefined}
         sessionNotes={sessionNotes}
+      />
+      
+      {/* Session Brief Panel - Auto-generates on patient selection */}
+      <SessionBriefPanel
+        patientId={selectedPatientId}
+        patientName={selectedPatientName}
+        isOpen={showSessionBrief}
+        onClose={() => setShowSessionBrief(false)}
+        onQuestionUsed={handleSessionBriefQuestion}
+        autoTrigger={true}
       />
       
       {/* Pregnancy Safety Calculator Dialog */}
