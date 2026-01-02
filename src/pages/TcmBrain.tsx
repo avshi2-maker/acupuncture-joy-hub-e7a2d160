@@ -57,7 +57,7 @@ import { CrossPlatformBackButton } from '@/components/ui/CrossPlatformBackButton
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { TierBadge } from '@/components/layout/TierBadge';
 import { FloatingHelpGuide } from '@/components/ui/FloatingHelpGuide';
-import { PregnancySafetyDialog, ElderlyLifestyleDialog, PediatricAcupunctureDialog } from '@/components/clinical';
+import { PregnancySafetyDialog, ElderlyLifestyleDialog, PediatricAcupunctureDialog, VagusNerveDialog } from '@/components/clinical';
 import { SessionBriefPanel } from '@/components/video/SessionBriefPanel';
 import { toast } from 'sonner';
 import clockImg from '@/assets/clock.png';
@@ -72,6 +72,7 @@ export default function TcmBrain() {
   const [showPregnancyCalc, setShowPregnancyCalc] = useState(false);
   const [showElderlyGuide, setShowElderlyGuide] = useState(false);
   const [showPediatricGuide, setShowPediatricGuide] = useState(false);
+  const [showVagusAssessment, setShowVagusAssessment] = useState(false);
   const [showSessionBrief, setShowSessionBrief] = useState(false);
   const [qaFavoritesCount, setQaFavoritesCount] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -539,6 +540,17 @@ export default function TcmBrain() {
                     onClick: () => setShowElderlyGuide(true),
                   },
                   {
+                    id: 'vagus',
+                    name: 'Vagus',
+                    nameHe: 'וואגוס',
+                    icon: Activity,
+                    color: 'text-purple-500',
+                    borderColor: 'border-purple-300',
+                    isActive: showVagusAssessment,
+                    tooltip: 'Vagus Nerve Assessment - 100 symptoms, acupoints & formulas',
+                    onClick: () => setShowVagusAssessment(true),
+                  },
+                  {
                     id: 'session-brief',
                     name: 'Brief',
                     nameHe: 'תקציר',
@@ -933,6 +945,12 @@ export default function TcmBrain() {
           open={showPediatricGuide} 
           onOpenChange={setShowPediatricGuide}
           defaultLanguage="he"
+        />
+        
+        {/* Vagus Nerve Assessment */}
+        <VagusNerveDialog 
+          open={showVagusAssessment} 
+          onOpenChange={setShowVagusAssessment}
         />
         
         {/* Session Brief Panel */}

@@ -6,3 +6,6 @@ export { ElderlyLifestyleDialog } from './ElderlyLifestyleDialog';
 export { PediatricAcupunctureGuide } from './PediatricAcupunctureGuide';
 export { PediatricAcupunctureDialog, PediatricGuideButton } from './PediatricAcupunctureDialog';
 export { PediatricInfographicCard } from './PediatricInfographicCard';
+export { VagusNerveAssessment } from './VagusNerveAssessment';
+export { VagusNerveDialog } from './VagusNerveDialog';
+export { VagusNerveCard } from './VagusNerveCard';
