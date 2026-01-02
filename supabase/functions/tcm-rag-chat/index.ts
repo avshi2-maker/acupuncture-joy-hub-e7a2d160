@@ -375,50 +375,52 @@ serve(async (req) => {
       clinicalTrialsResult
     ] = await Promise.all([
       // PILLAR 1: Clinical - Points, needles, techniques
+      // Searches ALL ASSETS for clinical content (acupoints, techniques, protocols)
       supabaseClient
         .from('knowledge_chunks')
         .select(`
           id, content, question, answer, chunk_index, metadata,
-          document:knowledge_documents!inner(id, file_name, original_name, category)
+          document:knowledge_documents(id, file_name, original_name, category)
         `)
-        .or('file_name.ilike.%acupuncture%,file_name.ilike.%point%,file_name.ilike.%meridian%,file_name.ilike.%protocol%,file_name.ilike.%treatment%', { referencedTable: 'document' })
+        .or('content.ilike.%acupuncture%,content.ilike.%point%,content.ilike.%needle%,content.ilike.%BL%,content.ilike.%GB%,content.ilike.%ST%,content.ilike.%SP%,content.ilike.%LI%,content.ilike.%KI%,content.ilike.%LR%,content.ilike.%moxa%,content.ilike.%cupping%,content.ilike.%insertion%,content.ilike.%depth%,content.ilike.%technique%,answer.ilike.%point%,answer.ilike.%needle%,question.ilike.%point%,question.ilike.%acupuncture%')
         .textSearch('content', searchTerms, { type: 'websearch', config: 'simple' })
-        .limit(8),
+        .limit(12),
 
       // PILLAR 2: Pharmacopeia - Herbs, formulas, dosages
+      // Searches ALL ASSETS for herbal/formula content
       supabaseClient
         .from('knowledge_chunks')
         .select(`
           id, content, question, answer, chunk_index, metadata,
-          document:knowledge_documents!inner(id, file_name, original_name, category)
+          document:knowledge_documents(id, file_name, original_name, category)
         `)
-        .or('file_name.ilike.%herb%,file_name.ilike.%formula%,file_name.ilike.%pharmacopeia%,file_name.ilike.%materia%,content.ilike.%tang%,content.ilike.%wan%', { referencedTable: 'document' })
+        .or('content.ilike.%herb%,content.ilike.%formula%,content.ilike.%tang%,content.ilike.%wan%,content.ilike.%san%,content.ilike.%dosage%,content.ilike.%decoction%,content.ilike.%contraindication%,content.ilike.%prescription%,content.ilike.%materia medica%,answer.ilike.%herb%,answer.ilike.%formula%,answer.ilike.%tang%,question.ilike.%herb%,question.ilike.%formula%')
         .textSearch('content', searchTerms, { type: 'websearch', config: 'simple' })
-        .limit(8),
+        .limit(12),
 
       // PILLAR 3: Nutrition - Searches ALL ASSETS for nutrition-related content
-      // Not limited to "nutrition" files - extracts diet info from ANY document
+      // Uses keyword-based search WITHOUT requiring original query match
+      // This ensures nutrition advice is found even if not directly mentioning the condition
       supabaseClient
         .from('knowledge_chunks')
         .select(`
           id, content, question, answer, chunk_index, metadata,
           document:knowledge_documents(id, file_name, original_name, category)
         `)
-        .or('content.ilike.%diet%,content.ilike.%food%,content.ilike.%eat%,content.ilike.%nutrition%,content.ilike.%avoid%,content.ilike.%warming%,content.ilike.%cooling%,content.ilike.%damp%,content.ilike.%phlegm%,content.ilike.%spleen%,content.ilike.%digest%,content.ilike.%meal%,content.ilike.%recipe%,answer.ilike.%diet%,answer.ilike.%food%,answer.ilike.%eat%,answer.ilike.%avoid%')
-        .textSearch('content', searchTerms, { type: 'websearch', config: 'simple' })
-        .limit(12),
+        .or('content.ilike.%diet%,content.ilike.%food%,content.ilike.%eat%,content.ilike.%nutrition%,content.ilike.%avoid foods%,content.ilike.%warming foods%,content.ilike.%cooling foods%,content.ilike.%dampness%,content.ilike.%phlegm%,content.ilike.%spleen%,content.ilike.%digest%,content.ilike.%meal%,content.ilike.%recipe%,content.ilike.%congee%,content.ilike.%soup%,content.ilike.%tea%,answer.ilike.%diet%,answer.ilike.%food%,answer.ilike.%eat%,answer.ilike.%avoid%,question.ilike.%diet%,question.ilike.%food%,question.ilike.%nutrition%')
+        .limit(15),
 
-      // PILLAR 4: Lifestyle/Sport - Searches ALL ASSETS for lifestyle-related content
-      // Not limited to "lifestyle" files - extracts exercise/sleep info from ANY document
+      // PILLAR 4: Lifestyle/Sport - Searches ALL ASSETS for lifestyle-related content  
+      // Uses keyword-based search WITHOUT requiring original query match
+      // This ensures lifestyle advice is found even if not directly mentioning the condition
       supabaseClient
         .from('knowledge_chunks')
         .select(`
           id, content, question, answer, chunk_index, metadata,
           document:knowledge_documents(id, file_name, original_name, category)
         `)
-        .or('content.ilike.%exercise%,content.ilike.%stretch%,content.ilike.%sleep%,content.ilike.%rest%,content.ilike.%stress%,content.ilike.%yoga%,content.ilike.%qigong%,content.ilike.%tai chi%,content.ilike.%walk%,content.ilike.%posture%,content.ilike.%relax%,content.ilike.%breathing%,content.ilike.%meditation%,answer.ilike.%exercise%,answer.ilike.%sleep%,answer.ilike.%stress%,answer.ilike.%stretch%')
-        .textSearch('content', searchTerms, { type: 'websearch', config: 'simple' })
-        .limit(12),
+        .or('content.ilike.%exercise%,content.ilike.%stretch%,content.ilike.%sleep%,content.ilike.%rest%,content.ilike.%stress%,content.ilike.%yoga%,content.ilike.%qigong%,content.ilike.%tai chi%,content.ilike.%walk%,content.ilike.%posture%,content.ilike.%relax%,content.ilike.%breathing%,content.ilike.%meditation%,content.ilike.%cool down%,content.ilike.%warm up%,answer.ilike.%exercise%,answer.ilike.%sleep%,answer.ilike.%stress%,answer.ilike.%stretch%,question.ilike.%exercise%,question.ilike.%lifestyle%,question.ilike.%sleep%')
+        .limit(15),
 
       // Age-specific knowledge
       ageGroup && ageFilePatterns.length > 0
