@@ -1,4 +1,6 @@
 import { BookOpen, Sparkles, Leaf } from "lucide-react";
+import tcmEncyclopediaImg from "@/assets/tcm-encyclopedia.png";
+import healingPathImg from "@/assets/healing-path-infographic.png";
 
 const philosophyCards = [
   {
@@ -40,8 +42,18 @@ export const ClinicPhilosophy = () => {
           בקליניקה אנו פועלים לפי עקרונות הרפואה הסינית העתיקה, המגובים במערכת ידע מתקדמת, ללא יומרות רפואיות מערביות – אלא כאלטרנטיבה שלמה וממוקדת.
         </p>
 
+        {/* TCM Encyclopedia Image - Featured */}
+        <div className="mb-12 md:mb-16">
+          <img 
+            src={tcmEncyclopediaImg} 
+            alt="TCM Encyclopedia - Ancient wisdom meets modern technology"
+            className="w-full max-w-3xl mx-auto rounded-2xl shadow-lg"
+            style={{ boxShadow: "0 20px 50px rgba(44, 110, 73, 0.15)" }}
+          />
+        </div>
+
         {/* Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-[30px]">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-[30px] mb-14 md:mb-20">
           {philosophyCards.map((card, index) => {
             const IconComponent = card.icon;
             return (
@@ -82,6 +94,22 @@ export const ClinicPhilosophy = () => {
               </article>
             );
           })}
+        </div>
+
+        {/* Healing Path Infographic */}
+        <div className="pt-8 border-t border-[#2c6e49]/10">
+          <h3 
+            className="text-xl md:text-2xl font-bold mb-6"
+            style={{ color: "#2c6e49", fontFamily: "'Heebo', sans-serif" }}
+          >
+            מסלול הריפוי: בין תיקון זמני לצמיחה מתמשכת
+          </h3>
+          <img 
+            src={healingPathImg} 
+            alt="מסלול הריפוי - השוואה בין טיפול סימפטומטי לטיפול בשורש"
+            className="w-full max-w-5xl mx-auto rounded-2xl shadow-lg"
+            style={{ boxShadow: "0 20px 50px rgba(44, 110, 73, 0.12)" }}
+          />
         </div>
       </div>
     </section>

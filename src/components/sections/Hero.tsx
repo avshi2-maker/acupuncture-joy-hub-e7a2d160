@@ -110,6 +110,35 @@ const Hero = () => {
         </span>
       </button>
 
+      {/* Scroll Indicator - Bottom Center */}
+      <button
+        onClick={() => {
+          const philosophySection = document.querySelector('[dir="rtl"]');
+          if (philosophySection) {
+            philosophySection.scrollIntoView({ behavior: 'smooth' });
+          }
+        }}
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1 text-primary-foreground/80 hover:text-primary-foreground transition-colors cursor-pointer animate-fade-in-up delay-700"
+        aria-label="Scroll down to learn more"
+      >
+        <span className="text-xs font-medium tracking-wider uppercase hidden sm:block">גלול למטה</span>
+        <div className="animate-bounce">
+          <svg 
+            className="w-6 h-6" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M19 14l-7 7m0 0l-7-7m7 7V3" 
+            />
+          </svg>
+        </div>
+      </button>
+
     </section>
   );
 };
