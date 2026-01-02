@@ -1,14 +1,17 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Send, Loader2, Sparkles, X, MessageCircle } from 'lucide-react';
+import { Brain, Send, Loader2, Sparkles, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
+import { RAGBodyFigureDisplay } from '@/components/acupuncture/RAGBodyFigureDisplay';
+import { parsePointReferences } from '@/components/acupuncture/BodyFigureSelector';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -33,6 +36,17 @@ export function TcmBrainPanel({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showBodyMap, setShowBodyMap] = useState(true);
+
+  // Extract highlighted points from the last assistant message
+  const { highlightedPoints, lastAIResponse } = useMemo(() => {
+    const lastAssistantMsg = [...messages].reverse().find(m => m.role === 'assistant');
+    if (lastAssistantMsg) {
+      const points = parsePointReferences(lastAssistantMsg.content);
+      return { highlightedPoints: points, lastAIResponse: lastAssistantMsg.content };
+    }
+    return { highlightedPoints: [], lastAIResponse: '' };
+  }, [messages]);
 
   const sendMessage = useCallback(async () => {
     if (!input.trim() || isLoading) return;
@@ -82,7 +96,7 @@ export function TcmBrainPanel({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-lg p-0 flex flex-col">
+      <SheetContent side="right" className="w-full sm:max-w-xl p-0 flex flex-col">
         <SheetHeader className="px-4 py-3 border-b bg-gradient-to-r from-jade/10 to-gold/10">
           <div className="flex items-center justify-between">
             <SheetTitle className="flex items-center gap-2 text-jade">
@@ -118,6 +132,33 @@ export function TcmBrainPanel({
             </Button>
           ))}
         </div>
+
+        {/* Body Map Section - Auto-updates when AI mentions points */}
+        {highlightedPoints.length > 0 && (
+          <Collapsible open={showBodyMap} onOpenChange={setShowBodyMap} className="border-b">
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="w-full flex items-center justify-between px-4 py-2 h-auto">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-jade" />
+                  <span className="text-sm font-medium">Body Map</span>
+                  <Badge variant="secondary" className="text-xs bg-jade/20 text-jade">
+                    {highlightedPoints.length} points
+                  </Badge>
+                </div>
+                {showBodyMap ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="px-4 pb-3">
+                <RAGBodyFigureDisplay
+                  pointCodes={highlightedPoints}
+                  aiResponseText={lastAIResponse}
+                  allowSelection={false}
+                />
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
 
         {/* Messages */}
         <ScrollArea className="flex-1 px-4 py-3">

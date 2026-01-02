@@ -844,7 +844,12 @@ export default function TcmBrain() {
               </TabsContent>
 
               <TabsContent value="bodymap" className="m-0">
-                <BodyMapTab highlightedPoints={highlightedPoints} streamChat={streamChat} onTabChange={setActiveTab} />
+                <BodyMapTab 
+                  highlightedPoints={highlightedPoints} 
+                  aiResponseText={messages.filter(m => m.role === 'assistant').slice(-1)[0]?.content || ''}
+                  streamChat={streamChat} 
+                  onTabChange={setActiveTab} 
+                />
               </TabsContent>
 
               <TabsContent value="session" className="m-0">
