@@ -8,148 +8,86 @@ import { Badge } from '@/components/ui/badge';
 import { User, Hand, Footprints, Brain, Baby, Sparkles, Loader2, MapPin } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
-// Import all body figure images
-import armImg from '@/assets/body-figures/arm.png';
-import armInnerImg from '@/assets/body-figures/arm_inner.png';
-import bodyFrontImg from '@/assets/body-figures/body_front.png';
-import bodyMainImg from '@/assets/body-figures/body_main.png';
-import bodybackImg from '@/assets/body-figures/bodyback.png';
+// Import all body figure images (updated collection)
+import armFullImg from '@/assets/body-figures/arm_full.png';
 import chestImg from '@/assets/body-figures/chest.png';
-import childBackImg from '@/assets/body-figures/child_back.png';
 import childFrontImg from '@/assets/body-figures/child_front.png';
 import earImg from '@/assets/body-figures/ear.png';
+import elbowInnerImg from '@/assets/body-figures/elbow_inner.png';
+import faceFrontImg from '@/assets/body-figures/face_front.png';
 import footImg from '@/assets/body-figures/foot.png';
 import footSoleImg from '@/assets/body-figures/foot_sole.png';
 import handImg from '@/assets/body-figures/hand.png';
-import headFrontImg from '@/assets/body-figures/head_front.png';
-import headSideImg from '@/assets/body-figures/head_side.png';
-import legFrontImg from '@/assets/body-figures/leg_front.png';
-import legInnerImg from '@/assets/body-figures/leg_inner.png';
-import legOuterImg from '@/assets/body-figures/leg_outer.png';
-import spineImg from '@/assets/body-figures/spine.png';
+import headLateralImg from '@/assets/body-figures/head_lateral.png';
+import kneeFrontImg from '@/assets/body-figures/knee_front.png';
+import kneeLateralImg from '@/assets/body-figures/knee_lateral.png';
+import kneeMedialImg from '@/assets/body-figures/knee_medial.png';
+import legsPosteriorImg from '@/assets/body-figures/legs_posterior.png';
+import neckFrontImg from '@/assets/body-figures/neck_front.png';
+import neckPosteriorImg from '@/assets/body-figures/neck_posterior.png';
+import sacrumImg from '@/assets/body-figures/sacrum.png';
+import scalpTopImg from '@/assets/body-figures/scalp_top.png';
+import shoulderAnteriorImg from '@/assets/body-figures/shoulder_anterior.png';
+import shoulderSideImg from '@/assets/body-figures/shoulder_side.png';
+import thighHipImg from '@/assets/body-figures/thigh_hip.png';
 import tongueImg from '@/assets/body-figures/tongue.png';
+import upperBackImg from '@/assets/body-figures/upper_back.png';
 import wristImg from '@/assets/body-figures/wrist.png';
 
-// Point coordinates from CSV - normalized to percentage values
+// Point coordinates for new body figures
 const pointCoordinates: { point_code: string; image_name: string; x: number; y: number }[] = [
-  { point_code: 'LI4', image_name: 'hand.png', x: 50, y: 40 },
-  { point_code: 'LI10', image_name: 'arm.png', x: 52, y: 55 },
-  { point_code: 'LI11', image_name: 'arm.png', x: 54, y: 45 },
-  { point_code: 'LI15', image_name: 'arm.png', x: 43, y: 20 },
-  { point_code: 'PC3', image_name: 'arm_inner.png', x: 52, y: 43 },
-  { point_code: 'PC6', image_name: 'arm_inner.png', x: 50, y: 50 },
-  { point_code: 'PC7', image_name: 'wrist.png', x: 50, y: 47 },
-  { point_code: 'PC8', image_name: 'hand.png', x: 48, y: 43 },
-  { point_code: 'HT3', image_name: 'arm_inner.png', x: 54, y: 40 },
-  { point_code: 'HT7', image_name: 'wrist.png', x: 50, y: 50 },
-  { point_code: 'HT8', image_name: 'hand.png', x: 47, y: 45 },
-  { point_code: 'LU5', image_name: 'arm_inner.png', x: 50, y: 38 },
-  { point_code: 'LU7', image_name: 'arm_inner.png', x: 47, y: 40 },
-  { point_code: 'LU9', image_name: 'wrist.png', x: 48, y: 52 },
-  { point_code: 'LU10', image_name: 'hand.png', x: 45, y: 38 },
-  { point_code: 'LU11', image_name: 'hand.png', x: 43, y: 33 },
-  { point_code: 'SI3', image_name: 'hand.png', x: 54, y: 43 },
-  { point_code: 'SI4', image_name: 'wrist.png', x: 54, y: 49 },
-  { point_code: 'SI6', image_name: 'wrist.png', x: 53, y: 54 },
-  { point_code: 'TE3', image_name: 'hand.png', x: 52, y: 39 },
-  { point_code: 'TE5', image_name: 'wrist.png', x: 52, y: 57 },
-  { point_code: 'TE6', image_name: 'arm.png', x: 53, y: 53 },
-  { point_code: 'TE14', image_name: 'arm.png', x: 45, y: 18 },
-  { point_code: 'ST2', image_name: 'head_front.png', x: 47, y: 52 },
-  { point_code: 'ST3', image_name: 'head_front.png', x: 46, y: 56 },
-  { point_code: 'ST4', image_name: 'head_front.png', x: 45, y: 60 },
-  { point_code: 'ST6', image_name: 'head_front.png', x: 43, y: 64 },
-  { point_code: 'ST7', image_name: 'head_side.png', x: 47, y: 56 },
-  { point_code: 'ST8', image_name: 'head_front.png', x: 43, y: 40 },
-  { point_code: 'ST25', image_name: 'body_front.png', x: 43, y: 50 },
-  { point_code: 'ST34', image_name: 'leg_front.png', x: 47, y: 30 },
-  { point_code: 'ST35', image_name: 'leg_front.png', x: 45, y: 35 },
-  { point_code: 'ST36', image_name: 'leg_front.png', x: 43, y: 50 },
-  { point_code: 'ST37', image_name: 'leg_front.png', x: 45, y: 55 },
-  { point_code: 'ST40', image_name: 'leg_front.png', x: 47, y: 60 },
-  { point_code: 'ST41', image_name: 'foot.png', x: 50, y: 45 },
-  { point_code: 'ST44', image_name: 'foot.png', x: 48, y: 55 },
-  { point_code: 'SP3', image_name: 'foot.png', x: 47, y: 48 },
-  { point_code: 'SP4', image_name: 'foot.png', x: 45, y: 45 },
-  { point_code: 'SP6', image_name: 'leg_inner.png', x: 54, y: 55 },
-  { point_code: 'SP9', image_name: 'leg_inner.png', x: 52, y: 48 },
-  { point_code: 'SP10', image_name: 'leg_inner.png', x: 50, y: 40 },
-  { point_code: 'SP15', image_name: 'body_front.png', x: 43, y: 47 },
-  { point_code: 'LV2', image_name: 'foot.png', x: 50, y: 53 },
-  { point_code: 'LV3', image_name: 'foot.png', x: 48, y: 50 },
-  { point_code: 'LV8', image_name: 'leg_inner.png', x: 48, y: 43 },
-  { point_code: 'LV13', image_name: 'body_front.png', x: 41, y: 43 },
-  { point_code: 'LV14', image_name: 'chest.png', x: 43, y: 53 },
-  { point_code: 'KI1', image_name: 'foot_sole.png', x: 50, y: 45 },
-  { point_code: 'KI3', image_name: 'foot.png', x: 47, y: 53 },
-  { point_code: 'KI6', image_name: 'foot.png', x: 48, y: 55 },
-  { point_code: 'KI7', image_name: 'leg_inner.png', x: 53, y: 58 },
-  { point_code: 'KI10', image_name: 'leg_inner.png', x: 50, y: 45 },
-  { point_code: 'KI27', image_name: 'chest.png', x: 47, y: 27 },
-  { point_code: 'BL1', image_name: 'head_front.png', x: 48, y: 46 },
-  { point_code: 'BL2', image_name: 'head_front.png', x: 47, y: 44 },
-  { point_code: 'BL10', image_name: 'bodyback.png', x: 47, y: 15 },
-  { point_code: 'BL11', image_name: 'bodyback.png', x: 45, y: 17 },
-  { point_code: 'BL13', image_name: 'bodyback.png', x: 45, y: 19 },
-  { point_code: 'BL15', image_name: 'bodyback.png', x: 45, y: 21 },
-  { point_code: 'BL17', image_name: 'bodyback.png', x: 45, y: 23 },
-  { point_code: 'BL18', image_name: 'bodyback.png', x: 45, y: 25 },
-  { point_code: 'BL20', image_name: 'bodyback.png', x: 45, y: 27 },
-  { point_code: 'BL21', image_name: 'bodyback.png', x: 45, y: 29 },
-  { point_code: 'BL23', image_name: 'bodyback.png', x: 45, y: 31 },
-  { point_code: 'BL25', image_name: 'bodyback.png', x: 45, y: 33 },
-  { point_code: 'BL40', image_name: 'leg_outer.png', x: 50, y: 48 },
-  { point_code: 'BL57', image_name: 'leg_outer.png', x: 48, y: 55 },
-  { point_code: 'BL60', image_name: 'foot.png', x: 45, y: 55 },
-  { point_code: 'BL62', image_name: 'foot.png', x: 43, y: 53 },
-  { point_code: 'GB1', image_name: 'head_side.png', x: 52, y: 44 },
-  { point_code: 'GB2', image_name: 'head_side.png', x: 50, y: 52 },
-  { point_code: 'GB8', image_name: 'head_side.png', x: 48, y: 36 },
-  { point_code: 'GB14', image_name: 'head_front.png', x: 45, y: 38 },
-  { point_code: 'GB20', image_name: 'head_side.png', x: 50, y: 48 },
-  { point_code: 'GB21', image_name: 'bodyback.png', x: 43, y: 13 },
-  { point_code: 'GB30', image_name: 'bodyback.png', x: 41, y: 48 },
-  { point_code: 'GB31', image_name: 'leg_outer.png', x: 52, y: 43 },
-  { point_code: 'GB34', image_name: 'leg_outer.png', x: 48, y: 50 },
-  { point_code: 'GB39', image_name: 'leg_outer.png', x: 47, y: 58 },
-  { point_code: 'GB40', image_name: 'foot.png', x: 50, y: 50 },
-  { point_code: 'GB41', image_name: 'foot.png', x: 52, y: 53 },
-  { point_code: 'GV4', image_name: 'spine.png', x: 50, y: 55 },
-  { point_code: 'GV14', image_name: 'bodyback.png', x: 50, y: 17 },
-  { point_code: 'GV16', image_name: 'bodyback.png', x: 50, y: 13 },
-  { point_code: 'GV20', image_name: 'head_front.png', x: 50, y: 15 },
-  { point_code: 'GV24', image_name: 'head_front.png', x: 50, y: 22 },
-  { point_code: 'GV26', image_name: 'head_front.png', x: 50, y: 64 },
-  { point_code: 'CV3', image_name: 'body_front.png', x: 50, y: 60 },
-  { point_code: 'CV4', image_name: 'body_front.png', x: 50, y: 58 },
-  { point_code: 'CV6', image_name: 'body_front.png', x: 50, y: 53 },
-  { point_code: 'CV8', image_name: 'body_front.png', x: 50, y: 50 },
-  { point_code: 'CV12', image_name: 'body_front.png', x: 50, y: 43 },
-  { point_code: 'CV17', image_name: 'chest.png', x: 50, y: 40 },
-  { point_code: 'CV22', image_name: 'chest.png', x: 50, y: 23 },
-  { point_code: 'CV23', image_name: 'head_front.png', x: 50, y: 68 },
-  { point_code: 'EX-HN1', image_name: 'head_front.png', x: 50, y: 10 },
-  { point_code: 'EX-HN3', image_name: 'head_front.png', x: 50, y: 38 },
-  { point_code: 'EX-HN5', image_name: 'head_front.png', x: 50, y: 48 },
-  { point_code: 'EX-LE10', image_name: 'leg_front.png', x: 43, y: 43 },
-  { point_code: 'Yintang', image_name: 'head_front.png', x: 50, y: 42 },
-  { point_code: 'Taiyang', image_name: 'head_side.png', x: 54, y: 46 },
-  { point_code: 'Ear-Shenmen', image_name: 'ear.png', x: 50, y: 40 },
-  { point_code: 'Ear-Heart', image_name: 'ear.png', x: 48, y: 47 },
-  { point_code: 'Ear-Kidney', image_name: 'ear.png', x: 47, y: 53 },
-  { point_code: 'Ear-Liver', image_name: 'ear.png', x: 52, y: 50 },
-  { point_code: 'Ear-Lung', image_name: 'ear.png', x: 50, y: 57 },
-  { point_code: 'Ear-Stomach', image_name: 'ear.png', x: 48, y: 60 },
-  { point_code: 'Ear-Spleen', image_name: 'ear.png', x: 47, y: 63 },
-  { point_code: 'Kid-Tui', image_name: 'child_front.png', x: 50, y: 53 },
-  { point_code: 'Kid-Feishu', image_name: 'child_back.png', x: 47, y: 33 },
-  { point_code: 'Kid-Pishu', image_name: 'child_back.png', x: 47, y: 40 },
-  { point_code: 'Kid-Shenshu', image_name: 'child_back.png', x: 47, y: 47 },
-  { point_code: 'Tongue-Heart', image_name: 'tongue.png', x: 50, y: 33 },
-  { point_code: 'Tongue-Lung', image_name: 'tongue.png', x: 50, y: 40 },
-  { point_code: 'Tongue-Spleen', image_name: 'tongue.png', x: 50, y: 47 },
-  { point_code: 'Tongue-Kidney', image_name: 'tongue.png', x: 50, y: 53 },
-  { point_code: 'Tongue-Liver', image_name: 'tongue.png', x: 47, y: 43 },
+  // Hand points
+  { point_code: 'LI4', image_name: 'hand.png', x: 35, y: 35 },
+  { point_code: 'PC8', image_name: 'hand.png', x: 50, y: 55 },
+  { point_code: 'SI3', image_name: 'hand.png', x: 75, y: 45 },
+  // Wrist points
+  { point_code: 'PC7', image_name: 'wrist.png', x: 50, y: 45 },
+  { point_code: 'HT7', image_name: 'wrist.png', x: 65, y: 45 },
+  { point_code: 'TE5', image_name: 'wrist.png', x: 50, y: 25 },
+  // Arm full
+  { point_code: 'LI10', image_name: 'arm_full.png', x: 55, y: 65 },
+  { point_code: 'LI11', image_name: 'arm_full.png', x: 50, y: 50 },
+  // Elbow
+  { point_code: 'PC3', image_name: 'elbow_inner.png', x: 50, y: 55 },
+  { point_code: 'LU5', image_name: 'elbow_inner.png', x: 40, y: 48 },
+  // Shoulder
+  { point_code: 'LU1', image_name: 'shoulder_anterior.png', x: 35, y: 40 },
+  { point_code: 'GB21', image_name: 'shoulder_side.png', x: 40, y: 25 },
+  // Face
+  { point_code: 'ST2', image_name: 'face_front.png', x: 38, y: 42 },
+  { point_code: 'LI20', image_name: 'face_front.png', x: 42, y: 55 },
+  { point_code: 'Yintang', image_name: 'face_front.png', x: 50, y: 32 },
+  // Head lateral / scalp
+  { point_code: 'GB20', image_name: 'head_lateral.png', x: 25, y: 55 },
+  { point_code: 'GV20', image_name: 'scalp_top.png', x: 50, y: 50 },
+  // Neck
+  { point_code: 'CV22', image_name: 'neck_front.png', x: 50, y: 70 },
+  { point_code: 'GV16', image_name: 'neck_posterior.png', x: 50, y: 35 },
+  // Chest
+  { point_code: 'CV17', image_name: 'chest.png', x: 50, y: 50 },
+  // Upper back
+  { point_code: 'BL13', image_name: 'upper_back.png', x: 38, y: 35 },
+  { point_code: 'GV14', image_name: 'upper_back.png', x: 50, y: 15 },
+  // Sacrum
+  { point_code: 'BL32', image_name: 'sacrum.png', x: 40, y: 40 },
+  { point_code: 'GB30', image_name: 'sacrum.png', x: 30, y: 45 },
+  // Thigh/Hip
+  { point_code: 'GB31', image_name: 'thigh_hip.png', x: 50, y: 55 },
+  // Knee
+  { point_code: 'ST36', image_name: 'knee_front.png', x: 55, y: 65 },
+  { point_code: 'GB34', image_name: 'knee_lateral.png', x: 55, y: 55 },
+  { point_code: 'SP9', image_name: 'knee_medial.png', x: 45, y: 55 },
+  // Legs posterior
+  { point_code: 'BL40', image_name: 'legs_posterior.png', x: 50, y: 25 },
+  // Foot
+  { point_code: 'LV3', image_name: 'foot.png', x: 35, y: 50 },
+  { point_code: 'KI1', image_name: 'foot_sole.png', x: 50, y: 35 },
+  // Ear
+  { point_code: 'Ear-Shenmen', image_name: 'ear.png', x: 35, y: 35 },
+  // Tongue
+  { point_code: 'Tongue-Heart', image_name: 'tongue.png', x: 50, y: 25 },
+  // Pediatric
+  { point_code: 'Kid-Tui', image_name: 'child_front.png', x: 50, y: 55 },
 ];
 
 interface PointInfo {
@@ -164,34 +102,39 @@ interface PointInfo {
 }
 
 const bodyFigures = [
-  { id: 'body_front', name: 'Body Front', category: 'Full Body', image: bodyFrontImg },
-  { id: 'bodyback', name: 'Body Back', category: 'Full Body', image: bodybackImg },
-  { id: 'body_main', name: 'Body Main', category: 'Full Body', image: bodyMainImg },
-  { id: 'spine', name: 'Spine', category: 'Full Body', image: spineImg },
-  { id: 'head_front', name: 'Head Front', category: 'Head', image: headFrontImg },
-  { id: 'head_side', name: 'Head Side', category: 'Head', image: headSideImg },
-  { id: 'ear', name: 'Ear', category: 'Head', image: earImg },
-  { id: 'tongue', name: 'Tongue', category: 'Head', image: tongueImg },
-  { id: 'chest', name: 'Chest', category: 'Torso', image: chestImg },
-  { id: 'arm', name: 'Arm Outer', category: 'Arms', image: armImg },
-  { id: 'arm_inner', name: 'Arm Inner', category: 'Arms', image: armInnerImg },
+  { id: 'face_front', name: 'Face', category: 'Head', image: faceFrontImg },
+  { id: 'head_lateral', name: 'Head Side', category: 'Head', image: headLateralImg },
+  { id: 'scalp_top', name: 'Scalp', category: 'Head', image: scalpTopImg },
+  { id: 'neck_front', name: 'Neck Front', category: 'Head', image: neckFrontImg },
+  { id: 'neck_posterior', name: 'Neck Back', category: 'Head', image: neckPosteriorImg },
+  { id: 'ear', name: 'Ear', category: 'Microsystem', image: earImg },
+  { id: 'tongue', name: 'Tongue', category: 'Microsystem', image: tongueImg },
+  { id: 'shoulder_anterior', name: 'Shoulder Front', category: 'Arms', image: shoulderAnteriorImg },
+  { id: 'shoulder_side', name: 'Shoulder Side', category: 'Arms', image: shoulderSideImg },
+  { id: 'arm_full', name: 'Arm', category: 'Arms', image: armFullImg },
+  { id: 'elbow_inner', name: 'Elbow', category: 'Arms', image: elbowInnerImg },
   { id: 'wrist', name: 'Wrist', category: 'Arms', image: wristImg },
   { id: 'hand', name: 'Hand', category: 'Arms', image: handImg },
-  { id: 'leg_front', name: 'Leg Front', category: 'Legs', image: legFrontImg },
-  { id: 'leg_inner', name: 'Leg Inner', category: 'Legs', image: legInnerImg },
-  { id: 'leg_outer', name: 'Leg Outer', category: 'Legs', image: legOuterImg },
+  { id: 'chest', name: 'Chest', category: 'Torso', image: chestImg },
+  { id: 'upper_back', name: 'Upper Back', category: 'Torso', image: upperBackImg },
+  { id: 'sacrum', name: 'Sacrum', category: 'Torso', image: sacrumImg },
+  { id: 'thigh_hip', name: 'Thigh/Hip', category: 'Legs', image: thighHipImg },
+  { id: 'knee_front', name: 'Knee Front', category: 'Legs', image: kneeFrontImg },
+  { id: 'knee_lateral', name: 'Knee Side', category: 'Legs', image: kneeLateralImg },
+  { id: 'knee_medial', name: 'Knee Inner', category: 'Legs', image: kneeMedialImg },
+  { id: 'legs_posterior', name: 'Legs Back', category: 'Legs', image: legsPosteriorImg },
   { id: 'foot', name: 'Foot', category: 'Legs', image: footImg },
   { id: 'foot_sole', name: 'Foot Sole', category: 'Legs', image: footSoleImg },
-  { id: 'child_front', name: 'Child Front', category: 'Pediatric', image: childFrontImg },
-  { id: 'child_back', name: 'Child Back', category: 'Pediatric', image: childBackImg },
+  { id: 'child_front', name: 'Child', category: 'Pediatric', image: childFrontImg },
 ];
 
 const categories = [
   { id: 'all', name: 'All', icon: Sparkles },
-  { id: 'Full Body', name: 'Body', icon: User },
   { id: 'Head', name: 'Head', icon: Brain },
   { id: 'Arms', name: 'Arms', icon: Hand },
+  { id: 'Torso', name: 'Torso', icon: User },
   { id: 'Legs', name: 'Legs', icon: Footprints },
+  { id: 'Microsystem', name: 'Micro', icon: Sparkles },
   { id: 'Pediatric', name: 'Pediatric', icon: Baby },
 ];
 
