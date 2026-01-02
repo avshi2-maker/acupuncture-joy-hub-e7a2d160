@@ -108,6 +108,63 @@ function uniq<T>(arr: T[]): T[] {
   return [...new Set(arr)];
 }
 
+// ============================================================================
+// RELEVANCE SCORING - Ranks chunks by how well they match query keywords
+// ============================================================================
+function calculateRelevanceScore(chunk: any, queryKeywords: string[], pillarKeywords: string[]): number {
+  const content = ((chunk.content || '') + ' ' + (chunk.question || '') + ' ' + (chunk.answer || '')).toLowerCase();
+  let score = 0;
+  
+  // Primary: Query keyword matches (most important - 10 points each)
+  for (const keyword of queryKeywords) {
+    const regex = new RegExp(keyword.toLowerCase(), 'gi');
+    const matches = (content.match(regex) || []).length;
+    score += matches * 10;
+  }
+  
+  // Secondary: Pillar-specific keyword matches (5 points each)
+  for (const keyword of pillarKeywords) {
+    if (content.includes(keyword.toLowerCase())) {
+      score += 5;
+    }
+  }
+  
+  // Bonus: Exact phrase matches (20 points)
+  const queryPhrase = queryKeywords.join(' ').toLowerCase();
+  if (queryPhrase.length > 3 && content.includes(queryPhrase)) {
+    score += 20;
+  }
+  
+  // Bonus: Has structured Q&A format (5 points)
+  if (chunk.question && chunk.answer) {
+    score += 5;
+  }
+  
+  // Bonus: Content density (longer content with keywords = more value)
+  if (content.length > 500) {
+    score += 3;
+  }
+  
+  return score;
+}
+
+// Sort chunks by relevance score and return top N
+function rankChunksByRelevance(chunks: any[], queryKeywords: string[], pillarKeywords: string[], limit: number): any[] {
+  if (!chunks || chunks.length === 0) return [];
+  
+  // Calculate scores for all chunks
+  const scoredChunks = chunks.map(chunk => ({
+    ...chunk,
+    _relevanceScore: calculateRelevanceScore(chunk, queryKeywords, pillarKeywords)
+  }));
+  
+  // Sort by relevance score (highest first)
+  scoredChunks.sort((a, b) => b._relevanceScore - a._relevanceScore);
+  
+  // Return top N
+  return scoredChunks.slice(0, limit);
+}
+
 // Detect which pillar a chunk belongs to based on content
 function detectPillar(content: string): PillarType[] {
   const normalized = content.toLowerCase();
@@ -375,7 +432,7 @@ serve(async (req) => {
       clinicalTrialsResult
     ] = await Promise.all([
       // PILLAR 1: Clinical - Points, needles, techniques
-      // Searches ALL ASSETS for clinical content (acupoints, techniques, protocols)
+      // Searches ALL ASSETS for clinical content - fetches MORE results for ranking
       supabaseClient
         .from('knowledge_chunks')
         .select(`
@@ -384,10 +441,10 @@ serve(async (req) => {
         `)
         .or('content.ilike.%acupuncture%,content.ilike.%point%,content.ilike.%needle%,content.ilike.%BL%,content.ilike.%GB%,content.ilike.%ST%,content.ilike.%SP%,content.ilike.%LI%,content.ilike.%KI%,content.ilike.%LR%,content.ilike.%moxa%,content.ilike.%cupping%,content.ilike.%insertion%,content.ilike.%depth%,content.ilike.%technique%,answer.ilike.%point%,answer.ilike.%needle%,question.ilike.%point%,question.ilike.%acupuncture%')
         .textSearch('content', searchTerms, { type: 'websearch', config: 'simple' })
-        .limit(12),
+        .limit(50), // Fetch 50, will rank and take top 15
 
       // PILLAR 2: Pharmacopeia - Herbs, formulas, dosages
-      // Searches ALL ASSETS for herbal/formula content
+      // Searches ALL ASSETS for herbal/formula content - fetches MORE for ranking
       supabaseClient
         .from('knowledge_chunks')
         .select(`
@@ -396,11 +453,10 @@ serve(async (req) => {
         `)
         .or('content.ilike.%herb%,content.ilike.%formula%,content.ilike.%tang%,content.ilike.%wan%,content.ilike.%san%,content.ilike.%dosage%,content.ilike.%decoction%,content.ilike.%contraindication%,content.ilike.%prescription%,content.ilike.%materia medica%,answer.ilike.%herb%,answer.ilike.%formula%,answer.ilike.%tang%,question.ilike.%herb%,question.ilike.%formula%')
         .textSearch('content', searchTerms, { type: 'websearch', config: 'simple' })
-        .limit(12),
+        .limit(50), // Fetch 50, will rank and take top 15
 
       // PILLAR 3: Nutrition - Searches ALL ASSETS for nutrition-related content
-      // Uses keyword-based search WITHOUT requiring original query match
-      // This ensures nutrition advice is found even if not directly mentioning the condition
+      // Fetches MORE results to rank by relevance to the user's query
       supabaseClient
         .from('knowledge_chunks')
         .select(`
@@ -408,11 +464,10 @@ serve(async (req) => {
           document:knowledge_documents(id, file_name, original_name, category)
         `)
         .or('content.ilike.%diet%,content.ilike.%food%,content.ilike.%eat%,content.ilike.%nutrition%,content.ilike.%avoid foods%,content.ilike.%warming foods%,content.ilike.%cooling foods%,content.ilike.%dampness%,content.ilike.%phlegm%,content.ilike.%spleen%,content.ilike.%digest%,content.ilike.%meal%,content.ilike.%recipe%,content.ilike.%congee%,content.ilike.%soup%,content.ilike.%tea%,answer.ilike.%diet%,answer.ilike.%food%,answer.ilike.%eat%,answer.ilike.%avoid%,question.ilike.%diet%,question.ilike.%food%,question.ilike.%nutrition%')
-        .limit(15),
+        .limit(50), // Fetch 50, will rank and take top 15
 
       // PILLAR 4: Lifestyle/Sport - Searches ALL ASSETS for lifestyle-related content  
-      // Uses keyword-based search WITHOUT requiring original query match
-      // This ensures lifestyle advice is found even if not directly mentioning the condition
+      // Fetches MORE results to rank by relevance to the user's query
       supabaseClient
         .from('knowledge_chunks')
         .select(`
@@ -420,7 +475,7 @@ serve(async (req) => {
           document:knowledge_documents(id, file_name, original_name, category)
         `)
         .or('content.ilike.%exercise%,content.ilike.%stretch%,content.ilike.%sleep%,content.ilike.%rest%,content.ilike.%stress%,content.ilike.%yoga%,content.ilike.%qigong%,content.ilike.%tai chi%,content.ilike.%walk%,content.ilike.%posture%,content.ilike.%relax%,content.ilike.%breathing%,content.ilike.%meditation%,content.ilike.%cool down%,content.ilike.%warm up%,answer.ilike.%exercise%,answer.ilike.%sleep%,answer.ilike.%stress%,answer.ilike.%stretch%,question.ilike.%exercise%,question.ilike.%lifestyle%,question.ilike.%sleep%')
-        .limit(15),
+        .limit(50), // Fetch 50, will rank and take top 15
 
       // Age-specific knowledge
       ageGroup && ageFilePatterns.length > 0
@@ -432,7 +487,7 @@ serve(async (req) => {
             `)
             .or(ageFilePatterns.map(p => `file_name.ilike.%${p}%`).join(','), { referencedTable: 'document' })
             .textSearch('content', searchTerms, { type: 'websearch', config: 'simple' })
-            .limit(6)
+            .limit(10)
         : Promise.resolve({ data: [], error: null }),
 
       // CAF Master Studies
@@ -455,29 +510,63 @@ serve(async (req) => {
         .limit(5)
     ]);
 
-    // Extract results
-    const clinicalChunks = clinicalResult.data || [];
-    const pharmacopeiaChunks = pharmacopeiaResult.data || [];
-    const nutritionChunks = nutritionResult.data || [];
-    const lifestyleChunks = lifestyleResult.data || [];
+    // ========================================================================
+    // RELEVANCE RANKING - Select TOP 15 most relevant from each pillar
+    // ========================================================================
+    const queryKeywords = keywordTerms.slice(0, 8);
+    
+    // Rank each pillar by relevance to the user's query
+    const clinicalChunks = rankChunksByRelevance(
+      clinicalResult.data || [], 
+      queryKeywords, 
+      CLINICAL_KEYWORDS, 
+      15
+    );
+    const pharmacopeiaChunks = rankChunksByRelevance(
+      pharmacopeiaResult.data || [], 
+      queryKeywords, 
+      PHARMACOPEIA_KEYWORDS, 
+      15
+    );
+    const nutritionChunks = rankChunksByRelevance(
+      nutritionResult.data || [], 
+      queryKeywords, 
+      NUTRITION_KEYWORDS, 
+      15
+    );
+    const lifestyleChunks = rankChunksByRelevance(
+      lifestyleResult.data || [], 
+      queryKeywords, 
+      LIFESTYLE_KEYWORDS, 
+      15
+    );
     const ageSpecificChunks = ageSpecificResult.data || [];
     const cafStudies = cafStudiesResult.data || [];
     const clinicalTrials = clinicalTrialsResult.data || [];
 
-    console.log('=== PILLAR RESULTS ===');
-    console.log(`📍 Clinical chunks: ${clinicalChunks.length}`);
-    console.log(`🌿 Pharmacopeia chunks: ${pharmacopeiaChunks.length}`);
-    console.log(`🍎 Nutrition chunks: ${nutritionChunks.length}`);
-    console.log(`🏃 Lifestyle chunks: ${lifestyleChunks.length}`);
+    console.log('=== PILLAR RESULTS (RANKED BY RELEVANCE) ===');
+    console.log(`📍 Clinical chunks: ${clinicalChunks.length} (from ${(clinicalResult.data || []).length} candidates)`);
+    console.log(`🌿 Pharmacopeia chunks: ${pharmacopeiaChunks.length} (from ${(pharmacopeiaResult.data || []).length} candidates)`);
+    console.log(`🍎 Nutrition chunks: ${nutritionChunks.length} (from ${(nutritionResult.data || []).length} candidates)`);
+    console.log(`🏃 Lifestyle chunks: ${lifestyleChunks.length} (from ${(lifestyleResult.data || []).length} candidates)`);
     console.log(`👤 Age-specific chunks: ${ageSpecificChunks.length}`);
     console.log(`📊 CAF Studies: ${cafStudies.length}`);
     console.log(`🔬 Clinical Trials: ${clinicalTrials.length}`);
+    
+    // Log top relevance scores for debugging
+    if (clinicalChunks.length > 0) {
+      console.log(`📍 Top clinical score: ${clinicalChunks[0]._relevanceScore}`);
+    }
+    if (nutritionChunks.length > 0) {
+      console.log(`🍎 Top nutrition score: ${nutritionChunks[0]._relevanceScore}`);
+    }
+
+    const totalPillarChunks = clinicalChunks.length + pharmacopeiaChunks.length + nutritionChunks.length + lifestyleChunks.length;
 
     // Enhanced fallback search with keyword matching
     let fallbackChunks: any[] = [];
-    const fallbackWords = (keywordTerms || []).filter((w: string) => w.length > 1).slice(0, 8);
-    const totalPillarChunks = clinicalChunks.length + pharmacopeiaChunks.length + nutritionChunks.length + lifestyleChunks.length;
-
+    const fallbackWords = queryKeywords.filter((w: string) => w.length > 1).slice(0, 8);
+    
     if (totalPillarChunks < 8 && fallbackWords.length > 0) {
       console.log(`Running enhanced fallback search with keywords: ${fallbackWords.join(', ')}`);
       
@@ -494,11 +583,14 @@ serve(async (req) => {
           document:knowledge_documents(id, file_name, original_name, category)
         `)
         .or(ilikeConditions)
-        .limit(15);
+        .limit(30);
       
       if (fallbackData) {
+        // Rank fallback chunks by relevance before distributing
+        const rankedFallback = rankChunksByRelevance(fallbackData, queryKeywords, [], 20);
+        
         // Categorize fallback chunks into pillars
-        fallbackData.forEach(chunk => {
+        rankedFallback.forEach(chunk => {
           const pillars = detectPillar(chunk.content);
           if (pillars.includes('clinical') && clinicalChunks.length < 8) {
             clinicalChunks.push(chunk);
@@ -513,7 +605,7 @@ serve(async (req) => {
             lifestyleChunks.push(chunk);
           }
         });
-        fallbackChunks = fallbackData;
+        fallbackChunks = rankedFallback;
         console.log(`Fallback search found: ${fallbackChunks.length} chunks, distributed across pillars`);
       }
     }
