@@ -55,7 +55,6 @@ import TherapistDisclaimer from "./pages/TherapistDisclaimer";
 import TherapistIntake from "./pages/TherapistIntake";
 import AdminDisclaimers from "./pages/AdminDisclaimers";
 import CMBrainQuestions from "./pages/CMBrainQuestions";
-import PointCoordinateEditor from "./pages/PointCoordinateEditor";
 import Contact from "./pages/Contact";
 import AdminPasswordGenerator from "./pages/AdminPasswordGenerator";
 import CAFBrowser from "./pages/CAFBrowser";
@@ -135,8 +134,8 @@ const App = () => (
                       <Route path="/encyclopedia" element={<RequireTier><EncyclopediaLanding /></RequireTier>} />
                       <Route path="/developers" element={<RequireTier><Developers /></RequireTier>} />
                       <Route path="/scenarios" element={<RequireTier><ScenariosDashboard /></RequireTier>} />
+                      <Route path="/caf-browser" element={<RequireTier><CAFBrowser /></RequireTier>} />
                       <Route path="/cm-brain-questions" element={<RequireTier><CMBrainQuestions /></RequireTier>} />
-                      <Route path="/point-editor" element={<RequireTier><PointCoordinateEditor /></RequireTier>} />
                       <Route path="/caf-browser" element={<RequireTier><CAFBrowser /></RequireTier>} />
                       <Route path="/clinical-trials" element={<RequireTier><ClinicalTrialsBrowser /></RequireTier>} />
                       <Route path="/patient-valuator" element={<RequireTier><PatientValuator /></RequireTier>} />
