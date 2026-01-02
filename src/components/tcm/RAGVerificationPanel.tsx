@@ -9,23 +9,105 @@ import { CheckCircle2, XCircle, AlertTriangle, Database, FileText, Shield, Refre
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 
-// All CSV files that SHOULD be in RAG (matches public/knowledge-assets)
+// All knowledge documents indexed in the RAG system (auto-generated from database)
 const EXPECTED_KNOWLEDGE_FILES = [
-  { name: 'tongue-diagnosis.csv', aliases: ['clinic_tongue_diagnosis', 'tongue'] },
-  { name: 'pulse-diagnosis.csv', aliases: ['clinic_pulse_diagnosis', 'pulse'] },
-  { name: 'diet-nutrition-intake.csv', aliases: ['tcm_clinic_diet_nutrition', 'nutrition', 'diet'] },
-  { name: 'chronic-pain-management.csv', aliases: ['chronic-pain', 'pain'] },
-  { name: 'digestive-disorders.csv', aliases: ['digestive'] },
-  { name: 'immune-resilience.csv', aliases: ['immune'] },
+  // Acupuncture Points
+  { name: 'acupuncture-points-sapir-guide.pdf', aliases: ['acupuncture_points', 'points_categories'] },
+  
+  // Anxiety & Mental Health
   { name: 'mental-health-tcm.csv', aliases: ['mental-health', 'mental'] },
-  { name: 'pediatric-acupuncture.csv', aliases: ['pediatric', 'Pediatric_QA'] },
-  { name: 'sport-performance-recovery.csv', aliases: ['sport_performance', 'sport'] },
-  { name: 'womens-health-tcm.csv', aliases: ['womens-health', 'women'] },
-  { name: 'work-stress-burnout.csv', aliases: ['Work_Stress_Burnout', 'stress', 'burnout'] },
-  { name: 'extreme-weather-climate.csv', aliases: ['extreme_weather', 'climate', 'weather'] },
-  { name: 'nine-constitutions-qa.csv', aliases: ['nine_constitutions', 'constitution', 'constitutions'] },
+  { name: 'tcm_teenage_mental_health_qa.csv', aliases: ['teenage_mental', 'teen_mental'] },
+  
+  // Brain Health
+  { name: 'brain-health-tcm.csv', aliases: ['brain-health', 'brain'] },
+  
+  // Clinic Intake
+  { name: 'clinic_allergies_intake_form.csv', aliases: ['allergies_intake', 'allergies'] },
+  { name: 'clinic_medications_supplements_intake.csv', aliases: ['medications_intake', 'supplements'] },
+  
+  // Clinical Protocols
+  { name: 'CAF_Master_Studies.csv', aliases: ['caf_master', 'caf', 'ferrari'] },
+  { name: 'chronic-pain-management.csv', aliases: ['chronic-pain', 'pain'] },
+  
+  // Clinical QA
+  { name: 'QA_Professional_Corrected_4Columns.csv', aliases: ['qa_professional', 'professional_qa'] },
+  
+  // Crisis & Emergency
+  { name: 'Profound_Crisis_QA_100_Complete.csv', aliases: ['crisis', 'profound_crisis', 'emergency'] },
+  
+  // Dermatology
+  { name: 'skin_disease_qa_100.csv', aliases: ['skin_disease', 'skin'] },
+  { name: 'tcm_renovada_skin_renewal_100qa.csv', aliases: ['skin_renewal', 'renovada'] },
+  
+  // Digestive
+  { name: 'Gastric_Conditions.csv', aliases: ['gastric', 'stomach', 'esophagus'] },
+  { name: 'digestive-disorders.csv', aliases: ['digestive'] },
+  
+  // Energy Channels
+  { name: 'energy-channels-100-qa.csv', aliases: ['energy_channels', 'channels'] },
+  
+  // Environmental Health
+  { name: 'extreme_weather_climate_conditions_qa_100.csv', aliases: ['extreme_weather', 'climate', 'weather'] },
+  
+  // General Health
+  { name: 'Age_Prompts_Adults.csv', aliases: ['age_prompts', 'adults_18_50'] },
   { name: 'chief-complaints-tcm.csv', aliases: ['chief_complaints', 'complaints', 'chief'] },
-  { name: 'vagus_nerve_100_qa.csv', aliases: ['vagus_nerve', 'vagus', 'vagal'] },
+  
+  // Geriatric
+  { name: 'adults_50_70.csv', aliases: ['adults_50_70', 'middle_age'] },
+  { name: 'elderly_lifestyle_recommendations.csv', aliases: ['elderly_lifestyle', 'elderly'] },
+  { name: 'tcm_elderly_70-120_qa_50.csv', aliases: ['elderly_70_120', 'seniors'] },
+  
+  // Herbal Medicine
+  { name: 'herbal_200_formula.csv', aliases: ['herbal_200', 'herbal_formula'] },
+  { name: 'Herbal_Formulas.csv', aliases: ['herbal_formulas', 'formulas'] },
+  
+  // Neurology
+  { name: 'Vagus_Nerve_QA.csv', aliases: ['vagus_nerve', 'vagus', 'vagal'] },
+  { name: 'neuro-degenerative-tcm-100.csv', aliases: ['neuro_degenerative', 'neurodegenerative'] },
+  
+  // Nutrition
+  { name: 'NUTRITION.csv', aliases: ['nutrition'] },
+  
+  // Pediatric
+  { name: 'tcm_children_7-13_qa_50.csv', aliases: ['children_7_13', 'children'] },
+  { name: 'pediatric-acupuncture.csv', aliases: ['pediatric', 'pediatric_acupuncture'] },
+  { name: 'Pediatric_QA_with_acupuncture_points.csv', aliases: ['pediatric_qa', 'pediatric_points'] },
+  
+  // Safety Warnings
+  { name: 'acupuncture_point_warnings_comprehensive.csv', aliases: ['point_warnings', 'warnings', 'safety'] },
+  
+  // TCM Constitution
+  { name: 'nine_constitutions_qa_100.csv', aliases: ['nine_constitutions', 'constitution', 'constitutions'] },
+  
+  // TCM Diagnosis
+  { name: 'clinic_pulse_diagnosis_reference.csv', aliases: ['pulse_diagnosis', 'pulse'] },
+  { name: 'clinic_tongue_diagnosis_reference.csv', aliases: ['tongue_diagnosis', 'tongue'] },
+  { name: 'Diagnostics_Professional_Corrected_4Columns.csv', aliases: ['diagnostics_professional', 'diagnostics'] },
+  { name: 'Four_Examinations_Si_Zhen.csv', aliases: ['four_examinations', 'si_zhen'] },
+  { name: 'pulse_and_tongue_diagnosis-2.pdf', aliases: ['pulse_tongue_pdf'] },
+  
+  // TCM Theory
+  { name: 'pulse-diagnosis.csv', aliases: ['pulse_qa'] },
+  { name: 'tcm_adults_18-50_qa_50_enhanced.csv', aliases: ['adults_18_50_enhanced'] },
+  { name: 'tcm_clinic_diet_nutrition_intake_form.csv', aliases: ['diet_nutrition', 'diet'] },
+  { name: 'tcm_newborn_qa_50.csv', aliases: ['newborn', 'infants'] },
+  { name: 'tcm_toddlers_1-3_qa_50.csv', aliases: ['toddlers_1_3', 'toddlers'] },
+  { name: 'tcm_young_children_4-6_qa_50.csv', aliases: ['young_children_4_6'] },
+  { name: 'tongue-diagnosis.csv', aliases: ['tongue_qa'] },
+  { name: 'Zang_Fu_Organs_100_QA.csv', aliases: ['zang_fu', 'organs'] },
+  
+  // TCM Training
+  { name: 'TCM_Training_Syllabus_250_QA.csv', aliases: ['training_syllabus', 'syllabus'] },
+  
+  // Treatment Planning
+  { name: 'Treatment_Planning_Professional_Corrected_4Columns.csv', aliases: ['treatment_planning', 'treatment'] },
+  
+  // Wellness & Lifestyle
+  { name: 'immune-resilience-tcm.csv', aliases: ['immune', 'resilience'] },
+  { name: 'sport-performance-recovery.csv', aliases: ['sport_performance', 'sport'] },
+  { name: 'womens-health-tcm.csv', aliases: ['womens_health', 'women'] },
+  { name: 'Work_Stress_Burnout_TCM_QA.csv', aliases: ['work_stress', 'burnout', 'stress'] },
 ];
 
 interface RAGVerificationPanelProps {
