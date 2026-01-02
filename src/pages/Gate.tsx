@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useTier } from '@/hooks/useTier';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { toast } from 'sonner';
-import { Lock, ArrowLeft, Leaf, CreditCard, Upload, CheckCircle, ArrowRight, MessageCircle, Mail, Loader2, Play, Fingerprint, Eye, EyeOff, Clock, Baby, Zap, Heart, Sparkles } from 'lucide-react';
+import { Lock, ArrowLeft, Leaf, CreditCard, Upload, CheckCircle, ArrowRight, MessageCircle, Mail, Loader2, Play, Fingerprint, Eye, EyeOff, Clock, Baby, Zap, Heart, Sparkles, FlaskConical } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { TierCard } from '@/components/pricing/TierCard';
 import { Confetti } from '@/components/ui/Confetti';
@@ -466,13 +466,24 @@ export default function Gate() {
 
         <div className="relative z-10 py-8 px-4">
           <div className="max-w-6xl mx-auto">
-            <Link 
-              to="/" 
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 backdrop-blur-sm text-slate-700 hover:bg-white transition-colors shadow-lg mb-6"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              חזרה לדף הבית
-            </Link>
+            <div className="flex items-center justify-between mb-6">
+              <Link 
+                to="/" 
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 backdrop-blur-sm text-slate-700 hover:bg-white transition-colors shadow-lg"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                חזרה לדף הבית
+              </Link>
+              
+              {/* Dev Mode Button */}
+              <Link 
+                to="/tcm-brain?devmode=true" 
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/90 backdrop-blur-sm text-white hover:bg-amber-600 transition-colors shadow-lg text-sm font-medium"
+              >
+                <FlaskConical className="h-4 w-4" />
+                Dev Mode
+              </Link>
+            </div>
 
             {/* Step Indicator - Glassmorphism style */}
             <div className="flex justify-center mb-8">
