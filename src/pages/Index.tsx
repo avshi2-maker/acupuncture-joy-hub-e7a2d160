@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/dialog";
 import { ThemedClockWidget, getClockTheme, type ClockTheme } from "@/components/ui/ThemedClockWidget";
 import heroBg from "@/assets/hero-meridian-bg.png";
+import { ClinicPhilosophy } from "@/components/home/ClinicPhilosophy";
 // tcm-organ-clock image removed
 
 const promoVideos = [
@@ -202,12 +203,14 @@ const Index = () => {
         <link rel="canonical" href={typeof window !== "undefined" ? window.location.origin + "/" : "/"} />
       </Helmet>
 
-      <main
-        className="h-screen overflow-hidden flex items-center justify-center px-4 bg-cover bg-center bg-no-repeat relative"
-        style={{ backgroundImage: `url(${heroBg})` }}
-      >
-        {/* Overlay for better text readability */}
-        <div className="absolute inset-0 bg-jade/40" />
+      <div className="min-h-screen overflow-y-auto">
+        {/* Hero Section */}
+        <main
+          className="h-screen flex items-center justify-center px-4 bg-cover bg-center bg-no-repeat relative"
+          style={{ backgroundImage: `url(${heroBg})` }}
+        >
+          {/* Overlay for better text readability */}
+          <div className="absolute inset-0 bg-jade/40" />
 
         {/* Top left - Home button */}
         <div className="absolute top-4 left-4 md:top-6 md:left-6 z-20">
@@ -564,6 +567,9 @@ const Index = () => {
         </div>
       </main>
 
+        {/* Clinic Philosophy Section */}
+        <ClinicPhilosophy />
+      </div>
       {/* Video Modal - Auto-playing all videos in sequence */}
       {showVideoModal && (
         <div 
