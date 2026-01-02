@@ -1679,6 +1679,17 @@ export default function VideoSession() {
                     tooltip: 'Healthy lifestyle guide for adults 70+',
                     onClick: () => setShowElderlyGuide(true),
                   },
+                  {
+                    id: 'session-brief',
+                    name: 'Brief',
+                    nameHe: 'תקציר',
+                    icon: Sparkles,
+                    color: 'text-amber-600',
+                    borderColor: 'border-amber-300',
+                    isActive: showSessionBrief,
+                    tooltip: 'AI Session Brief with patient analysis & visit history',
+                    onClick: () => setShowSessionBrief(!showSessionBrief),
+                  },
                 ],
               },
               {

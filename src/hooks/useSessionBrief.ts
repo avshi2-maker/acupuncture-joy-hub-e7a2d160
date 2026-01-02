@@ -24,11 +24,23 @@ interface PatientIntakeData {
   pregnancy_notes?: string | null;
 }
 
+export interface VisitHistorySummary {
+  id: string;
+  visit_date: string;
+  chief_complaint: string | null;
+  tcm_pattern: string | null;
+  treatment_principle: string | null;
+  points_used: string[] | null;
+  notes: string | null;
+}
+
 interface SessionBrief {
   analysis: string;
   suggestedQuestions: SuggestedQuestion[];
   keyFindings: string[];
   treatmentFocus: string[];
+  visitHistory: VisitHistorySummary[];
+  totalVisits: number;
   timestamp: Date;
 }
 
@@ -77,6 +89,40 @@ export function useSessionBrief() {
       return null;
     }
     return data;
+  }, []);
+
+  const fetchVisitHistory = useCallback(async (patientId: string): Promise<{ visits: VisitHistorySummary[]; total: number }> => {
+    // Get total count
+    const { count } = await supabase
+      .from('visits')
+      .select('*', { count: 'exact', head: true })
+      .eq('patient_id', patientId);
+
+    // Get last 5 visits with relevant fields
+    const { data, error } = await supabase
+      .from('visits')
+      .select(`
+        id,
+        visit_date,
+        chief_complaint,
+        tcm_pattern,
+        treatment_principle,
+        points_used,
+        notes
+      `)
+      .eq('patient_id', patientId)
+      .order('visit_date', { ascending: false })
+      .limit(5);
+
+    if (error) {
+      console.error('Error fetching visit history:', error);
+      return { visits: [], total: 0 };
+    }
+
+    return { 
+      visits: data || [], 
+      total: count || 0 
+    };
   }, []);
 
   const buildIntakePrompt = useCallback((intake: PatientIntakeData): string => {
@@ -268,15 +314,27 @@ Format the response clearly with headers. Include both English and Hebrew for qu
     setError(null);
 
     try {
-      // Fetch patient intake data
-      const intake = await fetchPatientIntake(patientId);
+      // Fetch patient intake data and visit history in parallel
+      const [intake, historyResult] = await Promise.all([
+        fetchPatientIntake(patientId),
+        fetchVisitHistory(patientId)
+      ]);
+
       if (!intake) {
         setError('Could not load patient data');
         return null;
       }
 
-      // Build prompt from intake
-      const prompt = buildIntakePrompt(intake);
+      // Build prompt from intake (include visit history context)
+      let prompt = buildIntakePrompt(intake);
+      
+      // Add visit history context to prompt if available
+      if (historyResult.visits.length > 0) {
+        const historyContext = historyResult.visits.slice(0, 3).map(v => 
+          `- ${v.visit_date}: ${v.tcm_pattern || 'No pattern'} | Points: ${v.points_used?.join(', ') || 'None'}`
+        ).join('\n');
+        prompt += `\n\n**Previous Visits (${historyResult.total} total):**\n${historyContext}`;
+      }
 
       // Call TCM RAG chat for analysis
       const { data, error: ragError } = await supabase.functions.invoke('tcm-rag-chat', {
@@ -300,6 +358,8 @@ Format the response clearly with headers. Include both English and Hebrew for qu
         suggestedQuestions: parseSuggestedQuestions(aiResponse),
         keyFindings: parseKeyFindings(aiResponse),
         treatmentFocus: parseTreatmentFocus(aiResponse),
+        visitHistory: historyResult.visits,
+        totalVisits: historyResult.total,
         timestamp: new Date()
       };
 

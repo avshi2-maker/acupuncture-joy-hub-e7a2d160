@@ -24,12 +24,16 @@ import {
   MessageCircle,
   Copy,
   Check,
-  Zap
+  Zap,
+  History,
+  Calendar,
+  MapPin
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useSessionBrief, SuggestedQuestion } from '@/hooks/useSessionBrief';
+import { useSessionBrief, SuggestedQuestion, VisitHistorySummary } from '@/hooks/useSessionBrief';
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 interface SessionBriefPanelProps {
   patientId: string | null;
@@ -49,9 +53,9 @@ const categoryConfig: Record<SuggestedQuestion['category'], { icon: React.Elemen
 };
 
 const priorityColors = {
-  high: 'border-l-red-500 bg-red-50/50',
-  medium: 'border-l-amber-500 bg-amber-50/50',
-  low: 'border-l-green-500 bg-green-50/50'
+  high: 'border-l-red-500 bg-red-50/50 dark:bg-red-950/30',
+  medium: 'border-l-amber-500 bg-amber-50/50 dark:bg-amber-950/30',
+  low: 'border-l-green-500 bg-green-50/50 dark:bg-green-950/30'
 };
 
 export function SessionBriefPanel({
@@ -65,6 +69,7 @@ export function SessionBriefPanel({
   const { isLoading, sessionBrief, error, generateSessionBrief, clearBrief } = useSessionBrief();
   const [analysisExpanded, setAnalysisExpanded] = useState(true);
   const [questionsExpanded, setQuestionsExpanded] = useState(true);
+  const [historyExpanded, setHistoryExpanded] = useState(true);
   const [copiedQuestion, setCopiedQuestion] = useState<number | null>(null);
   const [hasAutoTriggered, setHasAutoTriggered] = useState(false);
 
@@ -240,6 +245,79 @@ export function SessionBriefPanel({
                           ))}
                         </div>
                       </div>
+                    )}
+
+                    {/* Visit History Section */}
+                    {sessionBrief.visitHistory && sessionBrief.visitHistory.length > 0 && (
+                      <>
+                        <Separator />
+                        <Collapsible open={historyExpanded} onOpenChange={setHistoryExpanded}>
+                          <CollapsibleTrigger className="flex items-center justify-between w-full py-2 hover:bg-muted/50 rounded-lg px-2 transition-colors">
+                            <div className="flex items-center gap-2 text-sm font-medium">
+                              <History className="h-4 w-4 text-blue-600" />
+                              Previous Visits
+                              <Badge variant="outline" className="text-xs bg-blue-50 dark:bg-blue-950/30 text-blue-600">
+                                {sessionBrief.totalVisits} total
+                              </Badge>
+                            </div>
+                            {historyExpanded ? (
+                              <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            <div className="mt-2 space-y-2">
+                              {sessionBrief.visitHistory.map((visit, i) => (
+                                <motion.div
+                                  key={visit.id}
+                                  initial={{ opacity: 0, y: 5 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: i * 0.05 }}
+                                  className="p-3 rounded-lg bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-800/30"
+                                >
+                                  <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                      <Calendar className="h-3 w-3 text-blue-500" />
+                                      <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                                        {format(new Date(visit.visit_date), 'MMM d, yyyy')}
+                                      </span>
+                                    </div>
+                                    {i === 0 && (
+                                      <Badge className="text-[10px] bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                                        Latest
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  
+                                  {visit.tcm_pattern && (
+                                    <div className="text-xs mb-1">
+                                      <span className="text-muted-foreground">Pattern: </span>
+                                      <span className="font-medium">{visit.tcm_pattern}</span>
+                                    </div>
+                                  )}
+                                  
+                                  {visit.points_used && visit.points_used.length > 0 && (
+                                    <div className="flex items-start gap-1 text-xs">
+                                      <MapPin className="h-3 w-3 text-rose-500 mt-0.5 flex-shrink-0" />
+                                      <span className="text-muted-foreground">
+                                        {visit.points_used.slice(0, 6).join(', ')}
+                                        {visit.points_used.length > 6 && ` +${visit.points_used.length - 6} more`}
+                                      </span>
+                                    </div>
+                                  )}
+                                  
+                                  {visit.chief_complaint && (
+                                    <div className="text-xs text-muted-foreground mt-1 italic truncate">
+                                      "{visit.chief_complaint}"
+                                    </div>
+                                  )}
+                                </motion.div>
+                              ))}
+                            </div>
+                          </CollapsibleContent>
+                        </Collapsible>
+                      </>
                     )}
 
                     <Separator />

@@ -29,7 +29,8 @@ import {
   BookOpen,
   Heart,
   Mic,
-  Baby
+  Baby,
+  Sparkles
 } from 'lucide-react';
 import { APIUsageMeter } from '@/components/tcm-brain/APIUsageMeter';
 import { useTcmBrainState } from '@/hooks/useTcmBrainState';
@@ -55,6 +56,7 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { TierBadge } from '@/components/layout/TierBadge';
 import { FloatingHelpGuide } from '@/components/ui/FloatingHelpGuide';
 import { PregnancySafetyDialog, ElderlyLifestyleDialog } from '@/components/clinical';
+import { SessionBriefPanel } from '@/components/video/SessionBriefPanel';
 import { toast } from 'sonner';
 import clockImg from '@/assets/clock.png';
 
@@ -67,6 +69,7 @@ export default function TcmBrain() {
   const [showHelpGuide, setShowHelpGuide] = useState(false);
   const [showPregnancyCalc, setShowPregnancyCalc] = useState(false);
   const [showElderlyGuide, setShowElderlyGuide] = useState(false);
+  const [showSessionBrief, setShowSessionBrief] = useState(false);
   const [qaFavoritesCount, setQaFavoritesCount] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
   const quickActionsRef = useRef<QuickActionsRef>(null);
@@ -503,6 +506,17 @@ export default function TcmBrain() {
                     tooltip: 'Healthy lifestyle guide for adults 70+',
                     onClick: () => setShowElderlyGuide(true),
                   },
+                  {
+                    id: 'session-brief',
+                    name: 'Brief',
+                    nameHe: 'תקציר',
+                    icon: Sparkles,
+                    color: 'text-amber-600',
+                    borderColor: 'border-amber-300',
+                    isActive: showSessionBrief,
+                    tooltip: 'AI Session Brief with patient analysis & visit history',
+                    onClick: () => setShowSessionBrief(!showSessionBrief),
+                  },
                 ],
               },
               {
@@ -850,6 +864,19 @@ export default function TcmBrain() {
         <ElderlyLifestyleDialog 
           open={showElderlyGuide} 
           onOpenChange={setShowElderlyGuide}
+        />
+        
+        {/* Session Brief Panel */}
+        <SessionBriefPanel
+          patientId={selectedPatient?.id || null}
+          patientName={selectedPatient?.name || null}
+          isOpen={showSessionBrief}
+          onClose={() => setShowSessionBrief(false)}
+          onQuestionUsed={(question) => {
+            streamChat(question);
+            setActiveTab('diagnostics');
+          }}
+          autoTrigger={true}
         />
       </div>
     </>
