@@ -3,6 +3,7 @@ import { format, differenceInMinutes } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import {
@@ -14,7 +15,19 @@ import {
   Repeat,
   Check,
   X,
+  CheckCircle2,
+  XCircle,
+  HelpCircle,
+  Send,
 } from 'lucide-react';
+
+interface AppointmentConfirmation {
+  id: string;
+  token: string;
+  response: string | null;
+  responded_at: string | null;
+  expires_at: string;
+}
 
 interface Appointment {
   id: string;
@@ -31,6 +44,7 @@ interface Appointment {
   recurrence_end_date: string | null;
   parent_appointment_id: string | null;
   patients?: { full_name: string; phone?: string | null } | null;
+  appointment_confirmations?: AppointmentConfirmation[];
 }
 
 interface Room {
@@ -68,6 +82,28 @@ export function SwipeableAppointmentCard({
   const startTime = new Date(appointment.start_time);
   const endTime = new Date(appointment.end_time);
   const duration = differenceInMinutes(endTime, startTime);
+
+  // Get confirmation status
+  const getConfirmationStatus = () => {
+    const confirmation = appointment.appointment_confirmations?.[0];
+    if (!confirmation) {
+      return { status: 'not_sent', label: 'לא נשלח', icon: Send, color: 'text-muted-foreground' };
+    }
+    if (confirmation.response === 'confirmed') {
+      return { status: 'confirmed', label: 'אישר', icon: CheckCircle2, color: 'text-jade' };
+    }
+    if (confirmation.response === 'cancelled') {
+      return { status: 'cancelled', label: 'ביטל', icon: XCircle, color: 'text-destructive' };
+    }
+    const isExpired = new Date(confirmation.expires_at) < new Date();
+    if (isExpired) {
+      return { status: 'expired', label: 'פג תוקף', icon: HelpCircle, color: 'text-amber-500' };
+    }
+    return { status: 'pending', label: 'ממתין', icon: HelpCircle, color: 'text-amber-500' };
+  };
+
+  const confirmStatus = getConfirmationStatus();
+  const ConfirmIcon = confirmStatus.icon;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -270,9 +306,33 @@ export function SwipeableAppointmentCard({
             
             {/* Status & Actions */}
             <div className="flex flex-col items-end gap-2">
-              <Badge className={cn('text-[10px]', getStatusColor(appointment.status))}>
-                {appointment.status}
-              </Badge>
+              <div className="flex items-center gap-1">
+                {/* Confirmation Status */}
+                {appointment.patient_id && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge variant="outline" className={cn('text-[10px] gap-0.5', confirmStatus.color, 'border-current')}>
+                          <ConfirmIcon className="h-3 w-3" />
+                          {confirmStatus.label}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">
+                          {confirmStatus.status === 'confirmed' && 'המטופל אישר הגעה'}
+                          {confirmStatus.status === 'cancelled' && 'המטופל ביטל'}
+                          {confirmStatus.status === 'pending' && 'ממתין לתשובה'}
+                          {confirmStatus.status === 'expired' && 'פג תוקף'}
+                          {confirmStatus.status === 'not_sent' && 'לא נשלחה תזכורת'}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                <Badge className={cn('text-[10px]', getStatusColor(appointment.status))}>
+                  {appointment.status}
+                </Badge>
+              </div>
               
               {appointment.status === 'scheduled' && onStartSession && (
                 <Button
