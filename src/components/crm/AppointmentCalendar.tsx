@@ -49,6 +49,8 @@ interface AppointmentCalendarProps {
   patients: Patient[];
 }
 
+type ConfirmationFilter = 'all' | 'confirmed' | 'pending' | 'cancelled' | 'not_sent' | 'expired';
+
 export function AppointmentCalendar({ userId, patients }: AppointmentCalendarProps) {
   const navigate = useNavigate();
   const { tier, daysRemaining } = useTier();
@@ -60,6 +62,7 @@ export function AppointmentCalendar({ userId, patients }: AppointmentCalendarPro
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showTrialExpiredDialog, setShowTrialExpiredDialog] = useState(false);
+  const [confirmationFilter, setConfirmationFilter] = useState<ConfirmationFilter>('all');
 
   // Check if trial is expired
   const isTrialExpired = tier === 'trial' && daysRemaining !== null && daysRemaining <= 0;
@@ -161,8 +164,18 @@ export function AppointmentCalendar({ userId, patients }: AppointmentCalendarPro
     return { status: 'pending', label: 'ממתין לתשובה', icon: HelpCircle, color: 'text-amber-500' };
   };
 
+  // Filter appointments by confirmation status
+  const filterByConfirmationStatus = (apts: Appointment[]) => {
+    if (confirmationFilter === 'all') return apts;
+    return apts.filter(apt => {
+      const status = getConfirmationStatus(apt);
+      return status.status === confirmationFilter;
+    });
+  };
+
   const getAppointmentsForDay = (day: Date) => {
-    return appointments.filter(apt => isSameDay(new Date(apt.start_time), day));
+    const dayApts = appointments.filter(apt => isSameDay(new Date(apt.start_time), day));
+    return filterByConfirmationStatus(dayApts);
   };
 
   const handleAddAppointment = async () => {
@@ -296,10 +309,19 @@ export function AppointmentCalendar({ userId, patients }: AppointmentCalendarPro
 
   const weekDays = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
 
+  const confirmationFilterOptions: { value: ConfirmationFilter; label: string; icon: typeof CheckCircle2 }[] = [
+    { value: 'all', label: 'הכל', icon: Clock },
+    { value: 'confirmed', label: 'אישרו', icon: CheckCircle2 },
+    { value: 'pending', label: 'ממתינים', icon: HelpCircle },
+    { value: 'cancelled', label: 'ביטלו', icon: XCircle },
+    { value: 'not_sent', label: 'לא נשלח', icon: Send },
+    { value: 'expired', label: 'פג תוקף', icon: AlertCircle },
+  ];
+
   return (
     <div className="p-4 space-y-4" dir="rtl">
       {/* Calendar Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
             <ChevronRight className="h-4 w-4" />
@@ -311,9 +333,30 @@ export function AppointmentCalendar({ userId, patients }: AppointmentCalendarPro
             <ChevronLeft className="h-4 w-4" />
           </Button>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setCurrentMonth(new Date())}>
-          היום
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setCurrentMonth(new Date())}>
+            היום
+          </Button>
+        </div>
+      </div>
+
+      {/* Confirmation Status Filter */}
+      <div className="flex flex-wrap gap-2">
+        {confirmationFilterOptions.map(option => {
+          const Icon = option.icon;
+          return (
+            <Button
+              key={option.value}
+              variant={confirmationFilter === option.value ? "default" : "outline"}
+              size="sm"
+              className="gap-1.5"
+              onClick={() => setConfirmationFilter(option.value)}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {option.label}
+            </Button>
+          );
+        })}
       </div>
 
       {/* Calendar Grid */}
@@ -384,6 +427,9 @@ export function AppointmentCalendar({ userId, patients }: AppointmentCalendarPro
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
             תורים להיום
+            {confirmationFilter !== 'all' && (
+              <Badge variant="secondary" className="text-xs">מסונן: {confirmationFilterOptions.find(o => o.value === confirmationFilter)?.label}</Badge>
+            )}
             {isTrialExpired && (
               <Badge variant="destructive" className="text-xs">תקופת ניסיון הסתיימה</Badge>
             )}
@@ -391,7 +437,9 @@ export function AppointmentCalendar({ userId, patients }: AppointmentCalendarPro
         </CardHeader>
         <CardContent>
           {getAppointmentsForDay(new Date()).length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">אין תורים להיום</p>
+            <p className="text-sm text-muted-foreground text-center py-4">
+              {confirmationFilter === 'all' ? 'אין תורים להיום' : 'אין תורים התואמים לסינון'}
+            </p>
           ) : (
             <div className="space-y-2">
               {getAppointmentsForDay(new Date()).map(apt => {

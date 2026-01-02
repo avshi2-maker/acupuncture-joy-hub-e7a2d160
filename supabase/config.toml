@@ -9,6 +9,9 @@ verify_jwt = false
 [functions.send-followup-reminders]
 verify_jwt = false
 
+[functions.send-appointment-followup]
+verify_jwt = false
+
 [functions.appointment-confirm]
 verify_jwt = false
 
