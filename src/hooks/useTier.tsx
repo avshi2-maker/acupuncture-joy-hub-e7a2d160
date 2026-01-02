@@ -9,6 +9,7 @@ interface TierContextType {
   setExpiresAt: (date: Date | null) => void;
   hasFeature: (feature: TierFeature) => boolean;
   daysRemaining: number | null;
+  clearTier: () => void;
 }
 
 type TierFeature = 
@@ -74,12 +75,19 @@ export function TierProvider({ children }: { children: ReactNode }) {
     return featuresByTier[tier]?.includes(feature) ?? false;
   };
 
+  const clearTier = () => {
+    setTierState(null);
+    setExpiresAtState(null);
+    localStorage.removeItem('therapist_tier');
+    localStorage.removeItem('therapist_expires_at');
+  };
+
   const daysRemaining = expiresAt 
     ? Math.max(0, Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : null;
 
   return (
-    <TierContext.Provider value={{ tier, setTier, expiresAt, setExpiresAt, hasFeature, daysRemaining }}>
+    <TierContext.Provider value={{ tier, setTier, expiresAt, setExpiresAt, hasFeature, daysRemaining, clearTier }}>
       {children}
     </TierContext.Provider>
   );

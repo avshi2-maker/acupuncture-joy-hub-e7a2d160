@@ -52,6 +52,8 @@ export function InlineMusicPlayer({ onClose }: InlineMusicPlayerProps) {
   const [currentSound, setCurrentSound] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.5);
+  const [audioBlocked, setAudioBlocked] = useState(false);
+  const [pendingSound, setPendingSound] = useState<BuiltInSound | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -68,14 +70,23 @@ export function InlineMusicPlayer({ onClose }: InlineMusicPlayerProps) {
     localStorage.setItem('tcm-music-volume', volume.toString());
   }, [volume]);
 
-  const playSound = (sound: BuiltInSound) => {
+  const playSound = async (sound: BuiltInSound) => {
+    setAudioBlocked(false);
+    setPendingSound(null);
+
     if (currentSound === sound.id && audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
         setIsPlaying(false);
       } else {
-        audioRef.current.play();
-        setIsPlaying(true);
+        try {
+          await audioRef.current.play();
+          setIsPlaying(true);
+        } catch (err) {
+          console.warn('[Music] Autoplay blocked:', err);
+          setAudioBlocked(true);
+          setPendingSound(sound);
+        }
       }
       return;
     }
@@ -88,11 +99,32 @@ export function InlineMusicPlayer({ onClose }: InlineMusicPlayerProps) {
     const audio = new Audio(sound.audioUrl);
     audio.loop = true;
     audio.volume = volume;
-    audio.play().catch(console.error);
     
-    audioRef.current = audio;
-    setCurrentSound(sound.id);
-    setIsPlaying(true);
+    try {
+      await audio.play();
+      audioRef.current = audio;
+      setCurrentSound(sound.id);
+      setIsPlaying(true);
+    } catch (err) {
+      console.warn('[Music] Autoplay blocked:', err);
+      setAudioBlocked(true);
+      setPendingSound(sound);
+      audioRef.current = audio;
+      setCurrentSound(sound.id);
+    }
+  };
+
+  const handleUnblockAudio = async () => {
+    if (pendingSound && audioRef.current) {
+      try {
+        await audioRef.current.play();
+        setIsPlaying(true);
+        setAudioBlocked(false);
+        setPendingSound(null);
+      } catch (err) {
+        console.error('[Music] Still blocked:', err);
+      }
+    }
   };
 
   const stopAll = () => {
@@ -136,6 +168,17 @@ export function InlineMusicPlayer({ onClose }: InlineMusicPlayerProps) {
             </Button>
           </div>
         </div>
+
+        {/* Autoplay blocked prompt */}
+        {audioBlocked && pendingSound && (
+          <button
+            onClick={handleUnblockAudio}
+            className="w-full mb-2 p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-200 flex items-center justify-center gap-2 animate-pulse"
+          >
+            <Play className="h-4 w-4" />
+            <span className="text-sm font-medium">Tap to start audio</span>
+          </button>
+        )}
 
         {/* Sound Buttons */}
         <div className="flex gap-1 mb-2">

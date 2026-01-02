@@ -123,6 +123,8 @@ export function FloatingMusicPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.5);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [audioBlocked, setAudioBlocked] = useState(false);
+  const [pendingSound, setPendingSound] = useState<BuiltInSound | null>(null);
 
   // Load favorites and volume from localStorage on mount
   useEffect(() => {
@@ -172,15 +174,25 @@ export function FloatingMusicPlayer() {
     window.open(url, 'music_player', 'width=400,height=600,left=100,top=100');
   };
 
-  const playBuiltInSound = (sound: BuiltInSound) => {
+  const playBuiltInSound = async (sound: BuiltInSound) => {
+    // Reset blocked state on new attempt
+    setAudioBlocked(false);
+    setPendingSound(null);
+
     // If clicking the same sound, toggle play/pause
     if (currentSound === sound.id && audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
         setIsPlaying(false);
       } else {
-        audioRef.current.play();
-        setIsPlaying(true);
+        try {
+          await audioRef.current.play();
+          setIsPlaying(true);
+        } catch (err) {
+          console.warn('[Music] Autoplay blocked:', err);
+          setAudioBlocked(true);
+          setPendingSound(sound);
+        }
       }
       return;
     }
@@ -195,17 +207,38 @@ export function FloatingMusicPlayer() {
     const audio = new Audio(sound.audioUrl);
     audio.loop = true;
     audio.volume = volume;
-    audio.play().catch(console.error);
     
-    audioRef.current = audio;
-    setCurrentSound(sound.id);
-    setIsPlaying(true);
+    try {
+      await audio.play();
+      audioRef.current = audio;
+      setCurrentSound(sound.id);
+      setIsPlaying(true);
+    } catch (err) {
+      console.warn('[Music] Autoplay blocked:', err);
+      setAudioBlocked(true);
+      setPendingSound(sound);
+      audioRef.current = audio;
+      setCurrentSound(sound.id);
+    }
 
     // Handle audio ending (shouldn't happen with loop, but just in case)
     audio.onended = () => {
       setIsPlaying(false);
       setCurrentSound(null);
     };
+  };
+
+  const handleUnblockAudio = async () => {
+    if (pendingSound && audioRef.current) {
+      try {
+        await audioRef.current.play();
+        setIsPlaying(true);
+        setAudioBlocked(false);
+        setPendingSound(null);
+      } catch (err) {
+        console.error('[Music] Still blocked:', err);
+      }
+    }
   };
 
   const stopAllAudio = () => {
@@ -320,6 +353,16 @@ export function FloatingMusicPlayer() {
 
           <TabsContent value="builtin" className="mt-0">
             <div className="p-2 max-h-48 overflow-y-auto">
+              {/* Autoplay blocked prompt */}
+              {audioBlocked && pendingSound && (
+                <button
+                  onClick={handleUnblockAudio}
+                  className="w-full mb-2 p-3 rounded-lg bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-200 flex items-center justify-center gap-2 animate-pulse"
+                >
+                  <Play className="h-5 w-5" />
+                  <span className="font-medium">Tap to start audio</span>
+                </button>
+              )}
               {builtInSounds.map((sound) => {
                 const isActive = currentSound === sound.id;
                 return (
@@ -341,7 +384,7 @@ export function FloatingMusicPlayer() {
                       <div className="font-medium text-foreground text-sm">
                         {sound.nameHe}
                         {isActive && isPlaying && (
-                          <span className="mr-2 text-jade text-xs">♪ מתנגן</span>
+                          <span className="mr-2 text-jade text-xs">♪ Playing</span>
                         )}
                       </div>
                       <div className="text-xs text-muted-foreground">{sound.description}</div>

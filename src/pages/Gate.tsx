@@ -25,8 +25,10 @@ const DEV_TEST_PASSWORD = 'dev2025';
 
 // Session expiry timer component
 function SessionExpiryTimer() {
-  const { expiresAt } = useTier();
+  const { expiresAt, clearTier } = useTier();
+  const navigate = useNavigate();
   const [timeLeft, setTimeLeft] = useState<string>('');
+  const [isExpired, setIsExpired] = useState(false);
   
   useEffect(() => {
     if (!expiresAt) return;
@@ -37,7 +39,8 @@ function SessionExpiryTimer() {
       const diff = expiry.getTime() - now.getTime();
       
       if (diff <= 0) {
-        setTimeLeft('Session expired');
+        setTimeLeft('Expired');
+        setIsExpired(true);
         return;
       }
       
@@ -58,8 +61,28 @@ function SessionExpiryTimer() {
     const interval = setInterval(updateTimer, 60000); // Update every minute
     return () => clearInterval(interval);
   }, [expiresAt]);
+
+  const handleReLogin = () => {
+    clearTier();
+    navigate('/gate', { replace: true });
+  };
   
   if (!expiresAt || !timeLeft) return null;
+  
+  if (isExpired) {
+    return (
+      <div className="fixed top-4 left-4 z-50 flex items-center gap-3 px-4 py-2 rounded-full bg-destructive/90 backdrop-blur-sm border border-destructive shadow-lg text-sm text-destructive-foreground">
+        <Clock className="h-4 w-4" />
+        <span>Session expired</span>
+        <button 
+          onClick={handleReLogin}
+          className="ml-1 px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 transition-colors font-medium"
+        >
+          Re-login
+        </button>
+      </div>
+    );
+  }
   
   return (
     <div className="fixed top-4 left-4 z-50 flex items-center gap-2 px-3 py-2 rounded-full bg-background/80 backdrop-blur-sm border shadow-lg text-sm">
