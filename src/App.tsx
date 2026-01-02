@@ -63,6 +63,8 @@ import TherapistProfileEdit from "./pages/TherapistProfileEdit";
 import RetreatQuiz from "./pages/RetreatQuiz";
 import CRMSessionManager from "./pages/crm/CRMSessionManager";
 import PatientValuator from "./pages/PatientValuator";
+import ProfessionalInvite from "./pages/ProfessionalInvite";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -94,6 +96,7 @@ const App = () => (
                       <Route path="/therapist-disclaimer" element={<TherapistDisclaimer />} />
                       <Route path="/therapist-intake" element={<TherapistIntake />} />
                       <Route path="/retreat-quiz" element={<RetreatQuiz />} />
+                      <Route path="/invite" element={<ProfessionalInvite />} />
 
                       {/* Protected (requires tier) */}
                       <Route path="/dashboard" element={<RequireTier><Dashboard /></RequireTier>} />
