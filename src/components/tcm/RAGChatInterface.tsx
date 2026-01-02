@@ -524,6 +524,22 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
                   )}
                 </div>
               ))}
+              
+              {/* Typing indicator while streaming */}
+              {isLoading && searchPhase !== 'external-consent' && (
+                <div className="flex items-start gap-3 animate-fade-in">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/20">
+                    <BookOpen className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="bg-muted rounded-lg rounded-tl-sm px-4 py-3 shadow-sm">
+                    <div className="flex gap-1.5 items-center h-5">
+                      <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0ms', animationDuration: '0.6s' }} />
+                      <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '150ms', animationDuration: '0.6s' }} />
+                      <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '300ms', animationDuration: '0.6s' }} />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </ScrollArea>

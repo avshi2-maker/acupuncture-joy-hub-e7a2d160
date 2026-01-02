@@ -66,6 +66,7 @@ export function useTcmBrainState() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [loadingStartTime, setLoadingStartTime] = useState<number | null>(null);
   const [currentQuery, setCurrentQuery] = useState<string>('');
   const [highlightedPoints, setHighlightedPoints] = useState<string[]>([]);
@@ -336,6 +337,7 @@ export function useTcmBrainState() {
 
       // Add empty assistant message that we'll update
       setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+      setIsStreaming(true);
 
       while (true) {
         const { done, value } = await reader.read();
@@ -462,6 +464,7 @@ export function useTcmBrainState() {
       toast.error('Chat error');
     } finally {
       setIsLoading(false);
+      setIsStreaming(false);
       setLoadingStartTime(null);
     }
   }, [disclaimerStatus, session, messages, selectedPatient]);
@@ -825,6 +828,7 @@ Provide a complete treatment protocol:
     input,
     setInput,
     isLoading,
+    isStreaming,
     loadingStartTime,
     currentQuery,
     highlightedPoints,
