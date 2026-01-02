@@ -57,7 +57,7 @@ import { CrossPlatformBackButton } from '@/components/ui/CrossPlatformBackButton
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { TierBadge } from '@/components/layout/TierBadge';
 import { FloatingHelpGuide } from '@/components/ui/FloatingHelpGuide';
-import { PregnancySafetyDialog, ElderlyLifestyleDialog } from '@/components/clinical';
+import { PregnancySafetyDialog, ElderlyLifestyleDialog, PediatricAcupunctureDialog } from '@/components/clinical';
 import { SessionBriefPanel } from '@/components/video/SessionBriefPanel';
 import { toast } from 'sonner';
 import clockImg from '@/assets/clock.png';
@@ -71,6 +71,7 @@ export default function TcmBrain() {
   const [showHelpGuide, setShowHelpGuide] = useState(false);
   const [showPregnancyCalc, setShowPregnancyCalc] = useState(false);
   const [showElderlyGuide, setShowElderlyGuide] = useState(false);
+  const [showPediatricGuide, setShowPediatricGuide] = useState(false);
   const [showSessionBrief, setShowSessionBrief] = useState(false);
   const [qaFavoritesCount, setQaFavoritesCount] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -516,6 +517,17 @@ export default function TcmBrain() {
                     onClick: () => setShowPregnancyCalc(true),
                   },
                   {
+                    id: 'pediatric',
+                    name: 'Pediatric',
+                    nameHe: 'ילדים',
+                    icon: Baby,
+                    color: 'text-cyan-500',
+                    borderColor: 'border-cyan-300',
+                    isActive: showPediatricGuide,
+                    tooltip: 'Complete pediatric acupuncture treatment guide',
+                    onClick: () => setShowPediatricGuide(true),
+                  },
+                  {
                     id: 'elderly',
                     name: 'Elderly',
                     nameHe: 'קשישים',
@@ -914,6 +926,13 @@ export default function TcmBrain() {
         <ElderlyLifestyleDialog 
           open={showElderlyGuide} 
           onOpenChange={setShowElderlyGuide}
+        />
+        
+        {/* Pediatric Acupuncture Guide */}
+        <PediatricAcupunctureDialog 
+          open={showPediatricGuide} 
+          onOpenChange={setShowPediatricGuide}
+          defaultLanguage="he"
         />
         
         {/* Session Brief Panel */}

@@ -60,6 +60,7 @@ import knowledgeBg from '@/assets/knowledge-bg.png';
 import videoMeetingBg from '@/assets/video-meeting-bg.jpg';
 import retreatQuizBg from '@/assets/retreat-quiz-bg.png';
 import { PatientEducationWidget } from '@/components/education/PatientEducationWidget';
+import { PediatricInfographicCard } from '@/components/clinical';
 
 
 // Phosphor-style glowing clock component (mobile - small version)
@@ -1187,8 +1188,9 @@ export default function Dashboard() {
         </div>
 
         {/* Patient Education Widget */}
-        <div className="mb-8 opacity-0 animate-fade-in" style={{ animationDelay: '500ms', animationFillMode: 'forwards' }}>
+        <div className="mb-8 grid md:grid-cols-2 gap-6 opacity-0 animate-fade-in" style={{ animationDelay: '500ms', animationFillMode: 'forwards' }}>
           <PatientEducationWidget />
+          <PediatricInfographicCard animationDelay={550} />
         </div>
 
         {/* Row 1: Calendar, Patient Management, Therapist Intake */}
