@@ -1,21 +1,53 @@
-Body Part,Image File,Point Codes,Point Count,Category
-Hand,hand.png,"LI4, PC8, HT8, LU10, LU11, SI3, TE3",7,Upper Extremity
-Arm (Outer),arm.png,"LI10, LI11, LI15, TE6, TE14",5,Upper Extremity
-Arm (Inner),arm_inner.png,"PC3, PC6, HT3, LU5, LU7",5,Upper Extremity
-Wrist,wrist.png,"PC7, HT7, LU9, SI4, SI6, TE5",6,Upper Extremity
-Head (Front),head_front.png,"ST2, ST3, ST4, ST6, ST8, BL1, BL2, GB14, GV20, GV24, GV26, CV23, EX-HN1, EX-HN3, EX-HN5, Yintang",16,Head & Neck
-Head (Side),head_side.png,"ST7, GB1, GB2, GB8, GB20, Taiyang",6,Head & Neck
-Chest,chest.png,"LV14, KI27, CV17, CV22",4,Torso
-Body (Front),body_front.png,"ST25, SP15, LV13, CV3, CV4, CV6, CV8, CV12",8,Torso
-Body (Back),bodyback.png,"BL10, BL11, BL13, BL15, BL17, BL18, BL20, BL21, BL23, BL25, GB21, GB30, GV14, GV16",14,Torso
-Spine,spine.png,GV4,1,Torso
-Leg (Front),leg_front.png,"ST34, ST35, ST36, ST37, ST40, EX-LE10",6,Lower Extremity
-Leg (Inner),leg_inner.png,"SP6, SP9, SP10, LV8, KI7, KI10",6,Lower Extremity
-Leg (Outer),leg_outer.png,"BL40, BL57, GB31, GB34, GB39",5,Lower Extremity
-Foot (Top),foot.png,"ST41, ST44, SP3, SP4, LV2, LV3, KI3, KI6, BL60, BL62, GB40, GB41",12,Lower Extremity
-Foot (Sole),foot_sole.png,KI1,1,Lower Extremity
-Ear,ear.png,"Ear-Shenmen, Ear-Heart, Ear-Kidney, Ear-Liver, Ear-Lung, Ear-Stomach, Ear-Spleen",7,Microsystem
-Tongue,tongue.png,"Tongue-Heart, Tongue-Lung, Tongue-Spleen, Tongue-Kidney, Tongue-Liver",5,Microsystem
-Child (Front),child_front.png,Kid-Tui,1,Pediatric
-Child (Back),child_back.png,"Kid-Feishu, Kid-Pishu, Kid-Shenshu",3,Pediatric
-TOTAL,19 figures,108 points,108,6 categories
+Body Part,Image File,Point Codes,Point Count,Category,Status
+Hand,hand.png,"LI4, PC8, HT8, LU10, LU11, SI3, TE3",7,Upper Extremity,EXISTS
+Arm (Outer),arm.png,"LI10, LI11, LI15, TE6, TE14",5,Upper Extremity,EXISTS
+Arm (Inner),arm_inner.png,"PC3, PC6, HT3, LU5, LU7",5,Upper Extremity,EXISTS
+Wrist,wrist.png,"PC7, HT7, LU9, SI4, SI6, TE5",6,Upper Extremity,EXISTS
+Head (Front),head_front.png,"ST2, ST3, ST4, ST6, ST8, BL1, BL2, GB14, GV20, GV24, GV26, CV23, EX-HN1, EX-HN3, EX-HN5, Yintang",16,Head & Neck,EXISTS
+Head (Side),head_side.png,"ST7, GB1, GB2, GB8, GB20, Taiyang",6,Head & Neck,EXISTS
+Chest,chest.png,"LV14, KI27, CV17, CV22",4,Torso,EXISTS
+Body (Front),body_front.png,"ST25, SP15, LV13, CV3, CV4, CV6, CV8, CV12",8,Torso,EXISTS
+Body (Back),bodyback.png,"BL10, BL11, BL13, BL15, BL17, BL18, BL20, BL21, BL23, BL25, GB21, GB30, GV14, GV16",14,Torso,EXISTS
+Spine,spine.png,GV4,1,Torso,EXISTS
+Leg (Front),leg_front.png,"ST34, ST35, ST36, ST37, ST40, EX-LE10",6,Lower Extremity,EXISTS
+Leg (Inner),leg_inner.png,"SP6, SP9, SP10, LV8, KI7, KI10",6,Lower Extremity,EXISTS
+Leg (Outer),leg_outer.png,"BL40, BL57, GB31, GB34, GB39",5,Lower Extremity,EXISTS
+Foot (Top),foot.png,"ST41, ST44, SP3, SP4, LV2, LV3, KI3, KI6, BL60, BL62, GB40, GB41",12,Lower Extremity,EXISTS
+Foot (Sole),foot_sole.png,KI1,1,Lower Extremity,EXISTS
+Ear,ear.png,"Ear-Shenmen, Ear-Heart, Ear-Kidney, Ear-Liver, Ear-Lung, Ear-Stomach, Ear-Spleen",7,Microsystem,EXISTS
+Tongue,tongue.png,"Tongue-Heart, Tongue-Lung, Tongue-Spleen, Tongue-Kidney, Tongue-Liver",5,Microsystem,EXISTS
+Child (Front),child_front.png,Kid-Tui,1,Pediatric,EXISTS
+Child (Back),child_back.png,"Kid-Feishu, Kid-Pishu, Kid-Shenshu",3,Pediatric,EXISTS
+SUBTOTAL (Current),19 figures,108 points,108,6 categories,EXISTS
+,,,,,-
+RECOMMENDED ADDITIONS,,,,,-
+,,,,,-
+=== MUST-HAVE (Critical for Precision) ===,,,,,-
+Abdomen (Zoomed),abdomen.png,"CV3, CV4, CV5, CV6, CV7, CV8, CV9, CV10, CV11, CV12, ST25, ST26, ST27, ST28, KI11-KI16, SP13-SP16",25+,Torso,NEEDED
+Face (Front Close-up),face.png,"LI20, ST2, ST3, ST4, ST5, ST6, ST7, Yintang, Taiyang, BL1, BL2, GB1, GV26, CV24",14+,Head & Neck,NEEDED
+Hand (Dorsum),hand_dorsum.png,"LI4, TE3, TE4, SI3, SI4",5,Upper Extremity,NEEDED
+Hand (Palm),hand_palm.png,"PC8, HT8, LU10, LU11",4,Upper Extremity,NEEDED
+,,,,,-
+=== HIGH-VALUE (Professional Standard) ===,,,,,-
+Shoulder & Neck (Posterior),shoulder_neck.png,"GB21, SI11, SI12, SI13, SI14, LI15, LI16, TE14, TE15, SJ14",10+,Upper Extremity,NEEDED
+Scalp (Top/Vertex),scalp_top.png,"GV20, GV21, GV22, GV23, Sishencong, Motor Line, Sensory Line",7+,Head & Neck,NEEDED
+Sacrum & Gluteal,sacrum.png,"BL31, BL32, BL33, BL34, BL35, GB30, GV2, GV3, GV4",9+,Torso,NEEDED
+Elbow,elbow.png,"LI11, LU5, HT3, SI8, TE10, PC3",6,Upper Extremity,NEEDED
+Knee (Detailed),knee.png,"ST34, ST35, ST36, SP9, SP10, BL40, GB34, LV8, EX-LE4, EX-LE5",10,Lower Extremity,NEEDED
+Neck (Posterior),neck_back.png,"GB20, GV16, BL10, SI17, LI18",5+,Head & Neck,NEEDED
+Upper Back (Scapular),upper_back.png,"BL11-BL17, SI9-SI15, GB21",15+,Torso,NEEDED
+Lower Back (Lumbar),lower_back.png,"BL23, BL24, BL25, BL26, GV3, GV4, GV5",7+,Torso,NEEDED
+Ankle (Detailed),ankle.png,"KI3, KI6, BL60, BL62, SP5, GB40, ST41, LV4",8,Lower Extremity,NEEDED
+Thigh/Hip,thigh_hip.png,"GB29, GB30, GB31, ST31, ST32, BL36, BL37",7+,Lower Extremity,NEEDED
+,,,,,-
+=== MICROSYSTEM EXPANSIONS ===,,,,,-
+Scalp Microsystem (YNSA),scalp_ynsa.png,"Motor Zone, Sensory Zone, Foot Zone, Thorax Zone, Tremor Zone",10+,Microsystem,OPTIONAL
+Korean Hand Therapy,hand_kht.png,"Various KHT points mapped to organs",20+,Microsystem,OPTIONAL
+,,,,,-
+SUMMARY,,,,,-
+Current Regions,19,108 points,108,6 categories,EXISTS
+Must-Have Additions,4,48+ points,48+,3 categories,NEEDED
+High-Value Additions,10,85+ points,85+,4 categories,NEEDED
+Optional Microsystems,2,30+ points,30+,1 category,OPTIONAL
+,,,,,-
+TARGET TOTAL,35 figures,270+ points,270+,6 categories,RECOMMENDED
