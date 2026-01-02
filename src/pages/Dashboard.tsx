@@ -60,7 +60,7 @@ import knowledgeBg from '@/assets/knowledge-bg.png';
 import videoMeetingBg from '@/assets/video-meeting-bg.jpg';
 import retreatQuizBg from '@/assets/retreat-quiz-bg.png';
 import { PatientEducationWidget } from '@/components/education/PatientEducationWidget';
-import { PediatricInfographicCard, VagusNerveCard } from '@/components/clinical';
+import { PediatricInfographicCard, VagusNerveCard, VagusStimulationDialog } from '@/components/clinical';
 
 
 // Phosphor-style glowing clock component (mobile - small version)
@@ -254,6 +254,7 @@ export default function Dashboard() {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [showPinSetup, setShowPinSetup] = useState(false);
+  const [showVagusStimulation, setShowVagusStimulation] = useState(false);
   const [clockTheme, setClockTheme] = useState<ClockTheme>('gold');
   const [disclaimerStatus, setDisclaimerStatus] = useState<DisclaimerStatus>({ isSigned: false, isExpired: false });
   const { progress, hasProgress, resetProgress } = useWorkflowProgress();
@@ -1264,6 +1265,12 @@ export default function Dashboard() {
       
       {/* First-time tutorial overlay */}
       <WorkflowTutorial />
+      
+      {/* Vagus Stimulation Guide */}
+      <VagusStimulationDialog 
+        open={showVagusStimulation} 
+        onOpenChange={setShowVagusStimulation}
+      />
     </div>
     </>
   );

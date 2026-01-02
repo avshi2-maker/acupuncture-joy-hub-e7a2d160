@@ -32,7 +32,8 @@ import {
   Baby,
   Sparkles,
   Apple,
-  Activity
+  Activity,
+  Wind
 } from 'lucide-react';
 import { APIUsageMeter } from '@/components/tcm-brain/APIUsageMeter';
 import { useTcmBrainState } from '@/hooks/useTcmBrainState';
@@ -57,7 +58,7 @@ import { CrossPlatformBackButton } from '@/components/ui/CrossPlatformBackButton
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { TierBadge } from '@/components/layout/TierBadge';
 import { FloatingHelpGuide } from '@/components/ui/FloatingHelpGuide';
-import { PregnancySafetyDialog, ElderlyLifestyleDialog, PediatricAcupunctureDialog, VagusNerveDialog } from '@/components/clinical';
+import { PregnancySafetyDialog, ElderlyLifestyleDialog, PediatricAcupunctureDialog, VagusNerveDialog, VagusStimulationDialog } from '@/components/clinical';
 import { SessionBriefPanel } from '@/components/video/SessionBriefPanel';
 import { toast } from 'sonner';
 import clockImg from '@/assets/clock.png';
@@ -73,6 +74,7 @@ export default function TcmBrain() {
   const [showElderlyGuide, setShowElderlyGuide] = useState(false);
   const [showPediatricGuide, setShowPediatricGuide] = useState(false);
   const [showVagusAssessment, setShowVagusAssessment] = useState(false);
+  const [showVagusStimulation, setShowVagusStimulation] = useState(false);
   const [showSessionBrief, setShowSessionBrief] = useState(false);
   const [qaFavoritesCount, setQaFavoritesCount] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -551,6 +553,17 @@ export default function TcmBrain() {
                     onClick: () => setShowVagusAssessment(true),
                   },
                   {
+                    id: 'vagus-guide',
+                    name: 'V-Guide',
+                    nameHe: 'מדריך V',
+                    icon: Wind,
+                    color: 'text-cyan-500',
+                    borderColor: 'border-cyan-300',
+                    isActive: showVagusStimulation,
+                    tooltip: 'Vagus Stimulation Guide - Breathing & Cold Exposure protocols',
+                    onClick: () => setShowVagusStimulation(true),
+                  },
+                  {
                     id: 'session-brief',
                     name: 'Brief',
                     nameHe: 'תקציר',
@@ -951,6 +964,12 @@ export default function TcmBrain() {
         <VagusNerveDialog 
           open={showVagusAssessment} 
           onOpenChange={setShowVagusAssessment}
+        />
+        
+        {/* Vagus Stimulation Guide */}
+        <VagusStimulationDialog 
+          open={showVagusStimulation} 
+          onOpenChange={setShowVagusStimulation}
         />
         
         {/* Session Brief Panel */}
