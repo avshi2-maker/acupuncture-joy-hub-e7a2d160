@@ -124,11 +124,6 @@ export function FloatingMusicPlayer() {
   const [volume, setVolume] = useState(0.5);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Hide on TCM Brain page and Video Session page (have their own controls)
-  if (location.pathname === '/tcm-brain' || location.pathname === '/video-session') {
-    return null;
-  }
-
   // Load favorites and volume from localStorage on mount
   useEffect(() => {
     const storedFavorites = localStorage.getItem(FAVORITES_KEY);
@@ -153,6 +148,11 @@ export function FloatingMusicPlayer() {
     }
     localStorage.setItem(VOLUME_KEY, volume.toString());
   }, [volume]);
+
+  // Hide on TCM Brain page and Video Session page (have their own controls)
+  if (location.pathname === '/tcm-brain' || location.pathname === '/video-session') {
+    return null;
+  }
 
   const saveFavorites = (newFavorites: string[]) => {
     setFavorites(newFavorites);
