@@ -10,6 +10,92 @@ const STOPWORDS = new Set([
   'a','an','and','are','as','at','be','best','by','can','could','for','from','has','have','how','i','in','is','it','its','me','my','of','on','or','our','should','that','the','their','them','then','there','these','this','those','to','was','we','were','what','when','where','which','who','why','with','you','your',
 ]);
 
+// ============================================================================
+// 4-PILLAR HOLISTIC SEARCH ALGORITHM
+// ============================================================================
+
+// Pillar 1: Clinical Action - For Therapist
+const CLINICAL_KEYWORDS = [
+  'acupuncture', 'acupoint', 'point', 'needle', 'needling', 'insertion', 'depth',
+  'technique', 'moxa', 'moxibustion', 'cupping', 'electroacupuncture', 'bleeding',
+  'sedate', 'tonify', 'reduce', 'reinforce', 'manipulation', 'de qi', 'deqi',
+  'meridian', 'channel', 'jing luo', 'LI', 'ST', 'SP', 'HT', 'SI', 'BL', 'KI', 'PC', 'TE', 'GB', 'LR',
+  'ren', 'du', 'ashi', 'tender', 'trigger', 'motor point', 'distal', 'local',
+  'bilateral', 'unilateral', 'anterior', 'posterior', 'lateral', 'medial'
+];
+
+// Pillar 2: Pharmacopeia - For Therapist/Patient
+const PHARMACOPEIA_KEYWORDS = [
+  'herb', 'herbal', 'formula', 'prescription', 'tang', 'wan', 'san', 'pian',
+  'decoction', 'dosage', 'dose', 'gram', 'contraindication', 'caution', 'warning',
+  'pregnancy', 'interaction', 'side effect', 'toxicity', 'ingredient', 'combination',
+  'patent medicine', 'granule', 'tincture', 'extract', 'tea', 'modification',
+  'add', 'subtract', 'increase', 'decrease', 'pharmacopeia', 'materia medica',
+  'ben cao', 'radix', 'rhizoma', 'fructus', 'semen', 'cortex', 'folium'
+];
+
+// Pillar 3: Nutrition - For Patient
+const NUTRITION_KEYWORDS = [
+  'diet', 'food', 'nutrition', 'eat', 'avoid', 'recipe', 'meal', 'cooking',
+  'flavor', 'taste', 'sweet', 'sour', 'bitter', 'spicy', 'salty', 'bland',
+  'warming', 'cooling', 'cold', 'hot', 'damp', 'dry', 'phlegm', 'dampness',
+  'digest', 'stomach', 'spleen', 'breakfast', 'lunch', 'dinner', 'snack',
+  'soup', 'congee', 'porridge', 'tea', 'beverage', 'alcohol', 'caffeine',
+  'raw', 'cooked', 'steamed', 'boiled', 'fried', 'grilled', 'baked',
+  'vegetable', 'fruit', 'meat', 'fish', 'grain', 'legume', 'nut', 'seed',
+  'ginger', 'garlic', 'turmeric', 'cinnamon', 'honey', 'vinegar'
+];
+
+// Pillar 4: Lifestyle/Sport - For Patient
+const LIFESTYLE_KEYWORDS = [
+  'exercise', 'sport', 'yoga', 'tai chi', 'taichi', 'qigong', 'qi gong',
+  'stretch', 'stretching', 'movement', 'walk', 'walking', 'run', 'swimming',
+  'posture', 'ergonomic', 'sit', 'sitting', 'stand', 'standing', 'sleep',
+  'insomnia', 'rest', 'relaxation', 'meditation', 'breathing', 'breath',
+  'stress', 'anxiety', 'emotion', 'emotional', 'mental', 'mindset', 'mindfulness',
+  'lifestyle', 'habit', 'routine', 'schedule', 'work', 'office', 'computer',
+  'heat', 'ice', 'cold pack', 'heat pack', 'compress', 'self-massage',
+  'morning', 'evening', 'daily', 'weekly', 'avoid', 'reduce', 'limit'
+];
+
+// Pillar type definition
+type PillarType = 'clinical' | 'pharmacopeia' | 'nutrition' | 'lifestyle';
+
+interface PillarResult {
+  pillar: PillarType;
+  chunks: any[];
+  keywords: string[];
+  target: 'therapist' | 'patient' | 'both';
+}
+
+interface HolisticResponse {
+  query: string;
+  response_structure: {
+    clinical_protocol: {
+      points: string[];
+      technique: string;
+      images: string[];
+      contraindications: string[];
+      found_in_knowledge_base: boolean;
+    };
+    pharmacopeia: {
+      formula: string;
+      ingredients: string[];
+      dosage: string;
+      warning: string;
+      modifications: string[];
+      found_in_knowledge_base: boolean;
+    };
+    patient_homework: {
+      nutrition: string[];
+      sport_lifestyle: string[];
+      found_in_knowledge_base: boolean;
+    };
+  };
+  sources: any[];
+  ai_narrative: string;
+}
+
 function normalizeForSearch(raw: string): string {
   return (raw || '')
     .toLowerCase()
@@ -22,16 +108,51 @@ function uniq<T>(arr: T[]): T[] {
   return [...new Set(arr)];
 }
 
+// Detect which pillar a chunk belongs to based on content
+function detectPillar(content: string): PillarType[] {
+  const normalized = content.toLowerCase();
+  const pillars: PillarType[] = [];
+  
+  const clinicalScore = CLINICAL_KEYWORDS.filter(k => normalized.includes(k)).length;
+  const pharmaScore = PHARMACOPEIA_KEYWORDS.filter(k => normalized.includes(k)).length;
+  const nutritionScore = NUTRITION_KEYWORDS.filter(k => normalized.includes(k)).length;
+  const lifestyleScore = LIFESTYLE_KEYWORDS.filter(k => normalized.includes(k)).length;
+  
+  // A chunk can belong to multiple pillars
+  if (clinicalScore >= 2) pillars.push('clinical');
+  if (pharmaScore >= 2) pillars.push('pharmacopeia');
+  if (nutritionScore >= 2) pillars.push('nutrition');
+  if (lifestyleScore >= 2) pillars.push('lifestyle');
+  
+  // Default to clinical if no strong signal
+  if (pillars.length === 0) {
+    pillars.push('clinical');
+  }
+  
+  return pillars;
+}
+
+// Build pillar-specific search query
+function buildPillarQuery(baseQuery: string, pillar: PillarType): string {
+  const pillarTerms: Record<PillarType, string[]> = {
+    clinical: ['acupuncture', 'points', 'needle', 'technique', 'depth', 'meridian'],
+    pharmacopeia: ['herbal', 'formula', 'tang', 'dosage', 'herbs', 'prescription'],
+    nutrition: ['diet', 'food', 'nutrition', 'eat', 'avoid', 'recipe'],
+    lifestyle: ['exercise', 'sleep', 'stretch', 'yoga', 'lifestyle', 'stress']
+  };
+  
+  const terms = pillarTerms[pillar].slice(0, 3);
+  return `${baseQuery} ${terms.join(' ')}`;
+}
+
 function buildWebSearchQuery(rawQuery: string): { webQuery: string; keywords: string[] } {
   const normalized = normalizeForSearch(rawQuery);
 
-  // Base keywords from the user query
   const baseTokens = normalized
     .split(' ')
     .map((t) => t.trim())
     .filter((t) => t.length > 1 && !STOPWORDS.has(t));
 
-  // Minimal TCM expansions for common patterns (helps both textSearch + ilike fallback)
   const expansions: string[] = [];
   if (/\bliver\s+qi\s+stagnation\b/.test(normalized) || /\bqi\s+stagnation\b/.test(normalized)) {
     expansions.push('liver', 'qi', 'stagnation', '"liver qi"', '"qi stagnation"', '肝气郁结', '肝气');
@@ -39,7 +160,6 @@ function buildWebSearchQuery(rawQuery: string): { webQuery: string; keywords: st
 
   const combined = uniq([...baseTokens, ...expansions.map((e) => e.replace(/"/g, ''))]);
 
-  // Websearch syntax: use OR, include quoted phrases when relevant
   const webParts = uniq([
     ...expansions.filter((e) => e.includes('"')),
     ...combined.filter((t) => !t.includes('"')),
@@ -85,20 +205,88 @@ function getAgeGroupFilePatterns(ageGroup: string): string[] {
   return AGE_GROUP_PROMPTS[ageGroup]?.filePatterns || [];
 }
 
-const TCM_RAG_SYSTEM_PROMPT = `You are Dr. Sapir's TCM Knowledge Assistant, powered EXCLUSIVELY by proprietary materials from Dr. Roni Sapir's clinical knowledge base.
+// ============================================================================
+// 4-PILLAR HOLISTIC MANAGER SYSTEM PROMPT
+// ============================================================================
+const TCM_RAG_SYSTEM_PROMPT = `You are Dr. Sapir's TCM Holistic Knowledge Manager, powered EXCLUSIVELY by proprietary materials from Dr. Roni Sapir's clinical knowledge base.
 
+ROLE: You are the Master AI for a high-end TCM Clinic. You have access to verified documents containing clinical protocols, herbal data, and lifestyle advice.
+
+TASK: When a user queries a condition, you MUST extract ALL relevant modalities found in the text and categorize them into the 4 PILLARS.
+
+============================================================================
+THE 4 PILLARS - STRICT EXTRACTION RULES:
+============================================================================
+
+📍 PILLAR 1: CLINICAL (Target: Therapist)
+   - Acupuncture points and needle techniques
+   - Insertion depth, angle, manipulation methods
+   - Moxibustion, cupping, electroacupuncture protocols
+   - Point combinations and treatment sequences
+   
+🌿 PILLAR 2: PHARMACOPEIA (Target: Therapist/Patient)
+   - Specific herbal formulas with ingredients
+   - Dosages and preparation methods
+   - Contraindications and warnings
+   - Formula modifications for specific presentations
+   
+🍎 PILLAR 3: NUTRITION (Target: Patient)
+   - Dietary recommendations and restrictions
+   - Foods to add and foods to avoid
+   - Recipes or meal suggestions if available
+   - Flavor/temperature considerations (warming, cooling, etc.)
+   
+🏃 PILLAR 4: LIFESTYLE/SPORT (Target: Patient)
+   - Exercise recommendations and restrictions
+   - Sleep hygiene advice
+   - Stretches, yoga, qigong, tai chi
+   - Stress management, emotional support
+   - Work/ergonomic modifications
+
+============================================================================
 CRITICAL RULES:
-1. You MUST ONLY answer using the provided context from Dr. Sapir's materials
-2. If the context doesn't contain relevant information, say: "I don't have information about this in Dr. Sapir's proprietary knowledge base."
-3. ALWAYS cite sources using [Source: filename, entry #X] format
-4. NEVER make up information or use general knowledge
-5. Respond in the same language as the user's question
+============================================================================
 
-When answering:
-- Quote or paraphrase directly from the provided context
-- Include specific acupoints, formulas, or clinical notes when available
-- Mention safety considerations if present in the source material
-- Be concise but thorough`;
+1. NO HALLUCINATION: If a document lists points but no herbs, return "Herbs: None found in protocol." Do NOT invent a formula.
+
+2. EXHAUSTIVE EXTRACTION: You MUST fill all 4 pillars. If a pillar has no information, explicitly state "None found in knowledge base."
+
+3. ALWAYS cite sources using [Source: filename, entry #X] format.
+
+4. VISUAL LINKING: Link acupuncture points to their image IDs when available. Also look for exercise diagrams.
+
+5. STRUCTURED OUTPUT: Present the "Clinical" and "Pharmacopeia" sections for the Therapist, and "Nutrition/Lifestyle" as "Patient Instructions."
+
+6. Respond in the same language as the user's question (Hebrew if Hebrew, English if English).
+
+7. When answering, quote or paraphrase directly from the provided context.
+
+============================================================================
+OUTPUT FORMAT:
+============================================================================
+
+## 🏥 FOR THE THERAPIST
+
+### 📍 Clinical Protocol
+[Acupuncture points, techniques, depth, etc.]
+
+### 🌿 Herbal Formula
+[Formula name, ingredients, dosage, contraindications]
+
+---
+
+## 📋 PATIENT INSTRUCTIONS
+
+### 🍎 Nutrition Guidelines
+[Diet recommendations, foods to eat/avoid]
+
+### 🏃 Lifestyle & Exercise
+[Exercise, sleep, stretches, stress management]
+
+---
+
+## 📚 Sources
+[List all sources used]`;
 
 const EXTERNAL_AI_SYSTEM_PROMPT = `You are a general TCM (Traditional Chinese Medicine) knowledge assistant.
 
@@ -108,10 +296,14 @@ The therapist has accepted liability for using this external information.
 
 When answering:
 - Provide helpful TCM information based on general knowledge
+- Structure your response using the 4 PILLARS (Clinical, Pharmacopeia, Nutrition, Lifestyle)
 - Include appropriate medical disclaimers
 - Recommend consulting Dr. Sapir's verified materials for clinical decisions
 - Respond in the same language as the user's question`;
 
+// ============================================================================
+// MAIN EDGE FUNCTION
+// ============================================================================
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -145,495 +337,216 @@ serve(async (req) => {
 
     const { webQuery: searchTerms, keywords: keywordTerms } = buildWebSearchQuery(searchQuery);
 
-    // Age group context for specialized knowledge
     const ageGroupContext = ageGroup ? getAgeGroupSystemPrompt(ageGroup) : '';
 
-    console.log('=== RAG TRACE START ===');
+    console.log('=== 4-PILLAR HOLISTIC RAG SEARCH START ===');
     console.log('Query:', searchQuery);
     console.log('Websearch query:', searchTerms);
     console.log('Keyword terms:', keywordTerms.slice(0, 8).join(', '));
     console.log('Age group:', ageGroup || 'not specified');
     console.log('Using external AI:', useExternalAI || false);
-    console.log('Include chunk details:', includeChunkDetails || false);
 
-    // Get age-specific file patterns for prioritized search
+    // ========================================================================
+    // PHASE 2: COMPOSITE PARALLEL SEARCH - 4 Pillar Queries
+    // ========================================================================
+    
     const ageFilePatterns = ageGroup ? getAgeGroupFilePatterns(ageGroup) : [];
     
-    // Priority 0: Age-specific knowledge (if age group provided)
-    let ageSpecificChunks: any[] = [];
-    let ageError: any = null;
+    // Build pillar-specific queries
+    const clinicalQuery = buildPillarQuery(searchQuery, 'clinical');
+    const pharmaQuery = buildPillarQuery(searchQuery, 'pharmacopeia');
+    const nutritionQuery = buildPillarQuery(searchQuery, 'nutrition');
+    const lifestyleQuery = buildPillarQuery(searchQuery, 'lifestyle');
     
-    if (ageGroup && ageFilePatterns.length > 0) {
-      const agePatternQuery = ageFilePatterns.map(p => `file_name.ilike.%${p}%`).join(',');
-      const { data, error } = await supabaseClient
+    console.log('=== PARALLEL 4-PILLAR QUERIES ===');
+    console.log('Clinical query:', clinicalQuery);
+    console.log('Pharmacopeia query:', pharmaQuery);
+    console.log('Nutrition query:', nutritionQuery);
+    console.log('Lifestyle query:', lifestyleQuery);
+
+    // Run all 4 pillar searches in parallel
+    const [
+      clinicalResult,
+      pharmacopeiaResult,
+      nutritionResult,
+      lifestyleResult,
+      ageSpecificResult,
+      cafStudiesResult,
+      clinicalTrialsResult
+    ] = await Promise.all([
+      // PILLAR 1: Clinical - Points, needles, techniques
+      supabaseClient
         .from('knowledge_chunks')
         .select(`
-          id,
-          content,
-          question,
-          answer,
-          chunk_index,
-          metadata,
+          id, content, question, answer, chunk_index, metadata,
           document:knowledge_documents!inner(id, file_name, original_name, category)
         `)
-        .or(agePatternQuery, { referencedTable: 'document' })
-        .textSearch('content', searchTerms, {
-          type: 'websearch',
-          config: 'simple'
-        })
-        .limit(6);
-      
-      ageSpecificChunks = data || [];
-      ageError = error;
-      console.log(`Age-specific chunks (${ageGroup}): ${ageSpecificChunks.length}`);
-    }
+        .or('file_name.ilike.%acupuncture%,file_name.ilike.%point%,file_name.ilike.%meridian%,file_name.ilike.%protocol%,file_name.ilike.%treatment%', { referencedTable: 'document' })
+        .textSearch('content', searchTerms, { type: 'websearch', config: 'simple' })
+        .limit(8),
 
-    // Search for relevant chunks using full-text search
-    // Priority 1: Diagnostics file (should be used first in sessions)
-    const { data: diagnosticsChunks, error: diagError } = await supabaseClient
-      .from('knowledge_chunks')
-      .select(`
-        id,
-        content,
-        question,
-        answer,
-        chunk_index,
-        metadata,
-        document:knowledge_documents!inner(id, file_name, original_name, category)
-      `)
-      .ilike('document.file_name', '%Diagnostics_Professional%')
-      .textSearch('content', searchTerms, {
-        type: 'websearch',
-        config: 'simple'
-      })
-      .limit(5);
-
-    // Priority 2: Pulse and Tongue diagnosis files
-    const { data: pulseChunks, error: pulseError } = await supabaseClient
-      .from('knowledge_chunks')
-      .select(`
-        id,
-        content,
-        question,
-        answer,
-        chunk_index,
-        metadata,
-        document:knowledge_documents!inner(id, file_name, original_name, category)
-      `)
-      .or('file_name.ilike.%pulse%,file_name.ilike.%tongue%', { referencedTable: 'document' })
-      .textSearch('content', searchTerms, {
-        type: 'websearch',
-          config: 'simple'
-      })
-      .limit(5);
-
-    // Priority 3: Zang-Fu symptoms files
-    const { data: zangfuChunks, error: zangfuError } = await supabaseClient
-      .from('knowledge_chunks')
-      .select(`
-        id,
-        content,
-        question,
-        answer,
-        chunk_index,
-        metadata,
-        document:knowledge_documents!inner(id, file_name, original_name, category)
-      `)
-      .or('file_name.ilike.%zang%,file_name.ilike.%fu%,file_name.ilike.%organ%', { referencedTable: 'document' })
-      .textSearch('content', searchTerms, {
-        type: 'websearch',
-          config: 'simple'
-      })
-      .limit(4);
-
-    // Priority 4: Acupuncture points knowledge
-    const { data: acuChunks, error: acuError } = await supabaseClient
-      .from('knowledge_chunks')
-      .select(`
-        id,
-        content,
-        question,
-        answer,
-        chunk_index,
-        metadata,
-        document:knowledge_documents!inner(id, file_name, original_name, category)
-      `)
-      .or('file_name.ilike.%acupuncture%,file_name.ilike.%point%,file_name.ilike.%meridian%', { referencedTable: 'document' })
-      .textSearch('content', searchTerms, {
-        type: 'websearch',
-          config: 'simple'
-      })
-      .limit(4);
-
-    // Priority 5: QA Professional file (clinical Q&A)
-    const { data: qaChunks, error: qaError } = await supabaseClient
-      .from('knowledge_chunks')
-      .select(`
-        id,
-        content,
-        question,
-        answer,
-        chunk_index,
-        metadata,
-        document:knowledge_documents!inner(id, file_name, original_name, category)
-      `)
-      .ilike('document.file_name', '%QA_Professional%')
-      .textSearch('content', searchTerms, {
-        type: 'websearch',
-          config: 'simple'
-      })
-      .limit(4);
-
-    // Priority 6: Treatment Planning Protocols
-    const { data: treatmentChunks, error: treatmentError } = await supabaseClient
-      .from('knowledge_chunks')
-      .select(`
-        id,
-        content,
-        question,
-        answer,
-        chunk_index,
-        metadata,
-        document:knowledge_documents!inner(id, file_name, original_name, category)
-      `)
-      .ilike('document.file_name', '%Treatment_Planning%')
-      .textSearch('content', searchTerms, {
-        type: 'websearch',
-          config: 'simple'
-      })
-      .limit(4);
-
-    // Priority 7: CAF Master Studies (comprehensive clinical framework)
-    const { data: cafChunks, error: cafError } = await supabaseClient
-      .from('knowledge_chunks')
-      .select(`
-        id,
-        content,
-        question,
-        answer,
-        chunk_index,
-        metadata,
-        document:knowledge_documents!inner(id, file_name, original_name, category)
-      `)
-      .or('file_name.ilike.%caf%,file_name.ilike.%comprehensive%', { referencedTable: 'document' })
-      .textSearch('content', searchTerms, {
-        type: 'websearch',
-          config: 'simple'
-      })
-      .limit(5);
-
-    // Priority 8: Vagus Nerve knowledge base
-    const { data: vagusChunks, error: vagusError } = await supabaseClient
-      .from('knowledge_chunks')
-      .select(`
-        id,
-        content,
-        question,
-        answer,
-        chunk_index,
-        metadata,
-        document:knowledge_documents!inner(id, file_name, original_name, category)
-      `)
-      .or('content_type.eq.vagus-nerve,document.file_name.ilike.%vagus%,document.file_name.ilike.%vagal%')
-      .textSearch('content', searchTerms, {
-        type: 'websearch',
-          config: 'simple'
-      })
-      .limit(5);
-    
-    console.log(`Vagus Nerve chunks: ${vagusChunks?.length || 0}`);
-
-    // Priority 9: Neurodegenerative TCM knowledge (Parkinson's, Alzheimer's, Dementia, etc.)
-    const hasNeuroTerms = ['parkinson', 'alzheimer', 'dementia', 'tremor', 'neurodegen', 'memory loss', 'cognitive', 'dopamine', 'basal ganglia', 'brain fog', 'rigidity', 'bradykinesia', 'freezing', 'gait', 'dyskinesia', 'apathy', 'hallucination', 'sundowning'].some(
-      term => searchQuery.toLowerCase().includes(term)
-    );
-    
-    let neuroChunks: any[] = [];
-    if (hasNeuroTerms) {
-      const { data: neuroData, error: neuroError } = await supabaseClient
+      // PILLAR 2: Pharmacopeia - Herbs, formulas, dosages
+      supabaseClient
         .from('knowledge_chunks')
         .select(`
-          id,
-          content,
-          question,
-          answer,
-          chunk_index,
-          metadata,
+          id, content, question, answer, chunk_index, metadata,
           document:knowledge_documents!inner(id, file_name, original_name, category)
         `)
-        .or('file_name.ilike.%neuro%,file_name.ilike.%degenerative%,file_name.ilike.%parkinson%,file_name.ilike.%alzheimer%', { referencedTable: 'document' })
-        .textSearch('content', searchTerms, {
-          type: 'websearch',
-            config: 'simple'
-        })
-        .limit(8);
-      
-      neuroChunks = neuroData || [];
-      console.log(`Neurodegenerative chunks: ${neuroChunks.length}`);
-    }
+        .or('file_name.ilike.%herb%,file_name.ilike.%formula%,file_name.ilike.%pharmacopeia%,file_name.ilike.%materia%,content.ilike.%tang%,content.ilike.%wan%', { referencedTable: 'document' })
+        .textSearch('content', searchTerms, { type: 'websearch', config: 'simple' })
+        .limit(8),
 
-    // Also query CAF Master Studies table directly for pattern matching
-    let cafStudies: any[] = [];
-    try {
-      const searchWords = searchQuery.toLowerCase().split(/\s+/).filter((w: string) => w.length > 2);
-      const { data: cafData } = await supabaseClient
+      // PILLAR 3: Nutrition - Diet, foods, recipes
+      supabaseClient
+        .from('knowledge_chunks')
+        .select(`
+          id, content, question, answer, chunk_index, metadata,
+          document:knowledge_documents!inner(id, file_name, original_name, category)
+        `)
+        .or('file_name.ilike.%nutrition%,file_name.ilike.%diet%,file_name.ilike.%food%,file_name.ilike.%lifestyle%,content.ilike.%diet%,content.ilike.%food%,content.ilike.%eat%', { referencedTable: 'document' })
+        .textSearch('content', searchTerms, { type: 'websearch', config: 'simple' })
+        .limit(8),
+
+      // PILLAR 4: Lifestyle/Sport - Exercise, sleep, stress
+      supabaseClient
+        .from('knowledge_chunks')
+        .select(`
+          id, content, question, answer, chunk_index, metadata,
+          document:knowledge_documents!inner(id, file_name, original_name, category)
+        `)
+        .or('file_name.ilike.%lifestyle%,file_name.ilike.%exercise%,file_name.ilike.%sport%,file_name.ilike.%sleep%,file_name.ilike.%yoga%,file_name.ilike.%qigong%,content.ilike.%exercise%,content.ilike.%stretch%', { referencedTable: 'document' })
+        .textSearch('content', searchTerms, { type: 'websearch', config: 'simple' })
+        .limit(8),
+
+      // Age-specific knowledge
+      ageGroup && ageFilePatterns.length > 0
+        ? supabaseClient
+            .from('knowledge_chunks')
+            .select(`
+              id, content, question, answer, chunk_index, metadata,
+              document:knowledge_documents!inner(id, file_name, original_name, category)
+            `)
+            .or(ageFilePatterns.map(p => `file_name.ilike.%${p}%`).join(','), { referencedTable: 'document' })
+            .textSearch('content', searchTerms, { type: 'websearch', config: 'simple' })
+            .limit(6)
+        : Promise.resolve({ data: [], error: null }),
+
+      // CAF Master Studies
+      supabaseClient
         .from('caf_master_studies')
         .select('*')
-        .or(searchWords.map((w: string) => `western_label.ilike.%${w}%,tcm_pattern.ilike.%${w}%,key_symptoms.ilike.%${w}%,acupoints_display.ilike.%${w}%`).join(','))
-        .limit(3);
-      cafStudies = cafData || [];
-      console.log(`CAF Studies direct match: ${cafStudies.length}`);
-    } catch (cafStudyError) {
-      console.error('CAF Study query error:', cafStudyError);
-    }
+        .or(searchQuery.toLowerCase().split(/\s+/).filter((w: string) => w.length > 2).map((w: string) => 
+          `western_label.ilike.%${w}%,tcm_pattern.ilike.%${w}%,key_symptoms.ilike.%${w}%,acupoints_display.ilike.%${w}%`
+        ).join(','))
+        .limit(5),
 
-    // Query Retreat Quiz Results for patient wellness assessment data
-    let quizResults: any[] = [];
-    try {
-      const searchWords = searchQuery.toLowerCase().split(/\s+/).filter((w: string) => w.length > 2);
-      const hasRetreatTerms = ['retreat', 'quiz', 'wellness', 'assessment', 'burnout', 'stress', 'lifestyle'].some(
-        term => searchQuery.toLowerCase().includes(term)
-      );
-      if (hasRetreatTerms) {
-        const { data: quizData } = await supabaseClient
-          .from('retreat_quiz_results')
-          .select('*, patients(full_name)')
-          .order('created_at', { ascending: false })
-          .limit(5);
-        quizResults = quizData || [];
-        console.log(`Retreat Quiz Results: ${quizResults.length}`);
-      }
-    } catch (quizError) {
-      console.error('Quiz Results query error:', quizError);
-    }
+      // Clinical Trials
+      supabaseClient
+        .from('clinical_trials')
+        .select('*')
+        .or(searchQuery.toLowerCase().split(/\s+/).filter((w: string) => w.length > 2).map((w: string) => 
+          `condition.ilike.%${w}%,title.ilike.%${w}%,intervention.ilike.%${w}%`
+        ).join(','))
+        .order('sapir_verified', { ascending: false })
+        .limit(5)
+    ]);
 
-    // Query Clinical Trials for evidence-based data
-    let clinicalTrials: any[] = [];
-    try {
-      const searchWords = searchQuery.toLowerCase().split(/\s+/).filter((w: string) => w.length > 2);
-      const hasTrialTerms = ['study', 'trial', 'research', 'evidence', 'clinical', 'efficacy', 'outcome', 'nct'].some(
-        term => searchQuery.toLowerCase().includes(term)
-      );
-      // Also search if condition/symptom is mentioned
-      if (hasTrialTerms || searchWords.length > 0) {
-        const { data: trialData } = await supabaseClient
-          .from('clinical_trials')
-          .select('*')
-          .or(searchWords.map((w: string) => `condition.ilike.%${w}%,title.ilike.%${w}%,intervention.ilike.%${w}%,results_summary.ilike.%${w}%`).join(','))
-          .order('sapir_verified', { ascending: false })
-          .limit(5);
-        clinicalTrials = trialData || [];
-        console.log(`Clinical Trials matched: ${clinicalTrials.length}`);
-      }
-    } catch (trialError) {
-      console.error('Clinical Trials query error:', trialError);
-    }
+    // Extract results
+    const clinicalChunks = clinicalResult.data || [];
+    const pharmacopeiaChunks = pharmacopeiaResult.data || [];
+    const nutritionChunks = nutritionResult.data || [];
+    const lifestyleChunks = lifestyleResult.data || [];
+    const ageSpecificChunks = ageSpecificResult.data || [];
+    const cafStudies = cafStudiesResult.data || [];
+    const clinicalTrials = clinicalTrialsResult.data || [];
 
-    // Then get other relevant chunks
-    const { data: otherChunks, error: searchError } = await supabaseClient
-      .from('knowledge_chunks')
-      .select(`
-        id,
-        content,
-        question,
-        answer,
-        chunk_index,
-        metadata,
-        document:knowledge_documents(id, file_name, original_name, category)
-      `)
-      .textSearch('content', searchTerms, {
-        type: 'websearch',
-        config: 'simple'
-      })
-      .limit(8);
+    console.log('=== PILLAR RESULTS ===');
+    console.log(`📍 Clinical chunks: ${clinicalChunks.length}`);
+    console.log(`🌿 Pharmacopeia chunks: ${pharmacopeiaChunks.length}`);
+    console.log(`🍎 Nutrition chunks: ${nutritionChunks.length}`);
+    console.log(`🏃 Lifestyle chunks: ${lifestyleChunks.length}`);
+    console.log(`👤 Age-specific chunks: ${ageSpecificChunks.length}`);
+    console.log(`📊 CAF Studies: ${cafStudies.length}`);
+    console.log(`🔬 Clinical Trials: ${clinicalTrials.length}`);
 
-    // Enhanced fallback: Always run ilike search for better coverage
+    // Enhanced fallback search with keyword matching
     let fallbackChunks: any[] = [];
-
-    // Reuse extracted keywords (plus small expansions) rather than the first words of the sentence
     const fallbackWords = (keywordTerms || []).filter((w: string) => w.length > 1).slice(0, 8);
+    const totalPillarChunks = clinicalChunks.length + pharmacopeiaChunks.length + nutritionChunks.length + lifestyleChunks.length;
 
-    const totalPriorityChunks = (neuroChunks?.length || 0) + (cafChunks?.length || 0) +
-      (vagusChunks?.length || 0) + (ageSpecificChunks?.length || 0) +
-      (diagnosticsChunks?.length || 0) + (pulseChunks?.length || 0) +
-      (zangfuChunks?.length || 0) + (acuChunks?.length || 0) +
-      (qaChunks?.length || 0) + (treatmentChunks?.length || 0) +
-      (otherChunks?.length || 0);
-
-    // Always run fallback if we have less than 5 chunks or keywords exist
-    if ((totalPriorityChunks < 5 || fallbackWords.length > 0) && fallbackWords.length > 0) {
-      console.log(`Running enhanced ilike search with keywords: ${fallbackWords.join(', ')}`);
-
-      // Build comprehensive ilike conditions for up to 8 keywords
+    if (totalPillarChunks < 8 && fallbackWords.length > 0) {
+      console.log(`Running enhanced fallback search with keywords: ${fallbackWords.join(', ')}`);
+      
       const ilikeConditions = fallbackWords.flatMap((w: string) => [
         `content.ilike.%${w}%`,
         `question.ilike.%${w}%`,
         `answer.ilike.%${w}%`
       ]).join(',');
       
-      const { data: fallbackData, error: fallbackError } = await supabaseClient
+      const { data: fallbackData } = await supabaseClient
         .from('knowledge_chunks')
         .select(`
-          id,
-          content,
-          question,
-          answer,
-          chunk_index,
-          metadata,
+          id, content, question, answer, chunk_index, metadata,
           document:knowledge_documents(id, file_name, original_name, category)
         `)
         .or(ilikeConditions)
         .limit(15);
       
-      if (!fallbackError && fallbackData) {
+      if (fallbackData) {
+        // Categorize fallback chunks into pillars
+        fallbackData.forEach(chunk => {
+          const pillars = detectPillar(chunk.content);
+          if (pillars.includes('clinical') && clinicalChunks.length < 8) {
+            clinicalChunks.push(chunk);
+          }
+          if (pillars.includes('pharmacopeia') && pharmacopeiaChunks.length < 8) {
+            pharmacopeiaChunks.push(chunk);
+          }
+          if (pillars.includes('nutrition') && nutritionChunks.length < 8) {
+            nutritionChunks.push(chunk);
+          }
+          if (pillars.includes('lifestyle') && lifestyleChunks.length < 8) {
+            lifestyleChunks.push(chunk);
+          }
+        });
         fallbackChunks = fallbackData;
-        console.log(`Enhanced fallback search found: ${fallbackChunks.length} chunks`);
-      } else if (fallbackError) {
-        console.error('Fallback search error:', fallbackError);
+        console.log(`Fallback search found: ${fallbackChunks.length} chunks, distributed across pillars`);
       }
     }
 
-    if (searchError || diagError || pulseError || zangfuError || acuError || qaError || treatmentError || ageError || cafError || vagusError) {
-      console.error('Search error:', searchError || diagError || pulseError || zangfuError || acuError || qaError || treatmentError || ageError || cafError || vagusError);
-    }
-
-    // Merge with priority order: Neurodegenerative (if relevant), CAF studies, vagus nerve, age-specific, diagnostics, pulse/tongue, zang-fu, acupoints, QA, treatment protocols, fallback, then others
-    const prioritizedIds = new Set([
-      ...neuroChunks.map(c => c.id),
-      ...(cafChunks || []).map(c => c.id),
-      ...(vagusChunks || []).map(c => c.id),
-      ...ageSpecificChunks.map(c => c.id),
-      ...(diagnosticsChunks || []).map(c => c.id),
-      ...(pulseChunks || []).map(c => c.id),
-      ...(zangfuChunks || []).map(c => c.id),
-      ...(acuChunks || []).map(c => c.id),
-      ...(qaChunks || []).map(c => c.id),
-      ...(treatmentChunks || []).map(c => c.id),
-      ...(otherChunks || []).map(c => c.id)
-    ]);
+    // ========================================================================
+    // PHASE 3: BUILD STRUCTURED CONTEXT FOR AI
+    // ========================================================================
     
-    const chunks = [
-      ...neuroChunks,
-      ...(cafChunks || []),
-      ...(vagusChunks || []),
-      ...ageSpecificChunks,
-      ...(diagnosticsChunks || []),
-      ...(pulseChunks || []),
-      ...(zangfuChunks || []),
-      ...(acuChunks || []),
-      ...(qaChunks || []),
-      ...(treatmentChunks || []),
-      ...(otherChunks || []).filter(c => !prioritizedIds.has(c.id)),
-      ...fallbackChunks.filter(c => !prioritizedIds.has(c.id))
-    ].slice(0, 25);
+    const sources: Array<{ fileName: string; chunkIndex: number; preview: string; category: string; documentId: string; pillar: string }> = [];
+    const chunksMatched: Array<any> = [];
 
-    console.log(`Total chunks after merge: ${chunks.length} (fallback contributed: ${fallbackChunks.filter(c => !prioritizedIds.has(c.id)).length})`);
-
-    // Add CAF studies context as structured clinical data
-    let cafStudiesContext = '';
-    if (cafStudies.length > 0) {
-      cafStudiesContext = '\n\n=== CAF MASTER CLINICAL STUDIES (Deep Thinking Framework) ===\n';
-      cafStudiesContext += cafStudies.map((study, i) => `
-[CAF Study #${i + 1}: ${study.western_label} - ${study.tcm_pattern}]
-System: ${study.system_category}
-Key Symptoms: ${study.key_symptoms}
-Pulse/Tongue: ${study.pulse_tongue}
-Treatment Principle: ${study.treatment_principle}
-Acupoints: ${study.acupoints_display}
-Formula: ${study.pharmacopeia_formula}
-🧠 Clinical Insight: ${study.deep_thinking_note}
-`).join('\n---\n');
-      cafStudiesContext += '\n=== END CAF STUDIES ===';
-    }
-
-    // Add Retreat Quiz Results context for wellness assessments
-    let quizResultsContext = '';
-    if (quizResults.length > 0) {
-      quizResultsContext = '\n\n=== RETREAT QUIZ WELLNESS ASSESSMENTS ===\n';
-      quizResultsContext += quizResults.map((result, i) => {
-        const tcmData = result.collected_tcm || {};
-        return `
-[Quiz Result #${i + 1}: ${result.patients?.full_name || 'Anonymous'}]
-Date: ${new Date(result.created_at).toLocaleDateString()}
-Score: ${result.score}% (${result.answered_yes}/${result.total_questions} wellness indicators)
-Status: ${result.status}
-TCM Observations:
-- Patterns: ${tcmData.patterns?.join(', ') || 'Not recorded'}
-- Symptoms: ${tcmData.symptoms?.join(', ') || 'Not recorded'}
-- Recommendations: ${tcmData.recommendations?.join(', ') || 'Not recorded'}
-`;
-      }).join('\n---\n');
-      quizResultsContext += '\n=== END QUIZ ASSESSMENTS ===';
-    }
-
-    // Add Clinical Trials context for evidence-based data
-    let clinicalTrialsContext = '';
-    if (clinicalTrials.length > 0) {
-      clinicalTrialsContext = '\n\n=== CLINICAL TRIALS EVIDENCE ===\n';
-      clinicalTrialsContext += clinicalTrials.map((trial, i) => {
-        const verifiedTag = trial.sapir_verified ? '✅ Dr. Sapir Verified' : '⚠️ Unverified';
-        return `
-[Clinical Trial #${i + 1}: ${trial.nct_id || 'N/A'}] ${verifiedTag}
-Title: ${trial.title}
-Condition: ${trial.condition} ${trial.icd11_code ? `(ICD-11: ${trial.icd11_code})` : ''}
-Intervention: ${trial.intervention || 'Not specified'}
-Acupoints Used: ${trial.points_used?.join(', ') || 'Not specified'}
-Herbal Formula: ${trial.herbal_formula || 'None'}
-Phase: ${trial.phase || 'N/A'} | Enrollment: ${trial.enrollment || 'N/A'}
-Status: ${trial.study_status || 'Unknown'}
-Primary Outcome: ${trial.primary_outcome || 'Not specified'}
-Results: ${trial.results_summary || 'No results available'}
-Efficacy Rating: ${trial.efficacy_rating || 'Not rated'}
-${trial.sapir_notes ? `Dr. Sapir Notes: ${trial.sapir_notes}` : ''}
-Source: ${trial.source_url || trial.citation || 'ClinicalTrials.gov'}
-`;
-      }).join('\n---\n');
-      clinicalTrialsContext += '\n=== END CLINICAL TRIALS ===';
-    }
-
-    console.log(`Priority chunks - Age-Specific: ${ageSpecificChunks.length}, Diagnostics: ${diagnosticsChunks?.length || 0}, Pulse/Tongue: ${pulseChunks?.length || 0}, Zang-Fu: ${zangfuChunks?.length || 0}, Acupoints: ${acuChunks?.length || 0}, QA: ${qaChunks?.length || 0}, Treatment: ${treatmentChunks?.length || 0}, Other: ${otherChunks?.length || 0}`);
-
-    // Build context from retrieved chunks
-    let context = '';
-    const sources: Array<{ fileName: string; chunkIndex: number; preview: string; category: string; documentId: string }> = [];
-    const chunksMatched: Array<{ 
-      id: string; 
-      documentId: string; 
-      chunkIndex: number; 
-      contentPreview: string;
-      fileName: string;
-      question?: string;
-      answer?: string;
-      content: string;
-    }> = [];
-
-    console.log('=== CHUNK MATCHING ===');
-
-    if (chunks && chunks.length > 0) {
-      context = chunks.map((chunk, i) => {
+    // Helper to build context from chunks
+    const buildPillarContext = (chunks: any[], pillarName: string) => {
+      if (!chunks || chunks.length === 0) return '';
+      
+      return chunks.map((chunk, i) => {
         const doc = chunk.document as any;
         const fileName = doc?.original_name || doc?.file_name || 'Unknown';
         const category = doc?.category || 'general';
         const documentId = doc?.id || '';
-        
-        console.log(`Chunk ${i + 1}: ${fileName} #${chunk.chunk_index}`);
-        console.log(`  Preview: ${(chunk.question || chunk.content).substring(0, 80)}...`);
         
         sources.push({
           fileName,
           chunkIndex: chunk.chunk_index,
           preview: (chunk.question || chunk.content).substring(0, 100),
           category,
-          documentId
+          documentId,
+          pillar: pillarName
         });
         
-        // Include full chunk details for trace panel
         chunksMatched.push({
           id: chunk.id,
           documentId,
           chunkIndex: chunk.chunk_index,
           contentPreview: chunk.content.substring(0, 200),
           fileName,
+          pillar: pillarName,
           question: chunk.question || undefined,
           answer: chunk.answer || undefined,
           content: chunk.content
@@ -646,27 +559,95 @@ A: ${chunk.answer}`;
         }
         return `[Source: ${fileName}, Entry #${chunk.chunk_index}]
 ${chunk.content}`;
-      }).join('\n\n---\n\n');
+      }).join('\n\n');
+    };
+
+    // Build structured 4-pillar context
+    let structuredContext = '';
+    
+    structuredContext += '\n\n============================================================================\n';
+    structuredContext += '📍 PILLAR 1: CLINICAL PROTOCOL (Acupuncture, Points, Techniques)\n';
+    structuredContext += '============================================================================\n';
+    structuredContext += buildPillarContext(clinicalChunks, 'clinical') || 'No clinical protocol information found in knowledge base.';
+    
+    structuredContext += '\n\n============================================================================\n';
+    structuredContext += '🌿 PILLAR 2: PHARMACOPEIA (Herbal Formulas, Dosages)\n';
+    structuredContext += '============================================================================\n';
+    structuredContext += buildPillarContext(pharmacopeiaChunks, 'pharmacopeia') || 'No herbal formula information found in knowledge base.';
+    
+    structuredContext += '\n\n============================================================================\n';
+    structuredContext += '🍎 PILLAR 3: NUTRITION (Diet, Foods, Recipes)\n';
+    structuredContext += '============================================================================\n';
+    structuredContext += buildPillarContext(nutritionChunks, 'nutrition') || 'No nutrition information found in knowledge base.';
+    
+    structuredContext += '\n\n============================================================================\n';
+    structuredContext += '🏃 PILLAR 4: LIFESTYLE/SPORT (Exercise, Sleep, Stress)\n';
+    structuredContext += '============================================================================\n';
+    structuredContext += buildPillarContext(lifestyleChunks, 'lifestyle') || 'No lifestyle/exercise information found in knowledge base.';
+
+    // Add age-specific context if available
+    if (ageSpecificChunks.length > 0) {
+      structuredContext += '\n\n============================================================================\n';
+      structuredContext += `👤 AGE-SPECIFIC KNOWLEDGE (${ageGroup})\n`;
+      structuredContext += '============================================================================\n';
+      structuredContext += buildPillarContext(ageSpecificChunks, 'age-specific');
+    }
+
+    // Add CAF studies context
+    if (cafStudies.length > 0) {
+      structuredContext += '\n\n============================================================================\n';
+      structuredContext += '📊 CAF MASTER CLINICAL STUDIES (Deep Thinking Framework)\n';
+      structuredContext += '============================================================================\n';
+      structuredContext += cafStudies.map((study, i) => `
+[CAF Study #${i + 1}: ${study.western_label} - ${study.tcm_pattern}]
+System: ${study.system_category}
+Key Symptoms: ${study.key_symptoms}
+Pulse/Tongue: ${study.pulse_tongue}
+Treatment Principle: ${study.treatment_principle}
+Acupoints: ${study.acupoints_display}
+Formula: ${study.pharmacopeia_formula}
+🧠 Clinical Insight: ${study.deep_thinking_note}
+`).join('\n---\n');
+    }
+
+    // Add Clinical Trials context
+    if (clinicalTrials.length > 0) {
+      structuredContext += '\n\n============================================================================\n';
+      structuredContext += '🔬 CLINICAL TRIALS EVIDENCE\n';
+      structuredContext += '============================================================================\n';
+      structuredContext += clinicalTrials.map((trial, i) => {
+        const verifiedTag = trial.sapir_verified ? '✅ Dr. Sapir Verified' : '⚠️ Unverified';
+        return `
+[Clinical Trial #${i + 1}: ${trial.nct_id || 'N/A'}] ${verifiedTag}
+Title: ${trial.title}
+Condition: ${trial.condition} ${trial.icd11_code ? `(ICD-11: ${trial.icd11_code})` : ''}
+Intervention: ${trial.intervention || 'Not specified'}
+Acupoints Used: ${trial.points_used?.join(', ') || 'Not specified'}
+Herbal Formula: ${trial.herbal_formula || 'None'}
+Phase: ${trial.phase || 'N/A'} | Enrollment: ${trial.enrollment || 'N/A'}
+Results: ${trial.results_summary || 'No results available'}
+${trial.sapir_notes ? `Dr. Sapir Notes: ${trial.sapir_notes}` : ''}
+`;
+      }).join('\n---\n');
     }
 
     console.log(`=== SEARCH RESULTS ===`);
-    console.log(`Found ${chunks?.length || 0} chunks from ${new Set(sources.map(s => s.fileName)).size} unique documents`);
+    console.log(`Total chunks across all pillars: ${sources.length}`);
+    console.log(`Clinical: ${clinicalChunks.length}, Pharmacopeia: ${pharmacopeiaChunks.length}, Nutrition: ${nutritionChunks.length}, Lifestyle: ${lifestyleChunks.length}`);
 
     // Build messages for AI
     let systemMessage: string;
     
-    // Build age-specific context prefix if available
     const ageContextPrefix = ageGroupContext ? `\n\n=== PATIENT AGE GROUP CONTEXT ===\n${ageGroupContext}\n=== END AGE CONTEXT ===\n` : '';
     const patientContextPrefix = patientContext ? `\n\n=== PATIENT INFORMATION ===\n${patientContext}\n=== END PATIENT INFO ===\n` : '';
     
     if (useExternalAI) {
-      // Using external AI - no RAG context, use general knowledge
       systemMessage = EXTERNAL_AI_SYSTEM_PROMPT + ageContextPrefix + patientContextPrefix;
       console.log('Using external AI mode - no RAG context');
-    } else if (context || cafStudiesContext || quizResultsContext || clinicalTrialsContext) {
-      systemMessage = `${TCM_RAG_SYSTEM_PROMPT}${ageContextPrefix}${patientContextPrefix}\n\n=== CONTEXT FROM DR. SAPIR'S KNOWLEDGE BASE ===\n\n${context}${cafStudiesContext}${quizResultsContext}${clinicalTrialsContext}\n\n=== END CONTEXT ===`;
+    } else if (sources.length > 0 || cafStudies.length > 0 || clinicalTrials.length > 0) {
+      systemMessage = `${TCM_RAG_SYSTEM_PROMPT}${ageContextPrefix}${patientContextPrefix}\n\n=== 4-PILLAR KNOWLEDGE BASE CONTEXT ===\n${structuredContext}\n\n=== END CONTEXT ===`;
     } else {
-      systemMessage = `${TCM_RAG_SYSTEM_PROMPT}${ageContextPrefix}${patientContextPrefix}\n\nNOTE: No relevant entries found in the knowledge base for this query.`;
+      systemMessage = `${TCM_RAG_SYSTEM_PROMPT}${ageContextPrefix}${patientContextPrefix}\n\nNOTE: No relevant entries found in the knowledge base for this query. State this clearly for each pillar.`;
     }
 
     const chatMessages = [
@@ -680,17 +661,24 @@ ${chunk.content}`;
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    // Get unique documents used for metadata
+    // Prepare enhanced metadata with pillar breakdown
     const uniqueDocuments = [...new Set(sources.map(s => s.fileName))];
-
-    // Prepare metadata to send before streaming
     const metadata = {
       sources: useExternalAI ? [] : sources,
-      chunksFound: useExternalAI ? 0 : (chunks?.length || 0),
+      chunksFound: useExternalAI ? 0 : sources.length,
       documentsSearched: useExternalAI ? 0 : uniqueDocuments.length,
       documentsMatched: useExternalAI ? 0 : uniqueDocuments.length,
       searchTermsUsed: searchTerms,
       isExternal: useExternalAI || false,
+      pillarBreakdown: {
+        clinical: clinicalChunks.length,
+        pharmacopeia: pharmacopeiaChunks.length,
+        nutrition: nutritionChunks.length,
+        lifestyle: lifestyleChunks.length,
+        ageSpecific: ageSpecificChunks.length,
+        cafStudies: cafStudies.length,
+        clinicalTrials: clinicalTrials.length
+      }
     };
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -731,18 +719,17 @@ ${chunk.content}`;
 
     const transformStream = new TransformStream({
       start(controller) {
-        // Send metadata as first SSE event
+        // Send metadata as first SSE event with pillar breakdown
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'metadata', ...metadata })}\n\n`));
       },
       async transform(chunk, controller) {
         const text = decoder.decode(chunk, { stream: true });
-        // Parse SSE lines and extract content deltas
         const lines = text.split('\n');
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const jsonStr = line.slice(6).trim();
             if (jsonStr === '[DONE]') {
-              // Log the query for audit trail before sending DONE
+              // Log the query for audit trail
               try {
                 const serviceClient = createClient(
                   Deno.env.get('SUPABASE_URL') ?? '',
@@ -754,16 +741,17 @@ ${chunk.content}`;
                     user_id: user.id,
                     query_text: searchQuery,
                     search_terms: searchTerms,
-                    chunks_found: chunks?.length || 0,
+                    chunks_found: sources.length,
                     chunks_matched: chunksMatched,
-                    sources_used: useExternalAI ? [{ type: 'external_ai', liability_waived: true }] : sources.map(s => ({ fileName: s.fileName, category: s.category, chunkIndex: s.chunkIndex })),
+                    sources_used: useExternalAI 
+                      ? [{ type: 'external_ai', liability_waived: true }] 
+                      : sources.map(s => ({ fileName: s.fileName, category: s.category, chunkIndex: s.chunkIndex, pillar: s.pillar })),
                     response_preview: fullResponse.substring(0, 500),
-                    ai_model: useExternalAI ? 'google/gemini-2.5-flash (external)' : 'google/gemini-2.5-flash'
+                    ai_model: 'google/gemini-2.5-pro (4-pillar)'
                   })
                   .select('id, created_at')
                   .single();
                 console.log('Query logged for audit trail', logRow?.id);
-                // Send audit info with DONE
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', auditLogId: logRow?.id, auditLoggedAt: logRow?.created_at })}\n\n`));
               } catch (logErr) {
                 console.error('Failed to log query:', logErr);
@@ -786,7 +774,6 @@ ${chunk.content}`;
       },
     });
 
-    // Pipe the AI response through our transform
     const readable = aiResponse.body?.pipeThrough(transformStream);
 
     return new Response(readable, {
@@ -799,7 +786,7 @@ ${chunk.content}`;
     });
 
   } catch (error) {
-    console.error('RAG chat error:', error);
+    console.error('4-Pillar RAG chat error:', error);
     return new Response(JSON.stringify({ 
       error: error instanceof Error ? error.message : 'Unknown error' 
     }), {
