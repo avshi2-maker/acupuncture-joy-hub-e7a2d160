@@ -7,237 +7,249 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ArrowLeft, MapPin, Info, ZoomIn, ZoomOut, CheckSquare, Square, Sparkles, X, Trash2, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
-// Import all body figure images
-import armImg from '@/assets/body-figures/arm.png';
-import armInnerImg from '@/assets/body-figures/arm_inner.png';
-import bodyFrontImg from '@/assets/body-figures/body_front.png';
-import bodyMainImg from '@/assets/body-figures/body_main.png';
-import bodybackImg from '@/assets/body-figures/bodyback.png';
+// Import all body figure images (updated collection)
+import armFullImg from '@/assets/body-figures/arm_full.png';
 import chestImg from '@/assets/body-figures/chest.png';
-import childBackImg from '@/assets/body-figures/child_back.png';
 import childFrontImg from '@/assets/body-figures/child_front.png';
 import earImg from '@/assets/body-figures/ear.png';
+import elbowInnerImg from '@/assets/body-figures/elbow_inner.png';
+import faceFrontImg from '@/assets/body-figures/face_front.png';
 import footImg from '@/assets/body-figures/foot.png';
 import footSoleImg from '@/assets/body-figures/foot_sole.png';
 import handImg from '@/assets/body-figures/hand.png';
-import headFrontImg from '@/assets/body-figures/head_front.png';
-import headSideImg from '@/assets/body-figures/head_side.png';
-import legFrontImg from '@/assets/body-figures/leg_front.png';
-import legInnerImg from '@/assets/body-figures/leg_inner.png';
-import legOuterImg from '@/assets/body-figures/leg_outer.png';
-import spineImg from '@/assets/body-figures/spine.png';
+import headLateralImg from '@/assets/body-figures/head_lateral.png';
+import kneeFrontImg from '@/assets/body-figures/knee_front.png';
+import kneeLateralImg from '@/assets/body-figures/knee_lateral.png';
+import kneeMedialImg from '@/assets/body-figures/knee_medial.png';
+import legsPosteriorImg from '@/assets/body-figures/legs_posterior.png';
+import neckFrontImg from '@/assets/body-figures/neck_front.png';
+import neckPosteriorImg from '@/assets/body-figures/neck_posterior.png';
+import sacrumImg from '@/assets/body-figures/sacrum.png';
+import scalpTopImg from '@/assets/body-figures/scalp_top.png';
+import shoulderAnteriorImg from '@/assets/body-figures/shoulder_anterior.png';
+import shoulderSideImg from '@/assets/body-figures/shoulder_side.png';
+import thighHipImg from '@/assets/body-figures/thigh_hip.png';
 import tongueImg from '@/assets/body-figures/tongue.png';
+import upperBackImg from '@/assets/body-figures/upper_back.png';
 import wristImg from '@/assets/body-figures/wrist.png';
 
 // Map image names to imports
 const imageMap: Record<string, string> = {
-  'arm.png': armImg,
-  'arm_inner.png': armInnerImg,
-  'body_front.png': bodyFrontImg,
-  'body_main.png': bodyMainImg,
-  'bodyback.png': bodybackImg,
+  'arm_full.png': armFullImg,
   'chest.png': chestImg,
-  'child_back.png': childBackImg,
   'child_front.png': childFrontImg,
   'ear.png': earImg,
+  'elbow_inner.png': elbowInnerImg,
+  'face_front.png': faceFrontImg,
   'foot.png': footImg,
   'foot_sole.png': footSoleImg,
   'hand.png': handImg,
-  'head_front.png': headFrontImg,
-  'head_side.png': headSideImg,
-  'leg_front.png': legFrontImg,
-  'leg_inner.png': legInnerImg,
-  'leg_outer.png': legOuterImg,
-  'spine.png': spineImg,
+  'head_lateral.png': headLateralImg,
+  'knee_front.png': kneeFrontImg,
+  'knee_lateral.png': kneeLateralImg,
+  'knee_medial.png': kneeMedialImg,
+  'legs_posterior.png': legsPosteriorImg,
+  'neck_front.png': neckFrontImg,
+  'neck_posterior.png': neckPosteriorImg,
+  'sacrum.png': sacrumImg,
+  'scalp_top.png': scalpTopImg,
+  'shoulder_anterior.png': shoulderAnteriorImg,
+  'shoulder_side.png': shoulderSideImg,
+  'thigh_hip.png': thighHipImg,
   'tongue.png': tongueImg,
+  'upper_back.png': upperBackImg,
   'wrist.png': wristImg,
 };
 
 // Body figure categories for better organization
 const figureCategories = [
   {
-    name: 'Full Body',
-    figures: ['body_front.png', 'bodyback.png', 'body_main.png', 'spine.png']
-  },
-  {
-    name: 'Head & Face',
-    figures: ['head_front.png', 'head_side.png', 'ear.png', 'tongue.png']
+    name: 'Head & Neck',
+    figures: ['face_front.png', 'head_lateral.png', 'scalp_top.png', 'neck_front.png', 'neck_posterior.png']
   },
   {
     name: 'Upper Limbs',
-    figures: ['arm.png', 'arm_inner.png', 'wrist.png', 'hand.png']
-  },
-  {
-    name: 'Lower Limbs',
-    figures: ['leg_front.png', 'leg_inner.png', 'leg_outer.png', 'foot.png', 'foot_sole.png']
+    figures: ['shoulder_anterior.png', 'shoulder_side.png', 'arm_full.png', 'elbow_inner.png', 'wrist.png', 'hand.png']
   },
   {
     name: 'Torso',
-    figures: ['chest.png']
+    figures: ['chest.png', 'upper_back.png', 'sacrum.png']
+  },
+  {
+    name: 'Lower Limbs',
+    figures: ['thigh_hip.png', 'knee_front.png', 'knee_lateral.png', 'knee_medial.png', 'legs_posterior.png', 'foot.png', 'foot_sole.png']
+  },
+  {
+    name: 'Microsystems',
+    figures: ['ear.png', 'tongue.png']
   },
   {
     name: 'Pediatric',
-    figures: ['child_front.png', 'child_back.png']
+    figures: ['child_front.png']
   }
 ];
 
-// Point coordinates data - maps point codes to body figures
-// Coordinates are now in percentage (0-100) relative to each figure's dimensions
-// for precise anatomical placement
+// Point coordinates data - maps point codes to body figures (updated for new images)
 const pointCoordinates = [
-  // Hand points - dorsal view, thumb on left side
-  { point_code: 'LI4', image_name: 'hand.png', x: 35, y: 35 },      // Hegu - between thumb & index metacarpals
-  { point_code: 'PC8', image_name: 'hand.png', x: 50, y: 55 },      // Laogong - center of palm
-  { point_code: 'HT8', image_name: 'hand.png', x: 55, y: 60 },      // Shaofu - palm, between 4th-5th metacarpals
-  { point_code: 'LU10', image_name: 'hand.png', x: 25, y: 50 },     // Yuji - thenar eminence
-  { point_code: 'LU11', image_name: 'hand.png', x: 15, y: 70 },     // Shaoshang - thumb tip lateral
-  { point_code: 'SI3', image_name: 'hand.png', x: 75, y: 45 },      // Houxi - ulnar side, 5th metacarpal
-  { point_code: 'TE3', image_name: 'hand.png', x: 60, y: 30 },      // Zhongzhu - between 4th-5th metacarpals
+  // Hand points
+  { point_code: 'LI4', image_name: 'hand.png', x: 35, y: 35 },
+  { point_code: 'PC8', image_name: 'hand.png', x: 50, y: 55 },
+  { point_code: 'HT8', image_name: 'hand.png', x: 55, y: 60 },
+  { point_code: 'LU10', image_name: 'hand.png', x: 25, y: 50 },
+  { point_code: 'SI3', image_name: 'hand.png', x: 75, y: 45 },
+  { point_code: 'TE3', image_name: 'hand.png', x: 60, y: 30 },
   
-  // Wrist points - anterior/volar view
-  { point_code: 'PC7', image_name: 'wrist.png', x: 50, y: 45 },     // Daling - center of wrist crease
-  { point_code: 'HT7', image_name: 'wrist.png', x: 65, y: 45 },     // Shenmen - ulnar side of wrist crease
-  { point_code: 'LU9', image_name: 'wrist.png', x: 35, y: 45 },     // Taiyuan - radial side wrist crease
-  { point_code: 'SI4', image_name: 'wrist.png', x: 75, y: 50 },     // Wangu - ulnar styloid
-  { point_code: 'SI6', image_name: 'wrist.png', x: 70, y: 35 },     // Yanglao - above ulnar styloid
-  { point_code: 'TE5', image_name: 'wrist.png', x: 50, y: 25 },     // Waiguan - 2 cun above wrist dorsal
+  // Wrist points
+  { point_code: 'PC7', image_name: 'wrist.png', x: 50, y: 45 },
+  { point_code: 'HT7', image_name: 'wrist.png', x: 65, y: 45 },
+  { point_code: 'LU9', image_name: 'wrist.png', x: 35, y: 45 },
+  { point_code: 'TE5', image_name: 'wrist.png', x: 50, y: 25 },
   
-  // Arm outer/lateral points
-  { point_code: 'LI10', image_name: 'arm.png', x: 55, y: 65 },      // Shousanli - 2 cun below LI11
-  { point_code: 'LI11', image_name: 'arm.png', x: 50, y: 50 },      // Quchi - lateral elbow crease
-  { point_code: 'LI15', image_name: 'arm.png', x: 45, y: 15 },      // Jianyu - anterior shoulder
-  { point_code: 'TE6', image_name: 'arm.png', x: 50, y: 60 },       // Zhigou - 3 cun above wrist
-  { point_code: 'TE14', image_name: 'arm.png', x: 55, y: 20 },      // Jianliao - posterior shoulder
+  // Arm full points
+  { point_code: 'LI10', image_name: 'arm_full.png', x: 55, y: 65 },
+  { point_code: 'LI11', image_name: 'arm_full.png', x: 50, y: 50 },
+  { point_code: 'LI15', image_name: 'arm_full.png', x: 45, y: 15 },
+  { point_code: 'TE6', image_name: 'arm_full.png', x: 50, y: 60 },
   
-  // Arm inner/medial points
-  { point_code: 'PC3', image_name: 'arm_inner.png', x: 50, y: 50 }, // Quze - elbow crease center
-  { point_code: 'PC6', image_name: 'arm_inner.png', x: 50, y: 70 }, // Neiguan - 2 cun above wrist
-  { point_code: 'HT3', image_name: 'arm_inner.png', x: 60, y: 48 }, // Shaohai - medial elbow
-  { point_code: 'LU5', image_name: 'arm_inner.png', x: 40, y: 48 }, // Chize - lateral elbow crease
-  { point_code: 'LU7', image_name: 'arm_inner.png', x: 35, y: 75 }, // Lieque - above radial styloid
+  // Elbow points
+  { point_code: 'PC3', image_name: 'elbow_inner.png', x: 50, y: 55 },
+  { point_code: 'HT3', image_name: 'elbow_inner.png', x: 60, y: 50 },
+  { point_code: 'LU5', image_name: 'elbow_inner.png', x: 40, y: 48 },
   
-  // Head front points - face view
-  { point_code: 'ST2', image_name: 'head_front.png', x: 38, y: 42 },   // Sibai - below eye
-  { point_code: 'ST3', image_name: 'head_front.png', x: 35, y: 52 },   // Juliao - level with nose
-  { point_code: 'ST4', image_name: 'head_front.png', x: 38, y: 62 },   // Dicang - corner of mouth
-  { point_code: 'ST6', image_name: 'head_front.png', x: 30, y: 65 },   // Jiache - jaw angle
-  { point_code: 'ST8', image_name: 'head_front.png', x: 32, y: 22 },   // Touwei - forehead corner
-  { point_code: 'GB14', image_name: 'head_front.png', x: 35, y: 28 },  // Yangbai - above eyebrow
-  { point_code: 'GV20', image_name: 'head_front.png', x: 50, y: 8 },   // Baihui - crown
-  { point_code: 'GV24', image_name: 'head_front.png', x: 50, y: 18 },  // Shenting - hairline center
-  { point_code: 'GV26', image_name: 'head_front.png', x: 50, y: 58 },  // Renzhong - philtrum
-  { point_code: 'BL1', image_name: 'head_front.png', x: 42, y: 38 },   // Jingming - inner canthus
-  { point_code: 'BL2', image_name: 'head_front.png', x: 40, y: 32 },   // Zanzhu - inner eyebrow
-  { point_code: 'CV23', image_name: 'head_front.png', x: 50, y: 75 },  // Lianquan - above Adam's apple
-  { point_code: 'EX-HN1', image_name: 'head_front.png', x: 50, y: 5 }, // Sishencong - around GV20
-  { point_code: 'EX-HN3', image_name: 'head_front.png', x: 50, y: 32 },// Yintang area
-  { point_code: 'EX-HN5', image_name: 'head_front.png', x: 50, y: 40 },// Nose bridge
-  { point_code: 'Yintang', image_name: 'head_front.png', x: 50, y: 32 },// Third eye point
+  // Shoulder anterior
+  { point_code: 'LU1', image_name: 'shoulder_anterior.png', x: 35, y: 40 },
+  { point_code: 'LU2', image_name: 'shoulder_anterior.png', x: 38, y: 35 },
+  { point_code: 'ST12', image_name: 'shoulder_anterior.png', x: 45, y: 25 },
+  { point_code: 'LI15', image_name: 'shoulder_anterior.png', x: 55, y: 45 },
   
-  // Head side points - lateral view
-  { point_code: 'ST7', image_name: 'head_side.png', x: 55, y: 55 },    // Xiaguan - TMJ area
-  { point_code: 'GB1', image_name: 'head_side.png', x: 70, y: 40 },    // Tongziliao - outer canthus
-  { point_code: 'GB2', image_name: 'head_side.png', x: 48, y: 48 },    // Tinghui - anterior to ear
-  { point_code: 'GB8', image_name: 'head_side.png', x: 40, y: 25 },    // Shuaigu - above ear
-  { point_code: 'GB20', image_name: 'head_side.png', x: 25, y: 55 },   // Fengchi - occiput
-  { point_code: 'Taiyang', image_name: 'head_side.png', x: 65, y: 38 },// Temple
+  // Shoulder side/posterior
+  { point_code: 'SI9', image_name: 'shoulder_side.png', x: 50, y: 55 },
+  { point_code: 'SI10', image_name: 'shoulder_side.png', x: 48, y: 45 },
+  { point_code: 'TE14', image_name: 'shoulder_side.png', x: 55, y: 40 },
+  { point_code: 'GB21', image_name: 'shoulder_side.png', x: 40, y: 25 },
   
-  // Body front points - anterior torso
-  { point_code: 'ST25', image_name: 'body_front.png', x: 35, y: 55 },  // Tianshu - 2 cun lateral to navel
-  { point_code: 'SP15', image_name: 'body_front.png', x: 32, y: 50 },  // Daheng - 4 cun lateral to navel
-  { point_code: 'LV13', image_name: 'body_front.png', x: 28, y: 42 },  // Zhangmen - floating rib
-  { point_code: 'CV3', image_name: 'body_front.png', x: 50, y: 78 },   // Zhongji - 4 cun below navel
-  { point_code: 'CV4', image_name: 'body_front.png', x: 50, y: 72 },   // Guanyuan - 3 cun below navel
-  { point_code: 'CV6', image_name: 'body_front.png', x: 50, y: 62 },   // Qihai - 1.5 cun below navel
-  { point_code: 'CV8', image_name: 'body_front.png', x: 50, y: 55 },   // Shenque - navel
-  { point_code: 'CV12', image_name: 'body_front.png', x: 50, y: 38 },  // Zhongwan - 4 cun above navel
+  // Face front
+  { point_code: 'ST2', image_name: 'face_front.png', x: 38, y: 42 },
+  { point_code: 'ST3', image_name: 'face_front.png', x: 35, y: 52 },
+  { point_code: 'ST4', image_name: 'face_front.png', x: 38, y: 62 },
+  { point_code: 'LI20', image_name: 'face_front.png', x: 42, y: 55 },
+  { point_code: 'BL1', image_name: 'face_front.png', x: 42, y: 38 },
+  { point_code: 'BL2', image_name: 'face_front.png', x: 40, y: 32 },
+  { point_code: 'GB1', image_name: 'face_front.png', x: 32, y: 40 },
+  { point_code: 'GV26', image_name: 'face_front.png', x: 50, y: 58 },
+  { point_code: 'Yintang', image_name: 'face_front.png', x: 50, y: 32 },
   
-  // Chest points
-  { point_code: 'LV14', image_name: 'chest.png', x: 30, y: 70 },       // Qimen - 6th intercostal
-  { point_code: 'KI27', image_name: 'chest.png', x: 38, y: 18 },       // Shufu - below clavicle
-  { point_code: 'CV17', image_name: 'chest.png', x: 50, y: 50 },       // Danzhong - sternum center
-  { point_code: 'CV22', image_name: 'chest.png', x: 50, y: 12 },       // Tiantu - suprasternal notch
+  // Head lateral / scalp
+  { point_code: 'GB4', image_name: 'head_lateral.png', x: 55, y: 30 },
+  { point_code: 'GB8', image_name: 'head_lateral.png', x: 40, y: 25 },
+  { point_code: 'GB20', image_name: 'head_lateral.png', x: 25, y: 55 },
+  { point_code: 'Taiyang', image_name: 'head_lateral.png', x: 65, y: 38 },
+  { point_code: 'GV20', image_name: 'scalp_top.png', x: 50, y: 50 },
+  { point_code: 'GV21', image_name: 'scalp_top.png', x: 50, y: 40 },
+  { point_code: 'Sishencong', image_name: 'scalp_top.png', x: 45, y: 45 },
   
-  // Body back points - posterior view
-  { point_code: 'BL10', image_name: 'bodyback.png', x: 40, y: 12 },    // Tianzhu - C1-C2 level
-  { point_code: 'BL11', image_name: 'bodyback.png', x: 38, y: 18 },    // Dazhu - T1 level
-  { point_code: 'BL13', image_name: 'bodyback.png', x: 38, y: 24 },    // Feishu - T3 Lung
-  { point_code: 'BL15', image_name: 'bodyback.png', x: 38, y: 30 },    // Xinshu - T5 Heart
-  { point_code: 'BL17', image_name: 'bodyback.png', x: 38, y: 36 },    // Geshu - T7 Diaphragm
-  { point_code: 'BL18', image_name: 'bodyback.png', x: 38, y: 40 },    // Ganshu - T9 Liver
-  { point_code: 'BL20', image_name: 'bodyback.png', x: 38, y: 46 },    // Pishu - T11 Spleen
-  { point_code: 'BL21', image_name: 'bodyback.png', x: 38, y: 50 },    // Weishu - T12 Stomach
-  { point_code: 'BL23', image_name: 'bodyback.png', x: 38, y: 56 },    // Shenshu - L2 Kidney
-  { point_code: 'BL25', image_name: 'bodyback.png', x: 38, y: 62 },    // Dachangshu - L4 LI
-  { point_code: 'GB21', image_name: 'bodyback.png', x: 32, y: 10 },    // Jianjing - shoulder top
-  { point_code: 'GB30', image_name: 'bodyback.png', x: 30, y: 72 },    // Huantiao - hip/buttock
-  { point_code: 'GV14', image_name: 'bodyback.png', x: 50, y: 14 },    // Dazhui - C7-T1
-  { point_code: 'GV16', image_name: 'bodyback.png', x: 50, y: 8 },     // Fengfu - below occiput
+  // Neck front
+  { point_code: 'CV22', image_name: 'neck_front.png', x: 50, y: 70 },
+  { point_code: 'CV23', image_name: 'neck_front.png', x: 50, y: 55 },
+  { point_code: 'ST9', image_name: 'neck_front.png', x: 35, y: 50 },
+  { point_code: 'ST10', image_name: 'neck_front.png', x: 38, y: 55 },
+  { point_code: 'LI17', image_name: 'neck_front.png', x: 32, y: 45 },
   
-  // Spine points - midline
-  { point_code: 'GV4', image_name: 'spine.png', x: 50, y: 60 },        // Mingmen - L2
+  // Neck posterior
+  { point_code: 'GB20', image_name: 'neck_posterior.png', x: 35, y: 45 },
+  { point_code: 'GV16', image_name: 'neck_posterior.png', x: 50, y: 35 },
+  { point_code: 'BL10', image_name: 'neck_posterior.png', x: 40, y: 50 },
+  { point_code: 'SI15', image_name: 'neck_posterior.png', x: 35, y: 60 },
+  { point_code: 'GV14', image_name: 'neck_posterior.png', x: 50, y: 70 },
   
-  // Leg front points - anterior thigh/leg
-  { point_code: 'ST34', image_name: 'leg_front.png', x: 55, y: 25 },   // Liangqiu - above knee
-  { point_code: 'ST35', image_name: 'leg_front.png', x: 55, y: 32 },   // Dubi - below patella
-  { point_code: 'ST36', image_name: 'leg_front.png', x: 55, y: 42 },   // Zusanli - 3 cun below knee
-  { point_code: 'ST37', image_name: 'leg_front.png', x: 55, y: 52 },   // Shangjuxu - 6 cun below knee
-  { point_code: 'ST40', image_name: 'leg_front.png', x: 55, y: 62 },   // Fenglong - mid-calf lateral
-  { point_code: 'EX-LE10', image_name: 'leg_front.png', x: 45, y: 35 },// Heding - above patella center
+  // Chest
+  { point_code: 'CV17', image_name: 'chest.png', x: 50, y: 50 },
+  { point_code: 'CV22', image_name: 'chest.png', x: 50, y: 12 },
+  { point_code: 'KI27', image_name: 'chest.png', x: 38, y: 18 },
+  { point_code: 'LV14', image_name: 'chest.png', x: 30, y: 70 },
   
-  // Leg inner points - medial view
-  { point_code: 'SP6', image_name: 'leg_inner.png', x: 45, y: 75 },    // Sanyinjiao - 3 cun above ankle
-  { point_code: 'SP9', image_name: 'leg_inner.png', x: 45, y: 45 },    // Yinlingquan - below knee medial
-  { point_code: 'SP10', image_name: 'leg_inner.png', x: 50, y: 30 },   // Xuehai - above knee medial
-  { point_code: 'LV8', image_name: 'leg_inner.png', x: 40, y: 40 },    // Ququan - knee crease medial
-  { point_code: 'KI7', image_name: 'leg_inner.png', x: 40, y: 80 },    // Fuliu - 2 cun above KI3
-  { point_code: 'KI10', image_name: 'leg_inner.png', x: 35, y: 42 },   // Yingu - popliteal medial
+  // Upper back
+  { point_code: 'BL11', image_name: 'upper_back.png', x: 38, y: 25 },
+  { point_code: 'BL13', image_name: 'upper_back.png', x: 38, y: 35 },
+  { point_code: 'BL15', image_name: 'upper_back.png', x: 38, y: 45 },
+  { point_code: 'BL17', image_name: 'upper_back.png', x: 38, y: 55 },
+  { point_code: 'GV14', image_name: 'upper_back.png', x: 50, y: 15 },
+  { point_code: 'SI11', image_name: 'upper_back.png', x: 28, y: 40 },
   
-  // Leg outer points - lateral view
-  { point_code: 'BL40', image_name: 'leg_outer.png', x: 50, y: 35 },   // Weizhong - popliteal center
-  { point_code: 'BL57', image_name: 'leg_outer.png', x: 50, y: 55 },   // Chengshan - calf center
-  { point_code: 'GB31', image_name: 'leg_outer.png', x: 50, y: 20 },   // Fengshi - lateral thigh
-  { point_code: 'GB34', image_name: 'leg_outer.png', x: 55, y: 40 },   // Yanglingquan - fibular head
-  { point_code: 'GB39', image_name: 'leg_outer.png', x: 50, y: 72 },   // Xuanzhong - 3 cun above ankle
+  // Sacrum
+  { point_code: 'BL31', image_name: 'sacrum.png', x: 40, y: 30 },
+  { point_code: 'BL32', image_name: 'sacrum.png', x: 40, y: 40 },
+  { point_code: 'BL33', image_name: 'sacrum.png', x: 40, y: 50 },
+  { point_code: 'BL34', image_name: 'sacrum.png', x: 40, y: 60 },
+  { point_code: 'GV4', image_name: 'sacrum.png', x: 50, y: 20 },
+  { point_code: 'GB30', image_name: 'sacrum.png', x: 30, y: 45 },
   
-  // Foot points - dorsal/medial view
-  { point_code: 'ST41', image_name: 'foot.png', x: 50, y: 20 },        // Jiexi - ankle crease center
-  { point_code: 'ST44', image_name: 'foot.png', x: 45, y: 75 },        // Neiting - 2nd-3rd toe web
-  { point_code: 'SP3', image_name: 'foot.png', x: 25, y: 45 },         // Taibai - medial foot
-  { point_code: 'SP4', image_name: 'foot.png', x: 20, y: 35 },         // Gongsun - medial arch
-  { point_code: 'LV2', image_name: 'foot.png', x: 40, y: 70 },         // Xingjian - 1st-2nd toe web
-  { point_code: 'LV3', image_name: 'foot.png', x: 35, y: 50 },         // Taichong - dorsum
-  { point_code: 'KI3', image_name: 'foot.png', x: 15, y: 25 },         // Taixi - medial ankle
-  { point_code: 'KI6', image_name: 'foot.png', x: 12, y: 30 },         // Zhaohai - below medial malleolus
-  { point_code: 'BL60', image_name: 'foot.png', x: 85, y: 25 },        // Kunlun - lateral ankle
-  { point_code: 'BL62', image_name: 'foot.png', x: 82, y: 32 },        // Shenmai - below lateral malleolus
-  { point_code: 'GB40', image_name: 'foot.png', x: 75, y: 22 },        // Qiuxu - anterior to lateral malleolus
-  { point_code: 'GB41', image_name: 'foot.png', x: 60, y: 55 },        // Zulinqi - 4th-5th metatarsal
+  // Thigh/Hip
+  { point_code: 'GB29', image_name: 'thigh_hip.png', x: 55, y: 25 },
+  { point_code: 'GB30', image_name: 'thigh_hip.png', x: 45, y: 30 },
+  { point_code: 'GB31', image_name: 'thigh_hip.png', x: 50, y: 55 },
+  { point_code: 'ST31', image_name: 'thigh_hip.png', x: 55, y: 35 },
+  { point_code: 'ST32', image_name: 'thigh_hip.png', x: 55, y: 50 },
   
-  // Foot sole points
-  { point_code: 'KI1', image_name: 'foot_sole.png', x: 50, y: 35 },    // Yongquan - sole center anterior
+  // Knee front
+  { point_code: 'ST34', image_name: 'knee_front.png', x: 55, y: 25 },
+  { point_code: 'ST35', image_name: 'knee_front.png', x: 55, y: 45 },
+  { point_code: 'ST36', image_name: 'knee_front.png', x: 55, y: 65 },
+  { point_code: 'SP10', image_name: 'knee_front.png', x: 45, y: 25 },
+  { point_code: 'Xiyan', image_name: 'knee_front.png', x: 45, y: 45 },
   
-  // Ear points - auricular view
-  { point_code: 'Ear-Shenmen', image_name: 'ear.png', x: 35, y: 35 },  // Upper triangular fossa
-  { point_code: 'Ear-Heart', image_name: 'ear.png', x: 50, y: 55 },    // Concha center
-  { point_code: 'Ear-Kidney', image_name: 'ear.png', x: 45, y: 70 },   // Upper concha
-  { point_code: 'Ear-Liver', image_name: 'ear.png', x: 55, y: 45 },    // Lower concha lateral
-  { point_code: 'Ear-Lung', image_name: 'ear.png', x: 50, y: 65 },     // Around heart point
-  { point_code: 'Ear-Stomach', image_name: 'ear.png', x: 60, y: 50 },  // Helix root
-  { point_code: 'Ear-Spleen', image_name: 'ear.png', x: 55, y: 60 },   // Below liver
+  // Knee lateral
+  { point_code: 'GB33', image_name: 'knee_lateral.png', x: 50, y: 35 },
+  { point_code: 'GB34', image_name: 'knee_lateral.png', x: 55, y: 55 },
+  { point_code: 'ST36', image_name: 'knee_lateral.png', x: 60, y: 65 },
+  
+  // Knee medial
+  { point_code: 'SP9', image_name: 'knee_medial.png', x: 45, y: 55 },
+  { point_code: 'SP10', image_name: 'knee_medial.png', x: 50, y: 30 },
+  { point_code: 'LV7', image_name: 'knee_medial.png', x: 42, y: 50 },
+  { point_code: 'LV8', image_name: 'knee_medial.png', x: 40, y: 45 },
+  { point_code: 'KI10', image_name: 'knee_medial.png', x: 35, y: 48 },
+  
+  // Legs posterior
+  { point_code: 'BL39', image_name: 'legs_posterior.png', x: 45, y: 25 },
+  { point_code: 'BL40', image_name: 'legs_posterior.png', x: 50, y: 25 },
+  { point_code: 'BL57', image_name: 'legs_posterior.png', x: 50, y: 55 },
+  { point_code: 'KI10', image_name: 'legs_posterior.png', x: 55, y: 28 },
+  
+  // Foot points
+  { point_code: 'ST41', image_name: 'foot.png', x: 50, y: 20 },
+  { point_code: 'ST44', image_name: 'foot.png', x: 45, y: 75 },
+  { point_code: 'SP3', image_name: 'foot.png', x: 25, y: 45 },
+  { point_code: 'LV2', image_name: 'foot.png', x: 40, y: 70 },
+  { point_code: 'LV3', image_name: 'foot.png', x: 35, y: 50 },
+  { point_code: 'KI3', image_name: 'foot.png', x: 15, y: 25 },
+  { point_code: 'KI6', image_name: 'foot.png', x: 12, y: 30 },
+  { point_code: 'BL60', image_name: 'foot.png', x: 85, y: 25 },
+  { point_code: 'BL62', image_name: 'foot.png', x: 82, y: 32 },
+  { point_code: 'GB40', image_name: 'foot.png', x: 75, y: 22 },
+  { point_code: 'GB41', image_name: 'foot.png', x: 60, y: 55 },
+  
+  // Foot sole
+  { point_code: 'KI1', image_name: 'foot_sole.png', x: 50, y: 35 },
+  
+  // Ear points
+  { point_code: 'Ear-Shenmen', image_name: 'ear.png', x: 35, y: 35 },
+  { point_code: 'Ear-Heart', image_name: 'ear.png', x: 50, y: 55 },
+  { point_code: 'Ear-Kidney', image_name: 'ear.png', x: 45, y: 70 },
+  { point_code: 'Ear-Liver', image_name: 'ear.png', x: 55, y: 45 },
+  { point_code: 'Ear-Lung', image_name: 'ear.png', x: 50, y: 65 },
+  { point_code: 'Ear-Stomach', image_name: 'ear.png', x: 60, y: 50 },
+  { point_code: 'Ear-Spleen', image_name: 'ear.png', x: 55, y: 60 },
   
   // Tongue diagnostic areas
-  { point_code: 'Tongue-Heart', image_name: 'tongue.png', x: 50, y: 25 },  // Tip
-  { point_code: 'Tongue-Lung', image_name: 'tongue.png', x: 50, y: 35 },   // Behind tip
-  { point_code: 'Tongue-Spleen', image_name: 'tongue.png', x: 50, y: 50 }, // Center
-  { point_code: 'Tongue-Kidney', image_name: 'tongue.png', x: 50, y: 75 }, // Root
-  { point_code: 'Tongue-Liver', image_name: 'tongue.png', x: 30, y: 50 },  // Left edge
+  { point_code: 'Tongue-Heart', image_name: 'tongue.png', x: 50, y: 25 },
+  { point_code: 'Tongue-Lung', image_name: 'tongue.png', x: 50, y: 35 },
+  { point_code: 'Tongue-Spleen', image_name: 'tongue.png', x: 50, y: 50 },
+  { point_code: 'Tongue-Kidney', image_name: 'tongue.png', x: 50, y: 75 },
+  { point_code: 'Tongue-Liver', image_name: 'tongue.png', x: 30, y: 50 },
   
-  // Pediatric points
-  { point_code: 'Kid-Tui', image_name: 'child_front.png', x: 50, y: 55 },    // Abdomen
-  { point_code: 'Kid-Feishu', image_name: 'child_back.png', x: 38, y: 25 },  // Upper back
-  { point_code: 'Kid-Pishu', image_name: 'child_back.png', x: 38, y: 45 },   // Mid back
-  { point_code: 'Kid-Shenshu', image_name: 'child_back.png', x: 38, y: 55 }, // Lower back
+  // Pediatric
+  { point_code: 'Kid-Tui', image_name: 'child_front.png', x: 50, y: 55 },
 ];
 
 interface AcuPoint {
