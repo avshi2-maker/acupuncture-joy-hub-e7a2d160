@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import healingCurveImage from '@/assets/healing-curve-comparison.png';
+import { HealingCurveChart } from './HealingCurveChart';
 
 interface Patient {
   id: string;
@@ -234,6 +235,9 @@ export function PatientEducationWidget({ patientPhone, patientName, patientEmail
           <div className="bg-jade/10 border-r-4 border-jade p-4 my-5 italic">
             "{ARTICLE_CONTENT.quote}"
           </div>
+
+          {/* Animated Healing Curve Chart */}
+          <HealingCurveChart className="my-6" />
 
           {/* Healing Curve Comparison Image */}
           <div className="my-6">
