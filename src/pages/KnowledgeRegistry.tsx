@@ -433,6 +433,13 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'neurology',
     defaultLanguage: 'en',
   },
+  {
+    id: 'neuro-degenerative-tcm-100',
+    label: '🧠 Neurodegenerative TCM (Alzheimer\'s/Parkinson\'s - 100 Q&A)',
+    path: '/knowledge-assets/neuro-degenerative-tcm-100.csv',
+    defaultCategory: 'neurology',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 type QueueItemStatus = 'pending' | 'importing' | 'done' | 'error';

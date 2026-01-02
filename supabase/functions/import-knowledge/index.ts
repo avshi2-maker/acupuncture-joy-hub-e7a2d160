@@ -285,6 +285,17 @@ serve(async (req) => {
             answer = `**Channel/Physiological Mechanism:** ${channelMechanism}\n**Acupuncture Points:** ${acupoints}\n**Herbal Formula:** ${formula || 'None'}`;
             content = `Energy Channel Q&A (Fascial Planes)\nSymptom/Question: ${questionSymptom}\nChannel/Mechanism: ${channelMechanism}\nAcupoints: ${acupoints}\nFormula: ${formula || 'None'}`;
             contentType = 'energy-channel';
+          } else if (row.Question_Symptom && row.TCM_Value_Mechanism && row.CM_Dot_Numbers_Acupoints) {
+            // Neurodegenerative TCM format (Alzheimer's/Parkinson's)
+            const questionSymptom = row.Question_Symptom || '';
+            const tcmMechanism = row.TCM_Value_Mechanism || '';
+            const acupoints = row.CM_Dot_Numbers_Acupoints || '';
+            const formula = row.Pharmacopeia_Formula || '';
+            
+            question = questionSymptom;
+            answer = `**TCM Mechanism:** ${tcmMechanism}\n**Acupuncture Points:** ${acupoints}\n**Herbal Formula:** ${formula}`;
+            content = `Neurodegenerative TCM (Alzheimer's/Parkinson's)\nSymptom/Question: ${questionSymptom}\nTCM Mechanism: ${tcmMechanism}\nAcupoints: ${acupoints}\nFormula: ${formula}`;
+            contentType = 'neuro-degenerative';
           } else {
             // Generic: join all values
             content = Object.values(row).filter(Boolean).join(' | ');

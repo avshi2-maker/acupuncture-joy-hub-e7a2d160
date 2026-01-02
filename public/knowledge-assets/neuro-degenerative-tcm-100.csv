@@ -1,0 +1,101 @@
+Question_Symptom,TCM_Value_Mechanism,CM_Dot_Numbers_Acupoints,Pharmacopeia_Formula
+"Does the patient have resting tremors in the hands?",Liver Wind Agitating / Basal Ganglia Loop,LR3 (Taichong) + GB34 (Yanglingquan) + SI3 (Houxi),Tian Ma Gou Teng Yin
+"Does the patient forget names of close family members?",Kidney Jing Deficiency / Hippocampal atrophy,GB39 (Xuanzhong) + KI3 (Taixi) + DU20 (Baihui),Zuo Gui Wan
+"Does the patient have a rigid, mask-like face (Hypomimia)?",Phlegm-Blood Stasis / Dopamine signaling loss,ST4 (Dicang) + ST6 (Jiache) + LI4 (Hegu),Tong Qiao Huo Xue Tang
+"Does the patient wander or get lost in familiar places?",Heart-Kidney Disconnect / Spatial memory loss,HT7 (Shenmen) + KI3 (Taixi) + Sishencong,Bu Nao Wan
+"Does the patient move slowly (Bradykinesia)?",Yang Deficiency / Mitochondrial energy failure,ST36 (Zusanli) + GV14 (Dazhui) + CV6 (Qihai),Bu Yang Huan Wu Tang
+"Is the patient aggressive or easily agitated (Sundowning)?",Liver Fire / Circadian rhythm disruption,LR2 (Xingjian) + GB20 (Fengchi) + HT7 (Shenmen),Long Dan Xie Gan Tang
+"Does the patient have 'cogwheel' rigidity in joints?",Tendon malfunction due to Liver Blood deficiency,GB34 (Yanglingquan) + LR8 (Ququan) + SP10 (Xuehai),Shao Yao Gan Cao Tang
+"Does the patient repeat the same story over and over?",Phlegm Misting the Heart / Frontal Lobe loop,ST40 (Fenglong) + PC5 (Jianshi) + DU26 (Renzhong),Di Tan Tang
+"Does the patient have difficulty swallowing (Dysphagia)?",Lung/Stomach Qi deficiency / Vagal nerve weakness,CV23 (Lianquan) + GB20 (Fengchi) + LI4 (Hegu),Hou Shi Hei San
+"Does the patient have freezing of gait (stuck feet)?",Kidney Yang Deficiency / Motor cortex signaling,UB23 (Shenshu) + KD1 (Yongquan) + DU4 (Mingmen),Jin Gui Shen Qi Wan
+"Is the patient withdrawing socially (Apathy)?",Qi Stagnation / Dopamine reward deficiency,LR3 (Taichong) + DU20 (Baihui) + CV17 (Danzhong),Chai Hu Shu Gan San
+"Does the patient have hallucinations or delusions?",Phlegm Fire disturbing Shen / Neuro-inflammation,ST40 (Fenglong) + PC7 (Daling) + DU24 (Shenting),Wen Dan Tang
+"Does the patient have a soft, whispering voice?",Lung/Kidney Qi Deficiency / Laryngeal weakness,LU9 (Taiyuan) + KI6 (Zhaohai) + CV22 (Tiantu),Bu Zhong Yi Qi Tang
+"Does the patient have tremors that worsen with stress?",Liver Yang Rising / Adrenal cortisol spike,LR3 (Taichong) + GB20 (Fengchi) + Yintang,Zhen Gan Xi Feng Tang
+"Does the patient have micro-graphia (small handwriting)?",Fine Motor Control / Cerebellar dysfunction,LI4 (Hegu) + TW5 (Waiguan) + SI3 (Houxi),Bu Yang Huan Wu Tang
+"Is the patient experiencing incontinence?",Kidney Qi Sinking / Sphincter loss,CV4 (Guanyuan) + UB23 (Shenshu) + CV6 (Qihai),Suo Quan Wan
+"Does the patient have chronic constipation?",Large Intestine Dryness / Enteric nerve degeneration,ST25 (Tianshu) + SJ6 (Zhigou) + KD6 (Zhaohai),Ma Zi Ren Wan
+"Does the patient have insomnia (waking frequently)?",Yin Deficiency with Empty Heat / Melatonin drop,HT6 (Yinxi) + KD6 (Zhaohai) + Anmian,Tian Wang Bu Xin Dan
+"Does the patient have drooling?",Spleen Qi Deficiency / Oral motor weakness,ST4 (Dicang) + SP3 (Taibai) + CV24 (Chengjiang),Liu Jun Zi Tang
+"Does the patient have difficulty turning over in bed?",Trunk rigidity / Axial muscle tone,GB34 (Yanglingquan) + UB40 (Weizhong) + DU3 (Yaoyangguan),Shu Jing Huo Xue Tang
+"Does the patient have orthostatic hypotension (dizzy standing)?",Qi Sinking / Autonomic failure,GV20 (Baihui) + ST36 (Zusanli) + PC6 (Neiguan),Bu Zhong Yi Qi Tang
+"Does the patient exhibit pill-rolling tremors?",Wind-Phlegm obstruction / Basal Ganglia tremor,TW5 (Waiguan) + LI11 (Quchi) + LR3 (Taichong),Ban Xia Bai Zhu Tian Ma Tang
+"Does the patient have excessive daytime sleepiness?",Yang Deficiency / Reticular Activating System fatigue,GV20 (Baihui) + GV26 (Renzhong) + KI3 (Taixi),You Gui Wan
+"Does the patient have anxiety or panic attacks?",Heart Qi Deficiency / Amygdala over-activation,HT7 (Shenmen) + PC6 (Neiguan) + CV14 (Juque),Gui Pi Tang
+"Does the patient have loss of smell (Anosmia)?",Lung Qi Deficiency / Olfactory bulb degeneration,LI20 (Yingxiang) + LU7 (Lieque) + GV23 (Shangxing),Cang Er Zi San
+"Does the patient have paranoia (suspicion of theft)?",Kidney/Heart Disharmony / Prefrontal cortex decline,HT7 (Shenmen) + KI3 (Taixi) + UB15 (Xinshu),Zhi Bai Di Huang Wan
+"Does the patient have shuffling gait?",Kidney/Liver Deficiency / Proprioception loss,GB39 (Xuanzhong) + ST41 (Jiexi) + UB60 (Kunlun),Du Huo Ji Sheng Tang
+"Does the patient have severe neck stiffness?",Wind-Cold-Damp Bi / Cervical dystonia,GB20 (Fengchi) + UB10 (Tianzhu) + SI3 (Houxi),Ge Gen Tang
+"Does the patient have inappropriate laughing/crying?",Pseudobulbar affect / Shen disturbance,HT5 (Tongli) + PC6 (Neiguan) + DU26 (Renzhong),Gan Mai Da Zao Tang
+"Does the patient have muscle wasting (Atrophy)?",Spleen/Stomach Deficiency / Metabolic decline,ST36 (Zusanli) + SP6 (Sanyinjiao) + CV12 (Zhongwan),Ba Zhen Tang
+"Does the patient have restless leg syndrome?",Liver Blood Deficiency / Dopamine restlessness,GB31 (Fengshi) + SP10 (Xuehai) + LR3 (Taichong),Shao Yao Gan Cao Tang
+"Does the patient have inability to recognize faces (Prosopagnosia)?",Heart Blood Stasis / Fusiform gyrus issue,HT7 (Shenmen) + SI3 (Houxi) + UB15 (Xinshu),Xue Fu Zhu Yu Tang
+"Does the patient have blurred vision?",Liver Blood Deficiency / Visual cortex processing,UB18 (Ganshu) + GB37 (Guangming) + ST1 (Chengqi),Qi Ju Di Huang Wan
+"Does the patient have frequent falls?",Kidney Yang Deficiency / Vestibular imbalance,GB20 (Fengchi) + KD3 (Taixi) + DU20 (Baihui),Jin Gui Shen Qi Wan
+"Does the patient have oily skin (Seborrhea)?",Damp-Heat / Autonomic dysregulation,LI11 (Quchi) + SP9 (Yinlingquan) + ST44 (Neiting),Long Dan Xie Gan Tang
+"Does the patient have excessive sweating?",Qi Deficiency / Autonomic thermoregulation,LU9 (Taiyuan) + KD7 (Fuliu) + LI4 (Hegu),Yu Ping Feng San
+"Does the patient have vivid nightmares (REM behavior disorder)?",Liver Fire / Brainstem inhibition failure,LR2 (Xingjian) + HT8 (Shaofu) + PC7 (Daling),Long Dan Xie Gan Tang
+"Does the patient have difficulty initiating movement?",Qi Stagnation / Supplementary motor area block,LR3 (Taichong) + LI4 (Hegu) + GB34 (Yanglingquan),Chai Hu Shu Gan San
+"Does the patient have confusion at twilight (Sundowning)?",Yin Deficiency / Melatonin circadian dip,KD6 (Zhaohai) + HT7 (Shenmen) + SP6 (Sanyinjiao),Zuo Gui Wan
+"Does the patient have difficulty multitasking?",Spleen Qi Deficiency / Executive function load,SP3 (Taibai) + Sishencong + ST36 (Zusanli),Bu Nao Wan
+"Does the patient have painful muscle cramps?",Liver Blood Deficiency / Lactic acid buildup,GB34 (Yanglingquan) + SP8 (Diji) + LR3 (Taichong),Shao Yao Gan Cao Tang
+"Does the patient have swollen feet (Edema)?",Kidney Yang Deficiency / Lymphatic stasis,SP9 (Yinlingquan) + KD7 (Fuliu) + ST28 (Shuidao),Zhen Wu Tang
+"Does the patient have inability to dress themselves (Apraxia)?",Marrou/Brain Kidney Deficiency / Parietal lobe issue,GB39 (Xuanzhong) + DU20 (Baihui) + TW5 (Waiguan),Di Huang Yin Zi
+"Does the patient have loss of appetite?",Spleen Deficiency / Gut-Brain peptide suppression,ST36 (Zusanli) + CV12 (Zhongwan) + SP4 (Gongsun),Xiang Sha Liu Jun Zi Tang
+"Does the patient have verbal repetition (Echolalia)?",Heart Phlegm / Speech center loop,HT5 (Tongli) + CV23 (Lianquan) + DU15 (Yamen),Di Tan Tang
+"Does the patient have depression with fatigue?",Kidney Yang Deficiency / Serotonin depletion,UB23 (Shenshu) + DU4 (Mingmen) + CV6 (Qihai),You Gui Wan
+"Does the patient have stooped posture (Camptocormia)?",Kidney Essence Deficiency / Paraspinal weakness,UB23 (Shenshu) + DU3 (Yaoyangguan) + UB40 (Weizhong),Du Huo Ji Sheng Tang
+"Does the patient have inability to hold urine (Urgency)?",Kidney Qi not firm / Bladder detrusor spasms,CV3 (Zhongji) + KD3 (Taixi) + SP6 (Sanyinjiao),Suo Quan Wan
+"Does the patient have difficulty counting money?",Heart Blood Deficiency / Parietal calculation deficit,HT7 (Shenmen) + PC6 (Neiguan) + SP10 (Xuehai),Gui Pi Tang
+"Does the patient have sexual dysfunction?",Kidney Yang Deficiency / Autonomic failure,CV4 (Guanyuan) + KD3 (Taixi) + ST36 (Zusanli),Zan Yu Dan
+"Does the patient have cold extremities?",Yang Deficiency / Peripheral vasoconstriction,GV14 (Dazhui) + LI4 (Hegu) + ST36 (Zusanli),Si Ni Tang
+"Does the patient have hallucinations of small animals/people?",Kidney Yin Def / Visual cortex misfiring,KD3 (Taixi) + UB18 (Ganshu) + GB37 (Guangming),Liu Wei Di Huang Wan
+"Does the patient have inability to name objects (Anomia)?",Heart Phlegm / Temporal lobe connection,HT5 (Tongli) + DU20 (Baihui) + Sishencong,Tong Qiao Huo Xue Tang
+"Does the patient have pain in the shoulder?",Qi Stagnation / Rigidity induced inflammation,LI15 (Jianyu) + SI11 (Tianzong) + GB21 (Jianjing),Shen Tong Zhu Yu Tang
+"Does the patient have dry eyes and mouth?",Yin Deficiency / Parasympathetic failure,KD6 (Zhaohai) + SP6 (Sanyinjiao) + CV23 (Lianquan),Sha Shen Mai Men Dong Tang
+"Does the patient have inability to understand speech (Wernicke's)?",Kidney Essence / Auditory processing,KD3 (Taixi) + SI19 (Tinggong) + GB2 (Tinghui),Er Long Zuo Ci Wan
+"Does the patient have excessive yawning?",Qi Deficiency / Brain hypoxia compensation,LU9 (Taiyuan) + ST36 (Zusanli) + DU20 (Baihui),Bu Zhong Yi Qi Tang
+"Does the patient have impulse control issues?",Liver Fire / Frontal lobe disinhibition,LR2 (Xingjian) + GB13 (Benshen) + HT8 (Shaofu),Long Dan Xie Gan Tang
+"Does the patient have chronic back pain?",Kidney Deficiency / Structural degeneration,UB23 (Shenshu) + UB40 (Weizhong) + DU4 (Mingmen),Du Huo Ji Sheng Tang
+"Does the patient have tremor in the jaw?",Stomach Wind / Trigeminal motor loop,ST6 (Jiache) + ST7 (Xiaguan) + LI4 (Hegu),Qian Zheng San
+"Does the patient have inability to smell food?",Lung Qi Deficiency / Sensory deprivation,LI20 (Yingxiang) + LU7 (Lieque) + ST36 (Zusanli),Cang Er Zi San
+"Does the patient have excessive fear of falling?",Gallbladder Qi Deficiency / Vestibular anxiety,GB40 (Qiuxu) + GB34 (Yanglingquan) + KD3 (Taixi),Wen Dan Tang
+"Does the patient have loss of empathy?",Heart-Kidney disconnect / Frontal lobe atrophy,HT7 (Shenmen) + KI3 (Taixi) + CV17 (Danzhong),Tian Wang Bu Xin Dan
+"Does the patient have trouble leaning backwards?",Kidney Deficiency / Postural instability,UB23 (Shenshu) + UB60 (Kunlun) + DU3 (Yaoyangguan),Jin Gui Shen Qi Wan
+"Does the patient have difficulty pivoting while turning?",Liver Wind / Basal Ganglia transition failure,LR3 (Taichong) + GB34 (Yanglingquan) + GB39 (Xuanzhong),Zhen Gan Xi Feng Tang
+"Does the patient have chronic fatigue syndrome?",Qi/Blood Deficiency / Mitochondrial dysfunction,ST36 (Zusanli) + CV6 (Qihai) + SP6 (Sanyinjiao),Shi Quan Da Bu Tang
+"Does the patient have difficulty buttoning shirts?",Liver Blood Def / Fine motor dexterity,SI3 (Houxi) + LI4 (Hegu) + TW5 (Waiguan),Ba Zhen Tang
+"Does the patient have excessive blinking?",Liver Wind / Blepharospasm,UB2 (Zanzhu) + GB14 (Yangbai) + LR3 (Taichong),Shao Yao Gan Cao Tang
+"Does the patient have constipation alternating diarrhea?",Liver invading Spleen / Autonomic gut dysregulation,LR3 (Taichong) + ST25 (Tianshu) + SP6 (Sanyinjiao),Tong Xie Yao Fang
+"Does the patient have slurred speech (Dysarthria)?",Heart Phlegm / Tongue motor control,HT5 (Tongli) + CV23 (Lianquan) + DU15 (Yamen),Jie Yu Dan
+"Does the patient have agitation during evenings?",Yin Deficiency / Circadian rhythm dysregulation,KD6 (Zhaohai) + HT7 (Shenmen) + SP6 (Sanyinjiao),Suan Zao Ren Tang
+"Does the patient have loss of balance with eyes closed?",Kidney Essence / Proprioceptive failure,GB39 (Xuanzhong) + KD3 (Taixi) + DU20 (Baihui),Zuo Gui Wan
+"Does the patient have sensation of heat in palms/soles?",Yin Deficiency / Neuro-inflammation,KD1 (Yongquan) + PC8 (Laogong) + HT8 (Shaofu),Zhi Bai Di Huang Wan
+"Does the patient have forgetfulness of recent events?",Spleen Qi Deficiency / Hippocampal encoding failure,SP3 (Taibai) + HT7 (Shenmen) + Sishencong,Gui Pi Tang
+"Does the patient have 'freezing' in doorways?",Kidney/Liver / Visual-spatial motor block,GB37 (Guangming) + LR3 (Taichong) + UB62 (Shenmai),Bu Yang Huan Wu Tang
+"Does the patient have excessive saliva?",Spleen Deficiency / Swallowing reflex delay,CV23 (Lianquan) + CV24 (Chengjiang) + ST4 (Dicang),She Xian Tang
+"Does the patient have loss of facial expression?",Stomach/Spleen / Facial nerve hypomobility,ST3 (Juliao) + ST6 (Jiache) + LI20 (Yingxiang),Bu Yang Huan Wu Tang
+"Does the patient have rigid, stiff neck?",Du Mai Stasis / Axial rigidity,GV16 (Fengfu) + GV14 (Dazhui) + SI3 (Houxi),Ge Gen Tang
+"Does the patient have involuntary limb movements (Dyskinesia)?",Liver Wind / Dopamine agonist side-effect,LR3 (Taichong) + SP6 (Sanyinjiao) + GB34 (Yanglingquan),Zhen Gan Xi Feng Tang
+"Does the patient have inability to organize thoughts?",Gallbladder Deficiency / Executive dysfunction,GB40 (Qiuxu) + GB13 (Benshen) + DU24 (Shenting),Wen Dan Tang
+"Does the patient have sensitivity to noise?",Kidney Yin Deficiency / Auditory gating failure,KD3 (Taixi) + SJ17 (Yifeng) + GB43 (Xiaxi),Er Long Zuo Ci Wan
+"Does the patient have urinary retention?",Bladder Damp Heat / Sphincter dyssynergia,CV3 (Zhongji) + SP9 (Yinlingquan) + UB28 (Pangguangshu),Ba Zheng San
+"Does the patient have leg swelling (pitting)?",Kidney Yang Deficiency / Venous return failure,KD7 (Fuliu) + SP9 (Yinlingquan) + ST36 (Zusanli),Zhen Wu Tang
+"Does the patient have hallucinations of insects?",Phlegm Heat / Visual processing error,ST40 (Fenglong) + LR2 (Xingjian) + PC8 (Laogong),Wen Dan Tang
+"Does the patient have low blood pressure?",Qi Deficiency / Autonomic failure,GV20 (Baihui) + ST36 (Zusanli) + CV6 (Qihai),Sheng Mai San
+"Does the patient have weight loss despite eating?",Stomach Fire / Metabolic dysregulation,ST44 (Neiting) + SP6 (Sanyinjiao) + CV12 (Zhongwan),Yu Nu Jian
+"Does the patient have stiff, curling fingers?",Liver Blood Deficiency / Tendon contraction,SI3 (Houxi) + LI4 (Hegu) + Baxie,Shao Yao Gan Cao Tang
+"Does the patient have trouble stopping movement (Festination)?",Liver Wind / Braking mechanism failure,LR3 (Taichong) + GB34 (Yanglingquan) + KD1 (Yongquan),Tian Ma Gou Teng Yin
+"Does the patient have extreme passivity?",Yang Deficiency / Frontal lobe apathy,GV20 (Baihui) + GV14 (Dazhui) + UB23 (Shenshu),You Gui Wan
+"Does the patient have inability to perform math?",Spleen Qi Deficiency / Parietal lobe weakness,SP3 (Taibai) + HT7 (Shenmen) + ST36 (Zusanli),Gui Pi Tang
+"Does the patient have fainting spells?",Heart Qi Deficiency / Vagal syncope,PC6 (Neiguan) + GV26 (Renzhong) + HT9 (Shaochong),Sheng Mai San
+"Does the patient have painful toe curling (Dystonia)?",Liver Blood Deficiency / Focal dystonia,LR3 (Taichong) + SP6 (Sanyinjiao) + GB34 (Yanglingquan),Shao Yao Gan Cao Tang
+"Does the patient have glassy stare?",Phlegm Misting / Reduced blink rate,ST40 (Fenglong) + UB1 (Jingming) + DU20 (Baihui),Di Tan Tang
+"Does the patient have repetitive hand motions?",Heart Yin Deficiency / Self-soothing behavior,HT7 (Shenmen) + PC6 (Neiguan) + SP6 (Sanyinjiao),Gan Mai Da Zao Tang
+"Does the patient have trouble interpreting sarcasm?",Heart-Kidney / Right hemisphere decline,HT5 (Tongli) + KI3 (Taixi) + GV20 (Baihui),Kong Sheng Zhen Zhong Dan
+"Does the patient have metallic taste?",Stomach Phlegm / Sensory distortion,ST40 (Fenglong) + CV12 (Zhongwan) + ST44 (Neiting),Er Chen Tang
+"Does the patient have weak cough reflex?",Lung Qi Deficiency / Aspiration risk,LU7 (Lieque) + CV22 (Tiantu) + KD6 (Zhaohai),Su Zi Jiang Qi Tang
+"Does the patient have pale, shiny face?",Yang Deficiency / Poor facial perfusion,GV4 (Mingmen) + CV4 (Guanyuan) + ST36 (Zusanli),Jin Gui Shen Qi Wan
+"Does the patient have difficulty initiating urine?",Kidney Qi / Bladder sphincter tone,CV3 (Zhongji) + CV6 (Qihai) + UB32 (Ciliao),Ji Sheng Shen Qi Wan
+"Does the patient have fear of being alone?",Gallbladder/Heart Deficiency / Attachment anxiety,GB40 (Qiuxu) + HT7 (Shenmen) + CV14 (Juque),Ding Zhi Wan
