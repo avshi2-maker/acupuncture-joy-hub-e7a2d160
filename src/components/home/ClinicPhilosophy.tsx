@@ -1,4 +1,5 @@
-import { BookOpen, Sparkles, Leaf } from "lucide-react";
+import { useState } from "react";
+import { BookOpen, Sparkles, Leaf, X, ZoomIn } from "lucide-react";
 import tcmEncyclopediaImg from "@/assets/tcm-encyclopedia.png";
 import healingPathImg from "@/assets/healing-path-infographic.png";
 
@@ -19,6 +20,71 @@ const philosophyCards = [
     descriptionHe: `בניגוד לגישות המסתפקות בפתרון מהיר, אנו מתמקדים ב"מסלול בניית היסודות". המטרה אינה רק להעלים את הכאב הרגעי, אלא להשיב לגוף את האיזון הטבעי והחיוניות לטווח הארוך.`,
   },
 ];
+
+interface LightboxProps {
+  src: string;
+  alt: string;
+  onClose: () => void;
+}
+
+const Lightbox = ({ src, alt, onClose }: LightboxProps) => {
+  return (
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+    >
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 z-10 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+        aria-label="Close lightbox"
+      >
+        <X className="w-6 h-6 text-white" />
+      </button>
+      <img 
+        src={src} 
+        alt={alt}
+        className="max-w-[95vw] max-h-[90vh] object-contain rounded-lg shadow-2xl animate-scale-in"
+        onClick={(e) => e.stopPropagation()}
+      />
+    </div>
+  );
+};
+
+interface ZoomableImageProps {
+  src: string;
+  alt: string;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+const ZoomableImage = ({ src, alt, className, style }: ZoomableImageProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <>
+      <div 
+        className="relative group cursor-zoom-in"
+        onClick={() => setIsOpen(true)}
+      >
+        <img 
+          src={src} 
+          alt={alt}
+          className={className}
+          style={style}
+        />
+        {/* Zoom overlay on hover */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 rounded-2xl flex items-center justify-center">
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 rounded-full p-3 shadow-lg">
+            <ZoomIn className="w-6 h-6 text-[#2c6e49]" />
+          </div>
+        </div>
+      </div>
+      {isOpen && (
+        <Lightbox src={src} alt={alt} onClose={() => setIsOpen(false)} />
+      )}
+    </>
+  );
+};
 
 export const ClinicPhilosophy = () => {
   return (
@@ -44,7 +110,7 @@ export const ClinicPhilosophy = () => {
 
         {/* TCM Encyclopedia Image - Featured */}
         <div className="mb-12 md:mb-16">
-          <img 
+          <ZoomableImage 
             src={tcmEncyclopediaImg} 
             alt="TCM Encyclopedia - Ancient wisdom meets modern technology"
             className="w-full max-w-3xl mx-auto rounded-2xl shadow-lg"
@@ -104,7 +170,7 @@ export const ClinicPhilosophy = () => {
           >
             מסלול הריפוי: בין תיקון זמני לצמיחה מתמשכת
           </h3>
-          <img 
+          <ZoomableImage 
             src={healingPathImg} 
             alt="מסלול הריפוי - השוואה בין טיפול סימפטומטי לטיפול בשורש"
             className="w-full max-w-5xl mx-auto rounded-2xl shadow-lg"

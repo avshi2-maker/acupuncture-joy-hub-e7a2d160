@@ -118,24 +118,33 @@ const Hero = () => {
             philosophySection.scrollIntoView({ behavior: 'smooth' });
           }
         }}
-        className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1 text-primary-foreground/80 hover:text-primary-foreground transition-colors cursor-pointer animate-fade-in-up delay-700"
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 cursor-pointer animate-fade-in-up delay-700 group"
         aria-label="Scroll down to learn more"
       >
-        <span className="text-xs font-medium tracking-wider uppercase hidden sm:block">גלול למטה</span>
-        <div className="animate-bounce">
-          <svg 
-            className="w-6 h-6" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M19 14l-7 7m0 0l-7-7m7 7V3" 
-            />
-          </svg>
+        <span className="text-xs font-medium tracking-wider uppercase text-primary-foreground/90 group-hover:text-gold transition-colors hidden sm:block">
+          גלול למטה
+        </span>
+        <div className="relative">
+          {/* Outer glow ring */}
+          <div className="absolute inset-0 w-12 h-12 -m-1.5 rounded-full bg-gold/30 animate-ping" />
+          {/* Inner pulsing ring */}
+          <div className="absolute inset-0 w-10 h-10 -m-0.5 rounded-full bg-gold/20 animate-pulse" />
+          {/* Main button */}
+          <div className="relative w-9 h-9 rounded-full bg-gold/80 backdrop-blur-sm border-2 border-primary-foreground/40 flex items-center justify-center group-hover:bg-gold group-hover:scale-110 transition-all duration-300 shadow-lg shadow-gold/40">
+            <svg 
+              className="w-5 h-5 text-primary-foreground animate-bounce" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2.5} 
+                d="M19 14l-7 7m0 0l-7-7m7 7V3" 
+              />
+            </svg>
+          </div>
         </div>
       </button>
 
