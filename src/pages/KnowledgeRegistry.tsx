@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -467,6 +467,7 @@ interface QueueItem {
 export default function KnowledgeRegistry() {
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const [generatingReport, setGeneratingReport] = useState(false);
   const [report, setReport] = useState<LegalReport | null>(null);
@@ -496,11 +497,13 @@ export default function KnowledgeRegistry() {
     isPausedRef.current = isPaused;
   }, [isPaused]);
 
+  // If auth session is missing/expired, route to Gate (password-based access)
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate('/auth');
+      const redirect = encodeURIComponent(location.pathname + location.search);
+      navigate(`/gate?redirect=${redirect}`, { replace: true });
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, location.pathname, location.search]);
 
   const { data: documents, isLoading } = useQuery({
     queryKey: ['knowledge-documents'],
