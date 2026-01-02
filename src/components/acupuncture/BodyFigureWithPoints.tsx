@@ -2,11 +2,13 @@ import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { InteractivePointMarker } from './InteractivePointMarker';
-import { MapPin, ZoomIn, ZoomOut, Info } from 'lucide-react';
+import { MapPin, ZoomIn, ZoomOut, Info, Search, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getPointsForFigure, normalizePointCode } from '@/data/point-figure-mapping';
+import { usePointCoordinates } from '@/hooks/usePointCoordinates';
 
 // Import all body figure images
 import abdomenImg from '@/assets/body-figures/abdomen.png';
@@ -87,32 +89,6 @@ const imageMap: Record<string, string> = {
   'abdomen_female.png': abdomenFemaleImg,
 };
 
-// Default point positions (distributed evenly for now - can be refined with actual anatomical coordinates)
-// These are placeholder positions that distribute points visually
-function generateDefaultPositions(pointCodes: string[]): Record<string, { x: number; y: number }> {
-  const positions: Record<string, { x: number; y: number }> = {};
-  const total = pointCodes.length;
-  
-  if (total === 0) return positions;
-  
-  // Create a grid distribution
-  const cols = Math.ceil(Math.sqrt(total));
-  const rows = Math.ceil(total / cols);
-  
-  pointCodes.forEach((code, index) => {
-    const col = index % cols;
-    const row = Math.floor(index / cols);
-    
-    // Distribute points in a central region (20-80% of the image)
-    const x = 20 + (col / (cols - 1 || 1)) * 60;
-    const y = 20 + (row / (rows - 1 || 1)) * 60;
-    
-    positions[normalizePointCode(code)] = { x, y };
-  });
-  
-  return positions;
-}
-
 interface AcuPoint {
   id: string;
   code: string;
@@ -134,6 +110,7 @@ interface BodyFigureWithPointsProps {
   showAllPoints?: boolean;
   compact?: boolean;
   className?: string;
+  showSearch?: boolean;
 }
 
 export function BodyFigureWithPoints({
@@ -144,25 +121,30 @@ export function BodyFigureWithPoints({
   onPointSelect,
   showAllPoints = true,
   compact = false,
-  className = ''
+  className = '',
+  showSearch = false
 }: BodyFigureWithPointsProps) {
   const [zoom, setZoom] = useState(1);
   const [acuPoints, setAcuPoints] = useState<AcuPoint[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<string[]>([]);
+  
+  // Load precise coordinates from CSV
+  const { getCoordinatesForFigure, getPointCoordinate, isLoading: coordsLoading } = usePointCoordinates();
 
-  // Get the points that should be shown on this figure
+  // Get the points that should be shown on this figure from mapping
   const figurePointCodes = useMemo(() => getPointsForFigure(filename), [filename]);
   
-  // Generate default positions for points
-  const pointPositions = useMemo(() => 
-    generateDefaultPositions(figurePointCodes), 
-    [figurePointCodes]
-  );
+  // Get precise coordinates for this figure from CSV
+  const figureCoordinates = useMemo(() => {
+    return getCoordinatesForFigure(filename);
+  }, [filename, getCoordinatesForFigure]);
 
   // Fetch point details from database
   useEffect(() => {
     const fetchPoints = async () => {
-      if (figurePointCodes.length === 0) return;
+      if (figurePointCodes.length === 0 && figureCoordinates.length === 0) return;
       
       setLoading(true);
       const { data, error } = await supabase
@@ -170,10 +152,14 @@ export function BodyFigureWithPoints({
         .select('*');
       
       if (!error && data) {
-        // Filter to only points on this figure
-        const figureNormalized = figurePointCodes.map(normalizePointCode);
+        // Combine points from both mapping and CSV coordinates
+        const allCodes = new Set([
+          ...figurePointCodes.map(normalizePointCode),
+          ...figureCoordinates.map(c => normalizePointCode(c.point_code))
+        ]);
+        
         const filtered = data.filter(p => 
-          figureNormalized.includes(normalizePointCode(p.code))
+          allCodes.has(normalizePointCode(p.code))
         );
         
         setAcuPoints(filtered.map(p => ({
@@ -191,10 +177,33 @@ export function BodyFigureWithPoints({
       setLoading(false);
     };
     fetchPoints();
-  }, [figurePointCodes]);
+  }, [figurePointCodes, figureCoordinates]);
+
+  // Handle search
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      const query = searchQuery.toUpperCase();
+      const matches = acuPoints
+        .filter(p => 
+          p.code.toUpperCase().includes(query) ||
+          p.name_english.toUpperCase().includes(query) ||
+          p.meridian.toUpperCase().includes(query)
+        )
+        .map(p => p.code);
+      setSearchResults(matches);
+    } else {
+      setSearchResults([]);
+    }
+  }, [searchQuery, acuPoints]);
 
   // Points to display
   const displayPoints = useMemo(() => {
+    if (searchResults.length > 0) {
+      // Show only search results
+      return acuPoints.filter(p => 
+        searchResults.some(code => normalizePointCode(code) === normalizePointCode(p.code))
+      );
+    }
     if (showAllPoints) return acuPoints;
     
     // Only show highlighted or selected points
@@ -202,7 +211,31 @@ export function BodyFigureWithPoints({
     return acuPoints.filter(p => 
       visibleCodes.some(code => normalizePointCode(code) === normalizePointCode(p.code))
     );
-  }, [acuPoints, highlightedPoints, selectedPoints, showAllPoints]);
+  }, [acuPoints, highlightedPoints, selectedPoints, showAllPoints, searchResults]);
+
+  // Get point position - prefer CSV coordinates, fallback to grid
+  const getPointPosition = (pointCode: string): { x: number; y: number } | null => {
+    const coord = getPointCoordinate(filename, pointCode);
+    if (coord) {
+      return { x: coord.x_percent, y: coord.y_percent };
+    }
+    
+    // Fallback: generate a grid position for points not in CSV
+    const normalizedCode = normalizePointCode(pointCode);
+    const allCodes = acuPoints.map(p => normalizePointCode(p.code));
+    const index = allCodes.indexOf(normalizedCode);
+    if (index === -1) return null;
+    
+    const total = allCodes.length;
+    const cols = Math.ceil(Math.sqrt(total));
+    const col = index % cols;
+    const row = Math.floor(index / cols);
+    
+    return {
+      x: 20 + (col / (cols - 1 || 1)) * 60,
+      y: 20 + (row / (Math.ceil(total / cols) - 1 || 1)) * 60
+    };
+  };
 
   const handlePointClick = (point: AcuPoint) => {
     onPointClick?.(point);
@@ -227,6 +260,15 @@ export function BodyFigureWithPoints({
     );
   }
 
+  const isHighlighted = (code: string) => 
+    highlightedPoints.some(h => normalizePointCode(h) === normalizePointCode(code));
+  
+  const isSelected = (code: string) => 
+    selectedPoints.some(s => normalizePointCode(s) === normalizePointCode(code));
+  
+  const isSearchMatch = (code: string) =>
+    searchResults.some(s => normalizePointCode(s) === normalizePointCode(code));
+
   if (compact) {
     return (
       <div className={`relative ${className}`}>
@@ -243,7 +285,7 @@ export function BodyFigureWithPoints({
             className="max-w-full h-auto"
           />
           {displayPoints.map(point => {
-            const pos = pointPositions[normalizePointCode(point.code)];
+            const pos = getPointPosition(point.code);
             if (!pos) return null;
             
             return (
@@ -252,12 +294,8 @@ export function BodyFigureWithPoints({
                 point={point}
                 x={pos.x}
                 y={pos.y}
-                isHighlighted={highlightedPoints.some(h => 
-                  normalizePointCode(h) === normalizePointCode(point.code)
-                )}
-                isSelected={selectedPoints.some(s => 
-                  normalizePointCode(s) === normalizePointCode(point.code)
-                )}
+                isHighlighted={isHighlighted(point.code) || isSearchMatch(point.code)}
+                isSelected={isSelected(point.code)}
                 onClick={() => handlePointClick(point)}
                 size="sm"
               />
@@ -270,42 +308,76 @@ export function BodyFigureWithPoints({
 
   return (
     <Card className={`overflow-hidden ${className}`}>
-      <CardHeader className="py-3 flex flex-row items-center justify-between">
-        <CardTitle className="text-sm flex items-center gap-2">
-          <MapPin className="h-4 w-4 text-jade" />
-          {getFigureName(filename)}
-          {displayPoints.length > 0 && (
-            <Badge variant="outline" className="ml-1">
-              {displayPoints.length} points
-            </Badge>
-          )}
-        </CardTitle>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={() => setZoom(z => Math.max(0.5, z - 0.25))}
-            disabled={zoom <= 0.5}
-          >
-            <ZoomOut className="h-3 w-3" />
-          </Button>
-          <span className="text-xs text-muted-foreground w-10 text-center">
-            {Math.round(zoom * 100)}%
-          </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={() => setZoom(z => Math.min(2, z + 0.25))}
-            disabled={zoom >= 2}
-          >
-            <ZoomIn className="h-3 w-3" />
-          </Button>
+      <CardHeader className="py-2 px-3 space-y-2">
+        <div className="flex flex-row items-center justify-between">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-jade" />
+            {getFigureName(filename)}
+            {displayPoints.length > 0 && (
+              <Badge variant="outline" className="ml-1 text-xs">
+                {displayPoints.length} pts
+              </Badge>
+            )}
+          </CardTitle>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => setZoom(z => Math.max(0.5, z - 0.25))}
+              disabled={zoom <= 0.5}
+            >
+              <ZoomOut className="h-3 w-3" />
+            </Button>
+            <span className="text-[10px] text-muted-foreground w-8 text-center">
+              {Math.round(zoom * 100)}%
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => setZoom(z => Math.min(2, z + 0.25))}
+              disabled={zoom >= 2}
+            >
+              <ZoomIn className="h-3 w-3" />
+            </Button>
+          </div>
         </div>
+        
+        {/* Search Bar */}
+        {showSearch && (
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search points (e.g., ST36, Zusanli)"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-7 pl-7 pr-7 text-xs"
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-5 w-5"
+                onClick={() => setSearchQuery('')}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+        )}
+        
+        {/* Search Results Count */}
+        {searchResults.length > 0 && (
+          <div className="text-xs text-jade">
+            Found {searchResults.length} matching point{searchResults.length !== 1 ? 's' : ''}
+          </div>
+        )}
       </CardHeader>
+      
       <CardContent className="p-2">
-        <ScrollArea className="h-[400px]">
+        <ScrollArea className="h-[350px]">
           <div 
             className="relative inline-block"
             style={{ 
@@ -319,13 +391,13 @@ export function BodyFigureWithPoints({
               className="max-w-none"
               style={{ maxWidth: '100%', height: 'auto' }}
             />
-            {loading ? (
+            {(loading || coordsLoading) ? (
               <div className="absolute inset-0 flex items-center justify-center bg-background/50">
                 <span className="text-sm text-muted-foreground">Loading points...</span>
               </div>
             ) : (
               displayPoints.map(point => {
-                const pos = pointPositions[normalizePointCode(point.code)];
+                const pos = getPointPosition(point.code);
                 if (!pos) return null;
                 
                 return (
@@ -334,12 +406,8 @@ export function BodyFigureWithPoints({
                     point={point}
                     x={pos.x}
                     y={pos.y}
-                    isHighlighted={highlightedPoints.some(h => 
-                      normalizePointCode(h) === normalizePointCode(point.code)
-                    )}
-                    isSelected={selectedPoints.some(s => 
-                      normalizePointCode(s) === normalizePointCode(point.code)
-                    )}
+                    isHighlighted={isHighlighted(point.code) || isSearchMatch(point.code)}
+                    isSelected={isSelected(point.code)}
                     onClick={() => handlePointClick(point)}
                     size="md"
                     showLabel
@@ -358,7 +426,16 @@ export function BodyFigureWithPoints({
             </div>
             <div className="flex flex-wrap gap-1">
               {highlightedPoints.map(code => (
-                <Badge key={code} className="bg-jade text-xs">{code}</Badge>
+                <Badge 
+                  key={code} 
+                  className="bg-jade text-xs cursor-pointer hover:bg-jade/80 transition-colors"
+                  onClick={() => {
+                    const point = acuPoints.find(p => normalizePointCode(p.code) === normalizePointCode(code));
+                    if (point) handlePointClick(point);
+                  }}
+                >
+                  {code}
+                </Badge>
               ))}
             </div>
           </div>
