@@ -6,6 +6,49 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const STOPWORDS = new Set([
+  'a','an','and','are','as','at','be','best','by','can','could','for','from','has','have','how','i','in','is','it','its','me','my','of','on','or','our','should','that','the','their','them','then','there','these','this','those','to','was','we','were','what','when','where','which','who','why','with','you','your',
+]);
+
+function normalizeForSearch(raw: string): string {
+  return (raw || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\u4e00-\u9fff]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function uniq<T>(arr: T[]): T[] {
+  return [...new Set(arr)];
+}
+
+function buildWebSearchQuery(rawQuery: string): { webQuery: string; keywords: string[] } {
+  const normalized = normalizeForSearch(rawQuery);
+
+  // Base keywords from the user query
+  const baseTokens = normalized
+    .split(' ')
+    .map((t) => t.trim())
+    .filter((t) => t.length > 1 && !STOPWORDS.has(t));
+
+  // Minimal TCM expansions for common patterns (helps both textSearch + ilike fallback)
+  const expansions: string[] = [];
+  if (/\bliver\s+qi\s+stagnation\b/.test(normalized) || /\bqi\s+stagnation\b/.test(normalized)) {
+    expansions.push('liver', 'qi', 'stagnation', '"liver qi"', '"qi stagnation"', '肝气郁结', '肝气');
+  }
+
+  const combined = uniq([...baseTokens, ...expansions.map((e) => e.replace(/"/g, ''))]);
+
+  // Websearch syntax: use OR, include quoted phrases when relevant
+  const webParts = uniq([
+    ...expansions.filter((e) => e.includes('"')),
+    ...combined.filter((t) => !t.includes('"')),
+  ]).slice(0, 12);
+
+  const webQuery = webParts.length > 0 ? webParts.join(' OR ') : rawQuery;
+  return { webQuery, keywords: combined.slice(0, 12) };
+}
+
 // Age group configuration with system prompts
 const AGE_GROUP_PROMPTS: Record<string, { context: string; filePatterns: string[] }> = {
   newborn: {
@@ -99,14 +142,16 @@ serve(async (req) => {
 
     const { query, messages, useExternalAI, includeChunkDetails, ageGroup, patientContext } = await req.json();
     const searchQuery = query || messages?.[messages.length - 1]?.content || '';
-    const searchTerms = searchQuery.split(' ').slice(0, 5).join(' | ');
-    
+
+    const { webQuery: searchTerms, keywords: keywordTerms } = buildWebSearchQuery(searchQuery);
+
     // Age group context for specialized knowledge
     const ageGroupContext = ageGroup ? getAgeGroupSystemPrompt(ageGroup) : '';
 
     console.log('=== RAG TRACE START ===');
     console.log('Query:', searchQuery);
-    console.log('Search terms:', searchTerms);
+    console.log('Websearch query:', searchTerms);
+    console.log('Keyword terms:', keywordTerms.slice(0, 8).join(', '));
     console.log('Age group:', ageGroup || 'not specified');
     console.log('Using external AI:', useExternalAI || false);
     console.log('Include chunk details:', includeChunkDetails || false);
@@ -134,7 +179,7 @@ serve(async (req) => {
         .or(agePatternQuery, { referencedTable: 'document' })
         .textSearch('content', searchTerms, {
           type: 'websearch',
-          config: 'english'
+          config: 'simple'
         })
         .limit(6);
       
@@ -159,7 +204,7 @@ serve(async (req) => {
       .ilike('document.file_name', '%Diagnostics_Professional%')
       .textSearch('content', searchTerms, {
         type: 'websearch',
-        config: 'english'
+        config: 'simple'
       })
       .limit(5);
 
@@ -178,7 +223,7 @@ serve(async (req) => {
       .or('file_name.ilike.%pulse%,file_name.ilike.%tongue%', { referencedTable: 'document' })
       .textSearch('content', searchTerms, {
         type: 'websearch',
-        config: 'english'
+          config: 'simple'
       })
       .limit(5);
 
@@ -197,7 +242,7 @@ serve(async (req) => {
       .or('file_name.ilike.%zang%,file_name.ilike.%fu%,file_name.ilike.%organ%', { referencedTable: 'document' })
       .textSearch('content', searchTerms, {
         type: 'websearch',
-        config: 'english'
+          config: 'simple'
       })
       .limit(4);
 
@@ -216,7 +261,7 @@ serve(async (req) => {
       .or('file_name.ilike.%acupuncture%,file_name.ilike.%point%,file_name.ilike.%meridian%', { referencedTable: 'document' })
       .textSearch('content', searchTerms, {
         type: 'websearch',
-        config: 'english'
+          config: 'simple'
       })
       .limit(4);
 
@@ -235,7 +280,7 @@ serve(async (req) => {
       .ilike('document.file_name', '%QA_Professional%')
       .textSearch('content', searchTerms, {
         type: 'websearch',
-        config: 'english'
+          config: 'simple'
       })
       .limit(4);
 
@@ -254,7 +299,7 @@ serve(async (req) => {
       .ilike('document.file_name', '%Treatment_Planning%')
       .textSearch('content', searchTerms, {
         type: 'websearch',
-        config: 'english'
+          config: 'simple'
       })
       .limit(4);
 
@@ -273,7 +318,7 @@ serve(async (req) => {
       .or('file_name.ilike.%caf%,file_name.ilike.%comprehensive%', { referencedTable: 'document' })
       .textSearch('content', searchTerms, {
         type: 'websearch',
-        config: 'english'
+          config: 'simple'
       })
       .limit(5);
 
@@ -289,10 +334,10 @@ serve(async (req) => {
         metadata,
         document:knowledge_documents!inner(id, file_name, original_name, category)
       `)
-      .or('file_name.ilike.%vagus%,file_name.ilike.%vagal%,content_type.eq.vagus-nerve', { referencedTable: 'document' })
+      .or('content_type.eq.vagus-nerve,document.file_name.ilike.%vagus%,document.file_name.ilike.%vagal%')
       .textSearch('content', searchTerms, {
         type: 'websearch',
-        config: 'english'
+          config: 'simple'
       })
       .limit(5);
     
@@ -319,7 +364,7 @@ serve(async (req) => {
         .or('file_name.ilike.%neuro%,file_name.ilike.%degenerative%,file_name.ilike.%parkinson%,file_name.ilike.%alzheimer%', { referencedTable: 'document' })
         .textSearch('content', searchTerms, {
           type: 'websearch',
-          config: 'english'
+            config: 'simple'
         })
         .limit(8);
       
@@ -398,30 +443,29 @@ serve(async (req) => {
       `)
       .textSearch('content', searchTerms, {
         type: 'websearch',
-        config: 'english'
+        config: 'simple'
       })
       .limit(8);
 
     // Enhanced fallback: Always run ilike search for better coverage
     let fallbackChunks: any[] = [];
-    // Extract meaningful words (>3 chars) and TCM-specific terms
-    const searchWords = searchQuery.toLowerCase()
-      .split(/\s+/)
-      .filter((w: string) => w.length > 2 && !['the', 'and', 'for', 'with', 'how', 'what', 'why', 'can', 'are', 'this', 'that', 'have', 'has'].includes(w));
-    
-    const totalPriorityChunks = (neuroChunks?.length || 0) + (cafChunks?.length || 0) + 
-      (vagusChunks?.length || 0) + (ageSpecificChunks?.length || 0) + 
-      (diagnosticsChunks?.length || 0) + (pulseChunks?.length || 0) + 
-      (zangfuChunks?.length || 0) + (acuChunks?.length || 0) + 
-      (qaChunks?.length || 0) + (treatmentChunks?.length || 0) + 
+
+    // Reuse extracted keywords (plus small expansions) rather than the first words of the sentence
+    const fallbackWords = (keywordTerms || []).filter((w: string) => w.length > 1).slice(0, 8);
+
+    const totalPriorityChunks = (neuroChunks?.length || 0) + (cafChunks?.length || 0) +
+      (vagusChunks?.length || 0) + (ageSpecificChunks?.length || 0) +
+      (diagnosticsChunks?.length || 0) + (pulseChunks?.length || 0) +
+      (zangfuChunks?.length || 0) + (acuChunks?.length || 0) +
+      (qaChunks?.length || 0) + (treatmentChunks?.length || 0) +
       (otherChunks?.length || 0);
 
-    // Always run fallback if we have less than 5 chunks or search words exist
-    if ((totalPriorityChunks < 5 || searchWords.length > 0) && searchWords.length > 0) {
-      console.log(`Running enhanced ilike search with words: ${searchWords.slice(0, 5).join(', ')}`);
-      
-      // Build comprehensive ilike conditions for up to 5 words
-      const ilikeConditions = searchWords.slice(0, 5).flatMap((w: string) => [
+    // Always run fallback if we have less than 5 chunks or keywords exist
+    if ((totalPriorityChunks < 5 || fallbackWords.length > 0) && fallbackWords.length > 0) {
+      console.log(`Running enhanced ilike search with keywords: ${fallbackWords.join(', ')}`);
+
+      // Build comprehensive ilike conditions for up to 8 keywords
+      const ilikeConditions = fallbackWords.flatMap((w: string) => [
         `content.ilike.%${w}%`,
         `question.ilike.%${w}%`,
         `answer.ilike.%${w}%`
