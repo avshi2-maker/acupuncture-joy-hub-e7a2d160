@@ -43,6 +43,9 @@ export function TierCard({
         <div className="mt-4">
           <span className="text-4xl font-bold text-foreground">{price}</span>
           {price !== 'חינם' && <span className="text-muted-foreground mr-1">/ חודש</span>}
+          {price !== 'חינם' && (
+            <div className="text-sm text-muted-foreground mt-1">כולל מע״מ</div>
+          )}
         </div>
         <p className="text-sm text-muted-foreground mt-2">{description}</p>
       </CardHeader>
