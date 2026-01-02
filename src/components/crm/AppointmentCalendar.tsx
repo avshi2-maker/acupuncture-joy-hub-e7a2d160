@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, addMonths, subMonths, startOfWeek, endOfWeek, isToday } from 'date-fns';
 import { he } from 'date-fns/locale';
-import { ChevronRight, ChevronLeft, Plus, Clock, User, Trash2, Edit, X, Play, AlertCircle } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Plus, Clock, User, Trash2, Edit, X, Play, AlertCircle, CheckCircle2, XCircle, HelpCircle, Send } from 'lucide-react';
 import { WhatsAppReminderButton } from '@/components/crm/WhatsAppReminderButton';
 import { useTier } from '@/hooks/useTier';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -24,6 +24,14 @@ interface Patient {
   consent_signed?: boolean | null;
 }
 
+interface AppointmentConfirmation {
+  id: string;
+  token: string;
+  response: string | null;
+  responded_at: string | null;
+  expires_at: string;
+}
+
 interface Appointment {
   id: string;
   therapist_id: string;
@@ -33,6 +41,7 @@ interface Appointment {
   end_time: string;
   status: string;
   notes: string | null;
+  appointment_confirmations?: AppointmentConfirmation[];
 }
 
 interface AppointmentCalendarProps {
@@ -118,7 +127,7 @@ export function AppointmentCalendar({ userId, patients }: AppointmentCalendarPro
     setIsLoading(true);
     const { data, error } = await supabase
       .from('appointments')
-      .select('*')
+      .select('*, appointment_confirmations(*)')
       .gte('start_time', monthStart.toISOString())
       .lte('start_time', monthEnd.toISOString())
       .order('start_time', { ascending: true });
@@ -130,6 +139,26 @@ export function AppointmentCalendar({ userId, patients }: AppointmentCalendarPro
       setAppointments(data || []);
     }
     setIsLoading(false);
+  };
+
+  // Get confirmation status for an appointment
+  const getConfirmationStatus = (apt: Appointment) => {
+    const confirmation = apt.appointment_confirmations?.[0];
+    if (!confirmation) {
+      return { status: 'not_sent', label: 'לא נשלח', icon: Send, color: 'text-muted-foreground' };
+    }
+    if (confirmation.response === 'confirmed') {
+      return { status: 'confirmed', label: 'אישר הגעה', icon: CheckCircle2, color: 'text-jade' };
+    }
+    if (confirmation.response === 'cancelled') {
+      return { status: 'cancelled', label: 'ביטל', icon: XCircle, color: 'text-destructive' };
+    }
+    // Token sent but no response yet
+    const isExpired = new Date(confirmation.expires_at) < new Date();
+    if (isExpired) {
+      return { status: 'expired', label: 'פג תוקף', icon: HelpCircle, color: 'text-amber-500' };
+    }
+    return { status: 'pending', label: 'ממתין לתשובה', icon: HelpCircle, color: 'text-amber-500' };
   };
 
   const getAppointmentsForDay = (day: Date) => {
@@ -317,19 +346,26 @@ export function AppointmentCalendar({ userId, patients }: AppointmentCalendarPro
                     {format(day, 'd')}
                   </div>
                   <div className="space-y-1">
-                    {dayAppointments.slice(0, 3).map(apt => (
-                      <div
-                        key={apt.id}
-                        className={`text-xs p-1 rounded truncate cursor-pointer ${statusColors[apt.status] || 'bg-muted'}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openEditDialog(apt);
-                        }}
-                      >
-                        <span className="font-medium">{format(new Date(apt.start_time), 'HH:mm')}</span>
-                        <span className="mr-1">{apt.title}</span>
-                      </div>
-                    ))}
+                    {dayAppointments.slice(0, 3).map(apt => {
+                      const confirmStatus = getConfirmationStatus(apt);
+                      const ConfirmIcon = confirmStatus.icon;
+                      return (
+                        <div
+                          key={apt.id}
+                          className={`text-xs p-1 rounded truncate cursor-pointer flex items-center gap-1 ${statusColors[apt.status] || 'bg-muted'}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEditDialog(apt);
+                          }}
+                        >
+                          <span className="font-medium">{format(new Date(apt.start_time), 'HH:mm')}</span>
+                          <span className="mr-1 flex-1 truncate">{apt.title}</span>
+                          {apt.patient_id && (
+                            <ConfirmIcon className={`h-3 w-3 flex-shrink-0 ${confirmStatus.color}`} />
+                          )}
+                        </div>
+                      );
+                    })}
                     {dayAppointments.length > 3 && (
                       <div className="text-xs text-muted-foreground text-center">
                         +{dayAppointments.length - 3} עוד
@@ -360,11 +396,37 @@ export function AppointmentCalendar({ userId, patients }: AppointmentCalendarPro
             <div className="space-y-2">
               {getAppointmentsForDay(new Date()).map(apt => {
                 const sessionCheck = canStartSession(apt);
+                const confirmStatus = getConfirmationStatus(apt);
+                const ConfirmIcon = confirmStatus.icon;
                 return (
                   <div key={apt.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                     <div className="flex items-center gap-3">
                       <div className="text-sm">
-                        <div className="font-medium">{apt.title}</div>
+                        <div className="font-medium flex items-center gap-2">
+                          {apt.title}
+                          {/* Confirmation Status Badge */}
+                          {apt.patient_id && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge variant="outline" className={`text-[10px] h-5 gap-1 ${confirmStatus.color} border-current`}>
+                                    <ConfirmIcon className="h-3 w-3" />
+                                    {confirmStatus.label}
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>
+                                    {confirmStatus.status === 'confirmed' && 'המטופל אישר את הגעתו'}
+                                    {confirmStatus.status === 'cancelled' && 'המטופל ביטל את התור'}
+                                    {confirmStatus.status === 'pending' && 'נשלחה תזכורת, ממתין לתשובה'}
+                                    {confirmStatus.status === 'expired' && 'פג תוקף התזכורת ללא תשובה'}
+                                    {confirmStatus.status === 'not_sent' && 'טרם נשלחה תזכורת למטופל'}
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                        </div>
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Clock className="h-3 w-3" />
                           {format(new Date(apt.start_time), 'HH:mm')} - {format(new Date(apt.end_time), 'HH:mm')}

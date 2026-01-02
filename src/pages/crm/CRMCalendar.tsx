@@ -41,6 +41,9 @@ import {
   FileText,
   Send,
   CheckCircle,
+  CheckCircle2,
+  XCircle,
+  HelpCircle,
 } from 'lucide-react';
 import { WhatsAppReminderButton } from '@/components/crm/WhatsAppReminderButton';
 import { useSessionTimer } from '@/contexts/SessionTimerContext';
@@ -51,6 +54,14 @@ interface Room {
   id: string;
   name: string;
   color: string;
+}
+
+interface AppointmentConfirmation {
+  id: string;
+  token: string;
+  response: string | null;
+  responded_at: string | null;
+  expires_at: string;
 }
 
 interface Appointment {
@@ -68,6 +79,7 @@ interface Appointment {
   recurrence_end_date: string | null;
   parent_appointment_id: string | null;
   patients?: { full_name: string; phone?: string | null } | null;
+  appointment_confirmations?: AppointmentConfirmation[];
 }
 
 interface Patient {
@@ -179,7 +191,7 @@ function CalendarContent() {
 
       const { data: apptsData } = await supabase
         .from('appointments')
-        .select('*, patients(full_name, phone)')
+        .select('*, patients(full_name, phone), appointment_confirmations(*)')
         .gte('start_time', startDate.toISOString())
         .lte('start_time', endDate.toISOString())
         .order('start_time');

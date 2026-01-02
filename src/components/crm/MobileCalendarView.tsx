@@ -28,6 +28,14 @@ import {
 // Time slots for quick create (8am to 7pm)
 const TIME_SLOTS = Array.from({ length: 12 }, (_, i) => i + 8);
 
+interface AppointmentConfirmation {
+  id: string;
+  token: string;
+  response: string | null;
+  responded_at: string | null;
+  expires_at: string;
+}
+
 interface Appointment {
   id: string;
   title: string;
@@ -43,6 +51,7 @@ interface Appointment {
   recurrence_end_date: string | null;
   parent_appointment_id: string | null;
   patients?: { full_name: string; phone?: string | null } | null;
+  appointment_confirmations?: AppointmentConfirmation[];
 }
 
 interface Room {
