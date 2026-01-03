@@ -475,6 +475,13 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'clinical_protocols',
     defaultLanguage: 'en',
   },
+  {
+    id: 'tcm-stress-biofeedback',
+    label: '🧘 TCM Stress & Biofeedback (75 Q&A - Points & Formulas)',
+    path: '/knowledge/tcm_stress_biofeedback_75qa.csv',
+    defaultCategory: 'anxiety_mental',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 type QueueItemStatus = 'pending' | 'importing' | 'done' | 'error';
