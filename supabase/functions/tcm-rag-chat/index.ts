@@ -936,20 +936,31 @@ serve(async (req) => {
       });
     }
 
-    const { query, messages, useExternalAI, includeChunkDetails, ageGroup, patientContext } = await req.json();
+    const { query, messages, useExternalAI, includeChunkDetails, ageGroup, patientContext, language } = await req.json();
     const searchQuery = query || messages?.[messages.length - 1]?.content || '';
 
     // ========================================================================
-    // PHASE 1.5: LANGUAGE DETECTION & BILINGUAL EXPANSION
+    // PHASE 1.5: LANGUAGE DETECTION & PREFERENCE
     // ========================================================================
     const detectedLanguage = detectLanguage(searchQuery);
-    const bilingualExpansions = expandWithBilingualGlossary(searchQuery, detectedLanguage);
-    const languageFilePatterns = getLanguageFilePatterns(detectedLanguage);
     
-    console.log('=== LANGUAGE DETECTION ===');
+    // Use explicit language param, or detect from query, default to 'en'
+    // Map detected language to database language codes
+    const languageMap: Record<DetectedLanguage, string> = {
+      'hebrew': 'he',
+      'english': 'en', 
+      'chinese': 'zh',
+      'mixed': 'en' // Default to English for mixed
+    };
+    const preferredLanguage = language || languageMap[detectedLanguage] || 'en';
+    
+    // Still use bilingual glossary for search term expansion (helps find content)
+    const bilingualExpansions = expandWithBilingualGlossary(searchQuery, detectedLanguage);
+    
+    console.log('=== LANGUAGE-BASED RAG SEARCH ===');
     console.log('Detected language:', detectedLanguage);
-    console.log('Bilingual expansions:', bilingualExpansions.slice(0, 10).join(', '));
-    console.log('Language file patterns:', languageFilePatterns.join(', ') || 'all languages');
+    console.log('Preferred language for chunks:', preferredLanguage);
+    console.log('Bilingual expansions for search:', bilingualExpansions.slice(0, 10).join(', '));
 
     const { webQuery: searchTerms, keywords: keywordTerms } = buildWebSearchQuery(searchQuery);
     
@@ -1007,61 +1018,60 @@ serve(async (req) => {
       clinicalTrialsResult
     ] = await Promise.all([
       // PILLAR 1: Clinical - Points, needles, techniques
-      // Searches ALL ASSETS for clinical content - fetches MORE results for ranking
+      // Filter by preferred language for native content
       supabaseClient
         .from('knowledge_chunks')
         .select(`
-          id, content, question, answer, chunk_index, metadata,
+          id, content, question, answer, chunk_index, metadata, language,
           document:knowledge_documents(id, file_name, original_name, category)
         `)
-        .or('content.ilike.%acupuncture%,content.ilike.%point%,content.ilike.%needle%,content.ilike.%BL%,content.ilike.%GB%,content.ilike.%ST%,content.ilike.%SP%,content.ilike.%LI%,content.ilike.%KI%,content.ilike.%LR%,content.ilike.%moxa%,content.ilike.%cupping%,content.ilike.%insertion%,content.ilike.%depth%,content.ilike.%technique%,answer.ilike.%point%,answer.ilike.%needle%,question.ilike.%point%,question.ilike.%acupuncture%')
-        .textSearch('content', searchTerms, { type: 'websearch', config: 'simple' })
-        .limit(50), // Fetch 50, will rank and take top 15
+        .eq('language', preferredLanguage)
+        .or('content.ilike.%acupuncture%,content.ilike.%point%,content.ilike.%needle%,content.ilike.%BL%,content.ilike.%GB%,content.ilike.%ST%,content.ilike.%SP%,content.ilike.%LI%,content.ilike.%KI%,content.ilike.%LR%,content.ilike.%moxa%,content.ilike.%cupping%,content.ilike.%דיקור%,content.ilike.%נקודה%,content.ilike.%מחט%')
+        .limit(50),
 
       // PILLAR 2: Pharmacopeia - Herbs, formulas, dosages
-      // Searches ALL ASSETS for herbal/formula content - fetches MORE for ranking
       supabaseClient
         .from('knowledge_chunks')
         .select(`
-          id, content, question, answer, chunk_index, metadata,
+          id, content, question, answer, chunk_index, metadata, language,
           document:knowledge_documents(id, file_name, original_name, category)
         `)
-        .or('content.ilike.%herb%,content.ilike.%formula%,content.ilike.%tang%,content.ilike.%wan%,content.ilike.%san%,content.ilike.%dosage%,content.ilike.%decoction%,content.ilike.%contraindication%,content.ilike.%prescription%,content.ilike.%materia medica%,answer.ilike.%herb%,answer.ilike.%formula%,answer.ilike.%tang%,question.ilike.%herb%,question.ilike.%formula%')
-        .textSearch('content', searchTerms, { type: 'websearch', config: 'simple' })
-        .limit(50), // Fetch 50, will rank and take top 15
+        .eq('language', preferredLanguage)
+        .or('content.ilike.%herb%,content.ilike.%formula%,content.ilike.%tang%,content.ilike.%wan%,content.ilike.%san%,content.ilike.%dosage%,content.ilike.%צמח%,content.ilike.%פורמולה%,content.ilike.%מינון%')
+        .limit(50),
 
-      // PILLAR 3: Nutrition - Searches ALL ASSETS for nutrition-related content
-      // Fetches MORE results to rank by relevance to the user's query
+      // PILLAR 3: Nutrition - Filter by language
       supabaseClient
         .from('knowledge_chunks')
         .select(`
-          id, content, question, answer, chunk_index, metadata,
+          id, content, question, answer, chunk_index, metadata, language,
           document:knowledge_documents(id, file_name, original_name, category)
         `)
-        .or('content.ilike.%diet%,content.ilike.%food%,content.ilike.%eat%,content.ilike.%nutrition%,content.ilike.%avoid foods%,content.ilike.%warming foods%,content.ilike.%cooling foods%,content.ilike.%dampness%,content.ilike.%phlegm%,content.ilike.%spleen%,content.ilike.%digest%,content.ilike.%meal%,content.ilike.%recipe%,content.ilike.%congee%,content.ilike.%soup%,content.ilike.%tea%,answer.ilike.%diet%,answer.ilike.%food%,answer.ilike.%eat%,answer.ilike.%avoid%,question.ilike.%diet%,question.ilike.%food%,question.ilike.%nutrition%')
-        .limit(50), // Fetch 50, will rank and take top 15
+        .eq('language', preferredLanguage)
+        .or('content.ilike.%diet%,content.ilike.%food%,content.ilike.%eat%,content.ilike.%nutrition%,content.ilike.%תזונה%,content.ilike.%אוכל%,content.ilike.%דיאטה%,content.ilike.%מזון%')
+        .limit(50),
 
-      // PILLAR 4: Lifestyle/Sport - Searches ALL ASSETS for lifestyle-related content  
-      // Fetches MORE results to rank by relevance to the user's query
+      // PILLAR 4: Lifestyle/Sport - Filter by language
       supabaseClient
         .from('knowledge_chunks')
         .select(`
-          id, content, question, answer, chunk_index, metadata,
+          id, content, question, answer, chunk_index, metadata, language,
           document:knowledge_documents(id, file_name, original_name, category)
         `)
-        .or('content.ilike.%exercise%,content.ilike.%stretch%,content.ilike.%sleep%,content.ilike.%rest%,content.ilike.%stress%,content.ilike.%yoga%,content.ilike.%qigong%,content.ilike.%tai chi%,content.ilike.%walk%,content.ilike.%posture%,content.ilike.%relax%,content.ilike.%breathing%,content.ilike.%meditation%,content.ilike.%cool down%,content.ilike.%warm up%,answer.ilike.%exercise%,answer.ilike.%sleep%,answer.ilike.%stress%,answer.ilike.%stretch%,question.ilike.%exercise%,question.ilike.%lifestyle%,question.ilike.%sleep%')
-        .limit(50), // Fetch 50, will rank and take top 15
+        .eq('language', preferredLanguage)
+        .or('content.ilike.%exercise%,content.ilike.%stretch%,content.ilike.%sleep%,content.ilike.%stress%,content.ilike.%yoga%,content.ilike.%תרגיל%,content.ilike.%שינה%,content.ilike.%מתיחה%,content.ilike.%יוגה%')
+        .limit(50),
 
-      // Age-specific knowledge
+      // Age-specific knowledge (also filtered by language)
       ageGroup && ageFilePatterns.length > 0
         ? supabaseClient
             .from('knowledge_chunks')
             .select(`
-              id, content, question, answer, chunk_index, metadata,
+              id, content, question, answer, chunk_index, metadata, language,
               document:knowledge_documents!inner(id, file_name, original_name, category)
             `)
+            .eq('language', preferredLanguage)
             .or(ageFilePatterns.map(p => `file_name.ilike.%${p}%`).join(','), { referencedTable: 'document' })
-            .textSearch('content', searchTerms, { type: 'websearch', config: 'simple' })
             .limit(10)
         : Promise.resolve({ data: [], error: null }),
 
@@ -1120,9 +1130,9 @@ serve(async (req) => {
     const cafStudies = cafStudiesResult.data || [];
     const clinicalTrials = clinicalTrialsResult.data || [];
 
-    console.log('=== PILLAR RESULTS (RANKED BY RELEVANCE - BILINGUAL) ===');
+    console.log('=== PILLAR RESULTS (LANGUAGE-FILTERED) ===');
     console.log(`🌐 Query language: ${detectedLanguage}`);
-    console.log(`🔄 Bilingual terms used: ${bilingualExpansions.length}`);
+    console.log(`📚 Preferred content language: ${preferredLanguage}`);
     console.log(`📍 Clinical chunks: ${clinicalChunks.length} (from ${(clinicalResult.data || []).length} candidates)`);
     console.log(`🌿 Pharmacopeia chunks: ${pharmacopeiaChunks.length} (from ${(pharmacopeiaResult.data || []).length} candidates)`);
     console.log(`🍎 Nutrition chunks: ${nutritionChunks.length} (from ${(nutritionResult.data || []).length} candidates)`);
@@ -1141,28 +1151,45 @@ serve(async (req) => {
 
     const totalPillarChunks = clinicalChunks.length + pharmacopeiaChunks.length + nutritionChunks.length + lifestyleChunks.length;
 
-    // Enhanced fallback search with keyword matching (using BILINGUAL expanded keywords)
+    // Enhanced fallback search - first try same language, then fallback to English
     let fallbackChunks: any[] = [];
     const fallbackWords = expandedKeywords.filter((w: string) => w.length > 1).slice(0, 12);
     
     if (totalPillarChunks < 8 && fallbackWords.length > 0) {
-      console.log(`Running enhanced BILINGUAL fallback search with keywords: ${fallbackWords.join(', ')}`);
+      console.log(`Running fallback search for language: ${preferredLanguage}`);
       
-      // Use expanded keywords (including Hebrew/English translations) for fallback
       const ilikeConditions = fallbackWords.flatMap((w: string) => [
         `content.ilike.%${w.replace(/'/g, "''")}%`,
         `question.ilike.%${w.replace(/'/g, "''")}%`,
         `answer.ilike.%${w.replace(/'/g, "''")}%`
       ]).join(',');
       
-      const { data: fallbackData } = await supabaseClient
+      // Try preferred language first
+      let { data: fallbackData } = await supabaseClient
         .from('knowledge_chunks')
         .select(`
-          id, content, question, answer, chunk_index, metadata,
+          id, content, question, answer, chunk_index, metadata, language,
           document:knowledge_documents(id, file_name, original_name, category)
         `)
+        .eq('language', preferredLanguage)
         .or(ilikeConditions)
-        .limit(50); // Increased limit for better bilingual coverage
+        .limit(50);
+      
+      // If not enough results and not already English, fallback to English
+      if ((!fallbackData || fallbackData.length < 5) && preferredLanguage !== 'en') {
+        console.log(`Not enough ${preferredLanguage} content, falling back to English`);
+        const { data: englishFallback } = await supabaseClient
+          .from('knowledge_chunks')
+          .select(`
+            id, content, question, answer, chunk_index, metadata, language,
+            document:knowledge_documents(id, file_name, original_name, category)
+          `)
+          .eq('language', 'en')
+          .or(ilikeConditions)
+          .limit(50);
+        
+        fallbackData = [...(fallbackData || []), ...(englishFallback || [])];
+      }
       
       if (fallbackData) {
         // Rank fallback chunks by relevance before distributing
@@ -1185,7 +1212,7 @@ serve(async (req) => {
           }
         });
         fallbackChunks = rankedFallback;
-        console.log(`Bilingual fallback search found: ${fallbackChunks.length} chunks, distributed across pillars`);
+        console.log(`Language-aware fallback found: ${fallbackChunks.length} chunks, distributed across pillars`);
       }
     }
 

@@ -740,6 +740,7 @@ export type Database = {
           created_at: string
           document_id: string
           id: string
+          language: string | null
           metadata: Json | null
           question: string | null
         }
@@ -751,6 +752,7 @@ export type Database = {
           created_at?: string
           document_id: string
           id?: string
+          language?: string | null
           metadata?: Json | null
           question?: string | null
         }
@@ -762,6 +764,7 @@ export type Database = {
           created_at?: string
           document_id?: string
           id?: string
+          language?: string | null
           metadata?: Json | null
           question?: string | null
         }
