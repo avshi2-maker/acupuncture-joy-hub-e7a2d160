@@ -153,24 +153,31 @@ export default function RetreatQuiz() {
     setSaved(false);
   };
 
+  // SECURITY: Only static content - never include user input in these messages
   const getResultStatus = () => {
     if (score > 60) {
       return {
         badge: 'RETREAT URGENT',
         color: 'bg-destructive',
-        message: 'Your body is showing signs of <strong>Deep Depletion</strong>. Home care is likely insufficient. A structured retreat is recommended.',
+        messagePrefix: 'Your body is showing signs of ',
+        messageHighlight: 'Deep Depletion',
+        messageSuffix: '. Home care is likely insufficient. A structured retreat is recommended.',
       };
     } else if (score > 30) {
       return {
         badge: 'RETREAT RECOMMENDED',
         color: 'bg-amber-500',
-        message: 'You are showing signs of <strong>Qi Stagnation</strong> and stress. A retreat would be very beneficial to prevent burnout.',
+        messagePrefix: 'You are showing signs of ',
+        messageHighlight: 'Qi Stagnation',
+        messageSuffix: ' and stress. A retreat would be very beneficial to prevent burnout.',
       };
     } else {
       return {
         badge: 'MAINTENANCE MODE',
         color: 'bg-sky-500',
-        message: 'Your balance is reasonable. Maintenance acupuncture and lifestyle changes should be sufficient.',
+        messagePrefix: '',
+        messageHighlight: '',
+        messageSuffix: 'Your balance is reasonable. Maintenance acupuncture and lifestyle changes should be sufficient.',
       };
     }
   };
@@ -383,10 +390,13 @@ ${collectedTCM.length > 5 ? `...and ${collectedTCM.length - 5} more patterns\n` 
                   </Badge>
                   
                   <h2 className="text-xl font-bold text-jade mb-3">Assessment Complete</h2>
-                  <p
-                    className="text-muted-foreground mb-6"
-                    dangerouslySetInnerHTML={{ __html: getResultStatus().message }}
-                  />
+                  <p className="text-muted-foreground mb-6">
+                    {getResultStatus().messagePrefix}
+                    {getResultStatus().messageHighlight && (
+                      <strong>{getResultStatus().messageHighlight}</strong>
+                    )}
+                    {getResultStatus().messageSuffix}
+                  </p>
 
                   <h3 className="text-sm font-semibold text-muted-foreground mb-3">
                     Detected Patterns & Formulae:

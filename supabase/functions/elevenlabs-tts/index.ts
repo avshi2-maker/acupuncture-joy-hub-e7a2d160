@@ -14,22 +14,45 @@ serve(async (req) => {
   }
 
   try {
-    // Optional: Log user if authenticated (but don't require it for TTS)
+    // SECURITY: Require authentication
     const authHeader = req.headers.get('Authorization');
-    let userId = 'anonymous';
-    
-    if (authHeader && authHeader !== `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`) {
-      try {
-        const supabaseClient = createClient(
-          Deno.env.get('SUPABASE_URL') ?? '',
-          Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-          { global: { headers: { Authorization: authHeader } } }
-        );
-        const { data: { user } } = await supabaseClient.auth.getUser();
-        if (user) userId = user.id;
-      } catch {
-        // Auth failed, continue as anonymous - TTS is low risk
-      }
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authorization header required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - valid authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const userId = user.id;
+
+    // SECURITY: Rate limiting - check recent TTS calls (max 20 per minute)
+    const oneMinuteAgo = new Date(Date.now() - 60000).toISOString();
+    const { data: recentCalls, error: rateError } = await supabaseClient
+      .from('usage_logs')
+      .select('created_at')
+      .eq('user_id', userId)
+      .eq('action_type', 'tts_generation')
+      .gte('created_at', oneMinuteAgo);
+
+    if (!rateError && recentCalls && recentCalls.length >= 20) {
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded. Please wait before making more requests.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' } }
+      );
     }
 
     const { text, voice = 'Rachel' } = await req.json();
@@ -42,6 +65,13 @@ serve(async (req) => {
     if (text.length > 5000) {
       throw new Error('Text must be less than 5000 characters');
     }
+
+    // Log usage for rate limiting
+    await supabaseClient.from('usage_logs').insert({
+      user_id: userId,
+      action_type: 'tts_generation',
+      tokens_used: Math.ceil(text.length / 100),
+    });
 
     const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
     if (!ELEVENLABS_API_KEY) {

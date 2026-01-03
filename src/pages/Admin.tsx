@@ -94,11 +94,17 @@ export default function Admin() {
     setIsSigningIn(false);
   };
 
+  // SECURITY: Use cryptographically secure random number generator
   const generatePassword = (): string => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const getSecureRandomIndex = (max: number): number => {
+      const array = new Uint32Array(1);
+      crypto.getRandomValues(array);
+      return array[0] % max;
+    };
     let password = '';
     for (let i = 0; i < 8; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
+      password += chars.charAt(getSecureRandomIndex(chars.length));
     }
     return password;
   };
