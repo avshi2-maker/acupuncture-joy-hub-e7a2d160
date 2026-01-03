@@ -64,6 +64,7 @@ import CRMSessionManager from "./pages/crm/CRMSessionManager";
 import PatientValuator from "./pages/PatientValuator";
 import ProfessionalInvite from "./pages/ProfessionalInvite";
 import ClinicalTrialsBrowser from "./pages/ClinicalTrialsBrowser";
+import ROISimulator from "./pages/ROISimulator";
 
 const queryClient = new QueryClient();
 
@@ -139,6 +140,7 @@ const App = () => (
                       <Route path="/cm-brain-questions" element={<RequireTier><CMBrainQuestions /></RequireTier>} />
                       <Route path="/clinical-trials" element={<RequireTier><ClinicalTrialsBrowser /></RequireTier>} />
                       <Route path="/patient-valuator" element={<RequireTier><PatientValuator /></RequireTier>} />
+                      <Route path="/roi-simulator" element={<ROISimulator />} />
 
                       <Route path="*" element={<NotFound />} />
                     </Routes>
