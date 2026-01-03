@@ -6,9 +6,82 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Detect if text is primarily Hebrew
+function detectLanguage(text: string): "he" | "en" {
+  const hebrewPattern = /[\u0590-\u05FF]/g;
+  const hebrewMatches = text.match(hebrewPattern) || [];
+  return hebrewMatches.length > text.length * 0.1 ? "he" : "en";
+}
+
+// Translate Hebrew query to English for searching
+async function translateToEnglish(query: string, apiKey: string): Promise<string> {
+  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { 
+          role: "system", 
+          content: "You are a medical translation optimizer. Translate the Hebrew TCM/medical query to a concise English search term. Output ONLY the English search query, nothing else. Preserve medical terminology accurately."
+        },
+        { role: "user", content: query }
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    console.error("Translation failed, using original query");
+    return query;
+  }
+
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content?.trim() || query;
+}
+
+// Search knowledge base with English query
+async function searchKnowledgeBase(
+  supabaseClient: any,
+  searchQuery: string
+): Promise<{ content: string; source: string }[]> {
+  const searchTerms = searchQuery.toLowerCase().split(/\s+/).filter((t: string) => t.length > 2);
+  
+  if (searchTerms.length === 0) return [];
+
+  const { data: chunks, error } = await supabaseClient
+    .from("knowledge_chunks")
+    .select(`
+      content,
+      question,
+      answer,
+      document_id,
+      knowledge_documents!inner(original_name)
+    `)
+    .or(`content.ilike.%${searchTerms[0]}%,question.ilike.%${searchTerms[0]}%,answer.ilike.%${searchTerms[0]}%`)
+    .limit(8);
+
+  if (error) {
+    console.error("Knowledge search error:", error);
+    return [];
+  }
+
+  return (chunks || []).map((chunk: any) => ({
+    content: chunk.answer || chunk.content || "",
+    source: chunk.knowledge_documents?.original_name || "Unknown"
+  }));
+}
+
 const TCM_SYSTEM_PROMPT = `You are TCM Brain, an expert Traditional Chinese Medicine (TCM) knowledge assistant for licensed practitioners.
 
-Respond in the language of the question (Hebrew or English).
+LANGUAGE RULE (CRITICAL):
+- IF the user asks in Hebrew -> Answer ENTIRELY in Hebrew.
+- IF the user asks in English -> Answer ENTIRELY in English.
+- Do NOT mention that source documents were in English. Answer naturally.
+
+When Context is provided below, use it as your PRIMARY source. If no relevant context, use your training knowledge.
 
 CRITICAL: You MUST provide a COMPLETE clinical report using the TCM-CAF (TCM Clinical Asset Framework). ALL 15 sections MUST be filled with REAL, specific clinical data. Do not skip sections. Do not write placeholders.
 
@@ -111,6 +184,8 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const startTime = Date.now();
+
   try {
     // Validate JWT authentication
     const authHeader = req.headers.get("Authorization");
@@ -126,6 +201,11 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const adminClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
@@ -146,18 +226,47 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Build messages array
+    // Get the user's actual query
+    const userQuery = query || (messages && messages.length > 0 ? messages[messages.length - 1].content : "");
+    
+    // STEP 1: Detect language
+    const inputLanguage = detectLanguage(userQuery);
+    console.log(`Input language detected: ${inputLanguage}`);
+
+    // STEP 2: Translate to English if Hebrew (Cross-Lingual RAG)
+    let searchQuery = userQuery;
+    let translatedQuery = "";
+    
+    if (inputLanguage === "he") {
+      translatedQuery = await translateToEnglish(userQuery, LOVABLE_API_KEY);
+      searchQuery = translatedQuery;
+      console.log(`Translated query: ${translatedQuery}`);
+    }
+
+    // STEP 3: Search knowledge base with English query
+    const contextChunks = await searchKnowledgeBase(adminClient, searchQuery);
+    const sourceDocs = [...new Set(contextChunks.map(c => c.source))];
+    console.log(`Found ${contextChunks.length} relevant chunks from: ${sourceDocs.join(", ")}`);
+
+    // Build context string
+    const contextString = contextChunks.length > 0
+      ? `\n\n--- KNOWLEDGE BASE CONTEXT (Use as primary source) ---\n${contextChunks.map((c, i) => `[${i + 1}] ${c.content}`).join("\n\n")}\n--- END CONTEXT ---\n`
+      : "";
+
+    // Build messages array with context injected
+    const systemWithContext = TCM_SYSTEM_PROMPT + contextString;
     const chatMessages = [
-      { role: "system", content: TCM_SYSTEM_PROMPT },
+      { role: "system", content: systemWithContext },
     ];
 
-    // If it's a simple query (not conversation), add it as user message
+    // Add conversation history or single query
     if (query) {
       chatMessages.push({ role: "user", content: query });
     } else if (messages && Array.isArray(messages)) {
       chatMessages.push(...messages);
     }
 
+    // STEP 4: Generate response (will be in user's language due to prompt)
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -190,6 +299,24 @@ serve(async (req) => {
         JSON.stringify({ error: "AI service error" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    const latencyMs = Date.now() - startTime;
+
+    // STEP 5: Log for monitoring (async, don't block response)
+    try {
+      await adminClient.from("rag_query_logs").insert({
+        user_id: user.id,
+        query_text: userQuery,
+        search_terms: translatedQuery || searchQuery,
+        chunks_found: contextChunks.length,
+        sources_used: sourceDocs,
+        ai_model: "google/gemini-2.5-flash",
+        chunks_matched: { input_language: inputLanguage, translated_query: translatedQuery, latency_ms: latencyMs }
+      });
+      console.log("Query logged successfully");
+    } catch (logError) {
+      console.error("Failed to log query:", logError);
     }
 
     return new Response(response.body, {
