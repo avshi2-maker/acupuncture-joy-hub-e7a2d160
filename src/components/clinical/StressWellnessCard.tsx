@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Activity, Brain, Heart } from 'lucide-react';
+import { Activity, Brain, Wind } from 'lucide-react';
 import { StressAssessmentDialog } from './StressAssessmentDialog';
 import { HRVTrackerDialog } from './HRVTrackerDialog';
+import { BreathingExerciseDialog } from './BreathingExerciseDialog';
 import stressWellnessBg from '@/assets/stress-wellness.png';
 
 interface StressWellnessCardProps {
@@ -15,6 +16,7 @@ export const StressWellnessCard: React.FC<StressWellnessCardProps> = ({
 }) => {
   const [showStressAssessment, setShowStressAssessment] = useState(false);
   const [showHRVTracker, setShowHRVTracker] = useState(false);
+  const [showBreathing, setShowBreathing] = useState(false);
 
   return (
     <>
@@ -47,37 +49,51 @@ export const StressWellnessCard: React.FC<StressWellnessCardProps> = ({
               </div>
             </div>
             <p className="text-white/80 text-sm mb-4">
-              הערכת לחץ, מעקב HRV וביופידבק
+              הערכת לחץ, מעקב HRV ותרגילי נשימה
             </p>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="flex-1 bg-white/20 hover:bg-white/30 text-white border-white/20 backdrop-blur-sm gap-2"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowStressAssessment(true);
+                }}
+              >
+                <Brain className="h-4 w-4" />
+                <span className="hidden sm:inline">הערכת לחץ</span>
+                <span className="sm:hidden">לחץ</span>
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="flex-1 bg-white/20 hover:bg-white/30 text-white border-white/20 backdrop-blur-sm gap-2"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowHRVTracker(true);
+                }}
+              >
+                <Activity className="h-4 w-4" />
+                <span className="hidden sm:inline">HRV מעקב</span>
+                <span className="sm:hidden">HRV</span>
+              </Button>
+            </div>
             <Button
               variant="secondary"
               size="sm"
-              className="flex-1 bg-white/20 hover:bg-white/30 text-white border-white/20 backdrop-blur-sm gap-2"
+              className="w-full bg-emerald-600/80 hover:bg-emerald-600 text-white border-emerald-500/30 backdrop-blur-sm gap-2"
               onClick={(e) => {
                 e.stopPropagation();
-                setShowStressAssessment(true);
+                setShowBreathing(true);
               }}
             >
-              <Brain className="h-4 w-4" />
-              <span className="hidden sm:inline">הערכת לחץ</span>
-              <span className="sm:hidden">לחץ</span>
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              className="flex-1 bg-white/20 hover:bg-white/30 text-white border-white/20 backdrop-blur-sm gap-2"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowHRVTracker(true);
-              }}
-            >
-              <Activity className="h-4 w-4" />
-              <span className="hidden sm:inline">HRV מעקב</span>
-              <span className="sm:hidden">HRV</span>
+              <Wind className="h-4 w-4" />
+              תרגיל נשימה 4-7-8
             </Button>
           </div>
         </CardContent>
@@ -91,6 +107,10 @@ export const StressWellnessCard: React.FC<StressWellnessCardProps> = ({
       <HRVTrackerDialog 
         open={showHRVTracker} 
         onOpenChange={setShowHRVTracker}
+      />
+      <BreathingExerciseDialog
+        open={showBreathing}
+        onOpenChange={setShowBreathing}
       />
     </>
   );

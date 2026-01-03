@@ -465,3 +465,19 @@ body {
 .form-field-required:focus-within textarea:not(:valid) {
   @apply ring-2 ring-amber-500/30;
 }
+
+/* Breathing exercise animations */
+@keyframes breathe-grow {
+  from { transform: scale(0.6); }
+  to { transform: scale(1.1); }
+}
+
+@keyframes breathe-shrink {
+  from { transform: scale(1.1); }
+  to { transform: scale(0.6); }
+}
+
+@keyframes breathe-pulse {
+  0%, 100% { transform: scale(1.1); }
+  50% { transform: scale(1.05); }
+}

@@ -15,3 +15,4 @@ export { HRVTracker } from './HRVTracker';
 export { HRVTrackerDialog } from './HRVTrackerDialog';
 export { StressAssessmentDialog } from './StressAssessmentDialog';
 export { StressWellnessCard } from './StressWellnessCard';
+export { BreathingExerciseDialog } from './BreathingExerciseDialog';
