@@ -60,7 +60,7 @@ import knowledgeBg from '@/assets/knowledge-bg.png';
 import videoMeetingBg from '@/assets/video-meeting-bg.jpg';
 import retreatQuizBg from '@/assets/retreat-quiz-bg.png';
 import { PatientEducationWidget } from '@/components/education/PatientEducationWidget';
-import { PediatricInfographicCard, VagusNerveCard, VagusStimulationDialog } from '@/components/clinical';
+import { PediatricInfographicCard, VagusNerveCard, VagusStimulationDialog, StressWellnessCard } from '@/components/clinical';
 import { UsageWidget } from '@/components/roi/UsageWidget';
 
 
@@ -1189,12 +1189,13 @@ export default function Dashboard() {
           </Link>
         </div>
 
-        {/* Patient Education Widget + Usage Widget */}
-        <div className="mb-8 grid md:grid-cols-4 gap-6 opacity-0 animate-fade-in" style={{ animationDelay: '500ms', animationFillMode: 'forwards' }}>
+        {/* Patient Education Widget + Usage Widget + Stress Wellness */}
+        <div className="mb-8 grid md:grid-cols-5 gap-6 opacity-0 animate-fade-in" style={{ animationDelay: '500ms', animationFillMode: 'forwards' }}>
           <UsageWidget />
           <PatientEducationWidget />
           <PediatricInfographicCard animationDelay={550} />
           <VagusNerveCard />
+          <StressWellnessCard animationDelay={600} />
         </div>
 
         {/* Row 1: Calendar, Patient Management, Therapist Intake */}
