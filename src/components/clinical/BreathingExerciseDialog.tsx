@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Wind, Play, Pause, RotateCcw, Volume2, VolumeX, X } from 'lucide-react';
+import { Wind, Play, Pause, RotateCcw, Volume2, VolumeX, X, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
@@ -180,6 +180,14 @@ export const BreathingExerciseDialog: React.FC<BreathingExerciseDialogProps> = (
         if (newCount >= 3) {
           setIsRunning(false);
           setPhase('complete');
+          // Victory haptic pattern: celebration vibration
+          if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+            try {
+              navigator.vibrate([100, 50, 100, 50, 100, 50, 400]);
+            } catch (e) {
+              console.debug('Victory haptic not available:', e);
+            }
+          }
           return;
         }
       }
@@ -293,54 +301,63 @@ export const BreathingExerciseDialog: React.FC<BreathingExerciseDialogProps> = (
               </div>
             )}
 
-            {/* Breathing Circle */}
-            <div className="relative h-44 w-44 flex items-center justify-center mb-6">
-              <div 
-                className={cn(
-                  "absolute inset-0 rounded-full bg-emerald-600 opacity-80 transition-transform",
-                  "shadow-[0_0_30px_rgba(44,110,73,0.4)]",
-                  phase === 'inhale' && "animate-[breathe-grow_4s_ease-in-out_forwards]",
-                  phase === 'hold' && "animate-[breathe-pulse_1s_ease-in-out_infinite] scale-110",
-                  phase === 'exhale' && "animate-[breathe-shrink_8s_ease-in-out_forwards]",
-                  phase === 'ready' && "scale-75"
-                )}
-              />
-              
-              {/* Inner glow */}
-              <div 
-                className={cn(
-                  "absolute inset-4 rounded-full bg-emerald-400/50 blur-sm transition-transform",
-                  phase === 'inhale' && "animate-[breathe-grow_4s_ease-in-out_forwards]",
-                  phase === 'hold' && "animate-[breathe-pulse_1s_ease-in-out_infinite] scale-110",
-                  phase === 'exhale' && "animate-[breathe-shrink_8s_ease-in-out_forwards]",
-                  phase === 'ready' && "scale-75"
-                )}
-              />
+            {/* Breathing Circle - hidden during complete state */}
+            {phase !== 'complete' && (
+              <div className="relative h-44 w-44 flex items-center justify-center mb-6">
+                <div 
+                  className={cn(
+                    "absolute inset-0 rounded-full bg-emerald-600 opacity-80 transition-transform",
+                    "shadow-[0_0_30px_rgba(44,110,73,0.4)]",
+                    phase === 'inhale' && "animate-[breathe-grow_4s_ease-in-out_forwards]",
+                    phase === 'hold' && "animate-[breathe-pulse_1s_ease-in-out_infinite] scale-110",
+                    phase === 'exhale' && "animate-[breathe-shrink_8s_ease-in-out_forwards]",
+                    phase === 'ready' && "scale-75"
+                  )}
+                />
+                
+                {/* Inner glow */}
+                <div 
+                  className={cn(
+                    "absolute inset-4 rounded-full bg-emerald-400/50 blur-sm transition-transform",
+                    phase === 'inhale' && "animate-[breathe-grow_4s_ease-in-out_forwards]",
+                    phase === 'hold' && "animate-[breathe-pulse_1s_ease-in-out_infinite] scale-110",
+                    phase === 'exhale' && "animate-[breathe-shrink_8s_ease-in-out_forwards]",
+                    phase === 'ready' && "scale-75"
+                  )}
+                />
 
-              {/* Countdown Timer & Cycle Counter - shown during exercise */}
-              {isRunning && phase !== 'ready' && phase !== 'complete' && (
-                <div className="relative z-10 flex flex-col items-center">
-                  <span className="text-white font-extrabold text-5xl drop-shadow-lg">
-                    {countdown}
+                {/* Countdown Timer & Cycle Counter - shown during exercise */}
+                {isRunning && phase !== 'ready' && (
+                  <div className="relative z-10 flex flex-col items-center">
+                    <span className="text-white font-extrabold text-5xl drop-shadow-lg">
+                      {countdown}
+                    </span>
+                    <span className="text-white/90 text-sm font-medium mt-1 bg-black/10 px-3 py-0.5 rounded-full">
+                      מחזור {cycleCount + 1}/3
+                    </span>
+                  </div>
+                )}
+                
+                {/* Ready state - shown before start */}
+                {!isRunning && phase === 'ready' && (
+                  <span className="relative z-10 text-white/80 font-bold text-lg">
+                    3 מחזורים
                   </span>
-                  <span className="text-white/90 text-sm font-medium mt-1 bg-black/10 px-3 py-0.5 rounded-full">
-                    מחזור {cycleCount + 1}/3
-                  </span>
-                </div>
-              )}
-              
-              {/* Ready state - shown before start */}
-              {!isRunning && phase === 'ready' && (
-                <span className="relative z-10 text-white/80 font-bold text-lg">
-                  3 מחזורים
-                </span>
-              )}
+                )}
+              </div>
+            )}
 
-              {/* Complete state checkmark */}
-              {phase === 'complete' && (
-                <span className="relative z-10 text-white font-extrabold text-4xl">✓</span>
-              )}
-            </div>
+            {/* Pulsing Success Checkmark - shown on complete */}
+            {phase === 'complete' && (
+              <div 
+                className="h-24 w-24 flex items-center justify-center rounded-full bg-emerald-600/10 mb-6 animate-[success-pulse_2s_ease-in-out_infinite]"
+                style={{
+                  boxShadow: '0 0 0 0 rgba(44, 110, 73, 0.4)',
+                }}
+              >
+                <Check className="h-12 w-12 text-emerald-600" strokeWidth={3} />
+              </div>
+            )}
 
             {/* Instruction Text */}
             <div className="text-center min-h-[60px]">
