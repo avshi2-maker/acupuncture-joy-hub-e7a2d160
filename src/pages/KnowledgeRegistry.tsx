@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { FileText, Download, CheckCircle, Clock, AlertCircle, Shield, Database, FileCheck, Upload, Trash2, Pause, Play, RotateCcw, XCircle, ArrowLeft, ShieldAlert, Loader2 } from 'lucide-react';
+import { FileText, Download, CheckCircle, Clock, AlertCircle, Shield, Database, FileCheck, Upload, Trash2, Pause, Play, RotateCcw, XCircle, ArrowLeft, ShieldAlert, Loader2, Languages } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { format } from 'date-fns';
 
@@ -507,6 +507,8 @@ export default function KnowledgeRegistry() {
   const queryClient = useQueryClient();
   const [generatingReport, setGeneratingReport] = useState(false);
   const [report, setReport] = useState<LegalReport | null>(null);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translationProgress, setTranslationProgress] = useState<{ translated: number; total: number; errors?: string[] } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Built-in asset import (one file at a time)
@@ -731,7 +733,67 @@ export default function KnowledgeRegistry() {
       console.error('Error generating report:', error);
       toast.error('Failed to generate report');
     } finally {
-      setGeneratingReport(false);
+    setGeneratingReport(false);
+    }
+  };
+
+  const translateAllToHebrew = async () => {
+    setIsTranslating(true);
+    setTranslationProgress(null);
+    
+    try {
+      // Get all unique document IDs
+      const docIds = documents?.map(d => d.id) || [];
+      
+      if (docIds.length === 0) {
+        toast.error('No documents to translate');
+        setIsTranslating(false);
+        return;
+      }
+
+      let totalTranslated = 0;
+      let totalToTranslate = 0;
+      const allErrors: string[] = [];
+
+      // Process each document
+      for (const docId of docIds) {
+        toast.info(`Translating document ${docIds.indexOf(docId) + 1}/${docIds.length}...`);
+        
+        const { data, error } = await supabase.functions.invoke('translate-knowledge', {
+          body: { targetLanguage: 'he', documentId: docId },
+        });
+
+        if (error) {
+          console.error(`Error translating document ${docId}:`, error);
+          allErrors.push(`Document ${docId}: ${error.message}`);
+          continue;
+        }
+
+        totalTranslated += data?.translated || 0;
+        totalToTranslate += data?.total || 0;
+        if (data?.errors) {
+          allErrors.push(...data.errors);
+        }
+
+        setTranslationProgress({
+          translated: totalTranslated,
+          total: totalToTranslate,
+          errors: allErrors.length > 0 ? allErrors : undefined,
+        });
+      }
+
+      if (totalTranslated > 0) {
+        toast.success(`Translated ${totalTranslated} chunks to Hebrew`);
+      } else {
+        toast.info('No new chunks to translate (all already have Hebrew versions)');
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ['knowledge-chunks-stats'] });
+    } catch (error) {
+      console.error('Translation error:', error);
+      toast.error('Failed to translate documents');
+    } finally {
+      setIsTranslating(false);
     }
   };
 
@@ -1244,7 +1306,78 @@ ${report.verificationInstructions || ''}
         </CardContent>
       </Card>
 
-      {/* Documents Table */}
+      {/* Translation Section */}
+      <Card className="mb-8 border-blue-500/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Languages className="w-5 h-5 text-blue-600" />
+            Hebrew Translation
+          </CardTitle>
+          <CardDescription>
+            Translate all English knowledge chunks to Hebrew for native Hebrew RAG search
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-4">
+            <div className="flex gap-4 items-center">
+              <Button
+                onClick={translateAllToHebrew}
+                disabled={isTranslating || !documents || documents.length === 0}
+                className="flex items-center gap-2"
+                variant="outline"
+              >
+                <Languages className="w-4 h-4" />
+                {isTranslating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Translating...
+                  </>
+                ) : (
+                  'Translate All to Hebrew'
+                )}
+              </Button>
+              {isTranslating && (
+                <span className="text-sm text-muted-foreground animate-pulse">
+                  This may take several minutes...
+                </span>
+              )}
+            </div>
+
+            {translationProgress && (
+              <div className="p-4 bg-muted rounded-lg space-y-2">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <span className="text-sm">
+                    Translated <strong>{translationProgress.translated}</strong> of{' '}
+                    <strong>{translationProgress.total}</strong> chunks
+                  </span>
+                </div>
+                <Progress 
+                  value={translationProgress.total > 0 
+                    ? (translationProgress.translated / translationProgress.total) * 100 
+                    : 0
+                  } 
+                  className="h-2"
+                />
+                {translationProgress.errors && translationProgress.errors.length > 0 && (
+                  <div className="mt-2 text-sm text-destructive">
+                    <p className="font-medium">Errors ({translationProgress.errors.length}):</p>
+                    <ul className="list-disc list-inside max-h-24 overflow-y-auto">
+                      {translationProgress.errors.slice(0, 5).map((err, i) => (
+                        <li key={i}>{err}</li>
+                      ))}
+                      {translationProgress.errors.length > 5 && (
+                        <li>...and {translationProgress.errors.length - 5} more</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
