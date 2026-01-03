@@ -575,7 +575,7 @@ export default function Dashboard() {
     },
   ];
 
-  // Row 3: Knowledge Registry + Treatment Planner + Retreat Quiz
+  // Row 3: Knowledge Registry + Treatment Planner + Retreat Quiz + Brain Assessment
   const row3Features = [
     {
       id: 'knowledge_registry',
@@ -603,6 +603,15 @@ export default function Dashboard() {
       href: '/retreat-quiz',
       alwaysAvailable: true,
       backgroundImage: retreatQuizBg,
+    },
+    {
+      id: 'brain_assessment',
+      title: 'הערכת בריאות המוח',
+      description: 'שאלון רב-לשוני - ילדים, מבוגרים, גיל שלישי',
+      icon: <Brain className="h-6 w-6 text-white" />,
+      href: '/brain-assessment',
+      alwaysAvailable: true,
+      backgroundImage: brainBg,
     },
   ];
 
