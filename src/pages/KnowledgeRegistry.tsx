@@ -509,6 +509,8 @@ export default function KnowledgeRegistry() {
   const [report, setReport] = useState<LegalReport | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [translationProgress, setTranslationProgress] = useState<{ translated: number; total: number; errors?: string[] } | null>(null);
+  const [translatingDocId, setTranslatingDocId] = useState<string | null>(null);
+  const [docTranslationProgress, setDocTranslationProgress] = useState<Record<string, { translated: number; status: 'idle' | 'translating' | 'done' | 'error' }>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Built-in asset import (one file at a time)
@@ -794,6 +796,59 @@ export default function KnowledgeRegistry() {
       toast.error('Failed to translate documents');
     } finally {
       setIsTranslating(false);
+    }
+  };
+
+  // Per-document translation
+  const translateSingleDocument = async (docId: string, docName: string) => {
+    if (translatingDocId) {
+      toast.error('A translation is already in progress');
+      return;
+    }
+
+    setTranslatingDocId(docId);
+    setDocTranslationProgress(prev => ({
+      ...prev,
+      [docId]: { translated: 0, status: 'translating' }
+    }));
+
+    try {
+      const { data, error } = await supabase.functions.invoke('translate-knowledge', {
+        body: { targetLanguage: 'he', documentId: docId },
+      });
+
+      if (error) {
+        console.error(`Error translating document ${docId}:`, error);
+        setDocTranslationProgress(prev => ({
+          ...prev,
+          [docId]: { translated: 0, status: 'error' }
+        }));
+        toast.error(`Failed to translate ${docName}: ${error.message}`);
+        return;
+      }
+
+      const translated = data?.translated || 0;
+      setDocTranslationProgress(prev => ({
+        ...prev,
+        [docId]: { translated, status: 'done' }
+      }));
+
+      if (translated > 0) {
+        toast.success(`Translated ${translated} chunks from "${docName}" to Hebrew`);
+      } else {
+        toast.info(`No new chunks to translate in "${docName}" (already translated)`);
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ['knowledge-chunks-stats'] });
+    } catch (error) {
+      console.error('Translation error:', error);
+      setDocTranslationProgress(prev => ({
+        ...prev,
+        [docId]: { translated: 0, status: 'error' }
+      }));
+      toast.error(`Failed to translate ${docName}`);
+    } finally {
+      setTranslatingDocId(null);
     }
   };
 
@@ -1406,24 +1461,70 @@ ${report.verificationInstructions || ''}
                   <TableHead>Hash (SHA-256)</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Indexed At</TableHead>
+                  <TableHead>Translate</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {documents?.map((doc) => (
-                  <TableRow key={doc.id}>
-                    <TableCell className="font-medium">{doc.original_name}</TableCell>
-                    <TableCell>{doc.category || '-'}</TableCell>
-                    <TableCell>{doc.language?.toUpperCase() || '-'}</TableCell>
-                    <TableCell>{doc.row_count || '-'}</TableCell>
-                    <TableCell className="font-mono text-xs">
-                      {doc.file_hash.substring(0, 16)}...
-                    </TableCell>
-                    <TableCell>{getStatusBadge(doc.status)}</TableCell>
-                    <TableCell>
-                      {doc.indexed_at ? format(new Date(doc.indexed_at), 'MMM d, yyyy HH:mm') : '-'}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {documents?.map((doc) => {
+                  const docTransStatus = docTranslationProgress[doc.id];
+                  const isTranslatingThis = translatingDocId === doc.id;
+                  const isEnglishDoc = doc.language === 'en' || !doc.language;
+                  
+                  return (
+                    <TableRow key={doc.id}>
+                      <TableCell className="font-medium">{doc.original_name}</TableCell>
+                      <TableCell>{doc.category || '-'}</TableCell>
+                      <TableCell>{doc.language?.toUpperCase() || '-'}</TableCell>
+                      <TableCell>{doc.row_count || '-'}</TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {doc.file_hash.substring(0, 16)}...
+                      </TableCell>
+                      <TableCell>{getStatusBadge(doc.status)}</TableCell>
+                      <TableCell>
+                        {doc.indexed_at ? format(new Date(doc.indexed_at), 'MMM d, yyyy HH:mm') : '-'}
+                      </TableCell>
+                      <TableCell>
+                        {isEnglishDoc ? (
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => translateSingleDocument(doc.id, doc.original_name)}
+                              disabled={!!translatingDocId || isTranslating}
+                              className="gap-1 h-8"
+                            >
+                              {isTranslatingThis ? (
+                                <>
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                  <span className="text-xs">Translating...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Languages className="w-3 h-3" />
+                                  <span className="text-xs">→ HE</span>
+                                </>
+                              )}
+                            </Button>
+                            {docTransStatus?.status === 'done' && (
+                              <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                {docTransStatus.translated}
+                              </Badge>
+                            )}
+                            {docTransStatus?.status === 'error' && (
+                              <Badge variant="destructive" className="text-xs">
+                                <AlertCircle className="w-3 h-3 mr-1" />
+                                Error
+                              </Badge>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">N/A</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
