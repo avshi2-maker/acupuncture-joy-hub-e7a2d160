@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Wind, Play, Pause, RotateCcw, Volume2, VolumeX, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 
 interface BreathingExerciseDialogProps {
   open: boolean;
@@ -49,6 +50,7 @@ export const BreathingExerciseDialog: React.FC<BreathingExerciseDialogProps> = (
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const haptic = useHapticFeedback();
 
   // Generate and cache audio for a phase
   const generateAudio = useCallback(async (phaseKey: 'inhale' | 'hold' | 'exhale') => {
@@ -119,9 +121,17 @@ export const BreathingExerciseDialog: React.FC<BreathingExerciseDialogProps> = (
   useEffect(() => {
     if (!isRunning || phase === 'ready' || phase === 'complete') return;
 
-    // Play audio at phase start (only for breathing phases)
+    // Play audio and haptic at phase start (only for breathing phases)
     if (phase === 'inhale' || phase === 'hold' || phase === 'exhale') {
       playPhaseAudio(phase);
+      // Haptic feedback: different patterns for each phase
+      if (phase === 'inhale') {
+        haptic.light(); // Short gentle vibration for inhale
+      } else if (phase === 'hold') {
+        haptic.medium(); // Medium vibration for hold
+      } else if (phase === 'exhale') {
+        haptic.heavy(); // Longer vibration for exhale
+      }
     }
 
     // Reset progress at phase start
