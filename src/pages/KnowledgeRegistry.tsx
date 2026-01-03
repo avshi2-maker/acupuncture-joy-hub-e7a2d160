@@ -460,6 +460,21 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'neurology',
     defaultLanguage: 'en',
   },
+  // Dr. Zanfu Clinical Syndromes
+  {
+    id: 'dr-zanfu-clinic-syndromes',
+    label: '🔬 Dr. Zanfu Clinic Syndromes (Trigger Points & Pharmacopeia)',
+    path: '/knowledge-assets/dr-zanfu-clinic-syndromes.csv',
+    defaultCategory: 'clinical_protocols',
+    defaultLanguage: 'en',
+  },
+  {
+    id: 'dr-zanfu-syndromes-qa',
+    label: '🔬 Dr. Zanfu Syndromes Q&A (54 Clinical Patterns)',
+    path: '/knowledge-assets/dr-zanfu-syndromes-qa.csv',
+    defaultCategory: 'clinical_protocols',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 type QueueItemStatus = 'pending' | 'importing' | 'done' | 'error';
