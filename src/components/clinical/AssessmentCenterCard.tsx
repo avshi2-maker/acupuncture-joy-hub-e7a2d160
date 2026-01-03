@@ -10,6 +10,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import quizCardBg from '@/assets/quiz-card-bg.png';
 
 interface AssessmentItem {
   id: string;
@@ -58,13 +59,19 @@ interface AssessmentCenterCardProps {
 export function AssessmentCenterCard({ animationDelay = 0 }: AssessmentCenterCardProps) {
   return (
     <Card 
-      className="h-full opacity-0 animate-fade-in overflow-hidden"
+      className="h-full opacity-0 animate-fade-in overflow-hidden relative"
       style={{ 
         animationDelay: `${animationDelay}ms`, 
-        animationFillMode: 'forwards' 
+        animationFillMode: 'forwards',
+        backgroundImage: `url(${quizCardBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
       }}
     >
-      <CardHeader className="pb-3">
+      {/* Overlay for readability */}
+      <div className="absolute inset-0 bg-background/85 dark:bg-background/90" />
+      
+      <CardHeader className="pb-3 relative z-10">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
             <ClipboardList className="h-5 w-5 text-primary" />
@@ -75,7 +82,7 @@ export function AssessmentCenterCard({ animationDelay = 0 }: AssessmentCenterCar
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-0">
+      <CardContent className="pt-0 relative z-10">
         <div className="flex flex-col gap-2">
           {assessments.map((assessment, index) => (
             <Link
