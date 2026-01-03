@@ -13,3 +13,5 @@ export { VagusStimulationGuide } from './VagusStimulationGuide';
 export { VagusStimulationDialog } from './VagusStimulationDialog';
 export { HRVTracker } from './HRVTracker';
 export { HRVTrackerDialog } from './HRVTrackerDialog';
+export { StressAssessmentDialog } from './StressAssessmentDialog';
+export { StressWellnessCard } from './StressWellnessCard';
