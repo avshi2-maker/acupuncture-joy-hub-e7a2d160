@@ -108,6 +108,10 @@ const EXPECTED_KNOWLEDGE_FILES = [
   { name: 'sport-performance-recovery.csv', aliases: ['sport_performance', 'sport'] },
   { name: 'womens-health-tcm.csv', aliases: ['womens_health', 'women'] },
   { name: 'Work_Stress_Burnout_TCM_QA.csv', aliases: ['work_stress', 'burnout', 'stress'] },
+  
+  // Dr. Zanfu Syndromes & Clinical
+  { name: 'dr-zanfu-clinic-syndromes.csv', aliases: ['zanfu_clinic', 'clinic_syndromes', 'trigger_points'] },
+  { name: 'dr-zanfu-syndromes-qa.csv', aliases: ['zanfu_syndromes', 'syndromes_qa'] },
 ];
 
 interface RAGVerificationPanelProps {
