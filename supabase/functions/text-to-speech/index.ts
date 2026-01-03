@@ -15,7 +15,7 @@ serve(async (req) => {
   }
 
   try {
-    // Verify authentication
+    // SECURITY: Require authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       console.log('TTS request rejected: No authorization header');
@@ -40,7 +40,25 @@ serve(async (req) => {
       );
     }
 
-    console.log(`TTS request from authenticated user: ${user.id}`);
+    const userId = user.id;
+
+    // SECURITY: Rate limiting - check recent TTS calls (max 20 per minute)
+    const oneMinuteAgo = new Date(Date.now() - 60000).toISOString();
+    const { data: recentCalls, error: rateError } = await supabaseClient
+      .from('usage_logs')
+      .select('created_at')
+      .eq('user_id', userId)
+      .eq('action_type', 'openai_tts_generation')
+      .gte('created_at', oneMinuteAgo);
+
+    if (!rateError && recentCalls && recentCalls.length >= 20) {
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded. Please wait before making more requests.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' } }
+      );
+    }
+
+    console.log(`TTS request from authenticated user: ${userId}`);
 
     const { text, voice = 'nova', language = 'he' } = await req.json();
 
@@ -53,12 +71,19 @@ serve(async (req) => {
       throw new Error('Text exceeds maximum length of 5000 characters');
     }
 
+    // Log usage for rate limiting
+    await supabaseClient.from('usage_logs').insert({
+      user_id: userId,
+      action_type: 'openai_tts_generation',
+      tokens_used: Math.ceil(text.length / 100),
+    });
+
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY is not configured');
     }
 
-    console.log(`Generating TTS for text: "${text.substring(0, 50)}..." in ${language} with voice ${voice}`);
+    console.log(`User ${userId} generating TTS for text: "${text.substring(0, 50)}..." in ${language} with voice ${voice}`);
 
     // Generate speech from text using OpenAI TTS
     const response = await fetch('https://api.openai.com/v1/audio/speech', {

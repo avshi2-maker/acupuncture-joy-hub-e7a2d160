@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,6 +12,47 @@ serve(async (req) => {
   }
 
   try {
+    // SECURITY: Require authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authorization header required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - valid authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const userId = user.id;
+
+    // SECURITY: Rate limiting - check recent transcription calls (max 15 per minute)
+    const oneMinuteAgo = new Date(Date.now() - 60000).toISOString();
+    const { data: recentCalls, error: rateError } = await supabaseClient
+      .from('usage_logs')
+      .select('created_at')
+      .eq('user_id', userId)
+      .eq('action_type', 'transcription')
+      .gte('created_at', oneMinuteAgo);
+
+    if (!rateError && recentCalls && recentCalls.length >= 15) {
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded. Please wait before making more requests.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' } }
+      );
+    }
+
     const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
     
     if (!ELEVENLABS_API_KEY) {
@@ -33,7 +75,22 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Transcribing audio with diarization: ${enableDiarization}, language: ${languageCode}`);
+    // SECURITY: Limit file size (max 25MB)
+    if (audioFile.size > 25 * 1024 * 1024) {
+      return new Response(
+        JSON.stringify({ error: "Audio file too large. Maximum size is 25MB." }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Log usage for rate limiting
+    await supabaseClient.from('usage_logs').insert({
+      user_id: userId,
+      action_type: 'transcription',
+      tokens_used: Math.ceil(audioFile.size / 10000), // Approximate tokens based on file size
+    });
+
+    console.log(`User ${userId} transcribing audio with diarization: ${enableDiarization}, language: ${languageCode}`);
 
     // Prepare form data for ElevenLabs API
     const apiFormData = new FormData();
@@ -64,7 +121,7 @@ serve(async (req) => {
     }
 
     const result = await response.json();
-    console.log("Transcription completed successfully");
+    console.log("Transcription completed successfully for user:", userId);
 
     // Format response with speaker labels if diarization is enabled
     let formattedText = result.text || "";
