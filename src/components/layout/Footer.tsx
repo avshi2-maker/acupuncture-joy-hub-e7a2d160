@@ -1,7 +1,8 @@
-import { Leaf, Facebook, Instagram, Youtube, Linkedin, Mail } from "lucide-react";
+import { Facebook, Instagram, Youtube, Linkedin, Mail } from "lucide-react";
 import { WhatsAppCTA } from "@/components/ui/WhatsAppCTA";
 import { Disclaimer } from "./Disclaimer";
 import ForceRefreshButton from "@/components/pwa/ForceRefreshButton";
+import clinicLogo from "@/assets/clinic-logo.png";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -49,8 +50,8 @@ const Footer = () => {
             {/* Brand Column */}
             <div className="lg:col-span-2">
               <a href="#" className="flex items-center gap-2 mb-4">
-                <div className="p-2 bg-jade rounded-full">
-                  <Leaf className="w-6 h-6 text-primary-foreground" />
+                <div className="p-1 rounded-full">
+                  <img src={clinicLogo} alt="Clinic Logo" className="w-10 h-10 object-contain" />
                 </div>
                 <span className="font-display text-xl font-semibold">Dr Roni Sapir - Complementary Medicine</span>
               </a>
