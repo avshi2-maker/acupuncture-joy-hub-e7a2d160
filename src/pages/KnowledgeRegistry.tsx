@@ -498,6 +498,14 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'wellness_sport',
     defaultLanguage: 'en',
   },
+  // Brain Health Across Life Stages
+  {
+    id: 'brain-health-tcm',
+    label: '🧠 Brain Health TCM (100 Q&A - Pediatric/Adult/Geriatric Cognition)',
+    path: '/knowledge-assets/brain-health-tcm.csv',
+    defaultCategory: 'neurology',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 type QueueItemStatus = 'pending' | 'importing' | 'done' | 'error';
