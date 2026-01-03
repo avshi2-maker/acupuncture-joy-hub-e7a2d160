@@ -26,6 +26,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Sending payment proof notification for tier: ${tierName}, therapist: ${therapistName}, phone: ${therapistPhone}`);
 
+    const logoUrl = "https://hwwwioyrsbewptuwvrix.supabase.co/storage/v1/object/public/assets/clinic-logo.png";
+    
     const emailResponse = await resend.emails.send({
       from: "TCM Clinic <onboarding@resend.dev>",
       to: ["dr.roni.sapir@gmail.com"],
@@ -39,15 +41,16 @@ const handler = async (req: Request): Promise<Response> => {
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
             .header { background: linear-gradient(135deg, #2D5A4A 0%, #3D7A6A 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }
+            .logo { height: 60px; margin-bottom: 10px; }
             .content { background: #f9f9f9; padding: 20px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px; }
             .highlight { background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 15px 0; border-right: 4px solid #2D5A4A; }
-            .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+            .footer { text-align: center; margin-top: 20px; padding: 15px; background: #2D5A4A; color: white; font-size: 12px; border-radius: 8px; }
           </style>
         </head>
         <body>
           <div class="container">
             <div class="header">
-              <h1>🌿 TCM Clinic</h1>
+              <img src="${logoUrl}" alt="Dr Roni Sapir Clinic" class="logo" />
               <h2>אישור תשלום חדש התקבל</h2>
             </div>
             <div class="content">
@@ -65,10 +68,10 @@ const handler = async (req: Request): Promise<Response> => {
               
               <p>נא לבדוק את האישור ולשלוח סיסמה למטפל בהודעת WhatsApp.</p>
               
-              <p>בברכה,<br>מערכת TCM Clinic</p>
+              <p>בברכה,<br>ד"ר רוני ספיר - קליניקה לרפואה משלימה</p>
             </div>
             <div class="footer">
-              <p>הודעה זו נשלחה אוטומטית ממערכת TCM Clinic</p>
+              <p>🌿 ד"ר רוני ספיר - רפואה משלימה ורפואה סינית מסורתית</p>
             </div>
           </div>
         </body>
