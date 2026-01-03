@@ -460,7 +460,7 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'neurology',
     defaultLanguage: 'en',
   },
-  // Dr. Zanfu Clinical Syndromes
+  // Dr. Zanfu Clinical Syndromes - Priority #1 for RAG/AI search
   {
     id: 'dr-zanfu-clinic-syndromes',
     label: '🔬 Dr. Zanfu Clinic Syndromes (Trigger Points & Pharmacopeia)',
@@ -473,6 +473,14 @@ const BUILTIN_ASSETS = [
     label: '🔬 Dr. Zanfu Syndromes Q&A (54 Clinical Patterns)',
     path: '/knowledge-assets/dr-zanfu-syndromes-qa.csv',
     defaultCategory: 'clinical_protocols',
+    defaultLanguage: 'en',
+  },
+  // Pulse & Tongue Diagnosis - Priority #2 for RAG/AI search
+  {
+    id: 'tcm-pulse-tongue-diagnosis-qa',
+    label: '🩺 TCM Pulse & Tongue Diagnosis Q&A (86 Diagnostic Patterns)',
+    path: '/knowledge-assets/tcm_pulse_tongue_diagnosis_qa.csv',
+    defaultCategory: 'tcm_diagnosis',
     defaultLanguage: 'en',
   },
   {
