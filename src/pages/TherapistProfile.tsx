@@ -12,7 +12,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTier } from '@/hooks/useTier';
 import { toast } from 'sonner';
-import { User, Stethoscope, MapPin, Award, Leaf } from 'lucide-react';
+import { User, Stethoscope, MapPin, Award } from 'lucide-react';
+import clinicLogo from '@/assets/clinic-logo.png';
 import { Badge } from '@/components/ui/badge';
 
 const profileSchema = z.object({
@@ -103,8 +104,8 @@ export default function TherapistProfile() {
         <div className="max-w-2xl mx-auto">
           <Card className="shadow-elevated">
             <CardHeader className="text-center space-y-4">
-              <div className="mx-auto w-16 h-16 bg-jade-light rounded-full flex items-center justify-center">
-                <Leaf className="h-8 w-8 text-jade" />
+              <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center overflow-hidden">
+                <img src={clinicLogo} alt="Clinic Logo" className="w-full h-full object-contain" />
               </div>
               <div className="flex items-center justify-center gap-3">
                 <CardTitle className="font-display text-3xl">פרופיל מטפל</CardTitle>

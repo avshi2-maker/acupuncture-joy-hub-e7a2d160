@@ -11,7 +11,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { Leaf, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import clinicLogo from '@/assets/clinic-logo.png';
 import { Link } from 'react-router-dom';
 
 const authSchema = z.object({
@@ -99,8 +100,8 @@ export default function Auth() {
 
           <Card className="shadow-elevated">
             <CardHeader className="text-center space-y-4">
-              <div className="mx-auto w-16 h-16 bg-jade-light rounded-full flex items-center justify-center">
-                <Leaf className="h-8 w-8 text-jade" />
+              <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center overflow-hidden">
+                <img src={clinicLogo} alt="Clinic Logo" className="w-full h-full object-contain" />
               </div>
               <CardTitle className="font-display text-3xl">TCM Clinic</CardTitle>
               <CardDescription>כניסה לפאנל ניהול</CardDescription>

@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { Copy, Key, LogOut, Loader2, RefreshCw, Leaf, MessageSquare, Database } from 'lucide-react';
+import { Copy, Key, LogOut, Loader2, RefreshCw, MessageSquare, Database } from 'lucide-react';
+import clinicLogo from '@/assets/clinic-logo.png';
 import { format } from 'date-fns';
 
 interface TherapistRegistration {
@@ -175,8 +176,8 @@ export default function Admin() {
         <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
           <Card className="w-full max-w-md shadow-elevated">
             <CardHeader className="text-center space-y-4">
-              <div className="mx-auto w-16 h-16 bg-jade-light rounded-full flex items-center justify-center">
-                <Leaf className="h-8 w-8 text-jade" />
+              <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center overflow-hidden">
+                <img src={clinicLogo} alt="Clinic Logo" className="w-full h-full object-contain" />
               </div>
               <CardTitle className="font-display text-2xl">כניסת מנהל</CardTitle>
               <CardDescription>רק ד״ר רוני ספיר יכולה לגשת</CardDescription>
@@ -229,8 +230,8 @@ export default function Admin() {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-jade-light rounded-full flex items-center justify-center">
-                <Leaf className="h-6 w-6 text-jade" />
+              <div className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden">
+                <img src={clinicLogo} alt="Clinic Logo" className="w-full h-full object-contain" />
               </div>
               <div>
                 <h1 className="font-display text-3xl">פאנל ניהול</h1>
