@@ -7,6 +7,8 @@ interface TierCardProps {
   name: string;
   nameHe: string;
   price: string;
+  priceRange?: string;
+  queriesLimit?: string;
   description: string;
   features: { name: string; included: boolean }[];
   highlighted?: boolean;
@@ -18,6 +20,8 @@ export function TierCard({
   name, 
   nameHe, 
   price, 
+  priceRange,
+  queriesLimit,
   description, 
   features, 
   highlighted = false,
@@ -42,9 +46,11 @@ export function TierCard({
         <CardDescription className="text-sm">{name}</CardDescription>
         <div className="mt-4">
           <span className="text-4xl font-bold text-foreground">{price}</span>
-          {price !== 'חינם' && <span className="text-muted-foreground mr-1">/ חודש</span>}
-          {price !== 'חינם' && (
-            <div className="text-sm text-muted-foreground mt-1">כולל מע״מ</div>
+          {priceRange && <span className="text-muted-foreground mr-1">{priceRange}</span>}
+          {queriesLimit && (
+            <div className="text-sm font-medium text-jade mt-2 bg-jade/10 rounded-full px-3 py-1 inline-block">
+              {queriesLimit}
+            </div>
           )}
         </div>
         <p className="text-sm text-muted-foreground mt-2">{description}</p>
