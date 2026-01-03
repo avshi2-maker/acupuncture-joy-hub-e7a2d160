@@ -60,6 +60,7 @@ import cognitiveWellnessBg from '@/assets/cognitive_wellness.png';
 import knowledgeBg from '@/assets/knowledge-bg.png';
 import videoMeetingBg from '@/assets/video-meeting-bg.jpg';
 import retreatQuizBg from '@/assets/retreat_new.png';
+import clinicLogo from '@/assets/clinic-logo.png';
 import { PatientEducationWidget } from '@/components/education/PatientEducationWidget';
 import { PediatricInfographicCard, VagusNerveCard, VagusStimulationDialog, StressWellnessCard } from '@/components/clinical';
 import { UsageWidget } from '@/components/roi/UsageWidget';
@@ -637,8 +638,8 @@ export default function Dashboard() {
       <header className="bg-card border-b border-border sticky top-0 z-50 opacity-0 animate-fade-in" style={{ animationFillMode: 'forwards' }}>
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-4 hover:opacity-90 transition-opacity" aria-label="דף הבית">
-            <div className="w-10 h-10 bg-jade-light rounded-full flex items-center justify-center animate-scale-in" style={{ animationDelay: '100ms', animationFillMode: 'forwards' }}>
-              <Leaf className="h-5 w-5 text-jade" />
+            <div className="w-10 h-10 rounded-full flex items-center justify-center animate-scale-in overflow-hidden" style={{ animationDelay: '100ms', animationFillMode: 'forwards' }}>
+              <img src={clinicLogo} alt="Clinic Logo" className="w-full h-full object-contain" />
             </div>
             <div className="opacity-0 animate-fade-in" style={{ animationDelay: '150ms', animationFillMode: 'forwards' }}>
               <h1 className="font-display text-xl">CM Clinic</h1>

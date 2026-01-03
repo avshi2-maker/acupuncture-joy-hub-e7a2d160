@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Menu, X, Leaf, Code, Volume2, VolumeX, LogOut, LayoutDashboard } from "lucide-react";
+import { Menu, X, Code, Volume2, VolumeX, LogOut, LayoutDashboard } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -7,6 +7,7 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { WhatsAppCTA } from "@/components/ui/WhatsAppCTA";
 import { useTier } from "@/hooks/useTier";
+import clinicLogo from "@/assets/clinic-logo.png";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -147,14 +148,14 @@ const Header = () => {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 group flex-shrink-0">
           <div
-            className={`p-2 rounded-full transition-all duration-300 flex-shrink-0 ${
+            className={`p-1 rounded-full transition-all duration-300 flex-shrink-0 ${
               isScrolled || !isHomePage ? "bg-jade/10" : "bg-primary-foreground/10"
             }`}
           >
-            <Leaf
-              className={`w-6 h-6 transition-colors duration-300 ${
-                isScrolled || !isHomePage ? "text-jade" : "text-primary-foreground"
-              }`}
+            <img
+              src={clinicLogo}
+              alt="Clinic Logo"
+              className="w-10 h-10 object-contain"
             />
           </div>
           <div
