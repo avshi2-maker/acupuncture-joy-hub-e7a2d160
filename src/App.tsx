@@ -62,6 +62,7 @@ import TherapistProfileEdit from "./pages/TherapistProfileEdit";
 import RetreatQuiz from "./pages/RetreatQuiz";
 import BrainHealthAssessment from "./pages/BrainHealthAssessment";
 import FullBodyAssessment from "./pages/FullBodyAssessment";
+import Patient360 from "./pages/Patient360";
 import CRMSessionManager from "./pages/crm/CRMSessionManager";
 import PatientValuator from "./pages/PatientValuator";
 import ProfessionalInvite from "./pages/ProfessionalInvite";
@@ -101,6 +102,7 @@ const App = () => (
                       <Route path="/retreat-quiz" element={<RetreatQuiz />} />
                       <Route path="/brain-assessment" element={<BrainHealthAssessment />} />
                       <Route path="/full-body-assessment" element={<FullBodyAssessment />} />
+                      <Route path="/patient-360" element={<RequireTier><Patient360 /></RequireTier>} />
                       <Route path="/invite" element={<ProfessionalInvite />} />
 
                       {/* Protected (requires tier) */}

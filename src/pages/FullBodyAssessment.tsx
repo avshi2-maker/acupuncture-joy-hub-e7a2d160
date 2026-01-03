@@ -5,13 +5,21 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { 
   Home,
   RefreshCw,
   Copy,
   Mail,
   Check,
-  Heart
+  Heart,
+  User
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -30,13 +38,20 @@ interface Translations {
   restart: string;
   noSymptoms: string;
   protocol: string;
+  selectPatient: string;
+  guest: string;
+}
+
+interface PatientOption {
+  id: string;
+  name: string;
 }
 
 const translations: Record<Language, Translations> = {
   he: {
     title: '🧘 אבחון גוף מלא (15 מדדים)',
     subtitle: 'סמן את כל התופעות שאתה חווה כרגע ליצירת תמונת מצב מלאה',
-    generate: '⚡ צור פרוטוקול טיפול',
+    generate: '⚡ צור פרוטוקול ושמור בתיק',
     copy: 'העתק',
     email: '📧 שלח במייל',
     copied: 'הועתק!',
@@ -45,11 +60,13 @@ const translations: Record<Language, Translations> = {
     restart: 'התחל מחדש',
     noSymptoms: 'נא לבחור לפחות סימפטום אחד',
     protocol: 'פרוטוקול טיפולי',
+    selectPatient: 'שיוך למטופל:',
+    guest: 'אורח (לא לשמור)',
   },
   en: {
     title: '🧘 Full Body Assessment (15 Points)',
     subtitle: 'Select all symptoms you are currently experiencing to create a complete picture',
-    generate: '⚡ Generate Protocol',
+    generate: '⚡ Generate Protocol & Save',
     copy: 'Copy',
     email: '📧 Send via Email',
     copied: 'Copied!',
@@ -58,11 +75,13 @@ const translations: Record<Language, Translations> = {
     restart: 'Start Over',
     noSymptoms: 'Please select at least one symptom',
     protocol: 'Treatment Protocol',
+    selectPatient: 'Assign to patient:',
+    guest: 'Guest (do not save)',
   },
   ru: {
     title: '🧘 Полная оценка тела (15 точек)',
     subtitle: 'Отметьте все симптомы, которые вы испытываете сейчас',
-    generate: '⚡ Создать протокол',
+    generate: '⚡ Создать и сохранить протокол',
     copy: 'Копировать',
     email: '📧 Отправить по почте',
     copied: 'Скопировано!',
@@ -71,8 +90,17 @@ const translations: Record<Language, Translations> = {
     restart: 'Начать сначала',
     noSymptoms: 'Пожалуйста, выберите хотя бы один симптом',
     protocol: 'Протокол лечения',
+    selectPatient: 'Назначить пациенту:',
+    guest: 'Гость (не сохранять)',
   },
 };
+
+// Mock patients - will be replaced with real Supabase data
+const mockPatients: PatientOption[] = [
+  { id: '1', name: 'ישראל ישראלי' },
+  { id: '2', name: 'שרה כהן' },
+  { id: '3', name: 'דוד לוי' },
+];
 
 interface BodyMetric {
   id: string;
@@ -117,9 +145,11 @@ export default function FullBodyAssessment() {
   const [selectedSymptoms, setSelectedSymptoms] = useState<Set<string>>(new Set());
   const [generatedProtocol, setGeneratedProtocol] = useState<string>('');
   const [copied, setCopied] = useState(false);
+  const [selectedPatientId, setSelectedPatientId] = useState<string>('guest');
 
   const t = translations[language];
   const isRTL = language === 'he';
+  const selectedPatient = mockPatients.find(p => p.id === selectedPatientId);
 
   const toggleSymptom = useCallback((id: string) => {
     setSelectedSymptoms(prev => {
@@ -141,8 +171,13 @@ export default function FullBodyAssessment() {
 
     const selected = bodyMetrics.filter(m => selectedSymptoms.has(m.id));
     
-    // Build protocol
+    // Build protocol with patient info
     let protocol = `TCM Full Body Assessment Protocol\n`;
+    if (selectedPatient) {
+      protocol += `PATIENT_ID: ${selectedPatient.name}\n`;
+    } else if (selectedPatientId !== 'guest') {
+      protocol += `PATIENT_ID: Unknown\n`;
+    }
     protocol += `Total Indicators: ${selected.length} / ${bodyMetrics.length}\n\n`;
     protocol += `Selected Symptoms:\n`;
 
@@ -243,6 +278,29 @@ export default function FullBodyAssessment() {
               </Button>
             </div>
           </div>
+
+          {/* Patient Selector */}
+          <Card className="mb-6">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-4 flex-wrap">
+                <User className="h-5 w-5 text-primary" />
+                <span className="font-medium">{t.selectPatient}</span>
+                <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
+                  <SelectTrigger className="w-64">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="guest">{t.guest}</SelectItem>
+                    {mockPatients.map(patient => (
+                      <SelectItem key={patient.id} value={patient.id}>
+                        {patient.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Header */}
           <div className="text-center mb-8">

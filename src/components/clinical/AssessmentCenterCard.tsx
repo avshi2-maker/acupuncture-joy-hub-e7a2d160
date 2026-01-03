@@ -7,7 +7,8 @@ import {
   Brain, 
   Heart, 
   Palmtree,
-  ChevronRight
+  ChevronRight,
+  FileText
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import quizCardBg from '@/assets/quiz-card-bg.png';
@@ -49,6 +50,15 @@ const assessments: AssessmentItem[] = [
     href: '/retreat-quiz',
     hoverColor: 'group-hover:border-amber-500',
     bgHover: 'group-hover:bg-amber-500/5',
+  },
+  {
+    id: 'patient360',
+    title: 'תיק מטופל 360°',
+    titleEn: 'Patient History',
+    icon: <FileText className="h-5 w-5" />,
+    href: '/patient-360',
+    hoverColor: 'group-hover:border-blue-500',
+    bgHover: 'group-hover:bg-blue-500/5',
   },
 ];
 
