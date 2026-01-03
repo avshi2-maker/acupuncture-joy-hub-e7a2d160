@@ -1332,6 +1332,91 @@ ${report.verificationInstructions || ''}
         </CardContent>
       </Card>
 
+      {/* Knowledge Assets Export Section */}
+      <Card className="mb-8 border-amber-500/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="w-5 h-5 text-amber-600" />
+            Knowledge Assets Table Export
+          </CardTitle>
+          <CardDescription>
+            Export complete list of all {BUILTIN_ASSETS.length} knowledge assets for documentation
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4">
+            <Button
+              onClick={() => {
+                // Define which CSVs have trigger points (based on point-figure-mapping.ts analysis)
+                const triggerPointAssets = new Set([
+                  'acupoints_master.csv', 'acupoint-reference-50.csv', 'msk-protocols.csv', 
+                  'musculoskeletal-orthopedic.csv', 'pattern-differentiation-protocols.csv',
+                  'chronic-pain-management.csv', 'womens-health-tcm.csv', 'fertility-protocols.csv',
+                  'pregnancy-trimester-guide.csv', 'clinical-scenarios-100.csv', 'pulse-diagnosis.csv',
+                  'tongue-diagnosis.csv', 'mental-health-tcm.csv', 'work-stress-burnout.csv',
+                  'sport-performance-recovery.csv', 'pediatric-acupuncture.csv', 'digestive-disorders.csv',
+                  'immune-resilience.csv', 'nine-constitutions-qa.csv', 'chief-complaints-tcm.csv',
+                  'diagnostics-professional.csv', 'QA_Professional_Corrected_4Columns.csv',
+                  'Treatment_Planning_Protocols_Professional_100plus.csv', 'tcm-newborn-qa.csv',
+                  'tcm-children-7-13-qa.csv', 'tcm-adults-18-50-qa.csv', 'tcm-elderly-70-120-qa.csv',
+                  'age-prompts-adults-18-50.csv', 'age-prompts-adults-50-70.csv', 'elderly-lifestyle-recommendations.csv',
+                  'tcm-teenage-mental-health-qa.csv', 'four-examinations-qa.csv', 'tcm-pattern-differentiation-100qa.csv',
+                  'tcm-skin-renewal-100qa.csv', 'tcm-dermatology-comprehensive.csv', 'comprehensive_caf_studies.csv',
+                  'ibs-sibo-protocols.csv', 'liver-gallbladder-tcm.csv', 'gastric-conditions.csv',
+                  'vagus_nerve_100_qa.csv', 'neuro-degenerative-tcm-100.csv', 'dr-zanfu-clinic-syndromes.csv',
+                  'dr-zanfu-syndromes-qa.csv', 'tcm_pulse_tongue_diagnosis_qa.csv', 'tcm_stress_biofeedback_75qa.csv'
+                ]);
+
+                // Build CSV rows
+                const csvRows = [
+                  ['#', 'Category', 'Label', 'CSV Filename', 'Has Trigger Points', 'RAG Priority'].join(',')
+                ];
+
+                BUILTIN_ASSETS.forEach((asset, idx) => {
+                  const filename = asset.path.split('/').pop() || '';
+                  const hasTrigger = triggerPointAssets.has(filename) ? 'Yes' : 'No';
+                  let priority = '-';
+                  if (asset.id.includes('dr-zanfu')) priority = '#1 (Dr. Zanfu)';
+                  else if (asset.id === 'tcm-pulse-tongue-diagnosis-qa') priority = '#2 (Pulse/Tongue)';
+                  
+                  // Escape fields with commas
+                  const escapeField = (field: string) => field.includes(',') ? `"${field}"` : field;
+                  
+                  csvRows.push([
+                    String(idx + 1),
+                    escapeField(asset.defaultCategory.replace(/_/g, ' ')),
+                    escapeField(asset.label),
+                    escapeField(filename),
+                    hasTrigger,
+                    priority
+                  ].join(','));
+                });
+
+                const csvContent = csvRows.join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `knowledge-assets-table-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                toast.success('Knowledge assets table exported successfully!');
+              }}
+              className="flex items-center gap-2"
+              variant="outline"
+            >
+              <Download className="w-4 h-4" />
+              Export Assets Table (CSV)
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">
+            Includes: Category, Label, Filename, Trigger Points status, RAG Priority
+          </p>
+        </CardContent>
+      </Card>
+
       {/* Legal Report Section */}
       <Card className="mb-8 border-primary/20">
         <CardHeader>
