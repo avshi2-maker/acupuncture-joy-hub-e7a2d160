@@ -613,7 +613,7 @@ export default function CRMDashboard() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-background/20" />
                   <Leaf className="relative z-10 h-5 w-5 md:h-5 md:w-5 text-gold" />
-                  <span className="relative z-10 font-medium">Retreat Quiz</span>
+                  <span className="relative z-10 font-medium">שאלון ריטריט</span>
                 </Link>
               </div>
             </CardContent>
