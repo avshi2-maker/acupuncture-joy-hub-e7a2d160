@@ -43,7 +43,9 @@ export const BreathingExerciseDialog: React.FC<BreathingExerciseDialogProps> = (
   const [isMuted, setIsMuted] = useState(false);
   const [audioCache, setAudioCache] = useState<Record<string, string>>({});
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+  const [progress, setProgress] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Generate and cache audio for a phase
   const generateAudio = useCallback(async (phaseKey: 'inhale' | 'hold' | 'exhale') => {
@@ -110,18 +112,37 @@ export const BreathingExerciseDialog: React.FC<BreathingExerciseDialogProps> = (
     }
   }, [isMuted, audioCache, generateAudio]);
 
-  // Phase transition logic
+  // Phase transition logic with progress bar
   useEffect(() => {
     if (!isRunning || phase === 'ready') return;
 
     // Play audio at phase start
     playPhaseAudio(phase);
 
+    // Reset progress at phase start
+    setProgress(0);
+
+    // Progress bar update
+    const phaseDuration = PHASE_DURATIONS[phase];
+    const updateInterval = 50; // Update every 50ms for smooth animation
+    let elapsed = 0;
+
+    progressIntervalRef.current = setInterval(() => {
+      elapsed += updateInterval;
+      const newProgress = Math.min((elapsed / phaseDuration) * 100, 100);
+      setProgress(newProgress);
+    }, updateInterval);
+
     const phases: Phase[] = ['inhale', 'hold', 'exhale'];
     const currentIndex = phases.indexOf(phase);
     const nextPhase = phases[(currentIndex + 1) % 3];
     
     const timer = setTimeout(() => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+      setProgress(0);
+
       if (nextPhase === 'inhale') {
         const newCount = cycleCount + 1;
         setCycleCount(newCount);
@@ -136,9 +157,14 @@ export const BreathingExerciseDialog: React.FC<BreathingExerciseDialogProps> = (
         }
       }
       setPhase(nextPhase);
-    }, PHASE_DURATIONS[phase]);
+    }, phaseDuration);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+    };
   }, [phase, isRunning, cycleCount, playPhaseAudio]);
 
   const handleStart = async () => {
@@ -161,6 +187,10 @@ export const BreathingExerciseDialog: React.FC<BreathingExerciseDialogProps> = (
     setIsRunning(false);
     setPhase('ready');
     setCycleCount(0);
+    setProgress(0);
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+    }
     if (audioRef.current) {
       audioRef.current.pause();
     }
@@ -270,6 +300,16 @@ export const BreathingExerciseDialog: React.FC<BreathingExerciseDialogProps> = (
                 {PHASE_TEXT[phase].sub}
               </p>
             </div>
+
+            {/* Progress Bar */}
+            {isRunning && phase !== 'ready' && (
+              <div className="w-3/5 h-1.5 bg-emerald-200 rounded-full overflow-hidden mt-4">
+                <div 
+                  className="h-full bg-emerald-600 rounded-full transition-[width] duration-50 ease-linear"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            )}
 
             {/* Controls */}
             <div className="flex gap-3 mt-4">
