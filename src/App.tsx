@@ -61,6 +61,7 @@ import CAFBrowser from "./pages/CAFBrowser";
 import TherapistProfileEdit from "./pages/TherapistProfileEdit";
 import RetreatQuiz from "./pages/RetreatQuiz";
 import BrainHealthAssessment from "./pages/BrainHealthAssessment";
+import FullBodyAssessment from "./pages/FullBodyAssessment";
 import CRMSessionManager from "./pages/crm/CRMSessionManager";
 import PatientValuator from "./pages/PatientValuator";
 import ProfessionalInvite from "./pages/ProfessionalInvite";
@@ -99,6 +100,7 @@ const App = () => (
                       <Route path="/therapist-intake" element={<TherapistIntake />} />
                       <Route path="/retreat-quiz" element={<RetreatQuiz />} />
                       <Route path="/brain-assessment" element={<BrainHealthAssessment />} />
+                      <Route path="/full-body-assessment" element={<FullBodyAssessment />} />
                       <Route path="/invite" element={<ProfessionalInvite />} />
 
                       {/* Protected (requires tier) */}

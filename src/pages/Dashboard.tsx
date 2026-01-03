@@ -56,13 +56,11 @@ import {
 import calendarBg from '@/assets/calendar-bg.png';
 import deskBg from '@/assets/desk-bg.png';
 import brainBg from '@/assets/brain-bg.png';
-import cognitiveWellnessBg from '@/assets/cognitive_wellness.png';
 import knowledgeBg from '@/assets/knowledge-bg.png';
 import videoMeetingBg from '@/assets/video-meeting-bg.jpg';
-import retreatQuizBg from '@/assets/retreat_new.png';
 import clinicLogo from '@/assets/clinic-logo.png';
 import { PatientEducationWidget } from '@/components/education/PatientEducationWidget';
-import { PediatricInfographicCard, VagusNerveCard, VagusStimulationDialog, StressWellnessCard } from '@/components/clinical';
+import { PediatricInfographicCard, VagusNerveCard, VagusStimulationDialog, StressWellnessCard, AssessmentCenterCard } from '@/components/clinical';
 import { UsageWidget } from '@/components/roi/UsageWidget';
 
 
@@ -577,7 +575,7 @@ export default function Dashboard() {
     },
   ];
 
-  // Row 3: Knowledge Registry + Treatment Planner + Retreat Quiz + Brain Assessment
+  // Row 3: Knowledge Registry + Treatment Planner (removed individual quiz cards - now in Assessment Center)
   const row3Features = [
     {
       id: 'knowledge_registry',
@@ -596,24 +594,6 @@ export default function Dashboard() {
       href: '/treatment-planner',
       alwaysAvailable: true,
       backgroundImage: knowledgeBg,
-    },
-    {
-      id: 'retreat_quiz',
-      title: 'שאלון ריטריט',
-      description: 'הערכת צורך בהתחדשות עמוקה',
-      icon: <Leaf className="h-6 w-6 text-white" />,
-      href: '/retreat-quiz',
-      alwaysAvailable: true,
-      backgroundImage: retreatQuizBg,
-    },
-    {
-      id: 'brain_assessment',
-      title: 'הערכת בריאות המוח',
-      description: 'שאלון רב-לשוני - ילדים, מבוגרים, גיל שלישי',
-      icon: <Brain className="h-6 w-6 text-white" />,
-      href: '/brain-assessment',
-      alwaysAvailable: true,
-      backgroundImage: cognitiveWellnessBg,
     },
   ];
 
@@ -1200,13 +1180,14 @@ export default function Dashboard() {
           </Link>
         </div>
 
-        {/* Patient Education Widget + Usage Widget + Stress Wellness */}
-        <div className="mb-8 grid md:grid-cols-5 gap-6 opacity-0 animate-fade-in" style={{ animationDelay: '500ms', animationFillMode: 'forwards' }}>
+        {/* Patient Education Widget + Usage Widget + Stress Wellness + Assessment Center */}
+        <div className="mb-8 grid md:grid-cols-6 gap-6 opacity-0 animate-fade-in" style={{ animationDelay: '500ms', animationFillMode: 'forwards' }}>
           <UsageWidget />
           <PatientEducationWidget />
           <PediatricInfographicCard animationDelay={550} />
           <VagusNerveCard />
           <StressWellnessCard animationDelay={600} />
+          <AssessmentCenterCard animationDelay={650} />
         </div>
 
         {/* Row 1: Calendar, Patient Management, Therapist Intake */}
