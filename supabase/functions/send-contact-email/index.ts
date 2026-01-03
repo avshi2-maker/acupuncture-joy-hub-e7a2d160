@@ -38,20 +38,29 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Processing contact from: ${name} (${email})`);
 
+    const logoUrl = "https://hwwwioyrsbewptuwvrix.supabase.co/storage/v1/object/public/assets/clinic-logo.png";
+    
     // Send notification email to clinic owner
     const notificationEmail = await resend.emails.send({
       from: "Contact Form <onboarding@resend.dev>",
       to: ["ronisapir61@gmail.com"], // Your email - hidden from public
       subject: `New Contact: ${name}`,
       html: `
-        <h2>New Contact Form Submission</h2>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        ${phone ? `<p><strong>Phone:</strong> ${phone}</p>` : ''}
-        <p><strong>Message:</strong></p>
-        <p>${message.replace(/\n/g, '<br>')}</p>
-        <hr>
-        <p style="color: #666; font-size: 12px;">This message was sent from your website contact form.</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #2D5A4A, #4A7C6B);">
+            <img src="${logoUrl}" alt="Dr Roni Sapir Clinic" style="height: 60px; width: auto;" />
+          </div>
+          <div style="padding: 20px; background: #f9fafb;">
+            <h2 style="color: #2D5A4A;">New Contact Form Submission</h2>
+            <p><strong>Name:</strong> ${name}</p>
+            <p><strong>Email:</strong> ${email}</p>
+            ${phone ? `<p><strong>Phone:</strong> ${phone}</p>` : ''}
+            <p><strong>Message:</strong></p>
+            <p>${message.replace(/\n/g, '<br>')}</p>
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+            <p style="color: #666; font-size: 12px;">This message was sent from your website contact form.</p>
+          </div>
+        </div>
       `,
     });
 
@@ -63,11 +72,21 @@ const handler = async (req: Request): Promise<Response> => {
       to: [email],
       subject: "We received your message!",
       html: `
-        <h2>Thank you for contacting us, ${name}!</h2>
-        <p>We have received your message and will get back to you as soon as possible.</p>
-        <p>If your matter is urgent, please contact us via WhatsApp.</p>
-        <br>
-        <p>Best regards,<br>Dr Roni Sapir - Complementary Medicine Clinic</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #2D5A4A, #4A7C6B);">
+            <img src="${logoUrl}" alt="Dr Roni Sapir Clinic" style="height: 60px; width: auto;" />
+          </div>
+          <div style="padding: 20px; background: #f9fafb;">
+            <h2 style="color: #2D5A4A;">Thank you for contacting us, ${name}!</h2>
+            <p>We have received your message and will get back to you as soon as possible.</p>
+            <p>If your matter is urgent, please contact us via WhatsApp.</p>
+            <br>
+            <p>Best regards,<br><strong>Dr Roni Sapir - Complementary Medicine Clinic</strong></p>
+          </div>
+          <div style="text-align: center; padding: 15px; background: #2D5A4A; color: white; font-size: 12px;">
+            <p style="margin: 0;">🌿 Holistic Healing & Traditional Chinese Medicine</p>
+          </div>
+        </div>
       `,
     });
 

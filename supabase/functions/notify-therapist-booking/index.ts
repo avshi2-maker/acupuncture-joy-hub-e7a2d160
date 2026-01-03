@@ -52,20 +52,25 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Sending notification to therapist: ${therapistEmail}`);
 
+    const logoUrl = "https://hwwwioyrsbewptuwvrix.supabase.co/storage/v1/object/public/assets/clinic-logo.png";
+    
     const emailResponse = await resend.emails.send({
       from: "Clinic Notifications <onboarding@resend.dev>",
       to: [therapistEmail],
       subject: `New Session Booked: ${patientName} on ${date}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background: linear-gradient(135deg, #10B981, #3B82F6); padding: 20px; border-radius: 10px 10px 0 0;">
-            <h2 style="color: white; margin: 0;">📅 New Session Booked</h2>
+          <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #2D5A4A, #4A7C6B);">
+            <img src="${logoUrl}" alt="Dr Roni Sapir Clinic" style="height: 60px; width: auto;" />
           </div>
-          <div style="background: #f9fafb; padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px;">
+          <div style="background: linear-gradient(135deg, #10B981, #3B82F6); padding: 15px;">
+            <h2 style="color: white; margin: 0; text-align: center;">📅 New Session Booked</h2>
+          </div>
+          <div style="background: #f9fafb; padding: 20px; border: 1px solid #e5e7eb;">
             <p>Hello${therapistName ? ` ${therapistName}` : ''},</p>
             <p>A new session has been booked for you:</p>
             
-            <div style="background: white; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #10B981;">
+            <div style="background: white; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #2D5A4A;">
               <p style="margin: 5px 0;"><strong>👤 Patient:</strong> ${patientName}</p>
               <p style="margin: 5px 0;"><strong>📅 Date:</strong> ${date}</p>
               <p style="margin: 5px 0;"><strong>⏰ Time:</strong> ${time}</p>
@@ -75,11 +80,9 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
             
             <p style="color: #6b7280; font-size: 14px;">Booked by: ${bookedBy}</p>
-            
-            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
-            <p style="color: #9ca3af; font-size: 12px;">
-              This is an automated notification from your clinic management system.
-            </p>
+          </div>
+          <div style="text-align: center; padding: 15px; background: #2D5A4A; color: white; font-size: 12px;">
+            <p style="margin: 0;">🌿 Dr Roni Sapir - Complementary Medicine Clinic</p>
           </div>
         </div>
       `,

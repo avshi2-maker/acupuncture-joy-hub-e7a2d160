@@ -119,14 +119,19 @@ export function WhatsAppReminderButton({
 
       const displayTherapistName = getTherapistDisplayName();
       
-      let message = `שלום ${patientName}! 🌿\n\n`;
+      // Logo URL for WhatsApp preview
+      const logoPreviewUrl = "https://hwwwioyrsbewptuwvrix.supabase.co/storage/v1/object/public/assets/clinic-logo.png";
+      
+      let message = `🌿 *ד"ר רוני ספיר - קליניקה לרפואה משלימה*\n\n`;
+      message += `שלום ${patientName}!\n\n`;
       message += `זוהי תזכורת לתור שלך אצל ${displayTherapistName} בתאריך ${dateStr}`;
       if (appointmentTime) {
         message += ` בשעה ${appointmentTime}`;
       }
       message += `.\n\n`;
       message += `📍 לחץ/י כאן לפרטי הגעה ואישור:\n${landingUrl}\n\n`;
-      message += `בברכה,\n${displayTherapistName} 💚`;
+      message += `בברכה,\n${displayTherapistName} 💚\n\n`;
+      message += `🔗 ${logoPreviewUrl}`;
 
       const whatsappLink = `https://wa.me/${formattedPatientPhone}?text=${encodeURIComponent(message)}`;
       window.open(whatsappLink, '_blank');
