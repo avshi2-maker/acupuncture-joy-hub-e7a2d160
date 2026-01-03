@@ -58,7 +58,7 @@ import deskBg from '@/assets/desk-bg.png';
 import brainBg from '@/assets/brain-bg.png';
 import knowledgeBg from '@/assets/knowledge-bg.png';
 import videoMeetingBg from '@/assets/video-meeting-bg.jpg';
-import retreatQuizBg from '@/assets/retreat-quiz-bg.png';
+import retreatQuizBg from '@/assets/retreat_new.png';
 import { PatientEducationWidget } from '@/components/education/PatientEducationWidget';
 import { PediatricInfographicCard, VagusNerveCard, VagusStimulationDialog, StressWellnessCard } from '@/components/clinical';
 import { UsageWidget } from '@/components/roi/UsageWidget';
