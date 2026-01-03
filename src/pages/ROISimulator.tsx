@@ -1,52 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { SmartROISimulator } from '@/components/roi/SmartROISimulator';
+import { useUsageTracking } from '@/hooks/useUsageTracking';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Home } from 'lucide-react';
 
 const ROISimulator: React.FC = () => {
   const navigate = useNavigate();
-  const [usageData, setUsageData] = useState<{ currentUsed: number; tierLimit: number } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchUsageData = async () => {
-      try {
-        // Get current user
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
-          // For now, use sample data - in production, fetch from actual usage tracking
-          // This could be from a usage_logs table or an API endpoint
-          const sampleData = {
-            currentUsed: 350,
-            tierLimit: 500,
-          };
-          
-          setUsageData(sampleData);
-        } else {
-          // Demo mode for non-authenticated users
-          setUsageData({
-            currentUsed: 350,
-            tierLimit: 500,
-          });
-        }
-      } catch (error) {
-        console.error('Error fetching usage data:', error);
-        // Fallback to demo data
-        setUsageData({
-          currentUsed: 350,
-          tierLimit: 500,
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchUsageData();
-  }, []);
+  const { usageData, isLoading } = useUsageTracking();
 
   return (
     <>

@@ -1614,18 +1614,17 @@ export type Database = {
       }
     }
     Views: {
-      monthly_usage_summary: {
-        Row: {
-          month: string | null
-          total_queries: number | null
-          total_tokens: number | null
-          unique_patients: number | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
+      get_user_monthly_usage: {
+        Args: never
+        Returns: {
+          total_queries: number
+          total_tokens: number
+          unique_patients: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
-import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, TrendingUp, AlertTriangle, CheckCircle, Sparkles } from 'lucide-react';
+import { Brain, TrendingUp, AlertTriangle, CheckCircle, Sparkles, Zap } from 'lucide-react';
 
 interface SmartROISimulatorProps {
   currentUsed?: number;
   tierLimit?: number;
+  isEmbedded?: boolean;
 }
 
 const QUERIES_PER_PATIENT = 5;
@@ -17,7 +19,9 @@ const COST_PER_QUERY = 0.5; // ₪0.50 per AI query
 export const SmartROISimulator: React.FC<SmartROISimulatorProps> = ({
   currentUsed = 350,
   tierLimit = 500,
+  isEmbedded = false,
 }) => {
+  const navigate = useNavigate();
   const [patientForecast, setPatientForecast] = useState(80);
   const [pricePerTreatment, setPricePerTreatment] = useState(250);
   const [isLoading, setIsLoading] = useState(true);
@@ -81,7 +85,7 @@ export const SmartROISimulator: React.FC<SmartROISimulatorProps> = ({
   const suggestion = getAISuggestion();
 
   const getProgressColor = () => {
-    if (usagePercent >= 90) return 'bg-red-500';
+    if (usagePercent >= 90) return 'bg-destructive';
     if (usagePercent >= 70) return 'bg-amber-500';
     return 'bg-emerald-500';
   };
@@ -89,18 +93,22 @@ export const SmartROISimulator: React.FC<SmartROISimulatorProps> = ({
   const getSuggestionStyles = () => {
     switch (suggestion.type) {
       case 'success':
-        return 'bg-emerald-50 border-emerald-200 text-emerald-800';
+        return 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/50 dark:border-emerald-800 dark:text-emerald-200';
       case 'growth':
-        return 'bg-blue-50 border-blue-200 text-blue-800';
+        return 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950/50 dark:border-blue-800 dark:text-blue-200';
       case 'warning':
-        return 'bg-amber-50 border-amber-200 text-amber-800';
+        return 'bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/50 dark:border-amber-800 dark:text-amber-200';
       default:
         return 'bg-muted border-border text-muted-foreground';
     }
   };
 
+  const handleUpgradeClick = () => {
+    navigate('/pricing');
+  };
+
   return (
-    <div className="space-y-6 font-heebo" dir="rtl">
+    <div className={`space-y-6 font-heebo ${isEmbedded ? 'p-0' : ''}`} dir="rtl">
       {/* Current Status Section */}
       <Card className="border-2 border-primary/20 bg-gradient-to-br from-background to-muted/30">
         <CardHeader className="pb-3">
@@ -135,7 +143,7 @@ export const SmartROISimulator: React.FC<SmartROISimulatorProps> = ({
           </div>
 
           {isLowBalance && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm">
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-950/50 dark:border-amber-800 dark:text-amber-200 text-sm">
               <AlertTriangle className="w-4 h-4 flex-shrink-0" />
               <span>המערכת תשלח התראה כשתישארו עם 10% (בערך {Math.floor(tierLimit * 0.1 / QUERIES_PER_PATIENT)} מטופלים).</span>
             </div>
@@ -151,7 +159,7 @@ export const SmartROISimulator: React.FC<SmartROISimulatorProps> = ({
       </Card>
 
       {/* Growth Simulator Section */}
-      <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50/50 to-background">
+      <Card className="border-2 border-purple-200 dark:border-purple-800 bg-gradient-to-br from-purple-50/50 to-background dark:from-purple-950/30">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <span className="text-xl">🕹️</span>
@@ -218,7 +226,7 @@ export const SmartROISimulator: React.FC<SmartROISimulatorProps> = ({
       <Card className={`border-2 transition-all duration-300 ${getSuggestionStyles()}`}>
         <CardContent className="pt-6">
           <div className="flex items-start gap-3">
-            <div className="p-2 rounded-full bg-white/50">
+            <div className="p-2 rounded-full bg-background/50">
               <suggestion.icon className="w-6 h-6" />
             </div>
             <div className="flex-1 space-y-1">
@@ -232,30 +240,41 @@ export const SmartROISimulator: React.FC<SmartROISimulatorProps> = ({
 
           {/* Financial Summary */}
           <div className="mt-6 grid grid-cols-3 gap-3">
-            <div className="p-3 rounded-lg bg-white/60 text-center">
+            <div className="p-3 rounded-lg bg-background/60 text-center">
               <div className="text-xs text-muted-foreground mb-1">הכנסה צפויה</div>
-              <div className="text-lg font-bold text-emerald-600">
+              <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
                 ₪{expectedIncome.toLocaleString()}
               </div>
             </div>
-            <div className="p-3 rounded-lg bg-white/60 text-center">
+            <div className="p-3 rounded-lg bg-background/60 text-center">
               <div className="text-xs text-muted-foreground mb-1">עלות AI</div>
-              <div className="text-lg font-bold text-red-500">
+              <div className="text-lg font-bold text-destructive">
                 ₪{aiCost.toLocaleString()}
               </div>
             </div>
-            <div className="p-3 rounded-lg bg-white/60 text-center">
+            <div className="p-3 rounded-lg bg-background/60 text-center">
               <div className="text-xs text-muted-foreground mb-1">נטו</div>
-              <div className={`text-lg font-bold ${netIncome >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+              <div className={`text-lg font-bold ${netIncome >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}`}>
                 ₪{netIncome.toLocaleString()}
               </div>
             </div>
           </div>
 
           {upgradeNeeded && (
-            <div className="mt-4 p-3 rounded-lg bg-purple-100 border border-purple-200 text-purple-800 text-sm flex items-center gap-2">
-              <Sparkles className="w-4 h-4" />
-              <span>נדרשות {queriesNeeded - remaining} שאילתות נוספות מעבר לתכנית הנוכחית</span>
+            <div className="mt-4 space-y-3">
+              <div className="p-3 rounded-lg bg-purple-100 dark:bg-purple-900/50 border border-purple-200 dark:border-purple-700 text-purple-800 dark:text-purple-200 text-sm flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                <span>נדרשות {queriesNeeded - remaining} שאילתות נוספות מעבר לתכנית הנוכחית</span>
+              </div>
+              
+              <Button 
+                onClick={handleUpgradeClick}
+                className="w-full gap-2 bg-gradient-to-l from-purple-600 to-primary hover:from-purple-700 hover:to-primary/90"
+                size="lg"
+              >
+                <Zap className="w-5 h-5" />
+                שדרג עכשיו והגדל את הרווחים
+              </Button>
             </div>
           )}
         </CardContent>
