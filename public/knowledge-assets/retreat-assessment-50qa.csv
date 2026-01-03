@@ -1,0 +1,51 @@
+Question_Assessment,Patient_Response_Logic,TCM_Trigger_Points,Pharmacopeia_Formula
+"Do you wake up feeling exhausted even after a full night's sleep?",If Yes: Severe Qi Deficiency (MUST GO),UB23 (Shenshu) + KI3 (Taixi) + GV4 (Mingmen),Bu Zhong Yi Qi Tang (Tonify the Middle)
+"On a scale of 1-10 how difficult is it for you to disconnect from your phone for 1 hour?",If 8-10: severe Shen disturbance (MUST GO),Yintang + HT7 (Shenmen) + DU20 (Baihui),Tian Wang Bu Xin Dan (Emperor's Teapills)
+"Do you experience chronic neck or shoulder tension that returns immediately after massage?",If Yes: Liver Qi Stagnation turning to Fire (NEED),GB20 (Fengchi) + GB21 (Jianjing) + LI4 (Hegu),Xiao Yao San (Free and Easy Wanderer)
+"Are you currently going through a major life transition (divorce grief job loss)?",If Yes: Shen Shock/Trauma (MUST GO),PC6 (Neiguan) + HT7 (Shenmen) + Ear Shenmen,Gan Mai Da Zao Tang (Licorice & Jujube Soup)
+"Do you have irregular eating habits or skip meals due to stress?",If Yes: Spleen Qi Deficiency (NEED),ST36 (Zusanli) + SP6 (Sanyinjiao) + CV12 (Zhongwan),Xiang Sha Liu Jun Zi Tang (Six Gentlemen)
+"Do you feel a sense of 'stuckness' or lack of direction in life?",If Yes: Liver/Gallbladder stagnation (NEED),LV3 (Taichong) + GB34 (Yanglingquan),Chai Hu Shu Gan San (Bupleurum Powder)
+"Are you financially able to invest in your long-term health right now?",If No: Willingness Barrier (MAYBE),ST36 (Zusanli) for grounding,None (Focus on lifestyle advice)
+"Do you suffer from recurring headaches or migraines?",If Yes: Liver Yang Rising (NEED),GB20 (Fengchi) + LIV2 (Xingjian) + Taiyang,Tian Ma Gou Teng Yin (Gastrodia & Uncaria)
+"Is your libido significantly lower than usual?",If Yes: Kidney Essence/Jing Deficiency (MUST GO),CV4 (Guanyuan) + UB23 (Shenshu) + KI6 (Zhaohai),Zuo Gui Wan (Restore the Left)
+"Do you feel emotionally numb or detached from loved ones?",If Yes: Heart Qi Stagnation / Phlegm Misting (MUST GO),HT5 (Tongli) + PC6 (Neiguan) + ST40 (Fenglong),Ban Xia Hou Po Tang (Pinellia & Magnolia)
+"Can you commit to 5-7 days away from work?",If No: Logistical Barrier (WILLINGNESS ISSUE),Ear Point: Zero Point,None (Suggest Weekend Mini-Retreat)
+"Do you rely on coffee or stimulants to get through the day?",If Yes: False Yang / Adrenal Fatigue (NEED),KI3 (Taixi) + SP6 (Sanyinjiao),Liu Wei Di Huang Wan (Six Flavor Rehmannia)
+"Do you have trouble falling asleep due to racing thoughts?",If Yes: Spleen/Heart Blood Deficiency (NEED),HT7 (Shenmen) + SP10 (Xuehai) + Anmian,Gui Pi Tang (Restore the Spleen)
+"Do you wake up between 1 AM and 3 AM regularly?",If Yes: Liver Time / Detox Issue (NEED),LV14 (Qimen) + UB18 (Ganshu),Long Dan Xie Gan Tang (Gentiana Drain Fire)
+"Do you feel irritable or short-tempered with family?",If Yes: Liver Qi Stagnation (NEED),LV3 (Taichong) + LI4 (Hegu) [Four Gates],Jia Wei Xiao Yao San (Augmented Free Wanderer)
+"Is your tongue coating thick and greasy?",If Yes: Phlegm-Dampness accumulation (NEED),SP9 (Yinlingquan) + ST40 (Fenglong),Er Chen Tang (Two Aged Herbs)
+"Do you feel cold all the time especially in hands and feet?",If Yes: Yang Deficiency (NEED),GV14 (Dazhui) + Moxa on CV4,You Gui Wan (Restore the Right)
+"Do you experience night sweats or hot flashes?",If Yes: Kidney Yin Deficiency (NEED),KI6 (Zhaohai) + HT6 (Yinxi),Zhi Bai Di Huang Wan (Anemarrhena & Phellodendron)
+"Is your digestion loose or prone to diarrhea when stressed?",If Yes: Liver overacting on Spleen (NEED),LV13 (Zhangmen) + ST25 (Tianshu),Tong Xie Yao Fang (Painful Diarrhea Formula)
+"Do you feel a lump in your throat when stressed (Plum Pit Qi)?",If Yes: Qi Stagnation (NEED),CV22 (Tiantu) + PC6 (Neiguan),Ban Xia Hou Po Tang
+"Do you have a history of burnout or adrenal fatigue?",If Yes: Jing Deficiency (MUST GO),UB23 (Shenshu) + UB52 (Zhishi),Jin Gui Shen Qi Wan (Golden Book)
+"Are you open to trying meditation and silence?",If No: Resistance to cure (WILLINGNESS CHECK),Yintang + GV20 (Baihui),Chai Hu Long Gu Mu Li Tang (Bupleurum Dragon Bone)
+"Do you have skin outbreaks (acne/eczema) related to stress?",If Yes: Lung/Intestine Heat (NEED),LI11 (Quchi) + LU5 (Chize),Pi Pa Qing Fei Yin (Loquat Leaf)
+"Do you feel frequent palpitations or anxiety?",If Yes: Heart Qi/Yin Deficiency (MUST GO),HT7 (Shenmen) + PC6 (Neiguan) + CV14,Tian Wang Bu Xin Dan
+"Is your menstrual cycle irregular or painful?",If Yes: Blood Stagnation (NEED),SP8 (Diji) + CV4 (Guanyuan),Tao Hong Si Wu Tang (Four Substances)
+"Do you catch colds or get sick easily (low immunity)?",If Yes: Wei Qi Deficiency (NEED),LU9 (Taiyuan) + ST36 (Zusanli),Yu Ping Feng San (Jade Windscreen)
+"Do you feel uninspired or lacking creativity?",If Yes: Kidney/Spirit disconnect (NEED),UB52 (Zhishi) + GV4 (Mingmen),Ba Wei Di Huang Wan (Eight Flavor)
+"Do you suffer from chronic lower back pain or weak knees?",If Yes: Kidney Qi Deficiency (NEED),UB40 (Weizhong) + UB23 (Shenshu),Du Huo Ji Sheng Tang (Angelica Pubescens)
+"Are you willing to turn off your phone for 3 full days?",If Yes: High Willingness (READY),None,None
+"Do you experience acid reflux or heartburn?",If Yes: Stomach Fire / Liver invades Stomach (NEED),ST44 (Neiting) + PC6 (Neiguan),Zuo Jin Wan (Left Metal Pill)
+"Do you clench your jaw or grind your teeth at night?",If Yes: Liver Wind/Tension (NEED),ST6 (Jiache) + ST7 (Xiaguan),Shao Yao Gan Cao Tang (Peony & Licorice)
+"Do you feel heavy physically like your limbs are weighted?",If Yes: Dampness accumulation (NEED),SP9 (Yinlingquan) + UB20 (Pishou),Shen Ling Bai Zhu San (Ginseng & Atractylodes)
+"Do you have shortness of breath with little exertion?",If Yes: Lung/Kidney Qi Deficiency (NEED),LU9 (Taiyuan) + KI27 (Shufu),Sheng Mai San (Generate the Pulse)
+"Are you grieving a loss?",If Yes: Lung Qi / Po Soul disturbance (MUST GO),LU7 (Lieque) + UB13 (Feishu),Gan Mai Da Zao Tang
+"Do you feel 'wired but tired' at night?",If Yes: Yin/Yang disharmony (NEED),KI1 (Yongquan) + HT7 (Shenmen),Suan Zao Ren Tang
+"Do you have dry eyes or blurred vision?",If Yes: Liver Blood Deficiency (NEED),UB18 (Ganshu) + GB37 (Guangming),Qi Ju Di Huang Wan (Lycium & Chrysanthemum)
+"Are you seeking a spiritual connection or deeper meaning?",If Yes: Shen/Spirit search (MUST GO),GV20 (Baihui) + Sishencong,None (Meditation Focus)
+"Do you have frequent urination at night?",If Yes: Kidney Yang Deficiency (NEED),CV4 (Guanyuan) + UB23 (Shenshu),Sang Piao Xiao San (Mantis Egg Case)
+"Do you feel bloating immediately after eating?",If Yes: Food Stagnation / Spleen Def (NEED),ST36 (Zusanli) + RN12 (Zhongwan),Bao He Wan (Preserve Harmony)
+"Is your memory declining or do you have brain fog?",If Yes: Phlegm misting Orifices / Spleen Def (NEED),ST40 (Fenglong) + GV20 (Baihui),Bu Nao Wan (Brain Tonic)
+"Do you suffer from cold sores or herpes outbreaks when stressed?",If Yes: Damp Heat / Toxic Heat (NEED),LI11 (Quchi) + SP10 (Xuehai),Long Dan Xie Gan Tang
+"Do you have a support system at home?",If No: High Risk of Relapse (MUST GO for tools),HT7 (Shenmen),Xiao Yao San
+"Are you willing to change your diet for 10 days?",If No: Low Willingness (MAYBE),ST25 (Tianshu),Bao He Wan
+"Do you feel a tight band around your head?",If Yes: Dampness / Phlegm (NEED),Taiyang + ST8 (Touwei),Ban Xia Bai Zhu Tian Ma Tang
+"Do you sigh frequently?",If Yes: Liver Qi Stagnation (NEED),LV3 (Taichong) + PC6 (Neiguan),Yue Ju Wan (Escape Restraint)
+"Do you have restless leg syndrome?",If Yes: Liver Blood Deficiency / Wind (NEED),GB31 (Fengshi) + SP6 (Sanyinjiao),Shao Yao Gan Cao Tang
+"Do you feel unsupported in your daily life?",If Yes: Lung/Kidney deficiency (NEED),UB23 (Shenshu) + UB13 (Feishu),Bu Zhong Yi Qi Tang
+"Are you recovering from a surgery or illness?",If Yes: Qi and Blood Deficiency (MUST GO),ST36 (Zusanli) + SP6 (Sanyinjiao),Shi Quan Da Bu Tang (All Inclusive)
+"Do you feel angry at yourself often?",If Yes: Liver/Gallbladder disharmony (NEED),LV2 (Xingjian) + GB40 (Qiuxu),Long Dan Xie Gan Tang
+"Are you ready to commit to a new lifestyle contract?",If Yes: High Willingness (READY),GV20 (Baihui) + CV6 (Qihai),None (Ready for Retreat)

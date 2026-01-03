@@ -490,6 +490,14 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'anxiety_mental',
     defaultLanguage: 'en',
   },
+  // Retreat Assessment - Patient Conversion Tool
+  {
+    id: 'retreat-assessment-50qa',
+    label: '🏕️ Retreat Assessment (50 Q&A - Physical/Emotional/Willingness)',
+    path: '/knowledge-assets/retreat-assessment-50qa.csv',
+    defaultCategory: 'wellness_sport',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 type QueueItemStatus = 'pending' | 'importing' | 'done' | 'error';
