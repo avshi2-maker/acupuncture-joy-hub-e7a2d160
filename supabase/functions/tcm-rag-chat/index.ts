@@ -99,9 +99,166 @@ interface HolisticResponse {
 function normalizeForSearch(raw: string): string {
   return (raw || '')
     .toLowerCase()
-    .replace(/[^a-z0-9\u4e00-\u9fff]+/g, ' ')
+    .replace(/[^a-z0-9\u4e00-\u9fff\u0590-\u05ff]+/g, ' ') // Include Hebrew characters
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+// ============================================================================
+// LANGUAGE DETECTION & BILINGUAL GLOSSARY
+// ============================================================================
+
+type DetectedLanguage = 'hebrew' | 'english' | 'chinese' | 'mixed';
+
+/**
+ * Detect the primary language of a query
+ */
+function detectLanguage(text: string): DetectedLanguage {
+  const hebrewPattern = /[\u0590-\u05FF]/g;
+  const chinesePattern = /[\u4e00-\u9fff]/g;
+  const latinPattern = /[a-zA-Z]/g;
+  
+  const hebrewChars = (text.match(hebrewPattern) || []).length;
+  const chineseChars = (text.match(chinesePattern) || []).length;
+  const latinChars = (text.match(latinPattern) || []).length;
+  
+  const total = hebrewChars + chineseChars + latinChars;
+  if (total === 0) return 'english'; // Default
+  
+  const hebrewRatio = hebrewChars / total;
+  const chineseRatio = chineseChars / total;
+  const latinRatio = latinChars / total;
+  
+  // If significant mix, return mixed
+  if ((hebrewRatio > 0.2 && latinRatio > 0.2) || 
+      (chineseRatio > 0.2 && latinRatio > 0.2)) {
+    return 'mixed';
+  }
+  
+  if (hebrewRatio > 0.5) return 'hebrew';
+  if (chineseRatio > 0.5) return 'chinese';
+  return 'english';
+}
+
+/**
+ * TCM Bilingual Glossary - Hebrew ↔ English term mappings
+ * Each entry has: english term, hebrew term(s), pinyin, and category
+ */
+const TCM_BILINGUAL_GLOSSARY: Array<{
+  en: string[];
+  he: string[];
+  pinyin?: string[];
+  category: 'syndrome' | 'organ' | 'technique' | 'symptom' | 'herb' | 'pattern' | 'point';
+}> = [
+  // === SYNDROMES & PATTERNS ===
+  { en: ['liver qi stagnation', 'liver qi constraint'], he: ['גאן צ\'י יו', 'אי זרימת צי הכבד', 'סטגנציית צי כבד', 'עיכוב צי הכבד'], pinyin: ['gan qi yu'], category: 'syndrome' },
+  { en: ['blood stasis', 'blood stagnation'], he: ['סטגנציית דם', 'קיפאון דם', 'דם עומד'], pinyin: ['xue yu'], category: 'syndrome' },
+  { en: ['qi deficiency', 'qi xu'], he: ['חוסר צי', 'צי שו', 'חולשת צי'], pinyin: ['qi xu'], category: 'syndrome' },
+  { en: ['blood deficiency', 'xue xu'], he: ['חוסר דם', 'שואה שו', 'דלות דם'], pinyin: ['xue xu'], category: 'syndrome' },
+  { en: ['yin deficiency'], he: ['חוסר יין', 'יין שו'], pinyin: ['yin xu'], category: 'syndrome' },
+  { en: ['yang deficiency'], he: ['חוסר יאנג', 'יאנג שו'], pinyin: ['yang xu'], category: 'syndrome' },
+  { en: ['kidney yin deficiency'], he: ['חוסר יין כליה', 'כליה יין שו'], pinyin: ['shen yin xu'], category: 'syndrome' },
+  { en: ['kidney yang deficiency'], he: ['חוסר יאנג כליה', 'כליה יאנג שו'], pinyin: ['shen yang xu'], category: 'syndrome' },
+  { en: ['spleen qi deficiency'], he: ['חוסר צי טחול', 'טחול צי שו', 'חולשת טחול'], pinyin: ['pi qi xu'], category: 'syndrome' },
+  { en: ['heart blood deficiency'], he: ['חוסר דם לב', 'לב שואה שו'], pinyin: ['xin xue xu'], category: 'syndrome' },
+  { en: ['lung qi deficiency'], he: ['חוסר צי ריאה', 'ריאה צי שו'], pinyin: ['fei qi xu'], category: 'syndrome' },
+  { en: ['dampness', 'damp'], he: ['לחות', 'דאמפנס', 'שי'], pinyin: ['shi'], category: 'pattern' },
+  { en: ['phlegm'], he: ['ליחה', 'פלגם', 'טאן'], pinyin: ['tan'], category: 'pattern' },
+  { en: ['heat', 'fire'], he: ['חום', 'אש', 'רה'], pinyin: ['re', 'huo'], category: 'pattern' },
+  { en: ['cold'], he: ['קור', 'האן'], pinyin: ['han'], category: 'pattern' },
+  { en: ['wind'], he: ['רוח', 'פנג'], pinyin: ['feng'], category: 'pattern' },
+  { en: ['damp heat'], he: ['חום לחות', 'שי רה'], pinyin: ['shi re'], category: 'syndrome' },
+  { en: ['phlegm damp'], he: ['ליחה לחות', 'טאן שי'], pinyin: ['tan shi'], category: 'syndrome' },
+  { en: ['liver fire'], he: ['אש כבד', 'גאן הואו'], pinyin: ['gan huo'], category: 'syndrome' },
+  { en: ['liver yang rising'], he: ['עליית יאנג כבד', 'גאן יאנג שאנג קאנג'], pinyin: ['gan yang shang kang'], category: 'syndrome' },
+  
+  // === ORGANS (ZANG FU) ===
+  { en: ['liver'], he: ['כבד', 'גאן'], pinyin: ['gan'], category: 'organ' },
+  { en: ['heart'], he: ['לב', 'שין'], pinyin: ['xin'], category: 'organ' },
+  { en: ['spleen'], he: ['טחול', 'פי'], pinyin: ['pi'], category: 'organ' },
+  { en: ['lung', 'lungs'], he: ['ריאה', 'ריאות', 'פיי'], pinyin: ['fei'], category: 'organ' },
+  { en: ['kidney', 'kidneys'], he: ['כליה', 'כליות', 'שן'], pinyin: ['shen'], category: 'organ' },
+  { en: ['stomach'], he: ['קיבה', 'וויי'], pinyin: ['wei'], category: 'organ' },
+  { en: ['gallbladder'], he: ['כיס מרה', 'דאן'], pinyin: ['dan'], category: 'organ' },
+  { en: ['bladder'], he: ['שלפוחית', 'פאנג גואנג'], pinyin: ['pang guang'], category: 'organ' },
+  { en: ['small intestine'], he: ['מעי דק', 'שיאו צ\'אנג'], pinyin: ['xiao chang'], category: 'organ' },
+  { en: ['large intestine'], he: ['מעי גס', 'דא צ\'אנג'], pinyin: ['da chang'], category: 'organ' },
+  
+  // === TECHNIQUES ===
+  { en: ['acupuncture'], he: ['דיקור', 'אקופונקטורה', 'דיקור סיני'], category: 'technique' },
+  { en: ['moxibustion', 'moxa'], he: ['מוקסה', 'מוקסיבוסציה', 'ג\'יו'], pinyin: ['jiu'], category: 'technique' },
+  { en: ['cupping'], he: ['כוסות רוח', 'באגואן'], pinyin: ['ba guan'], category: 'technique' },
+  { en: ['tuina', 'tui na'], he: ['טווינא', 'עיסוי סיני', 'טויי נא'], pinyin: ['tui na'], category: 'technique' },
+  { en: ['needling', 'needle'], he: ['דיקור', 'מחט', 'נידלינג'], category: 'technique' },
+  { en: ['electroacupuncture'], he: ['אלקטרואקופונקטורה', 'דיקור חשמלי'], category: 'technique' },
+  { en: ['trigger point'], he: ['נקודת טריגר', 'טריגר פוינט', 'נקודת כאב'], category: 'technique' },
+  
+  // === SYMPTOMS ===
+  { en: ['headache'], he: ['כאב ראש', 'מיגרנה'], category: 'symptom' },
+  { en: ['insomnia', 'sleep disorder'], he: ['נדודי שינה', 'אינסומניה', 'הפרעות שינה'], category: 'symptom' },
+  { en: ['fatigue', 'tiredness'], he: ['עייפות', 'חולשה', 'תשישות'], category: 'symptom' },
+  { en: ['pain'], he: ['כאב', 'כאבים'], category: 'symptom' },
+  { en: ['back pain', 'low back pain'], he: ['כאב גב', 'כאבי גב תחתון', 'לומבלגיה'], category: 'symptom' },
+  { en: ['neck pain'], he: ['כאב צוואר', 'כאבי צוואר'], category: 'symptom' },
+  { en: ['anxiety'], he: ['חרדה', 'אנקסייטי'], category: 'symptom' },
+  { en: ['depression'], he: ['דיכאון', 'עצבות'], category: 'symptom' },
+  { en: ['stress'], he: ['לחץ', 'מתח', 'סטרס'], category: 'symptom' },
+  { en: ['digestive issues', 'digestion'], he: ['בעיות עיכול', 'עיכול', 'מערכת עיכול'], category: 'symptom' },
+  { en: ['constipation'], he: ['עצירות'], category: 'symptom' },
+  { en: ['diarrhea'], he: ['שלשול', 'דיאריאה'], category: 'symptom' },
+  { en: ['nausea'], he: ['בחילה', 'בחילות'], category: 'symptom' },
+  { en: ['menstrual pain', 'dysmenorrhea'], he: ['כאבי מחזור', 'דיסמנוריאה', 'כאבי וסת'], category: 'symptom' },
+  { en: ['infertility'], he: ['אי פוריות', 'פוריות'], category: 'symptom' },
+  { en: ['hot flashes'], he: ['גלי חום', 'הבזקי חום'], category: 'symptom' },
+  
+  // === COMMON ACUPOINTS ===
+  { en: ['LI4', 'hegu'], he: ['LI4', 'האגו', 'לי 4'], pinyin: ['he gu'], category: 'point' },
+  { en: ['LV3', 'liver 3', 'taichong'], he: ['LV3', 'טאי צ\'ונג', 'כבד 3'], pinyin: ['tai chong'], category: 'point' },
+  { en: ['ST36', 'zusanli'], he: ['ST36', 'זו סאן לי', 'קיבה 36'], pinyin: ['zu san li'], category: 'point' },
+  { en: ['SP6', 'sanyinjiao'], he: ['SP6', 'סאן יין ג\'יאו', 'טחול 6'], pinyin: ['san yin jiao'], category: 'point' },
+  { en: ['BL23', 'shenshu'], he: ['BL23', 'שן שו', 'שלפוחית 23'], pinyin: ['shen shu'], category: 'point' },
+  { en: ['GV20', 'baihui'], he: ['GV20', 'באי הווי', 'דו 20'], pinyin: ['bai hui'], category: 'point' },
+];
+
+/**
+ * Expand query with bilingual terms
+ * Returns both original terms and translated equivalents
+ */
+function expandWithBilingualGlossary(query: string, detectedLang: DetectedLanguage): string[] {
+  const normalizedQuery = query.toLowerCase();
+  const expansions: string[] = [];
+  
+  for (const entry of TCM_BILINGUAL_GLOSSARY) {
+    const allTerms = [...entry.en, ...entry.he, ...(entry.pinyin || [])];
+    
+    // Check if any term from this entry appears in the query
+    const foundTerm = allTerms.find(term => 
+      normalizedQuery.includes(term.toLowerCase())
+    );
+    
+    if (foundTerm) {
+      // Add all related terms for cross-language search
+      expansions.push(...allTerms);
+    }
+  }
+  
+  return [...new Set(expansions)]; // Deduplicate
+}
+
+/**
+ * Get language-specific file patterns for targeted search
+ */
+function getLanguageFilePatterns(lang: DetectedLanguage): string[] {
+  switch (lang) {
+    case 'hebrew':
+      return ['hebrew', 'he_', '_he', 'heb', 'עברית'];
+    case 'chinese':
+      return ['chinese', 'zh_', '_zh', 'mandarin'];
+    case 'english':
+      return ['english', 'en_', '_en', 'eng'];
+    default:
+      return []; // Search all for mixed
+  }
 }
 
 function uniq<T>(arr: T[]): T[] {
@@ -406,19 +563,41 @@ serve(async (req) => {
     const { query, messages, useExternalAI, includeChunkDetails, ageGroup, patientContext } = await req.json();
     const searchQuery = query || messages?.[messages.length - 1]?.content || '';
 
+    // ========================================================================
+    // PHASE 1.5: LANGUAGE DETECTION & BILINGUAL EXPANSION
+    // ========================================================================
+    const detectedLanguage = detectLanguage(searchQuery);
+    const bilingualExpansions = expandWithBilingualGlossary(searchQuery, detectedLanguage);
+    const languageFilePatterns = getLanguageFilePatterns(detectedLanguage);
+    
+    console.log('=== LANGUAGE DETECTION ===');
+    console.log('Detected language:', detectedLanguage);
+    console.log('Bilingual expansions:', bilingualExpansions.slice(0, 10).join(', '));
+    console.log('Language file patterns:', languageFilePatterns.join(', ') || 'all languages');
+
     const { webQuery: searchTerms, keywords: keywordTerms } = buildWebSearchQuery(searchQuery);
+    
+    // Combine original keywords with bilingual expansions for broader search
+    const expandedKeywords = [...new Set([...keywordTerms, ...bilingualExpansions])].slice(0, 20);
+    
+    // Build expanded search terms including bilingual terms
+    const expandedSearchTerms = bilingualExpansions.length > 0 
+      ? `${searchTerms} ${bilingualExpansions.slice(0, 6).join(' ')}`.trim()
+      : searchTerms;
 
     const ageGroupContext = ageGroup ? getAgeGroupSystemPrompt(ageGroup) : '';
 
     console.log('=== 4-PILLAR HOLISTIC RAG SEARCH START ===');
     console.log('Query:', searchQuery);
     console.log('Websearch query:', searchTerms);
+    console.log('Expanded search terms:', expandedSearchTerms);
     console.log('Keyword terms:', keywordTerms.slice(0, 8).join(', '));
+    console.log('Expanded keywords:', expandedKeywords.slice(0, 10).join(', '));
     console.log('Age group:', ageGroup || 'not specified');
     console.log('Using external AI:', useExternalAI || false);
 
     // ========================================================================
-    // PHASE 2: COMPOSITE PARALLEL SEARCH - 4 Pillar Queries
+    // PHASE 2: COMPOSITE PARALLEL SEARCH - 4 Pillar Queries (with language awareness)
     // ========================================================================
     
     const ageFilePatterns = ageGroup ? getAgeGroupFilePatterns(ageGroup) : [];
@@ -429,11 +608,17 @@ serve(async (req) => {
     const nutritionQuery = buildPillarQuery(searchQuery, 'nutrition');
     const lifestyleQuery = buildPillarQuery(searchQuery, 'lifestyle');
     
-    console.log('=== PARALLEL 4-PILLAR QUERIES ===');
+    // Build bilingual ILIKE conditions for expanded search
+    const bilingualIlikeTerms = bilingualExpansions.slice(0, 8).map(term => 
+      `content.ilike.%${term.replace(/'/g, "''")}%`
+    ).join(',');
+    
+    console.log('=== PARALLEL 4-PILLAR QUERIES (BILINGUAL) ===');
     console.log('Clinical query:', clinicalQuery);
     console.log('Pharmacopeia query:', pharmaQuery);
     console.log('Nutrition query:', nutritionQuery);
     console.log('Lifestyle query:', lifestyleQuery);
+    console.log('Bilingual ILIKE terms count:', bilingualExpansions.slice(0, 8).length);
 
     // Run all 4 pillar searches in parallel
     const [
@@ -526,10 +711,11 @@ serve(async (req) => {
 
     // ========================================================================
     // RELEVANCE RANKING - Select TOP 15 most relevant from each pillar
+    // Uses EXPANDED keywords (including bilingual terms) for better cross-language matching
     // ========================================================================
-    const queryKeywords = keywordTerms.slice(0, 8);
+    const queryKeywords = expandedKeywords.slice(0, 12); // Use expanded keywords instead of just keywordTerms
     
-    // Rank each pillar by relevance to the user's query
+    // Rank each pillar by relevance to the user's query (with bilingual term matching)
     const clinicalChunks = rankChunksByRelevance(
       clinicalResult.data || [], 
       queryKeywords, 
@@ -558,7 +744,9 @@ serve(async (req) => {
     const cafStudies = cafStudiesResult.data || [];
     const clinicalTrials = clinicalTrialsResult.data || [];
 
-    console.log('=== PILLAR RESULTS (RANKED BY RELEVANCE) ===');
+    console.log('=== PILLAR RESULTS (RANKED BY RELEVANCE - BILINGUAL) ===');
+    console.log(`🌐 Query language: ${detectedLanguage}`);
+    console.log(`🔄 Bilingual terms used: ${bilingualExpansions.length}`);
     console.log(`📍 Clinical chunks: ${clinicalChunks.length} (from ${(clinicalResult.data || []).length} candidates)`);
     console.log(`🌿 Pharmacopeia chunks: ${pharmacopeiaChunks.length} (from ${(pharmacopeiaResult.data || []).length} candidates)`);
     console.log(`🍎 Nutrition chunks: ${nutritionChunks.length} (from ${(nutritionResult.data || []).length} candidates)`);
@@ -577,17 +765,18 @@ serve(async (req) => {
 
     const totalPillarChunks = clinicalChunks.length + pharmacopeiaChunks.length + nutritionChunks.length + lifestyleChunks.length;
 
-    // Enhanced fallback search with keyword matching
+    // Enhanced fallback search with keyword matching (using BILINGUAL expanded keywords)
     let fallbackChunks: any[] = [];
-    const fallbackWords = queryKeywords.filter((w: string) => w.length > 1).slice(0, 8);
+    const fallbackWords = expandedKeywords.filter((w: string) => w.length > 1).slice(0, 12);
     
     if (totalPillarChunks < 8 && fallbackWords.length > 0) {
-      console.log(`Running enhanced fallback search with keywords: ${fallbackWords.join(', ')}`);
+      console.log(`Running enhanced BILINGUAL fallback search with keywords: ${fallbackWords.join(', ')}`);
       
+      // Use expanded keywords (including Hebrew/English translations) for fallback
       const ilikeConditions = fallbackWords.flatMap((w: string) => [
-        `content.ilike.%${w}%`,
-        `question.ilike.%${w}%`,
-        `answer.ilike.%${w}%`
+        `content.ilike.%${w.replace(/'/g, "''")}%`,
+        `question.ilike.%${w.replace(/'/g, "''")}%`,
+        `answer.ilike.%${w.replace(/'/g, "''")}%`
       ]).join(',');
       
       const { data: fallbackData } = await supabaseClient
@@ -597,30 +786,30 @@ serve(async (req) => {
           document:knowledge_documents(id, file_name, original_name, category)
         `)
         .or(ilikeConditions)
-        .limit(30);
+        .limit(50); // Increased limit for better bilingual coverage
       
       if (fallbackData) {
         // Rank fallback chunks by relevance before distributing
-        const rankedFallback = rankChunksByRelevance(fallbackData, queryKeywords, [], 20);
+        const rankedFallback = rankChunksByRelevance(fallbackData, expandedKeywords, [], 25);
         
         // Categorize fallback chunks into pillars
         rankedFallback.forEach(chunk => {
           const pillars = detectPillar(chunk.content);
-          if (pillars.includes('clinical') && clinicalChunks.length < 8) {
+          if (pillars.includes('clinical') && clinicalChunks.length < 10) {
             clinicalChunks.push(chunk);
           }
-          if (pillars.includes('pharmacopeia') && pharmacopeiaChunks.length < 8) {
+          if (pillars.includes('pharmacopeia') && pharmacopeiaChunks.length < 10) {
             pharmacopeiaChunks.push(chunk);
           }
-          if (pillars.includes('nutrition') && nutritionChunks.length < 8) {
+          if (pillars.includes('nutrition') && nutritionChunks.length < 10) {
             nutritionChunks.push(chunk);
           }
-          if (pillars.includes('lifestyle') && lifestyleChunks.length < 8) {
+          if (pillars.includes('lifestyle') && lifestyleChunks.length < 10) {
             lifestyleChunks.push(chunk);
           }
         });
         fallbackChunks = rankedFallback;
-        console.log(`Fallback search found: ${fallbackChunks.length} chunks, distributed across pillars`);
+        console.log(`Bilingual fallback search found: ${fallbackChunks.length} chunks, distributed across pillars`);
       }
     }
 
@@ -785,6 +974,13 @@ ${trial.sapir_notes ? `Dr. Sapir Notes: ${trial.sapir_notes}` : ''}
       documentsMatched: useExternalAI ? 0 : uniqueDocuments.length,
       searchTermsUsed: searchTerms,
       isExternal: useExternalAI || false,
+      // LANGUAGE DETECTION METADATA
+      languageDetection: {
+        detectedLanguage,
+        bilingualTermsExpanded: bilingualExpansions.length,
+        bilingualTermsUsed: bilingualExpansions.slice(0, 10),
+        crossLanguageSearch: bilingualExpansions.length > 0
+      },
       pillarBreakdown: {
         clinical: clinicalChunks.length,
         pharmacopeia: pharmacopeiaChunks.length,
@@ -806,7 +1002,7 @@ ${trial.sapir_notes ? `Dr. Sapir Notes: ${trial.sapir_notes}` : ''}
           chunkIndex: s.chunkIndex,
           category: s.category
         })),
-        searchScope: 'All 55 Indexed Assets (CSVs, PDFs, DOCs)',
+        searchScope: `All 55 Indexed Assets (Bilingual: ${detectedLanguage})`,
         closedLoop: !useExternalAI // Confirms no external AI used
       }
     };
