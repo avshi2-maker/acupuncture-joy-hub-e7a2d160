@@ -62,6 +62,7 @@ import { FloatingHelpGuide } from '@/components/ui/FloatingHelpGuide';
 import { PregnancySafetyDialog, ElderlyLifestyleDialog, PediatricAcupunctureDialog, VagusNerveDialog, VagusStimulationDialog, HRVTrackerDialog } from '@/components/clinical';
 import { SessionBriefPanel } from '@/components/video/SessionBriefPanel';
 import { PediatricTCMAssistant } from '@/components/tcm-brain/PediatricTCMAssistant';
+import { HerbalMasterWidget } from '@/components/herbal/HerbalMasterWidget';
 import { toast } from 'sonner';
 import clockImg from '@/assets/clock.png';
 
@@ -839,6 +840,11 @@ export default function TcmBrain() {
                 <PediatricTCMAssistant />
               </div>
             )}
+          </div>
+
+          {/* Herbal Master Widget - Encyclopedia, Safety & Quiz */}
+          <div className="mb-4">
+            <HerbalMasterWidget className="w-full" />
           </div>
 
           {/* Quick Action Boxes - 6 Configurable */}
