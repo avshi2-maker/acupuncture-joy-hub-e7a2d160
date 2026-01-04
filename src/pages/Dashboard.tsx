@@ -62,6 +62,7 @@ import clinicLogo from '@/assets/clinic-logo.png';
 import { PatientEducationWidget } from '@/components/education/PatientEducationWidget';
 import { PediatricInfographicCard, VagusNerveCard, VagusStimulationDialog, StressWellnessCard, AssessmentCenterCard } from '@/components/clinical';
 import { UsageWidget } from '@/components/roi/UsageWidget';
+import { HerbalMasterWidget } from '@/components/herbal/HerbalMasterWidget';
 
 
 // Phosphor-style glowing clock component (mobile - small version)
@@ -1188,6 +1189,11 @@ export default function Dashboard() {
           <VagusNerveCard />
           <StressWellnessCard animationDelay={600} />
           <AssessmentCenterCard animationDelay={650} />
+        </div>
+
+        {/* Herbal Master Widget - Encyclopedia, Safety & Quiz */}
+        <div className="mb-8 opacity-0 animate-fade-in" style={{ animationDelay: '530ms', animationFillMode: 'forwards' }}>
+          <HerbalMasterWidget className="max-w-lg" />
         </div>
 
         {/* Row 1: Calendar, Patient Management, Therapist Intake */}

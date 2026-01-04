@@ -110,6 +110,7 @@ import { InlineMusicPlayer } from '@/components/video/InlineMusicPlayer';
 import { TcmBrainPanel } from '@/components/video/TcmBrainPanel';
 import { SessionBriefPanel } from '@/components/video/SessionBriefPanel';
 import { PregnancySafetyDialog, ElderlyLifestyleDialog } from '@/components/clinical';
+import { HerbalMasterWidget } from '@/components/herbal/HerbalMasterWidget';
 
 import { SessionWorkflowIndicator } from '@/components/video/SessionWorkflowIndicator';
 import { SessionPhaseIndicator, useSafetyGate } from '@/components/session';
