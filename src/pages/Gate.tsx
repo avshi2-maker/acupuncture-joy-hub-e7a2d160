@@ -94,6 +94,20 @@ type Step = 'tiers' | 'payment' | 'password';
 
 // Check if therapist disclaimer is completed
 const DISCLAIMER_STORAGE_KEY = 'tcm_therapist_disclaimer_signed';
+const INTAKE_STORAGE_KEY = 'therapist_intake_completed';
+
+// Helper to check if intake is completed
+const isIntakeCompleted = (): boolean => {
+  try {
+    const completed = localStorage.getItem(INTAKE_STORAGE_KEY);
+    if (!completed) return false;
+    const data = JSON.parse(completed);
+    // Check if completed within last year
+    return data.completedAt && new Date(data.completedAt) > new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+  } catch {
+    return false;
+  }
+};
 
 export default function Gate() {
   const navigate = useNavigate();
@@ -124,16 +138,29 @@ export default function Gate() {
     const tierParam = params.get('tier');
     
     if (stepParam === 'payment' && tierParam) {
+      // Validate intake is completed before allowing payment step
+      if (!isIntakeCompleted()) {
+        toast.error('יש להשלים את טופס הקליטה תחילה');
+        sessionStorage.setItem('selected_tier_for_intake', tierParam);
+        navigate('/therapist-intake?from=gate');
+        return;
+      }
       setSelectedTier(tierParam);
       setCurrentStep('payment');
-      // Clear session storage
       sessionStorage.removeItem('selected_tier_for_intake');
     } else if (stepParam === 'password') {
+      // Validate intake is completed before allowing password step
+      if (!isIntakeCompleted()) {
+        toast.error('יש להשלים את טופס הקליטה תחילה');
+        sessionStorage.setItem('selected_tier_for_intake', 'trial');
+        navigate('/therapist-intake?from=gate');
+        return;
+      }
       setSelectedTier('trial');
       setCurrentStep('password');
       sessionStorage.removeItem('selected_tier_for_intake');
     }
-  }, [location.search]);
+  }, [location.search, navigate]);
   
   // Simulate page loading for tier cards
   useEffect(() => {
