@@ -1149,7 +1149,7 @@ export default function VideoSession() {
   };
 
   // AI Query handler - sends to tcm-rag-chat function
-  const handleAiQuery = async (type: 'nutrition' | 'herbs' | 'diagnosis' | 'mental' | 'sleep' | 'worklife' | 'wellness' | 'sports' | 'bazi' | 'astro' | 'points') => {
+  const handleAiQuery = async (type: 'nutrition' | 'herbs' | 'diagnosis' | 'mental' | 'sleep' | 'worklife' | 'wellness' | 'sports' | 'bazi' | 'astro' | 'points' | 'formulas') => {
     if (!aiQueryInput.trim()) {
       toast.error('Please enter a question');
       return;
@@ -1880,6 +1880,7 @@ export default function VideoSession() {
                 <div className="flex items-center gap-2 mb-3">
                   {activeAiQuery === 'nutrition' && <Apple className="h-5 w-5 text-green-600" />}
                   {activeAiQuery === 'herbs' && <Leaf className="h-5 w-5 text-amber-600" />}
+                  {activeAiQuery === 'formulas' && <Pill className="h-5 w-5 text-red-600" />}
                   {activeAiQuery === 'diagnosis' && <Stethoscope className="h-5 w-5 text-purple-600" />}
                   {activeAiQuery === 'mental' && <Heart className="h-5 w-5 text-rose-600" />}
                   {activeAiQuery === 'sleep' && <Moon className="h-5 w-5 text-indigo-600" />}

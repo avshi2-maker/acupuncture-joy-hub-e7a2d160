@@ -16,12 +16,13 @@ import {
   GripVertical,
   Settings2,
   X,
-  Check
+  Check,
+  Pill
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 
-export type ToolbarItemId = 'herbs' | 'nutrition' | 'mental' | 'sleep' | 'worklife' | 'wellness' | 'sports' | 'bazi' | 'astro' | 'points' | 'diagnosis';
+export type ToolbarItemId = 'herbs' | 'nutrition' | 'mental' | 'sleep' | 'worklife' | 'wellness' | 'sports' | 'bazi' | 'astro' | 'points' | 'diagnosis' | 'formulas';
 
 interface ToolbarItem {
   id: ToolbarItemId;
@@ -34,6 +35,7 @@ interface ToolbarItem {
 
 const allToolbarItems: ToolbarItem[] = [
   { id: 'herbs', icon: Leaf, label: 'Herbs', color: 'text-amber-700', bgColor: 'bg-amber-50', borderColor: 'border-amber-200' },
+  { id: 'formulas', icon: Pill, label: 'Formulas', color: 'text-red-700', bgColor: 'bg-red-50', borderColor: 'border-red-200' },
   { id: 'nutrition', icon: Apple, label: 'Nutrition', color: 'text-green-700', bgColor: 'bg-green-50', borderColor: 'border-green-200' },
   { id: 'mental', icon: Heart, label: 'Mental', color: 'text-rose-700', bgColor: 'bg-rose-50', borderColor: 'border-rose-200' },
   { id: 'sleep', icon: Moon, label: 'Sleep', color: 'text-indigo-700', bgColor: 'bg-indigo-50', borderColor: 'border-indigo-200' },
