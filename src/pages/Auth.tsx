@@ -9,9 +9,11 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ArrowLeft, Brain, ShieldCheck, Lock, Activity } from 'lucide-react';
+import { ArrowLeft, Brain, ShieldCheck, Lock, Activity, Eye, EyeOff, Mail } from 'lucide-react';
 import clinicLogo from '@/assets/clinic-logo.png';
 
 // Validation Schema
@@ -28,6 +30,10 @@ export default function Auth() {
   const { user, signIn, signUp, isLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [isSendingReset, setIsSendingReset] = useState(false);
 
   const form = useForm<AuthForm>({
     resolver: zodResolver(authSchema),
@@ -36,6 +42,28 @@ export default function Auth() {
       password: '',
     },
   });
+
+  const handleForgotPassword = async () => {
+    if (!forgotEmail) {
+      toast.error('נא להזין כתובת אימייל');
+      return;
+    }
+    setIsSendingReset(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+        redirectTo: `${window.location.origin}/auth?reset=true`,
+      });
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success('קישור לאיפוס סיסמה נשלח לאימייל שלך');
+        setShowForgotPassword(false);
+        setForgotEmail('');
+      }
+    } finally {
+      setIsSendingReset(false);
+    }
+  };
 
   // Redirect if already logged in
   useEffect(() => {
@@ -198,6 +226,16 @@ export default function Auth() {
                           </FormItem>
                         )}
                       />
+
+                      <div className="text-left">
+                        <button
+                          type="button"
+                          onClick={() => setShowForgotPassword(true)}
+                          className="text-sm text-emerald-600 hover:text-emerald-700 hover:underline transition-colors"
+                        >
+                          שכחת סיסמה?
+                        </button>
+                      </div>
                       <FormField
                         control={form.control}
                         name="password"
@@ -205,11 +243,20 @@ export default function Auth() {
                           <FormItem>
                             <FormLabel className="text-slate-700">סיסמה</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="password" 
-                                {...field} 
-                                className="bg-slate-50 border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all h-11"
-                              />
+                              <div className="relative">
+                                <Input 
+                                  type={showPassword ? "text" : "password"} 
+                                  {...field} 
+                                  className="bg-slate-50 border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all h-11 pl-10"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setShowPassword(!showPassword)}
+                                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                >
+                                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                </button>
+                              </div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -262,11 +309,20 @@ export default function Auth() {
                           <FormItem>
                             <FormLabel className="text-slate-700">סיסמה</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="password" 
-                                {...field} 
-                                className="bg-slate-50 border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all h-11"
-                              />
+                              <div className="relative">
+                                <Input 
+                                  type={showPassword ? "text" : "password"} 
+                                  {...field} 
+                                  className="bg-slate-50 border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/20 transition-all h-11 pl-10"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setShowPassword(!showPassword)}
+                                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                >
+                                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                </button>
+                              </div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -303,6 +359,44 @@ export default function Auth() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Forgot Password Dialog */}
+        <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
+          <DialogContent className="sm:max-w-md" dir="rtl">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-display">איפוס סיסמה</DialogTitle>
+              <DialogDescription>
+                הזן את כתובת האימייל שלך ונשלח לך קישור לאיפוס הסיסמה
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div className="relative">
+                <Input
+                  type="email"
+                  placeholder="you@clinic.com"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  className="bg-slate-50 border-slate-200 focus:border-emerald-500 h-11 pr-10"
+                />
+                <Mail className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              </div>
+              <Button
+                onClick={handleForgotPassword}
+                disabled={isSendingReset}
+                className="w-full h-11 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+              >
+                {isSendingReset ? (
+                  <span className="flex items-center gap-2">
+                    <div className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full" />
+                    שולח...
+                  </span>
+                ) : (
+                  'שלח קישור לאיפוס'
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   );
