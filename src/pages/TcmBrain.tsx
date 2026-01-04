@@ -86,9 +86,9 @@ export default function TcmBrain() {
   useEffect(() => {
     const saved = loadSavedSession();
     if (saved && saved.messages.length > 0) {
-      toast.info(`Found auto-saved session from ${saved.patientName || 'Unknown'}. Continue?`, {
+      toast.info(`נמצא סשן שמור עבור ${saved.patientName || 'לא ידוע'}. לשחזר?`, {
         duration: 10000,
-        action: { label: 'Restore', onClick: () => { toast.success('Session restored'); clearSavedSession(); } }
+        action: { label: 'שחזר', onClick: () => { toast.success('הסשן שוחזר בהצלחה'); clearSavedSession(); } }
       });
     }
   }, []);
@@ -122,21 +122,21 @@ export default function TcmBrain() {
   }, []);
 
   useEffect(() => {
-    if (selectedPatient?.id) { setShowSessionBrief(true); toast.info('🧠 Generating session brief...', { duration: 2000 }); }
+    if (selectedPatient?.id) { setShowSessionBrief(true); toast.info('🧠 מייצר תקציר סשן...', { duration: 2000 }); }
     else { setShowSessionBrief(false); }
   }, [selectedPatient?.id]);
 
   const tabItems = [
-    { id: 'diagnostics', label: 'Diagnostics', icon: Stethoscope, description: 'P1-P2' },
-    { id: 'symptoms', label: 'Symptoms', icon: Brain, description: 'P3' },
-    { id: 'treatment', label: 'Treatment', icon: Pill, description: 'P4-P6' },
-    { id: 'bodymap', label: 'Body Map', icon: UserIcon, description: 'Points' },
-    { id: 'session', label: 'Session', icon: FileText, description: 'Notes' },
-    { id: 'history', label: 'History', icon: Clock, description: 'Patient' },
+    { id: 'diagnostics', label: 'אבחון', icon: Stethoscope, description: 'שלב 1-2' },
+    { id: 'symptoms', label: 'תסמינים', icon: Brain, description: 'שלב 3' },
+    { id: 'treatment', label: 'טיפול', icon: Pill, description: 'שלב 4-6' },
+    { id: 'bodymap', label: 'מפת גוף', icon: UserIcon, description: 'נקודות' },
+    { id: 'session', label: 'רשומות', icon: FileText, description: 'הערות' },
+    { id: 'history', label: 'היסטוריה', icon: Clock, description: 'מטופל' },
   ];
 
   const handleVoiceCommand = useCallback((command: TcmVoiceCommand) => {
-    console.log('[TcmBrain] Voice command:', command);
+    console.log('[TcmBrain] פקודה קולית:', command);
     switch (command) {
       case 'generate-summary': quickActionsRef.current?.generateSummary(); break;
       case 'save-to-patient': quickActionsRef.current?.saveToPatient(); break;
@@ -150,26 +150,26 @@ export default function TcmBrain() {
       case 'clear-chat': clearChat(); break;
       case 'next-tab': setActiveTab(prev => { const idx = tabItems.findIndex(t => t.id === prev); return tabItems[(idx + 1) % tabItems.length].id; }); break;
       case 'previous-tab': setActiveTab(prev => { const idx = tabItems.findIndex(t => t.id === prev); return tabItems[(idx - 1 + tabItems.length) % tabItems.length].id; }); break;
-      case 'show-brief': setShowSessionBrief(true); toast.success('📋 Session Brief opened'); break;
-      case 'hide-brief': setShowSessionBrief(false); toast.info('Session Brief closed'); break;
+      case 'show-brief': setShowSessionBrief(true); toast.success('📋 תקציר נפתח'); break;
+      case 'hide-brief': setShowSessionBrief(false); toast.info('תקציר נסגר'); break;
     }
   }, [sessionStatus, startSession, pauseSession, continueSession, endSession, clearChat, tabItems]);
 
   return (
     <>
       <Helmet>
-        <title>CM Brain - Commander View</title>
-        <meta name="description" content="AI-powered Chinese Medicine clinical assistant" />
+        <title>CM Brain - מרכז שליטה</title>
+        <meta name="description" content="מערכת AI לרפואה סינית קלינית" />
       </Helmet>
       
-      {/* FULL SCREEN CONTAINER */}
-      <div className="min-h-screen bg-background flex flex-col overflow-hidden">
+      {/* מיכל מסך מלא */}
+      <div className="min-h-screen bg-background flex flex-col overflow-hidden" dir="rtl">
         
-        {/* --- HEADER --- */}
+        {/* --- כותרת עליונה --- */}
         <header className="border-b bg-gradient-to-r from-emerald-900/20 via-emerald-800/10 to-emerald-900/20 backdrop-blur-sm sticky top-0 z-50 shrink-0">
           <div className="max-w-full mx-auto px-3 md:px-4 py-2">
             <div className="flex items-center justify-between gap-4">
-              {/* Branding */}
+              {/* מיתוג */}
               <div className="flex items-center gap-2">
                 <CrossPlatformBackButton fallbackPath="/dashboard" variant="ghost" size="icon" className="md:hidden h-9 w-9" />
                 <Link to="/" className="flex items-center gap-2 hover:opacity-90">
@@ -178,7 +178,7 @@ export default function TcmBrain() {
                   </div>
                   <div className="hidden sm:block">
                     <h1 className="font-display text-lg font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">CM BRAIN</h1>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Commander View</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest">מרכז שליטה קליני</p>
                   </div>
                 </Link>
                 <Button variant="ghost" size="sm" onClick={() => setShowHelpGuide(true)} className="h-8 px-2 bg-yellow-400/10 hover:bg-yellow-400/20 text-yellow-700 dark:text-yellow-400">
@@ -186,24 +186,24 @@ export default function TcmBrain() {
                 </Button>
               </div>
 
-              {/* Central Clock */}
+              {/* שעון מרכזי */}
               <div className="hidden md:flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
                 <div className="bg-black/80 text-white px-4 py-1 rounded-full font-mono font-bold shadow-lg border border-white/20">
-                  {currentTime.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                  {currentTime.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
 
-              {/* Right Tools */}
+              {/* כלים בצד */}
               <div className="flex items-center gap-2">
                 {activeAssets.length > 0 && (
                   <Badge className="bg-jade/20 text-jade border-jade/30 hidden md:flex">
-                    <Database className="h-3 w-3 mr-1" /> {activeAssets.length}
+                    <Database className="h-3 w-3 ml-1" /> {activeAssets.length}
                   </Badge>
                 )}
                 <PatientSelectorDropdown patients={patients} selectedPatient={selectedPatient} onSelectPatient={setSelectedPatient} isLoading={loadingPatients} />
                 {sessionStatus === 'running' && (
                   <Badge variant="outline" className={`text-xs cursor-pointer hidden md:flex ${isSaving ? 'animate-pulse' : ''}`} onClick={saveNow}>
-                    <Save className={`h-3 w-3 mr-1 ${isSaving ? 'text-jade' : ''}`} /> {isSaving ? 'Saving...' : 'Auto'}
+                    <Save className={`h-3 w-3 ml-1 ${isSaving ? 'text-jade' : ''}`} /> {isSaving ? 'שומר...' : 'שמירה אוטומטית'}
                   </Badge>
                 )}
                 <div className="hidden md:flex items-center gap-2">
@@ -215,17 +215,17 @@ export default function TcmBrain() {
           </div>
         </header>
 
-        {/* AI TRUST HEADER */}
+        {/* כותרת אמון AI */}
         <AITrustHeader />
 
-        {/* --- MAIN SPLIT-SCREEN LAYOUT --- */}
+        {/* --- פריסת מסך מפוצל ראשי --- */}
         <main className="flex-1 overflow-hidden">
           <div className="h-full grid grid-cols-1 lg:grid-cols-12 gap-0">
             
-            {/* --- LEFT COMMANDER COLUMN (Chat/Tabs) - 66% width --- */}
-            <div className="lg:col-span-8 flex flex-col h-full border-r bg-card/30 overflow-hidden">
+            {/* --- עמודת פקודה (צ'אט/לשוניות) - 66% רוחב --- */}
+            <div className="lg:col-span-8 flex flex-col h-full border-l bg-card/30 overflow-hidden">
               
-              {/* Phase Indicator */}
+              {/* מחוון שלב */}
               <div className="px-4 py-2 border-b bg-gradient-to-r from-jade/5 to-transparent shrink-0">
                 <SessionPhaseIndicator
                   currentPhase={currentPhase}
@@ -242,7 +242,7 @@ export default function TcmBrain() {
                 />
               </div>
 
-              {/* Action Boxes (Horizontal Scroll) */}
+              {/* תיבות פעולה (גלילה אופקית) */}
               <div className="px-4 py-2 border-b bg-background/50 shrink-0 overflow-x-auto">
                  <SessionHeaderBoxes
                     groups={[
@@ -251,7 +251,7 @@ export default function TcmBrain() {
                         boxes: [
                           {
                             id: 'start-session',
-                            name: sessionStatus === 'idle' ? 'Start' : sessionStatus === 'running' ? 'Pause' : 'Resume',
+                            name: sessionStatus === 'idle' ? 'התחל' : sessionStatus === 'running' ? 'השהה' : 'המשך',
                             nameHe: sessionStatus === 'idle' ? 'התחל' : sessionStatus === 'running' ? 'השהה' : 'המשך',
                             icon: sessionStatus === 'running' ? Pause : Play,
                             color: 'text-jade',
@@ -261,19 +261,19 @@ export default function TcmBrain() {
                           },
                           {
                             id: 'end-session',
-                            name: 'End', nameHe: 'סיום', icon: Square, color: 'text-rose-600', borderColor: 'border-rose-300', onClick: endSession,
+                            name: 'סיום', nameHe: 'סיום', icon: Square, color: 'text-rose-600', borderColor: 'border-rose-300', onClick: endSession,
                           },
                           {
                             id: 'reset',
-                            name: 'Reset', nameHe: 'איפוס', icon: RotateCcw, color: 'text-amber-600', borderColor: 'border-amber-300', onClick: clearChat,
+                            name: 'איפוס', nameHe: 'איפוס', icon: RotateCcw, color: 'text-amber-600', borderColor: 'border-amber-300', onClick: clearChat,
                           },
                         ],
                       },
                       {
                          id: 'clinical-tools',
                          boxes: [
-                           { id: 'pediatric', name: 'Peds', nameHe: 'ילדים', icon: Baby, color: 'text-cyan-500', borderColor: 'border-cyan-300', onClick: () => setShowPediatricAssistant(true) },
-                           { id: 'herbs', name: 'Herbs', nameHe: 'צמחים', icon: Leaf, color: 'text-emerald-500', borderColor: 'border-emerald-300', onClick: () => { toast.info('Opened in Side Panel'); } },
+                           { id: 'pediatric', name: 'ילדים', nameHe: 'ילדים', icon: Baby, color: 'text-cyan-500', borderColor: 'border-cyan-300', onClick: () => setShowPediatricAssistant(true) },
+                           { id: 'herbs', name: 'צמחים', nameHe: 'צמחים', icon: Leaf, color: 'text-emerald-500', borderColor: 'border-emerald-300', onClick: () => { toast.info('נפתח בפאנל צדדי'); } },
                          ]
                       }
                     ]}
@@ -281,7 +281,7 @@ export default function TcmBrain() {
                   />
               </div>
 
-              {/* MAIN TABS AREA - Fills remaining height */}
+              {/* אזור לשוניות ראשי - ממלא את הגובה הנותר */}
               <div className="flex-1 overflow-hidden flex flex-col p-2">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
                   <TabsList className="grid grid-cols-6 w-full mb-2 shrink-0">
@@ -293,7 +293,7 @@ export default function TcmBrain() {
                     ))}
                   </TabsList>
 
-                  {/* Scrollable Content Container */}
+                  {/* מיכל תוכן נגלל */}
                   <div className="flex-1 overflow-y-auto bg-card rounded-lg border shadow-sm p-0">
                     <TabsContent value="diagnostics" className="m-0 h-full p-0">
                       <DiagnosticsTab messages={messages} isLoading={isLoading} onSendMessage={streamChat} onClear={clearChat} selectedPatient={selectedPatient} sessionSeconds={sessionSeconds} questionsAsked={questionsAsked} formatSessionTime={formatSessionTime} quickActionsRef={quickActionsRef} />
@@ -318,29 +318,29 @@ export default function TcmBrain() {
               </div>
             </div>
 
-            {/* --- RIGHT SIDECAR COLUMN (Tools/Widgets) - 33% width --- */}
-            <div className="lg:col-span-4 h-full overflow-y-auto bg-slate-50 dark:bg-slate-900/50 p-4 border-l custom-scrollbar">
+            {/* --- עמודת צד (כלים/ווידג'טים) - 33% רוחב --- */}
+            <div className="lg:col-span-4 h-full overflow-y-auto bg-slate-50 dark:bg-slate-900/50 p-4 border-r custom-scrollbar">
               <div className="space-y-6">
                 
-                {/* 1. Quick Actions */}
+                {/* 1. פעולות מהירות */}
                 <div className="bg-card rounded-lg border shadow-sm p-3">
-                  <h3 className="text-xs font-bold text-muted-foreground uppercase mb-2">Quick Actions</h3>
+                  <h3 className="text-xs font-bold text-muted-foreground uppercase mb-2">פעולות מהירות</h3>
                   <QuickActionBoxes 
                     onActionClick={(prompt) => { streamChat(prompt); setActiveTab('diagnostics'); }} 
                     isLoading={isLoading} 
                   />
                 </div>
 
-                {/* 2. Herbal Master Widget */}
+                {/* 2. ווידג'ט מאסטר צמחים */}
                 <div className="rounded-xl overflow-hidden shadow-sm border">
                   <HerbalMasterWidget className="w-full" />
                 </div>
 
-                {/* 3. Pediatric Assistant (Collapsible) */}
+                {/* 3. עוזר ילדים (מתקפל) */}
                 <div className="bg-card rounded-lg border shadow-sm">
                    <Button variant="ghost" className="w-full flex justify-between p-3" onClick={() => setShowPediatricAssistant(!showPediatricAssistant)}>
                       <div className="flex items-center gap-2 font-bold text-green-700">
-                        <Baby className="h-5 w-5" /> Pediatric Assistant
+                        <Baby className="h-5 w-5" /> עוזר טיפול בילדים
                       </div>
                       {showPediatricAssistant ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}
                    </Button>
@@ -351,26 +351,26 @@ export default function TcmBrain() {
                    )}
                 </div>
 
-                {/* 4. Knowledge Assets */}
+                {/* 4. נכסי ידע */}
                 <div className="bg-card rounded-lg border shadow-sm">
                    <Button variant="ghost" className="w-full flex justify-between p-3" onClick={() => setShowKnowledgeAssets(!showKnowledgeAssets)}>
                       <div className="flex items-center gap-2 font-bold text-emerald-700">
-                        <Database className="h-5 w-5" /> Knowledge Base
+                        <Database className="h-5 w-5" /> מאגר ידע קליני
                       </div>
-                      <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">{activeAssets.length} Active</Badge>
+                      <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">{activeAssets.length} פעילים</Badge>
                    </Button>
                    {showKnowledgeAssets && (
                      <div className="p-3 border-t">
-                       <KnowledgeAssetTabs activeAssets={activeAssets} showLabels={true} onAssetClick={(id) => toast.info(`${id} selected`)} />
+                       <KnowledgeAssetTabs activeAssets={activeAssets} showLabels={true} onAssetClick={(id) => toast.info(`מקור ידע ${id} נבחר`)} />
                      </div>
                    )}
                 </div>
 
-                {/* 5. Q&A Suggestions */}
+                {/* 5. הצעות שאלות */}
                 <div className="bg-card rounded-lg border shadow-sm">
                    <Button variant="ghost" className="w-full flex justify-between p-3" onClick={() => setShowQASuggestions(!showQASuggestions)}>
                       <div className="flex items-center gap-2 font-bold text-violet-700">
-                        <MessageCircleQuestion className="h-5 w-5" /> Q&A Suggestions
+                        <MessageCircleQuestion className="h-5 w-5" /> שאלות מוכנות (שו"ת)
                       </div>
                    </Button>
                    {showQASuggestions && (
@@ -384,12 +384,12 @@ export default function TcmBrain() {
           </div>
         </main>
 
-        {/* --- GLOBAL DIALOGS & OVERLAYS --- */}
+        {/* --- דיאלוגים ושכבות גלובליות --- */}
         {externalFallbackQuery && (
           <ExternalAIFallbackCard query={externalFallbackQuery} isLoading={isLoading} onDismiss={dismissExternalFallback} onUseExternalAI={(provider) => runExternalAIFallback(provider)} />
         )}
 
-        <IntakeReviewDialog open={showIntakeReview} onOpenChange={setShowIntakeReview} patientId={selectedPatient?.id} patientName={selectedPatient?.name} onComplete={() => toast.success('Verified')} />
+        <IntakeReviewDialog open={showIntakeReview} onOpenChange={setShowIntakeReview} patientId={selectedPatient?.id} patientName={selectedPatient?.name} onComplete={() => toast.success('אומת בהצלחה')} />
         <FloatingHelpGuide isOpen={showHelpGuide} onOpenChange={setShowHelpGuide} />
         <PregnancySafetyDialog open={showPregnancyCalc} onOpenChange={setShowPregnancyCalc} patientName={selectedPatient?.name} />
         <ElderlyLifestyleDialog open={showElderlyGuide} onOpenChange={setShowElderlyGuide} />
@@ -398,7 +398,7 @@ export default function TcmBrain() {
         <VagusStimulationDialog open={showVagusStimulation} onOpenChange={setShowVagusStimulation} />
         <HRVTrackerDialog open={showHRVTracker} onOpenChange={setShowHRVTracker} patientId={selectedPatient?.id} />
         
-        <SessionBriefPanel patientId={selectedPatient?.id || null} patientName={selectedPatient?.name || null} isOpen={showSessionBrief} onClose={() => setShowSessionBrief(false)} onQuestionUsed={(q) => { streamChat(q); setActiveTab('diagnostics'); }} onQuestionPinned={() => toast.success('Pinned')} autoTrigger={true} />
+        <SessionBriefPanel patientId={selectedPatient?.id || null} patientName={selectedPatient?.name || null} isOpen={showSessionBrief} onClose={() => setShowSessionBrief(false)} onQuestionUsed={(q) => { streamChat(q); setActiveTab('diagnostics'); }} onQuestionPinned={() => toast.success('ננעץ בלוח')} autoTrigger={true} />
         
         <EmotionalProcessingPanel isOpen={showEmotionalPanel} onClose={() => setShowEmotionalPanel(false)} initialEmotion={emotionalPanelEmotion} onAskQuestion={(q) => { streamChat(q); setShowEmotionalPanel(false); setActiveTab('symptoms'); }} />
       </div>
