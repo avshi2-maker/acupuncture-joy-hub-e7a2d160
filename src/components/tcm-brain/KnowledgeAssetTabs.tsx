@@ -279,6 +279,17 @@ export const KNOWLEDGE_ASSETS: KnowledgeAsset[] = [
     category: 'reference'
   },
   { 
+    id: 'grief-qa', 
+    name: 'Grief Q&A', 
+    nameHe: 'אבל - שאלות',
+    icon: Heart, 
+    color: 'text-rose-500', 
+    bgColor: 'bg-rose-50 dark:bg-rose-950/30', 
+    borderColor: 'border-rose-300 dark:border-rose-700',
+    file: 'tcm-grief-qa.csv',
+    category: 'specialties'
+  },
+  { 
     id: 'energy-channels', 
     name: 'Energy Channels', 
     nameHe: 'ערוצי אנרגיה',
