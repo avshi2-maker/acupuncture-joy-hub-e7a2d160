@@ -1,5 +1,5 @@
 import { ReactNode, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { CRMSidebar } from './CRMSidebar';
 import { CRMBreadcrumb } from './CRMBreadcrumb';
@@ -8,7 +8,7 @@ import { SessionTimerProvider } from '@/contexts/SessionTimerContext';
 import { ThemedClockWidget } from '@/components/ui/ThemedClockWidget';
 import { HeaderActions } from './HeaderActions';
 import { FloatingHelpGuide } from '@/components/ui/FloatingHelpGuide';
-import { Building2, Menu } from 'lucide-react';
+import { Building2, Menu, Leaf, Home } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar';
 
 interface CRMLayoutProps {
@@ -25,24 +25,27 @@ function MobileHeader({ onHelpClick }: HeaderContentProps) {
   if (!isMobile) return null;
   
   return (
-    <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-2 border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-3 md:hidden">
-      <div className="flex items-center gap-2">
+    <header className="sticky top-0 z-40 flex h-16 items-center justify-between gap-2 border-b border-gold/30 bg-gradient-to-r from-jade/90 via-jade/80 to-jade/90 backdrop-blur-sm px-3 md:hidden shadow-lg">
+      <div className="flex items-center gap-3">
         <button
           onClick={toggleSidebar}
-          className="inline-flex items-center justify-center rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          className="inline-flex items-center justify-center rounded-full p-2 text-cream/80 hover:bg-cream/10 hover:text-cream transition-colors"
         >
           <Menu className="h-5 w-5" />
           <span className="sr-only">Toggle sidebar</span>
         </button>
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-jade flex items-center justify-center">
-            <Building2 className="h-3.5 w-3.5 text-white" />
+        <Link to="/" className="flex items-center gap-2 group">
+          <div className="w-8 h-8 rounded-full bg-gold/20 border border-gold/50 flex items-center justify-center group-hover:bg-gold/30 transition-colors">
+            <Leaf className="h-4 w-4 text-gold" />
           </div>
-          <span className="font-display font-semibold text-sm">CM Clinic</span>
-        </div>
+          <div>
+            <span className="font-display font-bold text-sm text-cream tracking-tight">CM CLINIC</span>
+            <p className="text-[10px] text-cream/60 -mt-0.5">CRM Portal</p>
+          </div>
+        </Link>
       </div>
-      <div className="flex items-center gap-1">
-        <ThemedClockWidget className="scale-[0.6] origin-right" />
+      <div className="flex items-center gap-2">
+        <ThemedClockWidget className="scale-[0.55] origin-right" />
         <HeaderActions onHelpClick={onHelpClick} />
       </div>
     </header>
@@ -51,9 +54,28 @@ function MobileHeader({ onHelpClick }: HeaderContentProps) {
 
 function DesktopHeader({ onHelpClick }: HeaderContentProps) {
   return (
-    <header className="hidden md:flex h-14 items-center justify-between border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
-      <CRMBreadcrumb />
+    <header className="hidden md:flex h-16 items-center justify-between border-b border-gold/30 bg-gradient-to-r from-jade/90 via-jade/80 to-jade/90 backdrop-blur-sm px-6 shadow-lg">
       <div className="flex items-center gap-4">
+        <Link to="/" className="flex items-center gap-3 group mr-4">
+          <div className="w-10 h-10 rounded-full bg-gold/20 border border-gold/50 flex items-center justify-center group-hover:bg-gold/30 transition-all group-hover:scale-105">
+            <Leaf className="h-5 w-5 text-gold" />
+          </div>
+          <div>
+            <span className="font-display font-extrabold text-lg text-cream tracking-tight">CM CLINIC</span>
+            <p className="text-xs text-cream/60 -mt-0.5">CRM Portal</p>
+          </div>
+        </Link>
+        <div className="h-8 w-px bg-cream/20" />
+        <CRMBreadcrumb />
+      </div>
+      <div className="flex items-center gap-4">
+        <Link 
+          to="/" 
+          className="flex items-center gap-1.5 text-cream/70 hover:text-cream text-sm transition-colors"
+        >
+          <Home className="h-4 w-4" />
+          <span>Home</span>
+        </Link>
         <ThemedClockWidget className="scale-90" />
         <HeaderActions onHelpClick={onHelpClick} />
       </div>
