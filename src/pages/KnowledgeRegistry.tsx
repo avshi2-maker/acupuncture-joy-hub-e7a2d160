@@ -506,6 +506,14 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'neurology',
     defaultLanguage: 'en',
   },
+  // Oncology - TCM Supportive Care
+  {
+    id: 'tcm-oncology-comprehensive',
+    label: '🎗️ TCM Oncology Comprehensive (53 Cancer Types - All Ages)',
+    path: '/knowledge-assets/TCM_Oncology_Comprehensive_All_Ages.csv',
+    defaultCategory: 'clinical_protocols',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 type QueueItemStatus = 'pending' | 'importing' | 'done' | 'error';
