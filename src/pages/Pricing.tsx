@@ -5,6 +5,7 @@ import { PricingFAQ } from '@/components/pricing/PricingFAQ';
 import { TokenExplainer } from '@/components/pricing/TokenExplainer';
 import { TokenCalculator } from '@/components/pricing/TokenCalculator';
 import { FeatureComparisonTable } from '@/components/pricing/FeatureComparisonTable';
+import { TrustIndicators } from '@/components/pricing/TrustIndicators';
 import { ArrowLeft, HelpCircle, Sparkles, CreditCard, MessageCircle } from 'lucide-react';
 import newLogo from '@/assets/new-logo.png';
 import { Link } from 'react-router-dom';
@@ -155,6 +156,9 @@ export default function Pricing() {
               />
             ))}
           </div>
+
+          {/* Trust Indicators */}
+          <TrustIndicators />
 
           {/* Token Calculator Section */}
           <TokenCalculator />
