@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   BookOpen, CheckCircle2, AlertTriangle, Info, ChevronDown, ChevronUp,
-  Sparkles, Shield, FileText, HelpCircle
+  Sparkles, Shield, FileText, HelpCircle, Activity
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,12 +14,21 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+interface HybridSearchScore {
+  vectorScore?: number;
+  keywordScore?: number;
+  combinedScore: number;
+  threshold: number;
+  meetsThreshold: boolean;
+}
+
 interface ConfidenceMeterProps {
   confidence: number;
   sourcesCount: number;
   sourceNames: string[];
   isExternal: boolean;
   warnings?: string[];
+  hybridScore?: HybridSearchScore;
   onShowDetails?: () => void;
 }
 
@@ -29,9 +38,11 @@ export function ConfidenceMeter({
   sourceNames,
   isExternal,
   warnings = [],
+  hybridScore,
   onShowDetails
 }: ConfidenceMeterProps) {
   const [showSources, setShowSources] = useState(false);
+  const [showScoreDetails, setShowScoreDetails] = useState(false);
 
   // Determine status based on confidence and external flag
   const getStatus = () => {
@@ -117,8 +128,45 @@ export function ConfidenceMeter({
           </div>
         </div>
 
-        {/* Visual Meter */}
-        <div className="flex items-center gap-1.5">
+        {/* Visual Meter with Score */}
+        <div className="flex items-center gap-2">
+          {/* Hybrid Score Display */}
+          {hybridScore && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div 
+                    className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium cursor-pointer transition-colors ${
+                      hybridScore.meetsThreshold 
+                        ? 'bg-green-500/20 text-green-700 hover:bg-green-500/30' 
+                        : 'bg-red-500/20 text-red-600 hover:bg-red-500/30'
+                    }`}
+                    onClick={() => setShowScoreDetails(!showScoreDetails)}
+                  >
+                    <Activity className="w-3 h-3" />
+                    <span>{(hybridScore.combinedScore * 100).toFixed(0)}%</span>
+                    <span className="opacity-60">/ {(hybridScore.threshold * 100).toFixed(0)}%</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="left" className="max-w-[200px]">
+                  <div className="space-y-1">
+                    <p className="font-medium text-xs">Hybrid Search Score</p>
+                    <p className="text-[10px]">
+                      Combined: {(hybridScore.combinedScore * 100).toFixed(1)}%
+                    </p>
+                    <p className="text-[10px]">
+                      Threshold: {(hybridScore.threshold * 100).toFixed(0)}%
+                    </p>
+                    <p className={`text-[10px] ${hybridScore.meetsThreshold ? 'text-green-500' : 'text-red-500'}`}>
+                      {hybridScore.meetsThreshold ? '✓ Meets threshold' : '✗ Below threshold'}
+                    </p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
+          {/* Visual Meter */}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -146,6 +194,52 @@ export function ConfidenceMeter({
           </TooltipProvider>
         </div>
       </div>
+
+      {/* Expanded Hybrid Score Details */}
+      <AnimatePresence>
+        {showScoreDetails && hybridScore && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mt-2 pt-2 border-t border-current/10"
+          >
+            <div className="grid grid-cols-2 gap-2 text-[10px]">
+              {hybridScore.vectorScore !== undefined && (
+                <div className="flex items-center justify-between p-1.5 rounded bg-background/50">
+                  <span className="text-muted-foreground">Vector (Semantic)</span>
+                  <span className="font-medium">{(hybridScore.vectorScore * 100).toFixed(1)}%</span>
+                </div>
+              )}
+              {hybridScore.keywordScore !== undefined && (
+                <div className="flex items-center justify-between p-1.5 rounded bg-background/50">
+                  <span className="text-muted-foreground">Keyword (BM25)</span>
+                  <span className="font-medium">{(hybridScore.keywordScore * 100).toFixed(1)}%</span>
+                </div>
+              )}
+            </div>
+            {/* Threshold Bar */}
+            <div className="mt-2 relative h-2 bg-muted rounded-full overflow-hidden">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${hybridScore.combinedScore * 100}%` }}
+                className={`absolute h-full rounded-full ${
+                  hybridScore.meetsThreshold ? 'bg-green-500' : 'bg-red-500'
+                }`}
+              />
+              <div 
+                className="absolute h-full w-0.5 bg-foreground/60"
+                style={{ left: `${hybridScore.threshold * 100}%` }}
+              />
+            </div>
+            <div className="flex justify-between mt-1 text-[9px] text-muted-foreground">
+              <span>0%</span>
+              <span className="font-medium">Threshold: {(hybridScore.threshold * 100).toFixed(0)}%</span>
+              <span>100%</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Expandable Sources */}
       {sourceNames.length > 0 && (

@@ -599,6 +599,11 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
                         sourceNames={message.sources?.map(s => s.fileName) ?? []}
                         isExternal={message.isExternal ?? false}
                         warnings={message.traceData.hallucinationCheck?.warnings ?? []}
+                        hybridScore={message.metadata?.hybridSearchConfidence ? {
+                          combinedScore: message.metadata.hybridSearchConfidence.averageScore,
+                          threshold: message.metadata.hybridSearchConfidence.threshold,
+                          meetsThreshold: message.metadata.hybridSearchConfidence.meetsThreshold,
+                        } : undefined}
                         onShowDetails={() => setShowTracePanel(true)}
                       />
                     </div>
@@ -612,6 +617,11 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
                         sourcesCount={message.metadata.chunksFound}
                         sourceNames={message.sources?.map(s => s.fileName) ?? []}
                         isExternal={message.isExternal ?? false}
+                        hybridScore={message.metadata?.hybridSearchConfidence ? {
+                          combinedScore: message.metadata.hybridSearchConfidence.averageScore,
+                          threshold: message.metadata.hybridSearchConfidence.threshold,
+                          meetsThreshold: message.metadata.hybridSearchConfidence.meetsThreshold,
+                        } : undefined}
                         onShowDetails={() => setShowTracePanel(true)}
                       />
                     </div>
