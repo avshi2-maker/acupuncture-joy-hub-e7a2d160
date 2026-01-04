@@ -51,6 +51,7 @@ type TherapistIntakeForm = z.infer<typeof therapistIntakeSchema>;
 
 const INTAKE_STORAGE_KEY = 'therapist_intake_completed';
 const DISCLAIMER_STORAGE_KEY = 'therapist_disclaimer_signed';
+const INTAKE_DRAFT_KEY = 'therapist_intake_draft';
 
 const licenseTypes = [
   { value: 'acupuncture', label: 'דיקור סיני' },
@@ -105,6 +106,44 @@ export default function TherapistIntake() {
       clinicPhone: '',
     },
   });
+
+  // Load saved draft on mount
+  useEffect(() => {
+    const savedDraft = localStorage.getItem(INTAKE_DRAFT_KEY);
+    if (savedDraft) {
+      try {
+        const draft = JSON.parse(savedDraft);
+        if (draft.formData) {
+          form.reset(draft.formData);
+        }
+        if (draft.step) {
+          setStep(draft.step);
+        }
+        if (draft.confirmLicensed) setConfirmLicensed(draft.confirmLicensed);
+        if (draft.confirmRead) setConfirmRead(draft.confirmRead);
+        toast.info('טופס שמור נטען', { description: 'המשך מהמקום בו הפסקת' });
+      } catch {
+        // Invalid draft
+      }
+    }
+  }, [form]);
+
+  // Auto-save form data on changes
+  const formValues = form.watch();
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      const draft = {
+        formData: formValues,
+        step,
+        confirmLicensed,
+        confirmRead,
+        savedAt: new Date().toISOString(),
+      };
+      localStorage.setItem(INTAKE_DRAFT_KEY, JSON.stringify(draft));
+    }, 1000); // Debounce 1 second
+    
+    return () => clearTimeout(timeoutId);
+  }, [formValues, step, confirmLicensed, confirmRead]);
 
   // Check if already completed
   useEffect(() => {
@@ -282,6 +321,9 @@ export default function TherapistIntake() {
         therapistName: values.fullName,
         licenseNumber: values.licenseNumber,
       }));
+
+      // Clear the draft since form is complete
+      localStorage.removeItem(INTAKE_DRAFT_KEY);
 
       toast.success('טופס הקליטה הושלם בהצלחה!');
       
