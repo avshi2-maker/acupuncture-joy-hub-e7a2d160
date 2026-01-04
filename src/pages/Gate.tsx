@@ -1124,18 +1124,74 @@ export default function Gate() {
           {/* Confetti celebration */}
           <Confetti isActive={showConfetti} duration={3000} />
 
-          {/* Contact footer */}
-          <p className="text-center text-sm text-muted-foreground mt-8">
-            לשאלות נוספות, צרו קשר עם ד״ר רוני ספיר בוואטסאפ:{' '}
-            <a 
-              href="https://wa.me/972505231042" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-jade hover:underline"
-            >
-              050-5231042
-            </a>
-          </p>
+          {/* Footer section */}
+          <footer className="mt-12 pt-8 border-t border-white/20">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center md:text-right">
+              {/* Contact Info */}
+              <div className="space-y-2">
+                <h4 className="font-semibold text-foreground mb-3">צור קשר</h4>
+                <div className="space-y-1 text-sm text-muted-foreground">
+                  <p>ד״ר רוני ספיר</p>
+                  <a 
+                    href="tel:+972505231042" 
+                    className="block hover:text-jade transition-colors"
+                  >
+                    050-5231042
+                  </a>
+                  <a 
+                    href="mailto:dr.roni@tcmclinic.co.il" 
+                    className="block hover:text-jade transition-colors"
+                  >
+                    dr.roni@tcmclinic.co.il
+                  </a>
+                </div>
+              </div>
+
+              {/* Quick Links */}
+              <div className="space-y-2">
+                <h4 className="font-semibold text-foreground mb-3">קישורים מהירים</h4>
+                <div className="space-y-1 text-sm">
+                  <Link to="/" className="block text-muted-foreground hover:text-jade transition-colors">
+                    דף הבית
+                  </Link>
+                  <Link to="/pricing" className="block text-muted-foreground hover:text-jade transition-colors">
+                    מחירון
+                  </Link>
+                  <Link to="/about" className="block text-muted-foreground hover:text-jade transition-colors">
+                    אודות
+                  </Link>
+                </div>
+              </div>
+
+              {/* Support */}
+              <div className="space-y-2">
+                <h4 className="font-semibold text-foreground mb-3">תמיכה</h4>
+                <div className="space-y-1 text-sm">
+                  <a 
+                    href="https://wa.me/972505231042?text=שלום, אני צריך עזרה עם מערכת TCM Clinic"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center md:justify-start gap-2 text-muted-foreground hover:text-jade transition-colors"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    וואטסאפ
+                  </a>
+                  <a 
+                    href="mailto:support@tcmclinic.co.il"
+                    className="flex items-center justify-center md:justify-start gap-2 text-muted-foreground hover:text-jade transition-colors"
+                  >
+                    <Mail className="h-4 w-4" />
+                    תמיכה במייל
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Copyright */}
+            <div className="mt-6 pt-4 border-t border-white/10 text-center text-xs text-muted-foreground">
+              <p>© {new Date().getFullYear()} TCM Clinic. כל הזכויות שמורות.</p>
+            </div>
+          </footer>
           </div>
         </div>
       </div>
