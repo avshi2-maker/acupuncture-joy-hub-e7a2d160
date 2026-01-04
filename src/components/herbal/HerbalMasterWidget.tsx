@@ -162,7 +162,35 @@ const SAMPLE_FORMULAS: FormulaData[] = [
     answer: 'Bao He Wan reduces Food Stagnation and harmonizes the Stomach. It treats acute food stagnation with epigastric fullness, belching, acid reflux, loose stools, and a thick greasy tongue coating.',
     content: 'Bao He Wan: Shan Zha, Shen Qu, Lai Fu Zi, Ban Xia, Chen Pi, Fu Ling, Lian Qiao. Pattern: Food Stagnation. ⚠️ PREGNANCY CAUTION: Contains Lai Fu Zi (draining) and Ban Xia - avoid or use short-term with modified formula.',
     acupoints: 'CV12, ST36, ST21, PC6',
-    pharmacopeia: 'Dan Xi Xin Fa (Erta of Dan-Xi)',
+    pharmacopeia: 'Dan Xi Xin Fa (Era of Dan-Xi)',
+  },
+  // NEW v5 FORMULAS - Heat-Clearing, Exterior-Releasing, Shen-Calming
+  {
+    id: '14',
+    formula_name: 'Huang Lian Jie Du Tang (黄连解毒汤)',
+    question: 'What is Huang Lian Jie Du Tang used for?',
+    answer: 'Huang Lian Jie Du Tang drains Fire and resolves Toxin from all three Jiaos. It treats severe Heat/Fire patterns with high fever, irritability, dry mouth, insomnia, or skin eruptions.',
+    content: 'Huang Lian Jie Du Tang: Huang Lian, Huang Qin, Huang Bai, Zhi Zi. Pattern: Fire Toxin in All Three Jiaos. ⛔ PREGNANCY CONTRAINDICATED: Strongly draining and cold - may damage fetus. ⚠️ ELDERLY CAUTION: Very cold nature may damage Stomach Qi - use short-term only.',
+    acupoints: 'LI11, GV14, PC8, LV2',
+    pharmacopeia: 'Wai Tai Mi Yao (Arcane Essentials)',
+  },
+  {
+    id: '15',
+    formula_name: 'Gui Zhi Tang (桂枝汤)',
+    question: 'When is Gui Zhi Tang indicated?',
+    answer: 'Gui Zhi Tang releases the exterior and harmonizes Ying and Wei. It treats Wind-Cold exterior deficiency with sweating, aversion to wind, fever, headache, and a floating moderate pulse.',
+    content: 'Gui Zhi Tang: Gui Zhi, Bai Shao, Sheng Jiang, Da Zao, Zhi Gan Cao. Pattern: Wind-Cold with Wei Qi Deficiency. ⚠️ ELDERLY CAUTION: Promotes sweating - avoid excessive diaphoresis in weak or elderly patients. Monitor fluid intake.',
+    acupoints: 'LU7, LI4, BL12, ST36',
+    pharmacopeia: 'Shang Han Lun (Treatise on Cold Damage)',
+  },
+  {
+    id: '16',
+    formula_name: 'Tian Wang Bu Xin Dan (天王补心丹)',
+    question: 'What does Tian Wang Bu Xin Dan treat?',
+    answer: 'Tian Wang Bu Xin Dan nourishes Yin, nourishes Blood, tonifies Heart Qi, and calms the Shen. It treats Heart Yin deficiency with restlessness, insomnia, palpitations, poor memory, and night sweats.',
+    content: 'Tian Wang Bu Xin Dan: Sheng Di Huang, Ren Shen, Dan Shen, Xuan Shen, Fu Ling, Wu Wei Zi, Yuan Zhi, Dang Gui, Tian Men Dong, Mai Men Dong, Bai Zi Ren, Suan Zao Ren, Jie Geng. Pattern: Heart Yin Deficiency with Shen Disturbance. ⚠️ ELDERLY/PEDIATRIC CAUTION: Cloying formula - hard to digest. Combine with Spleen-tonifying herbs or reduce dose if digestion is weak.',
+    acupoints: 'HT7, PC6, SP6, KI6, CV14',
+    pharmacopeia: 'She Sheng Mi Pou (Secret Investigations into Obtaining Health)',
   },
 ];
 
@@ -171,11 +199,11 @@ const PREGNANCY_FORBIDDEN = [
   'Da Huang', 'Hong Hua', 'Niu Xi', 'San Leng', 'E Zhu', 'Shui Zhi', 
   'Mang Chong', 'Ban Mao', 'Wu Gong', 'Quan Xie', 'Chan Su', 'Xiong Huang',
   'Qian Niu Zi', 'Ba Dou', 'Gan Sui', 'Da Ji', 'Yuan Hua', 'She Xiang',
-  'Tao Ren', 'Yi Mu Cao', 'Mang Xiao', 'Carthami', 'Persicae'
+  'Tao Ren', 'Yi Mu Cao', 'Mang Xiao', 'Carthami', 'Persicae', 'Huang Lian', 'Huang Qin', 'Huang Bai'
 ];
 
-// Herbs requiring caution in elderly (cloying/stimulant)
-const ELDERLY_CAUTION = ['Ma Huang', 'Shu Di Huang', 'cardiovascular', 'stimulant', 'cloying'];
+// Herbs requiring caution in elderly (cloying/stimulant/cold)
+const ELDERLY_CAUTION = ['Ma Huang', 'Shu Di Huang', 'cardiovascular', 'stimulant', 'cloying', 'cold nature', 'sweating', 'Gui Zhi Tang'];
 
 // Herbs requiring caution in children
 const CHILDREN_CAUTION = ['Ma Huang', 'stimulant'];
