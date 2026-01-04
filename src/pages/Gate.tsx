@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useTier } from '@/hooks/useTier';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { toast } from 'sonner';
-import { Lock, ArrowLeft, CreditCard, Upload, CheckCircle, ArrowRight, MessageCircle, Mail, Loader2, Play, Fingerprint, Eye, EyeOff, Clock, Baby, Zap, Heart, Sparkles, FlaskConical, Leaf, HelpCircle } from 'lucide-react';
+import { Lock, ArrowLeft, CreditCard, Upload, CheckCircle, ArrowRight, MessageCircle, Mail, Loader2, Play, Fingerprint, Eye, EyeOff, HelpCircle, Leaf } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import newLogo from '@/assets/new-logo.png';
 import { Link } from 'react-router-dom';
@@ -90,44 +90,7 @@ const tiers = [
   },
 ];
 
-type Step = 'tiers' | 'pathways' | 'payment' | 'password';
-
-// Intake pathway cards data
-const intakePathways = [
-  {
-    id: 'wellness',
-    icon: Leaf,
-    title: 'טיפול כללי',
-    titleEn: 'Comprehensive Wellness',
-    description: 'מסלול לגילוי שורש הבעיה והחזרת האיזון ההוליסטי.',
-    bestFor: 'מטופלים חדשים, כאבים כרוניים, רפואה פנימית, איזון חוקתי.',
-    color: 'jade',
-    accentClass: 'from-jade to-jade-dark',
-    bgClass: 'bg-jade/10 border-jade/30',
-  },
-  {
-    id: 'maternal',
-    icon: Baby,
-    title: 'הריון ופריון',
-    titleEn: 'Maternal & Fertility',
-    description: 'מסלול מיוחד לכל שלבי האמהות.',
-    bestFor: 'טיפולי פוריות, תמיכה בהריון, הכנה ללידה, התאוששות אחרי לידה.',
-    color: 'rose',
-    accentClass: 'from-rose-400 to-rose-600',
-    bgClass: 'bg-rose-50 border-rose-200 dark:bg-rose-950/20 dark:border-rose-800',
-  },
-  {
-    id: 'acute',
-    icon: Zap,
-    title: 'טיפול חד או תחזוקה',
-    titleEn: 'Acute & Maintenance',
-    description: 'תמיכה מהירה או טיפול תחזוקתי.',
-    bestFor: 'מטופלים חוזרים, מצבים חדים (הצטננות, פציעות), תחזוקה שוטפת.',
-    color: 'amber',
-    accentClass: 'from-amber-400 to-amber-600',
-    bgClass: 'bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800',
-  },
-];
+type Step = 'tiers' | 'payment' | 'password';
 
 // Check if therapist disclaimer is completed
 const DISCLAIMER_STORAGE_KEY = 'tcm_therapist_disclaimer_signed';
@@ -154,6 +117,24 @@ export default function Gate() {
   // Check if user has previously logged in (has stored tier info)
   const hasStoredSession = localStorage.getItem('tier') !== null;
   
+  // Handle return from intake form - check URL params
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const stepParam = params.get('step');
+    const tierParam = params.get('tier');
+    
+    if (stepParam === 'payment' && tierParam) {
+      setSelectedTier(tierParam);
+      setCurrentStep('payment');
+      // Clear session storage
+      sessionStorage.removeItem('selected_tier_for_intake');
+    } else if (stepParam === 'password') {
+      setSelectedTier('trial');
+      setCurrentStep('password');
+      sessionStorage.removeItem('selected_tier_for_intake');
+    }
+  }, [location.search]);
+  
   // Simulate page loading for tier cards
   useEffect(() => {
     const timer = setTimeout(() => setIsPageLoading(false), 800);
@@ -172,27 +153,8 @@ export default function Gate() {
     const redirect = params.get('redirect');
     const question = params.get('question');
     
-    // Check if therapist intake is completed (mandatory after gate)
-    const intakeCompleted = localStorage.getItem('therapist_intake_completed');
-    let needsIntake = true;
-    
-    if (intakeCompleted) {
-      try {
-        const intakeData = JSON.parse(intakeCompleted);
-        // Check if completed within the last year
-        if (intakeData.completedAt && new Date(intakeData.completedAt) > new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)) {
-          needsIntake = false;
-        }
-      } catch {
-        needsIntake = true;
-      }
-    }
-    
-    // If intake not completed, redirect to therapist-intake (mandatory after payment)
-    if (needsIntake) {
-      return '/therapist-intake';
-    }
-    
+    // Since intake is completed BEFORE password entry in the new flow,
+    // we can go directly to dashboard or profile
     const hasProfile = localStorage.getItem('therapist_profile');
     const defaultRedirect = hasProfile ? '/dashboard' : '/therapist-profile';
 
@@ -204,13 +166,9 @@ export default function Gate() {
 
   const handleSelectTier = (tierName: string) => {
     setSelectedTier(tierName);
-    if (tierName === 'Trial') {
-      // Trial goes to pathways step first
-      setCurrentStep('pathways');
-    } else {
-      // Paid tiers show payment instructions
-      setCurrentStep('payment');
-    }
+    // Store selected tier and redirect to intake form
+    sessionStorage.setItem('selected_tier_for_intake', tierName.toLowerCase());
+    navigate('/therapist-intake?from=gate');
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -438,9 +396,9 @@ export default function Gate() {
                   <span className="text-xs sm:text-sm font-medium hidden sm:inline">תוכנית</span>
                 </div>
                 <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 text-slate-400" />
-                <div className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-full transition-all ${currentStep === 'pathways' ? 'bg-jade text-white shadow-md' : 'text-slate-600'}`}>
+                <div className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-full transition-all text-slate-600`}>
                   <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/30 flex items-center justify-center text-xs sm:text-sm font-medium">2</span>
-                  <span className="text-xs sm:text-sm font-medium hidden sm:inline">נתיב טיפול</span>
+                  <span className="text-xs sm:text-sm font-medium hidden sm:inline">טופס קליטה</span>
                 </div>
                 <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 text-slate-400" />
                 <div className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-full transition-all ${currentStep === 'payment' ? 'bg-jade text-white shadow-md' : 'text-slate-600'}`}>
@@ -643,87 +601,6 @@ export default function Gate() {
                 </div>
               </>
             )}
-
-          {/* Step: Intake Pathways (shown after tier selection for visual context) */}
-          {currentStep === 'pathways' && (
-            <>
-              {/* Glassmorphism header */}
-              <div className="text-center mb-10 mx-auto max-w-3xl">
-                <div className="bg-white/95 backdrop-blur-md rounded-3xl p-8 md:p-12 shadow-2xl border border-white/60">
-                  <h1 className="font-display text-3xl md:text-4xl text-jade-dark mb-4">
-                    בחרו את נתיב הטיפול
-                  </h1>
-                  <p className="text-slate-600 text-lg">
-                    בחרו את הנתיב המתאים ביותר לביקור שלכם היום
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-3 gap-6 lg:gap-8 mb-8">
-                {intakePathways.map((pathway) => {
-                  const IconComponent = pathway.icon;
-                  return (
-                    <div 
-                      key={pathway.id}
-                      className={`relative bg-white/95 backdrop-blur-md rounded-2xl p-8 text-center transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl border-2 ${pathway.bgClass} cursor-pointer group overflow-hidden`}
-                      onClick={() => setCurrentStep('password')}
-                    >
-                      {/* Top accent bar */}
-                      <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${pathway.accentClass}`} />
-                      
-                      {/* Icon */}
-                      <div className={`mx-auto w-20 h-20 rounded-full bg-gradient-to-br ${pathway.accentClass} flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform`}>
-                        <IconComponent className="h-10 w-10 text-white" />
-                      </div>
-                      
-                      {/* Title */}
-                      <h3 className="font-display text-xl font-semibold text-slate-800 mb-2">
-                        {pathway.title}
-                      </h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {pathway.titleEn}
-                      </p>
-                      
-                      {/* Description */}
-                      <p className="text-slate-600 mb-4 text-sm leading-relaxed">
-                        {pathway.description}
-                      </p>
-                      
-                      {/* Best for */}
-                      <div className="text-right bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3 mb-6">
-                        <p className="text-sm text-slate-600">
-                          <strong className={`text-${pathway.color}-600`}>מתאים ל:</strong>{' '}
-                          {pathway.bestFor}
-                        </p>
-                      </div>
-                      
-                      {/* CTA Button */}
-                      <Button 
-                        className={`w-full bg-gradient-to-r ${pathway.accentClass} text-white hover:opacity-90 transition-opacity shadow-md`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setCurrentStep('password');
-                        }}
-                      >
-                        התחל {pathway.title}
-                      </Button>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="text-center">
-                <Button 
-                  variant="ghost" 
-                  onClick={() => setCurrentStep('tiers')}
-                  className="text-slate-600 hover:text-slate-800"
-                >
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                  חזרה לבחירת תוכנית
-                </Button>
-              </div>
-            </>
-          )}
 
           {/* Step 2: Payment Instructions */}
           {currentStep === 'payment' && selectedTier && (

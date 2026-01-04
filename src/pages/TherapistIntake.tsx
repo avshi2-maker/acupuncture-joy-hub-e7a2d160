@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -74,6 +74,8 @@ const disclaimerPoints = [
 
 export default function TherapistIntake() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isFromGate = searchParams.get('from') === 'gate';
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [idCheckStatus, setIdCheckStatus] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle');
@@ -282,7 +284,20 @@ export default function TherapistIntake() {
       }));
 
       toast.success('טופס הקליטה הושלם בהצלחה!');
-      navigate('/dashboard');
+      
+      // Check if coming from Gate registration flow
+      if (isFromGate) {
+        const selectedTier = sessionStorage.getItem('selected_tier_for_intake');
+        if (selectedTier === 'trial') {
+          // Trial users go directly to password step
+          navigate('/gate?step=password');
+        } else {
+          // Paid tier users go to payment step
+          navigate('/gate?step=payment&tier=' + selectedTier);
+        }
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       console.error('Error:', err);
       toast.error('שגיאה בשמירה. נסה שוב.');
