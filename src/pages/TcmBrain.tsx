@@ -599,6 +599,16 @@ export default function TcmBrain() {
                     onClick: () => streamChat('What are the best acupuncture points and formulas for stress and anxiety according to TCM?'),
                   },
                   {
+                    id: 'grief',
+                    name: 'Grief',
+                    nameHe: 'אבל',
+                    icon: Heart,
+                    color: 'text-rose-500',
+                    borderColor: 'border-rose-300',
+                    tooltip: 'TCM Grief & Emotional Processing - 50 Q&A with acupoints & formulas',
+                    onClick: () => streamChat('What are the best acupuncture points and herbal formulas for grief and emotional processing according to TCM?'),
+                  },
+                  {
                     id: 'nutrition',
                     name: 'Nutrition',
                     nameHe: 'תזונה',
