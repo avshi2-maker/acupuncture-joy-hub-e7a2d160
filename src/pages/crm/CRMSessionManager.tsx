@@ -118,7 +118,7 @@ export default function CRMSessionManager() {
       }
     } catch (error) {
       console.error('Error fetching data:', error);
-      toast.error('Failed to load data');
+      toast.error('שגיאה בטעינת הנתונים');
     } finally {
       setLoading(false);
     }
@@ -182,7 +182,7 @@ export default function CRMSessionManager() {
             // Include owner as well
             const allStaff: StaffMember[] = staffData.map(s => ({
               ...s,
-              display_name: s.role === 'owner' ? 'Owner' : s.role.charAt(0).toUpperCase() + s.role.slice(1)
+              display_name: s.role === 'owner' ? 'בעלים' : s.role === 'admin' ? 'מנהל' : s.role === 'therapist' ? 'מטפל' : s.role.charAt(0).toUpperCase() + s.role.slice(1)
             }));
             
             // Add owner if not already in staff list
@@ -191,7 +191,7 @@ export default function CRMSessionManager() {
                 id: 'owner',
                 user_id: user.id,
                 role: 'owner',
-                display_name: 'You (Owner)'
+                display_name: 'אתה (בעלים)'
               });
             }
             
@@ -263,7 +263,7 @@ export default function CRMSessionManager() {
 
     const patientName = selectedPatientData.full_name.split(' ')[0];
     const dateFormatted = format(new Date(selectedDate), 'dd/MM/yyyy', { locale: he });
-    const roomName = selectedRoomData?.name || 'Treatment Room';
+    const roomName = selectedRoomData?.name || 'חדר טיפולים';
 
     return `שלום ${patientName}! 🌿
 
@@ -287,7 +287,7 @@ ${selectedPatientData.chief_complaint ? `נמשיך לטפל ב: ${selectedPatie
   const handleConfirmSession = async () => {
     const therapistId = selectedTherapist || user?.id;
     if (!selectedClinic || !selectedRoom || !selectedPatient || !selectedSlot || !therapistId) {
-      toast.error('Please fill in all required fields');
+      toast.error('אנא מלא את כל השדות הנדרשים');
       return;
     }
 
@@ -302,7 +302,7 @@ ${selectedPatientData.chief_complaint ? `נמשיך לטפל ב: ${selectedPatie
           patient_id: selectedPatient,
           clinic_id: selectedClinic,
           room_id: selectedRoom,
-          title: `Treatment - ${selectedPatientData?.full_name}`,
+          title: `טיפול - ${selectedPatientData?.full_name}`,
           start_time: startTime.toISOString(),
           end_time: endTime.toISOString(),
           status: 'scheduled',
@@ -323,17 +323,17 @@ ${selectedPatientData.chief_complaint ? `נמשיך לטפל ב: ${selectedPatie
           await supabase.functions.invoke('notify-therapist-booking', {
             body: {
               therapistEmail: user?.email, // Fallback - in production, get from profiles table
-              therapistName: selectedStaff?.display_name || 'Therapist',
+              therapistName: selectedStaff?.display_name || 'מטפל',
               patientName: selectedPatientData?.full_name,
               clinicName: selectedClinicData?.name,
-              roomName: selectedRoomData?.name || 'Treatment Room',
+              roomName: selectedRoomData?.name || 'חדר טיפולים',
               date: format(new Date(selectedDate), 'dd/MM/yyyy'),
               time: selectedSlot,
               notes: forecastNotes,
-              bookedBy: user?.email || 'Clinic Admin',
+              bookedBy: user?.email || 'מנהל הקליניקה',
             },
           });
-          toast.success('Therapist notified via email');
+          toast.success('נשלחה התראה למטפל במייל');
         } catch (notifyError) {
           console.error('Failed to send notification:', notifyError);
           // Don't fail the booking if notification fails
@@ -341,23 +341,23 @@ ${selectedPatientData.chief_complaint ? `נמשיך לטפל ב: ${selectedPatie
       }
 
       setBookingStatus('success');
-      const therapistLabel = selectedTherapist === user?.id ? 'you' : 'selected therapist';
-      setStatusMessage(`Session booked successfully for ${selectedPatientData?.full_name} at ${selectedSlot} with ${therapistLabel}`);
-      toast.success('Session booked!');
+      const therapistLabel = selectedTherapist === user?.id ? 'אתה' : 'המטפל שנבחר';
+      setStatusMessage(`התור נקבע בהצלחה עבור ${selectedPatientData?.full_name} בשעה ${selectedSlot} עם ${therapistLabel}`);
+      toast.success('התור נקבע בהצלחה!');
       
       // Refresh appointments
       fetchAppointmentsForDateAndRoom();
     } catch (error: any) {
       console.error('Error booking session:', error);
       setBookingStatus('error');
-      setStatusMessage(error.message || 'Failed to book session');
-      toast.error('Failed to book session');
+      setStatusMessage(error.message || 'שגיאה בקביעת התור');
+      toast.error('שגיאה בקביעת התור');
     }
   };
 
   const handleSendWhatsApp = () => {
     if (!selectedPatientData?.phone) {
-      toast.error('Patient phone number not available');
+      toast.error('מספר טלפון של המטופל לא זמין');
       return;
     }
 
@@ -387,10 +387,10 @@ ${selectedPatientData.chief_complaint ? `נמשיך לטפל ב: ${selectedPatie
           </div>
           <div>
             <h1 className="text-2xl font-display font-bold text-white flex items-center gap-2">
-              Session Command Center
+              מרכז ניהול תורים
               <Sparkles className="h-5 w-5 text-amber-400" />
             </h1>
-            <p className="text-white/70 text-sm">Smart scheduling with conflict detection</p>
+            <p className="text-white/70 text-sm">תזמון חכם עם זיהוי התנגשויות</p>
           </div>
         </div>
 
@@ -400,7 +400,7 @@ ${selectedPatientData.chief_complaint ? `נמשיך לטפל ב: ${selectedPatie
             <CardHeader className="pb-4">
               <CardTitle className="text-lg font-display flex items-center gap-2">
                 <span className="w-8 h-8 rounded-full bg-jade/10 flex items-center justify-center text-jade text-sm font-bold">1</span>
-                Session Details
+                פרטי התור
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -408,11 +408,11 @@ ${selectedPatientData.chief_complaint ? `נמשיך לטפל ב: ${selectedPatie
               <div>
                 <label className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-2">
                   <Building2 className="h-4 w-4" />
-                  Clinic Branch
+                  סניף מרפאה
                 </label>
                 <Select value={selectedClinic} onValueChange={setSelectedClinic}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select clinic..." />
+                    <SelectValue placeholder="בחר מרפאה..." />
                   </SelectTrigger>
                   <SelectContent>
                     {clinics.map(clinic => (
@@ -429,7 +429,7 @@ ${selectedPatientData.chief_complaint ? `נמשיך לטפל ב: ${selectedPatie
               <div>
                 <label className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-2">
                   <DoorOpen className="h-4 w-4" />
-                  Room / Resource
+                  חדר / משאב
                 </label>
                 <Select 
                   value={selectedRoom} 
@@ -437,7 +437,7 @@ ${selectedPatientData.chief_complaint ? `נמשיך לטפל ב: ${selectedPatie
                   disabled={!selectedClinic}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={selectedClinic ? "Select room..." : "Select clinic first"} />
+                    <SelectValue placeholder={selectedClinic ? "בחר חדר..." : "בחר מרפאה תחילה"} />
                   </SelectTrigger>
                   <SelectContent>
                     {rooms.map(room => (
@@ -460,11 +460,11 @@ ${selectedPatientData.chief_complaint ? `נמשיך לטפל ב: ${selectedPatie
               <div>
                 <label className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-2">
                   <Users className="h-4 w-4" />
-                  Select Patient
+                  בחר מטופל
                 </label>
                 <Select value={selectedPatient} onValueChange={setSelectedPatient}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select patient..." />
+                    <SelectValue placeholder="בחר מטופל..." />
                   </SelectTrigger>
                   <SelectContent>
                     {patients.map(patient => (
@@ -485,21 +485,21 @@ ${selectedPatientData.chief_complaint ? `נמשיך לטפל ב: ${selectedPatie
                   <div>
                     <label className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-2">
                       <User className="h-4 w-4" />
-                      Assign Therapist
+                      שייך מטפל
                     </label>
                     <Select value={selectedTherapist} onValueChange={setSelectedTherapist}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select therapist..." />
+                        <SelectValue placeholder="בחר מטפל..." />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value={user?.id || ''}>
-                          You (Current User)
+                          אתה (המשתמש הנוכחי)
                         </SelectItem>
                         {staffMembers
                           .filter(s => s.user_id !== user?.id && (s.role === 'therapist' || s.role === 'owner' || s.role === 'admin'))
                           .map(staff => (
                             <SelectItem key={staff.id} value={staff.user_id}>
-                              Staff - {staff.display_name || staff.role}
+                              צוות - {staff.display_name || staff.role}
                             </SelectItem>
                           ))
                         }
@@ -513,7 +513,7 @@ ${selectedPatientData.chief_complaint ? `נמשיך לטפל ב: ${selectedPatie
                       <div className="flex items-center gap-2">
                         <Mail className="h-4 w-4 text-jade" />
                         <Label htmlFor="notify-therapist" className="text-sm font-medium cursor-pointer">
-                          Notify therapist via email
+                          שלח התראה למטפל במייל
                         </Label>
                       </div>
                       <Switch
@@ -529,12 +529,12 @@ ${selectedPatientData.chief_complaint ? `נמשיך לטפל ב: ${selectedPatie
               {/* Quick Summary */}
               {selectedClinic && selectedRoom && selectedPatient && (
                 <div className="p-4 rounded-xl bg-gradient-to-r from-jade/5 to-blue-500/5 border border-jade/20">
-                  <p className="text-sm font-medium text-jade mb-2">Session Summary</p>
+                  <p className="text-sm font-medium text-jade mb-2">סיכום התור</p>
                   <div className="space-y-1 text-sm text-muted-foreground">
-                    <p>👨‍⚕️ Therapist: {selectedTherapist === user?.id ? 'You' : 'Staff Member'}</p>
-                    <p>👤 Patient: {selectedPatientData?.full_name}</p>
-                    <p>🏥 Clinic: {selectedClinicData?.name}</p>
-                    <p>🚪 Room: {selectedRoomData?.name}</p>
+                    <p>👨‍⚕️ מטפל: {selectedTherapist === user?.id ? 'אתה' : 'איש צוות'}</p>
+                    <p>👤 מטופל: {selectedPatientData?.full_name}</p>
+                    <p>🏥 מרפאה: {selectedClinicData?.name}</p>
+                    <p>🚪 חדר: {selectedRoomData?.name}</p>
                   </div>
                 </div>
               )}
@@ -546,7 +546,7 @@ ${selectedPatientData.chief_complaint ? `נמשיך לטפל ב: ${selectedPatie
             <CardHeader className="pb-4">
               <CardTitle className="text-lg font-display flex items-center gap-2">
                 <span className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 text-sm font-bold">2</span>
-                Calendar Availability
+                זמינות יומן
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -554,7 +554,7 @@ ${selectedPatientData.chief_complaint ? `נמשיך לטפל ב: ${selectedPatie
               <div>
                 <label className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-2">
                   <Calendar className="h-4 w-4" />
-                  Select Date
+                  בחר תאריך
                 </label>
                 <Input 
                   type="date" 
@@ -569,7 +569,7 @@ ${selectedPatientData.chief_complaint ? `נמשיך לטפל ב: ${selectedPatie
               <div>
                 <label className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-2">
                   <Clock className="h-4 w-4" />
-                  Available Slots
+                  משבצות פנויות
                   {selectedRoom && (
                     <Badge variant="secondary" className="ml-auto text-xs">
                       {selectedRoomData?.name}
@@ -580,7 +580,7 @@ ${selectedPatientData.chief_complaint ? `נמשיך לטפל ב: ${selectedPatie
                 {!selectedRoom ? (
                   <div className="p-8 text-center text-muted-foreground bg-muted/30 rounded-xl">
                     <DoorOpen className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p>Select clinic & room to see availability</p>
+                    <p>בחר מרפאה וחדר כדי לראות זמינות</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-5 gap-2">
@@ -610,15 +610,15 @@ ${selectedPatientData.chief_complaint ? `נמשיך לטפל ב: ${selectedPatie
               <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
                 <div className="flex items-center gap-1.5">
                   <div className="w-3 h-3 rounded bg-white border" />
-                  <span>Available</span>
+                  <span>פנוי</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <div className="w-3 h-3 rounded bg-jade" />
-                  <span>Selected</span>
+                  <span>נבחר</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <div className="w-3 h-3 rounded bg-muted" />
-                  <span>Booked</span>
+                  <span>תפוס</span>
                 </div>
               </div>
             </CardContent>
@@ -629,7 +629,7 @@ ${selectedPatientData.chief_complaint ? `נמשיך לטפל ב: ${selectedPatie
             <CardHeader className="pb-4">
               <CardTitle className="text-lg font-display flex items-center gap-2">
                 <span className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 text-sm font-bold">3</span>
-                Book & Forecast Report
+                קביעה ותחזית טיפול
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -638,10 +638,10 @@ ${selectedPatientData.chief_complaint ? `נמשיך לטפל ב: ${selectedPatie
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                      Additional Notes / Next Steps
+                      הערות נוספות / צעדים הבאים
                     </label>
                     <Textarea
-                      placeholder="E.g., Continue with back pain protocol, check medication interaction..."
+                      placeholder="לדוגמה: להמשיך בפרוטוקול כאבי גב, לבדוק אינטראקציות תרופתיות..."
                       value={forecastNotes}
                       onChange={(e) => setForecastNotes(e.target.value)}
                       rows={3}
@@ -654,7 +654,7 @@ ${selectedPatientData.chief_complaint ? `נמשיך לטפל ב: ${selectedPatie
                     className="w-full bg-gradient-to-r from-jade to-emerald-500 hover:from-jade/90 hover:to-emerald-500/90 text-white font-semibold py-6"
                   >
                     <CheckCircle2 className="h-5 w-5 mr-2" />
-                    Confirm Session
+                    אשר תור
                   </Button>
 
                   {/* Status Message */}
@@ -679,7 +679,7 @@ ${selectedPatientData.chief_complaint ? `נמשיך לטפל ב: ${selectedPatie
                   <div>
                     <label className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
                       <MessageCircle className="h-4 w-4" />
-                      WhatsApp Forecast Message Preview
+                      תצוגה מקדימה של הודעת וואטסאפ
                     </label>
                     <Textarea
                       value={whatsAppMessage}
@@ -696,7 +696,7 @@ ${selectedPatientData.chief_complaint ? `נמשיך לטפל ב: ${selectedPatie
                     className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-semibold py-6"
                   >
                     <Send className="h-5 w-5 mr-2" />
-                    Send via WhatsApp
+                    שלח בוואטסאפ
                   </Button>
                 </div>
               </div>
