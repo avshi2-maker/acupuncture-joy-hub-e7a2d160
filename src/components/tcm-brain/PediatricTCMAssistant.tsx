@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Baby, Pill, Syringe, ShieldAlert, Calculator, AlertTriangle, Droplet, Heart, Radiation, Activity, CheckCircle2, Loader2, Leaf, Search, RefreshCw } from 'lucide-react';
+import { Baby, Pill, Syringe, ShieldAlert, Calculator, AlertTriangle, Droplet, Heart, Radiation, Activity, CheckCircle2, Loader2, Leaf, Search, RefreshCw, Save, User } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,18 @@ import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
+
+interface Patient {
+  id: string;
+  full_name: string;
+}
+
+interface Visit {
+  id: string;
+  visit_date: string;
+  chief_complaint: string | null;
+}
 
 type TabType = 'dosing' | 'needle' | 'safety' | 'oncology' | 'herbs';
 type MethodType = 'weight' | 'age';
@@ -98,6 +110,7 @@ const ONCOLOGY_WARNINGS = {
 };
 
 export function PediatricTCMAssistant() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('dosing');
   
   // Oncology safety state
@@ -111,6 +124,15 @@ export function PediatricTCMAssistant() {
   const [ragResponse, setRagResponse] = useState<RAGOncologyResponse | null>(null);
   const [lastQueryStatus, setLastQueryStatus] = useState<'none' | 'success' | 'error'>('none');
   
+  // Patient/Visit selection state for saving
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [selectedPatientId, setSelectedPatientId] = useState<string>('');
+  const [visits, setVisits] = useState<Visit[]>([]);
+  const [selectedVisitId, setSelectedVisitId] = useState<string>('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingPatients, setIsLoadingPatients] = useState(false);
+  const [isLoadingVisits, setIsLoadingVisits] = useState(false);
+  
   // Dosing calculator state
   const [adultDose, setAdultDose] = useState('');
   const [method, setMethod] = useState<MethodType>('weight');
@@ -121,6 +143,23 @@ export function PediatricTCMAssistant() {
   
   // Needle spec state
   const [selectedAgeGroup, setSelectedAgeGroup] = useState('infant');
+
+  // Fetch patients on mount
+  useEffect(() => {
+    if (user?.id) {
+      fetchPatients();
+    }
+  }, [user?.id]);
+
+  // Fetch visits when patient is selected
+  useEffect(() => {
+    if (selectedPatientId) {
+      fetchVisits(selectedPatientId);
+    } else {
+      setVisits([]);
+      setSelectedVisitId('');
+    }
+  }, [selectedPatientId]);
 
   // Handle oncology status changes
   useEffect(() => {
@@ -135,6 +174,72 @@ export function PediatricTCMAssistant() {
       setRagResponse(null);
     }
   }, [oncologyStatus]);
+
+  const fetchPatients = async () => {
+    if (!user?.id) return;
+    setIsLoadingPatients(true);
+    try {
+      const { data, error } = await supabase
+        .from('patients')
+        .select('id, full_name')
+        .eq('therapist_id', user.id)
+        .order('full_name');
+      
+      if (error) throw error;
+      setPatients(data || []);
+    } catch (error) {
+      console.error('Error fetching patients:', error);
+    } finally {
+      setIsLoadingPatients(false);
+    }
+  };
+
+  const fetchVisits = async (patientId: string) => {
+    if (!user?.id) return;
+    setIsLoadingVisits(true);
+    try {
+      const { data, error } = await supabase
+        .from('visits')
+        .select('id, visit_date, chief_complaint')
+        .eq('patient_id', patientId)
+        .eq('therapist_id', user.id)
+        .order('visit_date', { ascending: false })
+        .limit(10);
+      
+      if (error) throw error;
+      setVisits(data || []);
+    } catch (error) {
+      console.error('Error fetching visits:', error);
+    } finally {
+      setIsLoadingVisits(false);
+    }
+  };
+
+  const saveHerbsToVisit = async () => {
+    if (!selectedVisitId || !ragResponse) return;
+    
+    setIsSaving(true);
+    try {
+      // Format herbs for saving
+      const safeHerbsList = ragResponse.safeHerbs.map(h => h.name).join(', ');
+      const avoidHerbsList = ragResponse.avoidHerbs.join(', ');
+      const herbsText = `[Oncology: ${oncologyStatus}]\nSafe: ${safeHerbsList}\nAvoid: ${avoidHerbsList}`;
+
+      const { error } = await supabase
+        .from('visits')
+        .update({ herbs_prescribed: herbsText })
+        .eq('id', selectedVisitId);
+
+      if (error) throw error;
+      
+      toast.success('Herb recommendations saved to visit record');
+    } catch (error) {
+      console.error('Error saving herbs:', error);
+      toast.error('Failed to save herb recommendations');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Fetch oncology-safe herbs from RAG
   const fetchOncologySafeHerbs = async (customQuery?: string) => {
@@ -642,52 +747,113 @@ export function PediatricTCMAssistant() {
 
                     {/* Results */}
                     {!isLoadingHerbs && ragResponse && (
-                      <ScrollArea className="h-[200px]">
-                        <div className="space-y-3">
-                          {/* Safe Herbs */}
-                          <div>
-                            <h5 className="text-xs font-semibold text-green-700 uppercase tracking-wide mb-2 flex items-center gap-1">
-                              <CheckCircle2 className="h-3 w-3" />
-                              Safe Herbs for {oncologyStatus === 'chemo' ? 'Chemotherapy' : 'Radiation'}
-                            </h5>
-                            <div className="space-y-2">
-                              {ragResponse.safeHerbs.map((herb, i) => (
-                                <div key={i} className="bg-green-50 border border-green-200 rounded-lg p-2">
-                                  <div className="font-medium text-sm text-green-800">{herb.name}</div>
-                                  <div className="text-xs text-green-700">{herb.indication}</div>
-                                  {herb.caution && (
-                                    <div className="text-xs text-amber-600 mt-1 italic">⚠️ {herb.caution}</div>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Avoid Herbs */}
-                          <div>
-                            <h5 className="text-xs font-semibold text-red-700 uppercase tracking-wide mb-2 flex items-center gap-1">
-                              <AlertTriangle className="h-3 w-3" />
-                              Avoid These Herbs
-                            </h5>
-                            <div className="bg-red-50 border border-red-200 rounded-lg p-2">
-                              <div className="flex flex-wrap gap-1">
-                                {ragResponse.avoidHerbs.map((herb, i) => (
-                                  <span key={i} className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
-                                    {herb}
-                                  </span>
+                      <>
+                        <ScrollArea className="h-[160px]">
+                          <div className="space-y-3">
+                            {/* Safe Herbs */}
+                            <div>
+                              <h5 className="text-xs font-semibold text-green-700 uppercase tracking-wide mb-2 flex items-center gap-1">
+                                <CheckCircle2 className="h-3 w-3" />
+                                Safe Herbs for {oncologyStatus === 'chemo' ? 'Chemotherapy' : 'Radiation'}
+                              </h5>
+                              <div className="space-y-2">
+                                {ragResponse.safeHerbs.map((herb, i) => (
+                                  <div key={i} className="bg-green-50 border border-green-200 rounded-lg p-2">
+                                    <div className="font-medium text-sm text-green-800">{herb.name}</div>
+                                    <div className="text-xs text-green-700">{herb.indication}</div>
+                                    {herb.caution && (
+                                      <div className="text-xs text-amber-600 mt-1 italic">⚠️ {herb.caution}</div>
+                                    )}
+                                  </div>
                                 ))}
                               </div>
                             </div>
-                          </div>
 
-                          {/* Sources */}
-                          {ragResponse.sources.length > 0 && (
-                            <div className="text-xs text-slate-400 pt-2 border-t border-slate-100">
-                              Sources: {ragResponse.sources.slice(0, 3).join(', ')}
+                            {/* Avoid Herbs */}
+                            <div>
+                              <h5 className="text-xs font-semibold text-red-700 uppercase tracking-wide mb-2 flex items-center gap-1">
+                                <AlertTriangle className="h-3 w-3" />
+                                Avoid These Herbs
+                              </h5>
+                              <div className="bg-red-50 border border-red-200 rounded-lg p-2">
+                                <div className="flex flex-wrap gap-1">
+                                  {ragResponse.avoidHerbs.map((herb, i) => (
+                                    <span key={i} className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
+                                      {herb}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
                             </div>
-                          )}
+
+                            {/* Sources */}
+                            {ragResponse.sources.length > 0 && (
+                              <div className="text-xs text-slate-400 pt-2 border-t border-slate-100">
+                                Sources: {ragResponse.sources.slice(0, 3).join(', ')}
+                              </div>
+                            )}
+                          </div>
+                        </ScrollArea>
+
+                        {/* Save to Visit Section */}
+                        <div className="border-t border-slate-200 pt-3 mt-3 space-y-2">
+                          <h5 className="text-xs font-semibold text-slate-600 uppercase tracking-wide flex items-center gap-1">
+                            <Save className="h-3 w-3" />
+                            Save to Patient Visit
+                          </h5>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Select 
+                              value={selectedPatientId} 
+                              onValueChange={setSelectedPatientId}
+                              disabled={isLoadingPatients}
+                            >
+                              <SelectTrigger className="text-xs h-8">
+                                <SelectValue placeholder={isLoadingPatients ? "Loading..." : "Select patient"} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {patients.map((p) => (
+                                  <SelectItem key={p.id} value={p.id} className="text-xs">
+                                    <div className="flex items-center gap-1">
+                                      <User className="h-3 w-3" />
+                                      {p.full_name}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Select 
+                              value={selectedVisitId} 
+                              onValueChange={setSelectedVisitId}
+                              disabled={!selectedPatientId || isLoadingVisits}
+                            >
+                              <SelectTrigger className="text-xs h-8">
+                                <SelectValue placeholder={isLoadingVisits ? "Loading..." : "Select visit"} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {visits.map((v) => (
+                                  <SelectItem key={v.id} value={v.id} className="text-xs">
+                                    {new Date(v.visit_date).toLocaleDateString()} 
+                                    {v.chief_complaint && ` - ${v.chief_complaint.slice(0, 20)}...`}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <Button 
+                            size="sm" 
+                            className="w-full bg-green-500 hover:bg-green-600 h-8 text-xs"
+                            onClick={saveHerbsToVisit}
+                            disabled={!selectedVisitId || isSaving}
+                          >
+                            {isSaving ? (
+                              <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                            ) : (
+                              <Save className="h-3 w-3 mr-1" />
+                            )}
+                            Save Herbs to Visit Record
+                          </Button>
                         </div>
-                      </ScrollArea>
+                      </>
                     )}
 
                     {/* Error/Empty state */}
