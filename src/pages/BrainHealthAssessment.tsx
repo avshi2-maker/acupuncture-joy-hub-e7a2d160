@@ -4,6 +4,13 @@ import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { 
   ArrowLeft, 
   ArrowRight, 
@@ -15,10 +22,15 @@ import {
   Check, 
   Home,
   Brain,
-  RefreshCw
+  RefreshCw,
+  Save,
+  Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { usePatients } from '@/hooks/usePatients';
+import { useCreateAssessment } from '@/hooks/usePatientAssessments';
+import { useAuth } from '@/hooks/useAuth';
 
 type Language = 'he' | 'en' | 'ru';
 type AgeGroup = 'pediatric' | 'adult' | 'elderly';
@@ -151,6 +163,11 @@ export default function BrainHealthAssessment() {
   const [selectedSymptoms, setSelectedSymptoms] = useState<Set<number>>(new Set());
   const [generatedProtocol, setGeneratedProtocol] = useState<string>('');
   const [copied, setCopied] = useState(false);
+  const [selectedPatientId, setSelectedPatientId] = useState<string>('');
+
+  const { user } = useAuth();
+  const { data: patients = [], isLoading: patientsLoading } = usePatients();
+  const createAssessment = useCreateAssessment();
 
   const t = translations[language];
   const isRTL = language === 'he';
@@ -167,7 +184,7 @@ export default function BrainHealthAssessment() {
     });
   }, []);
 
-  const generateProtocol = useCallback(() => {
+  const generateProtocol = useCallback(async () => {
     if (!ageGroup || selectedSymptoms.size === 0) {
       toast.error(t.noSymptoms);
       return;
@@ -198,7 +215,30 @@ export default function BrainHealthAssessment() {
     protocol += `Formulas: ${allFormulas.join(', ')}\n`;
 
     setGeneratedProtocol(protocol);
-  }, [ageGroup, selectedSymptoms, t]);
+
+    // Save to patient record if patient is selected and user is logged in
+    if (selectedPatientId && user) {
+      const score = Math.round((selectedSymptoms.size / symptoms.length) * 100);
+      try {
+        await createAssessment.mutateAsync({
+          patient_id: selectedPatientId,
+          assessment_type: 'brain',
+          score,
+          summary: `${ageLabels[ageGroup]} - ${selectedSymptoms.size} symptoms`,
+          details: {
+            ageGroup,
+            selectedSymptoms: selected.map(s => s.en),
+            points: allPoints,
+            formulas: allFormulas,
+            protocol,
+          },
+          status: 'saved',
+        });
+      } catch (error) {
+        console.error('Failed to save assessment:', error);
+      }
+    }
+  }, [ageGroup, selectedSymptoms, t, selectedPatientId, user, createAssessment]);
 
   const copyToClipboard = useCallback(async () => {
     try {
@@ -282,6 +322,41 @@ export default function BrainHealthAssessment() {
             </h1>
             <p className="text-muted-foreground">{t.subtitle}</p>
           </div>
+
+          {/* Patient Selector */}
+          {user && patients.length > 0 && (
+            <Card className="mb-6">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-4 flex-wrap">
+                  <Users className="h-5 w-5 text-muted-foreground" />
+                  <span className="font-medium">{isRTL ? 'שייך למטופל:' : 'Link to patient:'}</span>
+                  {patientsLoading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Select value={selectedPatientId} onValueChange={setSelectedPatientId}>
+                      <SelectTrigger className="w-64">
+                        <SelectValue placeholder={isRTL ? 'בחר מטופל (אופציונלי)...' : 'Select patient (optional)...'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">{isRTL ? 'ללא שיוך' : 'No patient'}</SelectItem>
+                        {patients.map(patient => (
+                          <SelectItem key={patient.id} value={patient.id}>
+                            {patient.full_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  {selectedPatientId && selectedPatientId !== 'none' && (
+                    <Badge variant="secondary" className="gap-1">
+                      <Save className="h-3 w-3" />
+                      {isRTL ? 'יישמר בתיק' : 'Will save to record'}
+                    </Badge>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Age Group Selector */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">

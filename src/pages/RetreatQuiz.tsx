@@ -10,6 +10,8 @@ import { Leaf, RefreshCw, CheckCircle, XCircle, MapPin, Pill, Video, Brain, Home
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { usePatients } from '@/hooks/usePatients';
+import { useCreateAssessment } from '@/hooks/usePatientAssessments';
 import retreatQuizBg from '@/assets/retreat-quiz-bg.png';
 
 interface QuestionData {
@@ -89,34 +91,23 @@ export default function RetreatQuiz() {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [score, setScore] = useState(0);
   const [collectedTCM, setCollectedTCM] = useState<CollectedTCM[]>([]);
-  const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<string>('');
-  const [loadingPatients, setLoadingPatients] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // Fetch patients on mount
+  const { data: patients = [], isLoading: loadingPatients } = usePatients();
+  const createAssessment = useCreateAssessment();
+
+  // Fetch user on mount
   useEffect(() => {
-    const fetchPatients = async () => {
-      setLoadingPatients(true);
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          setUserId(user.id);
-          const { data } = await supabase
-            .from('patients')
-            .select('id, full_name, phone')
-            .order('full_name');
-          setPatients(data || []);
-        }
-      } catch (error) {
-        console.error('Error fetching patients:', error);
-      } finally {
-        setLoadingPatients(false);
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
       }
     };
-    fetchPatients();
+    fetchUser();
   }, []);
 
   const startQuiz = () => {
@@ -190,6 +181,7 @@ export default function RetreatQuiz() {
 
     setSaving(true);
     try {
+      // Save to retreat_quiz_results (original behavior)
       const insertData = {
         therapist_id: userId,
         score,
@@ -203,6 +195,22 @@ export default function RetreatQuiz() {
       const { error } = await supabase.from('retreat_quiz_results').insert([insertData]);
 
       if (error) throw error;
+
+      // Also save to patient_assessments if patient is selected
+      if (selectedPatient && selectedPatient !== 'none') {
+        await createAssessment.mutateAsync({
+          patient_id: selectedPatient,
+          assessment_type: 'retreat',
+          score,
+          summary: getResultStatus().badge,
+          details: JSON.parse(JSON.stringify({
+            collectedTCM,
+            totalQuestions: questionsDB.length,
+            answeredYes: collectedTCM.length,
+          })),
+          status: 'saved',
+        });
+      }
       
       setSaved(true);
       toast.success('Quiz results saved to patient record');

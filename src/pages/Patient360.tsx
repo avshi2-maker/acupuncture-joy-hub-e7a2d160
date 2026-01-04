@@ -19,6 +19,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { 
   Home,
   Brain,
@@ -28,16 +34,19 @@ import {
   User,
   Calendar,
   FileText,
-  Loader2
+  Loader2,
+  X
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { usePatients } from '@/hooks/usePatients';
-import { usePatientAssessments, useLatestAssessments, AssessmentType } from '@/hooks/usePatientAssessments';
+import { usePatientAssessments, useLatestAssessments, AssessmentType, PatientAssessment } from '@/hooks/usePatientAssessments';
 import { format } from 'date-fns';
 
 export default function Patient360() {
   const navigate = useNavigate();
   const [selectedPatientId, setSelectedPatientId] = useState<string>('');
+  const [selectedAssessment, setSelectedAssessment] = useState<PatientAssessment | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   const { data: patients = [], isLoading: patientsLoading } = usePatients();
   const { data: assessments = [], isLoading: assessmentsLoading } = usePatientAssessments(selectedPatientId);
@@ -76,6 +85,122 @@ export default function Patient360() {
     } catch {
       return dateStr;
     }
+  };
+
+  const openAssessmentDetails = (assessment: PatientAssessment) => {
+    setSelectedAssessment(assessment);
+    setIsModalOpen(true);
+  };
+
+  const renderAssessmentDetails = (assessment: PatientAssessment) => {
+    const details = assessment.details as Record<string, unknown> | null;
+    
+    if (!details || Object.keys(details).length === 0) {
+      return <p className="text-muted-foreground">אין פרטים נוספים</p>;
+    }
+
+    return (
+      <div className="space-y-4">
+        {/* Score */}
+        {assessment.score !== null && (
+          <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
+            <span className="font-medium">ציון:</span>
+            <Badge variant="secondary" className="text-lg">{assessment.score}</Badge>
+          </div>
+        )}
+
+        {/* Summary */}
+        {assessment.summary && (
+          <div className="p-3 bg-muted/50 rounded-lg">
+            <span className="font-medium block mb-1">סיכום:</span>
+            <p className="text-sm">{assessment.summary}</p>
+          </div>
+        )}
+
+        {/* Detailed info based on assessment type */}
+        {assessment.assessment_type === 'brain' && details && (
+          <div className="space-y-3">
+            {details.ageGroup && (
+              <div className="p-3 bg-violet-500/10 rounded-lg">
+                <span className="font-medium">קבוצת גיל:</span> {String(details.ageGroup)}
+              </div>
+            )}
+            {Array.isArray(details.selectedSymptoms) && details.selectedSymptoms.length > 0 && (
+              <div className="p-3 bg-violet-500/10 rounded-lg">
+                <span className="font-medium block mb-2">סימפטומים:</span>
+                <ul className="list-disc list-inside text-sm space-y-1">
+                  {details.selectedSymptoms.map((s: unknown, i: number) => (
+                    <li key={i}>{String(s)}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {Array.isArray(details.points) && details.points.length > 0 && (
+              <div className="p-3 bg-violet-500/10 rounded-lg">
+                <span className="font-medium">נקודות:</span>
+                <p className="text-sm">{details.points.join(', ')}</p>
+              </div>
+            )}
+            {Array.isArray(details.formulas) && details.formulas.length > 0 && (
+              <div className="p-3 bg-violet-500/10 rounded-lg">
+                <span className="font-medium">פורמולות:</span>
+                <p className="text-sm">{details.formulas.join(', ')}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {assessment.assessment_type === 'body' && details && (
+          <div className="space-y-3">
+            {Array.isArray(details.selectedSymptoms) && details.selectedSymptoms.length > 0 && (
+              <div className="p-3 bg-emerald-500/10 rounded-lg">
+                <span className="font-medium block mb-2">מדדי גוף נבחרים:</span>
+                <ul className="list-disc list-inside text-sm space-y-1">
+                  {details.selectedSymptoms.map((s: unknown, i: number) => (
+                    <li key={i}>{String(s)}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {typeof details.protocol === 'string' && (
+              <div className="p-3 bg-emerald-500/10 rounded-lg">
+                <span className="font-medium block mb-2">פרוטוקול:</span>
+                <pre className="text-xs whitespace-pre-wrap font-mono bg-background p-2 rounded max-h-48 overflow-y-auto">
+                  {details.protocol}
+                </pre>
+              </div>
+            )}
+          </div>
+        )}
+
+        {assessment.assessment_type === 'retreat' && details && (
+          <div className="space-y-3">
+            {typeof details.answeredYes === 'number' && typeof details.totalQuestions === 'number' && (
+              <div className="p-3 bg-amber-500/10 rounded-lg">
+                <span className="font-medium">תשובות חיוביות:</span> {details.answeredYes} / {details.totalQuestions}
+              </div>
+            )}
+            {Array.isArray(details.collectedTCM) && details.collectedTCM.length > 0 && (
+              <div className="p-3 bg-amber-500/10 rounded-lg">
+                <span className="font-medium block mb-2">דפוסי TCM שזוהו:</span>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {details.collectedTCM.map((item: unknown, i: number) => {
+                    const tcmItem = item as { q?: string; pts?: string; herb?: string };
+                    return (
+                      <div key={i} className="text-xs p-2 bg-background rounded">
+                        <p className="font-medium">{tcmItem.q}</p>
+                        <p className="text-muted-foreground">נקודות: {tcmItem.pts}</p>
+                        <p className="text-muted-foreground">פורמולה: {tcmItem.herb}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -275,7 +400,12 @@ export default function Patient360() {
                             <TableCell>{assessment.summary || 'No summary'}</TableCell>
                             <TableCell>{getStatusBadge(assessment.status)}</TableCell>
                             <TableCell>
-                              <Button variant="ghost" size="sm" className="gap-1">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="gap-1"
+                                onClick={() => openAssessmentDetails(assessment)}
+                              >
                                 <Eye className="h-3 w-3" />
                                 צפה
                               </Button>
@@ -302,6 +432,32 @@ export default function Patient360() {
             </Card>
           )}
         </div>
+
+        {/* Assessment Details Modal */}
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto" dir="rtl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                {selectedAssessment && getTypeIcon(selectedAssessment.assessment_type)}
+                פרטי אבחון - {selectedAssessment && getTypeLabel(selectedAssessment.assessment_type)}
+              </DialogTitle>
+            </DialogHeader>
+            
+            {selectedAssessment && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="h-4 w-4" />
+                    {formatDate(selectedAssessment.created_at)}
+                  </span>
+                  {getStatusBadge(selectedAssessment.status)}
+                </div>
+                
+                {renderAssessmentDetails(selectedAssessment)}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   );
