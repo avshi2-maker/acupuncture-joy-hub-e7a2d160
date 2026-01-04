@@ -51,7 +51,7 @@ interface SafetyFilter {
   yinFire: boolean;
 }
 
-// Expanded Embedded Database (v7) - 22 Formulas with Safety Warnings including Bleeding/Yin-Fire
+// Expanded Embedded Database (v8) - 22 Formulas with Safety Warnings including Bleeding/Yin-Fire
 const SAMPLE_FORMULAS: FormulaData[] = [
   {
     id: '1',
@@ -310,6 +310,11 @@ export function HerbalMasterWidget({ className }: { className?: string }) {
   const [flashcardFormulas, setFlashcardFormulas] = useState<FormulaData[]>([]);
   const [currentFlashcardIndex, setCurrentFlashcardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
+
+  // Formula comparison state (v8 feature)
+  const [compareFormula1, setCompareFormula1] = useState<FormulaData | null>(null);
+  const [compareFormula2, setCompareFormula2] = useState<FormulaData | null>(null);
+  const [showCompareModal, setShowCompareModal] = useState(false);
 
   // Legal disclaimer state
   const [showLegalModal, setShowLegalModal] = useState(false);
@@ -714,7 +719,10 @@ export function HerbalMasterWidget({ className }: { className?: string }) {
                 </h3>
               </div>
               <p className="text-xs text-white/70">
-                Herbal Master v7 • 22 Formulas
+                Herbal Master v8 • 22 Formulas
+              </p>
+              <p className="text-[10px] text-white/50">
+                Includes: Zhi Bai, Jin Gui, Shi Hui
               </p>
             </div>
             
@@ -869,11 +877,36 @@ export function HerbalMasterWidget({ className }: { className?: string }) {
                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                         {formula.answer || formula.content}
                       </p>
-                      {formula.acupoints && (
-                        <Badge variant="secondary" className="mt-2 text-xs">
-                          נקודות: {formula.acupoints}
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        {formula.acupoints && (
+                          <Badge variant="secondary" className="text-xs">
+                            נקודות: {formula.acupoints}
+                          </Badge>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!compareFormula1) {
+                              setCompareFormula1(formula);
+                              toast.success(`Added "${formula.formula_name}" to compare slot 1`);
+                            } else if (!compareFormula2) {
+                              setCompareFormula2(formula);
+                              toast.success(`Added "${formula.formula_name}" to compare slot 2`);
+                              setShowCompareModal(true);
+                            } else {
+                              setCompareFormula1(formula);
+                              setCompareFormula2(null);
+                              toast.info(`Reset comparison with "${formula.formula_name}"`);
+                            }
+                          }}
+                        >
+                          <Scale className="h-3 w-3 mr-1" />
+                          {!compareFormula1 ? 'השווה' : !compareFormula2 ? 'הוסף להשוואה' : 'החלף'}
+                        </Button>
+                      </div>
                     </div>
                     <Shield className="h-4 w-4 text-jade/50" />
                   </div>
@@ -1054,6 +1087,139 @@ export function HerbalMasterWidget({ className }: { className?: string }) {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Comparison Bar (v8 feature) */}
+      {(compareFormula1 || compareFormula2) && (
+        <div className="bg-jade/10 border-t border-jade/30 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <Scale className="h-4 w-4 text-jade shrink-0" />
+              <div className="flex gap-2 overflow-hidden">
+                {compareFormula1 && (
+                  <Badge variant="outline" className="bg-background truncate max-w-[140px]">
+                    1: {compareFormula1.formula_name.split(' ')[0]}
+                  </Badge>
+                )}
+                {compareFormula2 && (
+                  <Badge variant="outline" className="bg-background truncate max-w-[140px]">
+                    2: {compareFormula2.formula_name.split(' ')[0]}
+                  </Badge>
+                )}
+              </div>
+            </div>
+            <div className="flex gap-2">
+              {compareFormula1 && compareFormula2 && (
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="bg-jade hover:bg-jade/90"
+                  onClick={() => setShowCompareModal(true)}
+                >
+                  <Eye className="h-3 w-3 mr-1" />
+                  השוואה
+                </Button>
+              )}
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setCompareFormula1(null);
+                  setCompareFormula2(null);
+                }}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Formula Comparison Modal (v8 feature) */}
+      <Dialog open={showCompareModal} onOpenChange={setShowCompareModal}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Scale className="h-5 w-5 text-jade" />
+              השוואת פורמולות (Formula Comparison)
+            </DialogTitle>
+            <DialogDescription>
+              Compare two formulas side by side
+            </DialogDescription>
+          </DialogHeader>
+          
+          {compareFormula1 && compareFormula2 && (
+            <div className="grid grid-cols-2 gap-4">
+              {/* Formula 1 */}
+              <div className="border rounded-lg p-4 bg-jade/5">
+                <h4 className="font-bold text-lg mb-3 flex items-center gap-2">
+                  <Leaf className="h-5 w-5 text-jade" />
+                  {compareFormula1.formula_name}
+                </h4>
+                <div className="space-y-3 text-sm">
+                  <div>
+                    <p className="font-semibold text-muted-foreground text-xs uppercase">Description</p>
+                    <p>{compareFormula1.answer || compareFormula1.content}</p>
+                  </div>
+                  {compareFormula1.acupoints && (
+                    <div>
+                      <p className="font-semibold text-muted-foreground text-xs uppercase">Acupoints</p>
+                      <Badge variant="secondary">{compareFormula1.acupoints}</Badge>
+                    </div>
+                  )}
+                  {compareFormula1.pharmacopeia && (
+                    <div>
+                      <p className="font-semibold text-muted-foreground text-xs uppercase">Source</p>
+                      <p className="text-xs text-muted-foreground">{compareFormula1.pharmacopeia}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Formula 2 */}
+              <div className="border rounded-lg p-4 bg-amber-500/5">
+                <h4 className="font-bold text-lg mb-3 flex items-center gap-2">
+                  <Leaf className="h-5 w-5 text-amber-600" />
+                  {compareFormula2.formula_name}
+                </h4>
+                <div className="space-y-3 text-sm">
+                  <div>
+                    <p className="font-semibold text-muted-foreground text-xs uppercase">Description</p>
+                    <p>{compareFormula2.answer || compareFormula2.content}</p>
+                  </div>
+                  {compareFormula2.acupoints && (
+                    <div>
+                      <p className="font-semibold text-muted-foreground text-xs uppercase">Acupoints</p>
+                      <Badge variant="secondary">{compareFormula2.acupoints}</Badge>
+                    </div>
+                  )}
+                  {compareFormula2.pharmacopeia && (
+                    <div>
+                      <p className="font-semibold text-muted-foreground text-xs uppercase">Source</p>
+                      <p className="text-xs text-muted-foreground">{compareFormula2.pharmacopeia}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCompareModal(false)}>
+              סגור
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                setCompareFormula1(null);
+                setCompareFormula2(null);
+                setShowCompareModal(false);
+              }}
+            >
+              נקה השוואה
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Legal Disclaimer Footer */}
       <div 

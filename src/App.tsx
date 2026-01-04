@@ -54,6 +54,7 @@ import ScenariosDashboard from "./pages/ScenariosDashboard";
 import TherapistDisclaimer from "./pages/TherapistDisclaimer";
 import TherapistIntake from "./pages/TherapistIntake";
 import AdminDisclaimers from "./pages/AdminDisclaimers";
+import AdminLegalAudit from "./pages/AdminLegalAudit";
 import CMBrainQuestions from "./pages/CMBrainQuestions";
 import Contact from "./pages/Contact";
 import AdminPasswordGenerator from "./pages/AdminPasswordGenerator";
@@ -132,6 +133,7 @@ const App = () => (
                       <Route path="/admin/knowledge" element={<KnowledgeRegistry />} />
                       <Route path="/admin/disclaimers" element={<RequireTier><AdminDisclaimers /></RequireTier>} />
                       <Route path="/admin/passwords" element={<RequireTier><AdminPasswordGenerator /></RequireTier>} />
+                      <Route path="/admin/legal-audit" element={<RequireTier><AdminLegalAudit /></RequireTier>} />
 
                       <Route path="/knowledge-registry" element={<KnowledgeRegistry />} />
                       <Route path="/bazi-calculator" element={<RequireTier><BaziCalculator /></RequireTier>} />
