@@ -44,7 +44,7 @@ interface SafetyFilter {
   elderly: boolean;
 }
 
-// Expanded Embedded Database (v3) - 10 Formulas with Safety Warnings
+// Expanded Embedded Database (v4) - 13 Formulas with Safety Warnings
 const SAMPLE_FORMULAS: FormulaData[] = [
   {
     id: '1',
@@ -135,6 +135,34 @@ const SAMPLE_FORMULAS: FormulaData[] = [
     content: 'Bu Zhong Yi Qi Tang: Huang Qi, Ren Shen, Bai Zhu, Zhi Gan Cao, Dang Gui, Chen Pi, Sheng Ma, Chai Hu. Pattern: Middle Qi Deficiency with Yang Sinking. Safe for elderly; good for chronic fatigue.',
     acupoints: 'CV6, ST36, BL20, GV20',
     pharmacopeia: 'Chinese Pharmacopoeia 2020 Edition, Vol. I',
+  },
+  // NEW v4 FORMULAS - Wind-Damp, Phlegm-Damp, Food Stagnation
+  {
+    id: '11',
+    formula_name: 'Du Huo Ji Sheng Tang (独活寄生汤)',
+    question: 'What is Du Huo Ji Sheng Tang used for?',
+    answer: 'Du Huo Ji Sheng Tang dispels Wind-Damp, tonifies Liver and Kidney, nourishes Qi and Blood. It treats chronic Bi syndrome with underlying deficiency - lower back/knee pain, joint stiffness, weakness.',
+    content: 'Du Huo Ji Sheng Tang: Du Huo, Sang Ji Sheng, Du Zhong, Niu Xi, Xi Xin, Qin Jiao, Fu Ling, Rou Gui, Fang Feng, Chuan Xiong, Ren Shen, Gan Cao, Dang Gui, Bai Shao, Shu Di Huang. Pattern: Wind-Damp Bi with Liver/Kidney Deficiency. ⚠️ PREGNANCY CAUTION: Contains Niu Xi and blood-moving herbs - use with care or avoid.',
+    acupoints: 'GB34, BL23, KI3, SP6, ST36',
+    pharmacopeia: 'Bei Ji Qian Jin Yao Fang (Thousand Ducat Formulas)',
+  },
+  {
+    id: '12',
+    formula_name: 'Er Chen Tang (二陈汤)',
+    question: 'What does Er Chen Tang treat?',
+    answer: 'Er Chen Tang dries Dampness and transforms Phlegm, regulates Qi and harmonizes the Middle Jiao. It is the base formula for Phlegm-Damp conditions with nausea, cough with copious white phlegm, chest oppression.',
+    content: 'Er Chen Tang: Ban Xia (Chen), Chen Pi (Chen), Fu Ling, Zhi Gan Cao, Sheng Jiang, Wu Mei. Pattern: Phlegm-Damp. ⚠️ PREGNANCY CAUTION: Ban Xia is traditionally contraindicated in pregnancy - use processed form (Fa Ban Xia) with care or substitute.',
+    acupoints: 'ST40, CV12, SP9, PC6',
+    pharmacopeia: 'Tai Ping Hui Min He Ji Ju Fang',
+  },
+  {
+    id: '13',
+    formula_name: 'Bao He Wan (保和丸)',
+    question: 'What is Bao He Wan used for?',
+    answer: 'Bao He Wan reduces Food Stagnation and harmonizes the Stomach. It treats acute food stagnation with epigastric fullness, belching, acid reflux, loose stools, and a thick greasy tongue coating.',
+    content: 'Bao He Wan: Shan Zha, Shen Qu, Lai Fu Zi, Ban Xia, Chen Pi, Fu Ling, Lian Qiao. Pattern: Food Stagnation. ⚠️ PREGNANCY CAUTION: Contains Lai Fu Zi (draining) and Ban Xia - avoid or use short-term with modified formula.',
+    acupoints: 'CV12, ST36, ST21, PC6',
+    pharmacopeia: 'Dan Xi Xin Fa (Erta of Dan-Xi)',
   },
 ];
 
