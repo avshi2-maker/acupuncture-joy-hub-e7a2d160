@@ -44,7 +44,7 @@ interface SafetyFilter {
   elderly: boolean;
 }
 
-// Expanded Embedded Database (v4) - 13 Formulas with Safety Warnings
+// Expanded Embedded Database (v6) - 19 Formulas with Safety Warnings
 const SAMPLE_FORMULAS: FormulaData[] = [
   {
     id: '1',
@@ -192,14 +192,43 @@ const SAMPLE_FORMULAS: FormulaData[] = [
     acupoints: 'HT7, PC6, SP6, KI6, CV14',
     pharmacopeia: 'She Sheng Mi Pou (Secret Investigations into Obtaining Health)',
   },
+  // NEW v6 FORMULAS - Interior-Warming, Drain Dampness, Regulate Qi
+  {
+    id: '17',
+    formula_name: 'Li Zhong Wan (理中丸)',
+    question: 'What is Li Zhong Wan used for?',
+    answer: 'Li Zhong Wan warms the Middle Jiao and strengthens Spleen Yang. It treats Spleen Yang deficiency with cold abdomen, loose stools, poor appetite, and fatigue.',
+    content: 'Li Zhong Wan: Ren Shen, Bai Zhu, Gan Jiang, Zhi Gan Cao. Pattern: Spleen Yang Deficiency with Interior Cold. ⚠️ YIN DEFICIENCY CAUTION: Do not use if signs of Empty Heat or Yin Deficiency exist - may aggravate heat symptoms.',
+    acupoints: 'CV12, ST36, CV6, BL20',
+    pharmacopeia: 'Shang Han Lun (Treatise on Cold Damage)',
+  },
+  {
+    id: '18',
+    formula_name: 'Wu Ling San (五苓散)',
+    question: 'What does Wu Ling San treat?',
+    answer: 'Wu Ling San promotes urination and drains Dampness, warms Yang and promotes Qi transformation. It treats water metabolism disorders with edema, difficult urination, thirst with inability to drink.',
+    content: 'Wu Ling San: Ze Xie, Fu Ling, Zhu Ling, Bai Zhu, Gui Zhi. Pattern: Bladder Qi Transformation Dysfunction / Dampness Accumulation. ⚠️ PREGNANCY CAUTION: Strong diuretic action alters fluid metabolism - use with care during pregnancy. Monitor hydration.',
+    acupoints: 'BL22, CV9, SP9, BL28',
+    pharmacopeia: 'Shang Han Lun (Treatise on Cold Damage)',
+  },
+  {
+    id: '19',
+    formula_name: 'Ban Xia Hou Po Tang (半夏厚朴汤)',
+    question: 'When is Ban Xia Hou Po Tang indicated?',
+    answer: 'Ban Xia Hou Po Tang promotes Qi movement, dissipates clumping, and directs rebellious Qi downward. It treats Plum-Pit Qi (Mei He Qi) - sensation of something stuck in throat, chest oppression, cough with phlegm.',
+    content: 'Ban Xia Hou Po Tang: Ban Xia, Hou Po, Fu Ling, Sheng Jiang, Zi Su Ye. Pattern: Qi Stagnation with Phlegm Accumulation. ⛔ PREGNANCY CONTRAINDICATED: Contains Ban Xia (pregnancy-forbidden) and strong Qi-moving herbs Hou Po/Zi Su Ye that may stimulate uterus.',
+    acupoints: 'CV22, PC6, ST40, LV3',
+    pharmacopeia: 'Jin Gui Yao Lue (Essential Prescriptions of the Golden Cabinet)',
+  },
 ];
 
-// Forbidden herbs during pregnancy (expanded list)
+// Forbidden herbs during pregnancy (expanded list v6)
 const PREGNANCY_FORBIDDEN = [
   'Da Huang', 'Hong Hua', 'Niu Xi', 'San Leng', 'E Zhu', 'Shui Zhi', 
   'Mang Chong', 'Ban Mao', 'Wu Gong', 'Quan Xie', 'Chan Su', 'Xiong Huang',
   'Qian Niu Zi', 'Ba Dou', 'Gan Sui', 'Da Ji', 'Yuan Hua', 'She Xiang',
-  'Tao Ren', 'Yi Mu Cao', 'Mang Xiao', 'Carthami', 'Persicae', 'Huang Lian', 'Huang Qin', 'Huang Bai'
+  'Tao Ren', 'Yi Mu Cao', 'Mang Xiao', 'Carthami', 'Persicae', 'Huang Lian', 'Huang Qin', 'Huang Bai',
+  'Ban Xia', 'Hou Po', 'Zi Su Ye'
 ];
 
 // Herbs requiring caution in elderly (cloying/stimulant/cold)
@@ -207,6 +236,9 @@ const ELDERLY_CAUTION = ['Ma Huang', 'Shu Di Huang', 'cardiovascular', 'stimulan
 
 // Herbs requiring caution in children
 const CHILDREN_CAUTION = ['Ma Huang', 'stimulant'];
+
+// Formulas contraindicated with Yin Deficiency/Empty Heat
+const YIN_DEF_CAUTION = ['Li Zhong Wan', 'Gan Jiang', 'interior warming'];
 
 export function HerbalMasterWidget({ className }: { className?: string }) {
   const [activeTab, setActiveTab] = useState('search');
