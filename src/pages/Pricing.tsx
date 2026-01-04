@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { TierCard } from '@/components/pricing/TierCard';
 import { PricingFAQ } from '@/components/pricing/PricingFAQ';
 import { TokenExplainer } from '@/components/pricing/TokenExplainer';
+import { TokenCalculator } from '@/components/pricing/TokenCalculator';
 import { ArrowLeft, HelpCircle, Sparkles, CreditCard, MessageCircle } from 'lucide-react';
 import newLogo from '@/assets/new-logo.png';
 import { Link } from 'react-router-dom';
@@ -153,6 +154,9 @@ export default function Pricing() {
               />
             ))}
           </div>
+
+          {/* Token Calculator Section */}
+          <TokenCalculator />
 
           {/* Token Explainer Section */}
           <TokenExplainer />
