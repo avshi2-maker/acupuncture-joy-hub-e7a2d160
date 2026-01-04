@@ -522,6 +522,14 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'clinical_protocols',
     defaultLanguage: 'en',
   },
+  // TCM Grief Processing
+  {
+    id: 'tcm-grief-qa',
+    label: '💔 TCM Grief Q&A (21 Q&A - Lung-Heart, Shen, Po, Formulas)',
+    path: '/knowledge-assets/tcm-grief-qa.csv',
+    defaultCategory: 'anxiety_mental',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 type QueueItemStatus = 'pending' | 'importing' | 'done' | 'error';

@@ -1712,6 +1712,16 @@ export default function VideoSession() {
                 id: 'wellness-category',
                 boxes: [
                   {
+                    id: 'grief',
+                    name: 'Grief',
+                    nameHe: 'אבל',
+                    icon: Heart,
+                    color: 'text-rose-500',
+                    borderColor: 'border-rose-300',
+                    tooltip: 'TCM Grief Q&A - Lung-Heart, Shen, Po processing with formulas',
+                    onClick: () => setShowTcmBrainPanel(true),
+                  },
+                  {
                     id: 'stress-biofeedback',
                     name: 'Stress',
                     nameHe: 'לחץ',
