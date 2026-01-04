@@ -61,6 +61,7 @@ import { TierBadge } from '@/components/layout/TierBadge';
 import { FloatingHelpGuide } from '@/components/ui/FloatingHelpGuide';
 import { PregnancySafetyDialog, ElderlyLifestyleDialog, PediatricAcupunctureDialog, VagusNerveDialog, VagusStimulationDialog, HRVTrackerDialog } from '@/components/clinical';
 import { SessionBriefPanel } from '@/components/video/SessionBriefPanel';
+import { PediatricTCMAssistant } from '@/components/tcm-brain/PediatricTCMAssistant';
 import { toast } from 'sonner';
 import clockImg from '@/assets/clock.png';
 
@@ -78,6 +79,7 @@ export default function TcmBrain() {
   const [showVagusStimulation, setShowVagusStimulation] = useState(false);
   const [showHRVTracker, setShowHRVTracker] = useState(false);
   const [showSessionBrief, setShowSessionBrief] = useState(false);
+  const [showPediatricAssistant, setShowPediatricAssistant] = useState(false);
   const [qaFavoritesCount, setQaFavoritesCount] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
   const quickActionsRef = useRef<QuickActionsRef>(null);
@@ -806,6 +808,35 @@ export default function TcmBrain() {
                   }}
                   sessionSeconds={sessionSeconds}
                 />
+              </div>
+            )}
+          </div>
+
+          {/* Pediatric TCM Assistant - Collapsible Widget */}
+          <div className="mb-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="w-full flex items-center justify-between py-2 px-3 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg hover:bg-green-100 dark:hover:bg-green-950/50"
+              onClick={() => setShowPediatricAssistant(!showPediatricAssistant)}
+            >
+              <div className="flex items-center gap-2">
+                <Baby className="h-4 w-4 text-green-600 dark:text-green-400" />
+                <span className="text-xs font-medium text-green-700 dark:text-green-300">Pediatric TCM Assistant</span>
+                <Badge variant="secondary" className="text-[10px] bg-green-200 dark:bg-green-800 text-green-700 dark:text-green-300">
+                  Dose Calc + Needle Specs
+                </Badge>
+              </div>
+              {showPediatricAssistant ? (
+                <ChevronUp className="h-4 w-4 text-green-600 dark:text-green-400" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-green-600 dark:text-green-400" />
+              )}
+            </Button>
+            
+            {showPediatricAssistant && (
+              <div className="mt-2 flex justify-center">
+                <PediatricTCMAssistant />
               </div>
             )}
           </div>
