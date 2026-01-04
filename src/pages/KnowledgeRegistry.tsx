@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { FileText, Download, CheckCircle, Clock, AlertCircle, Shield, Database, FileCheck, Upload, Trash2, Pause, Play, RotateCcw, XCircle, ArrowLeft, ShieldAlert, Loader2, Languages, Sparkles } from 'lucide-react';
+import { FileText, Download, CheckCircle, Clock, AlertCircle, Shield, Database, FileCheck, Upload, Trash2, Pause, Play, RotateCcw, XCircle, ArrowLeft, ShieldAlert, Loader2, Languages, Sparkles, Heart } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { format } from 'date-fns';
 
@@ -522,14 +522,43 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'clinical_protocols',
     defaultLanguage: 'en',
   },
-  // TCM Grief Processing
+  // TCM Emotional Processing Q&A
   {
     id: 'tcm-grief-qa',
-    label: '💔 TCM Grief Q&A (21 Q&A - Lung-Heart, Shen, Po, Formulas)',
+    label: '💔 TCM Grief Q&A (22 Q&A - Lung-Heart, Shen, Po, Formulas)',
     path: '/knowledge-assets/tcm-grief-qa.csv',
     defaultCategory: 'anxiety_mental',
     defaultLanguage: 'en',
   },
+  {
+    id: 'tcm-trauma-qa',
+    label: '🛡️ TCM Trauma Q&A (22 Q&A - Kidney-Heart, Zhi, Po, Formulas)',
+    path: '/knowledge-assets/tcm-trauma-qa.csv',
+    defaultCategory: 'anxiety_mental',
+    defaultLanguage: 'en',
+  },
+  {
+    id: 'tcm-fear-qa',
+    label: '😰 TCM Fear Q&A (22 Q&A - Kidney, Zhi, Water Element, Formulas)',
+    path: '/knowledge-assets/tcm-fear-qa.csv',
+    defaultCategory: 'anxiety_mental',
+    defaultLanguage: 'en',
+  },
+  {
+    id: 'tcm-anger-qa',
+    label: '🔥 TCM Anger Q&A (22 Q&A - Liver, Hun, Wood Element, Formulas)',
+    path: '/knowledge-assets/tcm-anger-qa.csv',
+    defaultCategory: 'anxiety_mental',
+    defaultLanguage: 'en',
+  },
+] as const;
+
+// Emotional wellness assets for bulk import
+const EMOTIONAL_WELLNESS_ASSETS = [
+  'tcm-grief-qa',
+  'tcm-trauma-qa', 
+  'tcm-fear-qa',
+  'tcm-anger-qa',
 ] as const;
 
 type QueueItemStatus = 'pending' | 'importing' | 'done' | 'error';
@@ -756,6 +785,76 @@ export default function KnowledgeRegistry() {
       setIsImportingBuiltIn(false);
     }
   }, [authLoading, user, navigate, builtInAssetId, builtInCategory, builtInLanguage, processQueue]);
+
+  // Bulk import all emotional wellness assets
+  const [isImportingEmotional, setIsImportingEmotional] = useState(false);
+  
+  const importEmotionalWellnessAssets = useCallback(async () => {
+    if (authLoading) return;
+    if (!user) {
+      toast.error('Please sign in to import knowledge.');
+      navigate('/auth');
+      return;
+    }
+
+    setIsImportingEmotional(true);
+    const emotionalAssets = BUILTIN_ASSETS.filter(a => EMOTIONAL_WELLNESS_ASSETS.includes(a.id as any));
+    
+    if (emotionalAssets.length === 0) {
+      toast.error('No emotional wellness assets found');
+      setIsImportingEmotional(false);
+      return;
+    }
+
+    try {
+      const queueItems: QueueItem[] = [];
+      
+      for (const asset of emotionalAssets) {
+        const res = await fetch(asset.path, { cache: 'no-cache' });
+        if (!res.ok) {
+          console.error(`Failed to load ${asset.label}`);
+          continue;
+        }
+
+        const text = await res.text();
+        const parsed = parseCSV(text);
+        if (parsed.rows.length === 0) {
+          console.error(`CSV ${asset.label} has no data rows`);
+          continue;
+        }
+
+        const file = new File([text], asset.label, { type: 'text/csv' });
+        queueItems.push({
+          id: crypto.randomUUID(),
+          file,
+          category: asset.defaultCategory,
+          language: asset.defaultLanguage,
+          parsed,
+          status: 'pending',
+        });
+      }
+
+      if (queueItems.length === 0) {
+        toast.error('Failed to load emotional wellness assets');
+        return;
+      }
+
+      isProcessingRef.current = false;
+      setIsProcessing(false);
+      isPausedRef.current = false;
+      setIsPaused(false);
+      queueRef.current = queueItems;
+      setQueue(queueItems);
+
+      setTimeout(() => processQueue(), 0);
+      toast.success(`Bulk import started: ${queueItems.length} emotional wellness assets (Grief, Trauma, Fear, Anger)`);
+    } catch (err: any) {
+      console.error('Bulk import error:', err);
+      toast.error(err?.message || 'Failed to import emotional wellness assets');
+    } finally {
+      setIsImportingEmotional(false);
+    }
+  }, [authLoading, user, navigate, processQueue]);
 
   // Effect to keep processing when queue changes and not paused
   useEffect(() => {
@@ -1474,14 +1573,23 @@ ${report.verificationInstructions || ''}
                 </div>
               </div>
 
-              <div className="mt-3 flex justify-end">
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <Button
+                  onClick={importEmotionalWellnessAssets}
+                  disabled={isProcessing || isImportingBuiltIn || isImportingEmotional}
+                  variant="outline"
+                  className="gap-1 border-rose-300 text-rose-600 hover:bg-rose-50 dark:border-rose-700 dark:text-rose-400 dark:hover:bg-rose-950"
+                >
+                  <Heart className="w-4 h-4" />
+                  {isImportingEmotional ? 'Importing…' : 'Bulk Import Emotional Q&A (4)'}
+                </Button>
                 <Button
                   onClick={importBuiltInAsset}
-                  disabled={isProcessing || isImportingBuiltIn}
+                  disabled={isProcessing || isImportingBuiltIn || isImportingEmotional}
                   className="gap-1"
                 >
                   <Upload className="w-4 h-4" />
-                  {isImportingBuiltIn ? 'Importing…' : 'Import now'}
+                  {isImportingBuiltIn ? 'Importing…' : 'Import Selected'}
                 </Button>
               </div>
             </div>
