@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 type AgeGroup = 'infant' | 'young_child' | 'school_age' | 'teenager';
-type Condition = 'immunity' | 'nausea' | 'pain' | 'fatigue' | 'mucositis' | 'anxiety';
+type Condition = 'immunity' | 'nausea' | 'pain' | 'fatigue' | 'mucositis' | 'anxiety' | 'insomnia' | 'appetite_loss';
 
 interface ProtocolData {
   dosing: {
@@ -119,6 +119,20 @@ const CONDITION_PROTOCOLS: Record<Condition, { label: string; labelHe: string; p
     points: ['HT7 (Shenmen)', 'PC6 (Neiguan)', 'GV20 (Baihui)', 'Yintang', 'KI1 (Yongquan)'],
     formula: 'Gui Pi Tang / An Shen Ding Zhi Wan (Modified)',
     alternatives: 'Auricular seeds on Shenmen, Play therapy, Breathing exercises, Child-friendly guided imagery'
+  },
+  insomnia: {
+    label: 'Insomnia (Sleep Issues)',
+    labelHe: 'נדודי שינה',
+    points: ['HT7 (Shenmen)', 'SP6 (Sanyinjiao)', 'Anmian (Extra)', 'GV20 (Baihui)', 'KI3 (Taixi)', 'Yintang'],
+    formula: 'Suan Zao Ren Tang / Tian Wang Bu Xin Dan (Modified)',
+    alternatives: 'Auricular seeds on Shenmen & Subcortex, Warm foot bath before bed, Lavender aromatherapy, Calming bedtime tuina'
+  },
+  appetite_loss: {
+    label: 'Appetite Loss (Anorexia)',
+    labelHe: 'חוסר תיאבון',
+    points: ['ST36 (Zusanli)', 'SP3 (Taibai)', 'CV12 (Zhongwan)', 'PC6 (Neiguan)', 'BL20 (Pishu)', 'BL21 (Weishu)'],
+    formula: 'Si Jun Zi Tang + Xiang Sha Liu Jun Zi Tang (Modified)',
+    alternatives: 'Gentle moxa on CV12, Pediatric tuina on abdomen, Small frequent meals, Ginger tea before meals'
   }
 };
 
