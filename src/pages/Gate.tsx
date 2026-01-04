@@ -12,7 +12,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useTier } from '@/hooks/useTier';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { toast } from 'sonner';
-import { Lock, ArrowLeft, CreditCard, Upload, CheckCircle, ArrowRight, MessageCircle, Mail, Loader2, Play, Fingerprint, Eye, EyeOff, Clock, Baby, Zap, Heart, Sparkles, FlaskConical, Leaf } from 'lucide-react';
+import { Lock, ArrowLeft, CreditCard, Upload, CheckCircle, ArrowRight, MessageCircle, Mail, Loader2, Play, Fingerprint, Eye, EyeOff, Clock, Baby, Zap, Heart, Sparkles, FlaskConical, Leaf, HelpCircle } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import clinicLogo from '@/assets/clinic-logo.png';
 import { Link } from 'react-router-dom';
 import { TierCard } from '@/components/pricing/TierCard';
@@ -1124,6 +1125,65 @@ export default function Gate() {
           {/* Confetti celebration */}
           <Confetti isActive={showConfetti} duration={3000} />
 
+          {/* FAQ Section */}
+          <div className="mt-12 max-w-2xl mx-auto">
+            <h3 className="text-xl font-semibold text-center mb-6 text-foreground">שאלות נפוצות</h3>
+            <Card className="bg-background/80 backdrop-blur-sm border-white/20">
+              <CardContent className="p-4">
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="item-1" className="border-white/20">
+                    <AccordionTrigger className="text-right hover:no-underline">
+                      מה ההבדל בין התוכניות?
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground text-right">
+                      <strong>ניסיון</strong> - 7 ימי ניסיון חינם עם גישה לכל הפיצ׳רים הבסיסיים: מאגר ידע TCM Brain, יומן תורים, וניהול מטופלים.
+                      <br /><br />
+                      <strong>סטנדרט</strong> - כולל את כל הפיצ׳רים הבסיסיים + תזכורות אוטומטיות למטופלים ב-Email ו-WhatsApp.
+                      <br /><br />
+                      <strong>פרימיום</strong> - כל הפיצ׳רים כולל פגישות וידאו עם מטופלים.
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="item-2" className="border-white/20">
+                    <AccordionTrigger className="text-right hover:no-underline">
+                      איך מתבצע התשלום?
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground text-right">
+                      התשלום מתבצע דרך Invoice4U (העברה בנקאית / כרטיס אשראי). לאחר התשלום, שלחו אישור בוואטסאפ ותקבלו סיסמת גישה תוך מספר שעות.
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="item-3" className="border-white/20">
+                    <AccordionTrigger className="text-right hover:no-underline">
+                      האם אפשר לשדרג תוכנית?
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground text-right">
+                      כן! ניתן לשדרג מתוכנית ניסיון או סטנדרט לתוכנית גבוהה יותר בכל עת. צרו קשר עם ד״ר רוני לקבלת קוד שדרוג.
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="item-4" className="border-white/20">
+                    <AccordionTrigger className="text-right hover:no-underline">
+                      מה קורה אחרי תקופת הניסיון?
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground text-right">
+                      לאחר 7 ימי הניסיון, תוכלו לבחור להמשיך עם אחת מהתוכניות בתשלום או להפסיק את השימוש. הנתונים שלכם נשמרים למשך 30 יום נוספים.
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="item-5" className="border-white/20">
+                    <AccordionTrigger className="text-right hover:no-underline">
+                      האם המידע שלי מאובטח?
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground text-right">
+                      בהחלט! המערכת משתמשת בהצפנה מתקדמת ועומדת בתקני אבטחת מידע. כל הנתונים מאוחסנים בשרתים מאובטחים עם גיבוי יומי.
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Footer section */}
           <footer className="mt-12 pt-8 border-t border-white/20">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center md:text-right">
@@ -1194,6 +1254,17 @@ export default function Gate() {
           </footer>
           </div>
         </div>
+
+        {/* Floating Help Button */}
+        <a
+          href="https://wa.me/972505231042?text=שלום, אני צריך עזרה עם מערכת TCM Clinic"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fixed bottom-6 left-6 z-50 flex items-center gap-2 px-4 py-3 rounded-full bg-jade text-white shadow-lg hover:bg-jade-dark hover:scale-105 transition-all duration-200"
+        >
+          <HelpCircle className="h-5 w-5" />
+          <span className="text-sm font-medium">צריכים עזרה?</span>
+        </a>
       </div>
     </>
   );
