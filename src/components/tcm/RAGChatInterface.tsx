@@ -16,6 +16,7 @@ import { ConfidenceMeter } from './ConfidenceMeter';
 import { QASuggestionsPanel } from './QASuggestionsPanel';
 import { SourceAuditFooter } from './SourceAuditFooter';
 import { AITrustHeader, AITrustHeaderRef } from '@/components/tcm-brain/AITrustHeader';
+import { ExtractedPointsDisplay } from './ExtractedPointsDisplay';
 
 interface Source {
   fileName: string;
@@ -407,6 +408,8 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
           auditLogged: data.auditLogged,
           pillarBreakdown: data.pillarBreakdown,
           sourceAudit: data.sourceAudit,
+          hybridSearchConfidence: data.hybridSearchConfidence,
+          extractedPoints: data.extractedPoints,
         },
         traceData: {
           steps: currentTrace.steps,
@@ -657,6 +660,15 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
                           +{message.sources.length - 5} more
                         </Badge>
                       )}
+                    </div>
+                  )}
+                  
+                  {/* Extracted Acupuncture Points Display */}
+                  {message.role === 'assistant' && message.metadata?.extractedPoints && (
+                    <div className="w-full max-w-[85%]">
+                      <ExtractedPointsDisplay 
+                        extractedPoints={message.metadata.extractedPoints}
+                      />
                     </div>
                   )}
                   
