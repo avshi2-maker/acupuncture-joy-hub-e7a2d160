@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/dialog";
 import { ThemedClockWidget, getClockTheme, type ClockTheme } from "@/components/ui/ThemedClockWidget";
 import heroBg from "@/assets/hero-meridian-bg.png";
+import newLogo from "@/assets/new-logo.png";
 import { ClinicPhilosophy } from "@/components/home/ClinicPhilosophy";
 // tcm-organ-clock image removed
 
@@ -260,8 +261,8 @@ const Index = () => {
             className="relative inline-block group"
             onClick={() => setShowAudioPlayer((v) => !v)}
           >
-            <div className="flex items-center justify-center gap-2 mb-1 cursor-pointer select-none">
-              <Leaf className="h-6 w-6 text-cream" />
+            <div className="flex items-center justify-center gap-3 mb-1 cursor-pointer select-none">
+              <img src={newLogo} alt="TCM Clinic Logo" className="h-10 w-10 object-contain" />
               <p className="text-lg md:text-xl font-display text-cream group-hover:text-gold transition-colors">
                 {t("drRoniSapir")}
               </p>

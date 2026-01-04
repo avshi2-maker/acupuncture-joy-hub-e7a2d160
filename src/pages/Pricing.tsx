@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { TierCard } from '@/components/pricing/TierCard';
-import { ArrowLeft, Leaf, HelpCircle, Sparkles, CreditCard, MessageCircle } from 'lucide-react';
+import { ArrowLeft, HelpCircle, Sparkles, CreditCard, MessageCircle } from 'lucide-react';
+import newLogo from '@/assets/new-logo.png';
 import { Link } from 'react-router-dom';
 import { WhatsAppWithTemplates } from '@/components/ui/WhatsAppTemplates';
 
@@ -125,8 +126,8 @@ export default function Pricing() {
           </Link>
 
           <div className="text-center mb-12">
-            <div className="mx-auto w-16 h-16 bg-jade-light rounded-full flex items-center justify-center mb-6">
-              <Leaf className="h-8 w-8 text-jade" />
+            <div className="mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-6">
+              <img src={newLogo} alt="TCM Clinic Logo" className="w-full h-full object-contain" />
             </div>
             <h1 className="font-display text-4xl md:text-5xl mb-4">בחרו את התוכנית שלכם</h1>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">

@@ -14,7 +14,7 @@ import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { toast } from 'sonner';
 import { Lock, ArrowLeft, CreditCard, Upload, CheckCircle, ArrowRight, MessageCircle, Mail, Loader2, Play, Fingerprint, Eye, EyeOff, Clock, Baby, Zap, Heart, Sparkles, FlaskConical, Leaf, HelpCircle } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import clinicLogo from '@/assets/clinic-logo.png';
+import newLogo from '@/assets/new-logo.png';
 import { Link } from 'react-router-dom';
 import { TierCard } from '@/components/pricing/TierCard';
 import { Confetti } from '@/components/ui/Confetti';
@@ -1182,6 +1182,54 @@ export default function Gate() {
                 </Accordion>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Video Tutorial Section */}
+          <div className="mt-12 max-w-4xl mx-auto">
+            <h3 className="text-xl font-semibold text-center mb-6 text-foreground flex items-center justify-center gap-2">
+              <Play className="h-5 w-5 text-jade" />
+              סרטוני הדרכה
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Tutorial 1 - Getting Started */}
+              <Card className="bg-background/80 backdrop-blur-sm border-white/20 hover:border-jade/50 transition-all group cursor-pointer">
+                <CardContent className="p-4 text-center">
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-jade/20 flex items-center justify-center group-hover:bg-jade/30 transition-colors">
+                    <Play className="h-6 w-6 text-jade" />
+                  </div>
+                  <h4 className="font-medium text-foreground mb-1">התחלה מהירה</h4>
+                  <p className="text-xs text-muted-foreground">איך להתחבר ולהתחיל לעבוד במערכת</p>
+                  <span className="text-xs text-jade mt-2 inline-block">2:30 דק׳</span>
+                </CardContent>
+              </Card>
+
+              {/* Tutorial 2 - Patient Management */}
+              <Card className="bg-background/80 backdrop-blur-sm border-white/20 hover:border-jade/50 transition-all group cursor-pointer">
+                <CardContent className="p-4 text-center">
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-jade/20 flex items-center justify-center group-hover:bg-jade/30 transition-colors">
+                    <Play className="h-6 w-6 text-jade" />
+                  </div>
+                  <h4 className="font-medium text-foreground mb-1">ניהול מטופלים</h4>
+                  <p className="text-xs text-muted-foreground">יצירת כרטיס מטופל ותיעוד ביקורים</p>
+                  <span className="text-xs text-jade mt-2 inline-block">4:15 דק׳</span>
+                </CardContent>
+              </Card>
+
+              {/* Tutorial 3 - TCM Brain */}
+              <Card className="bg-background/80 backdrop-blur-sm border-white/20 hover:border-jade/50 transition-all group cursor-pointer">
+                <CardContent className="p-4 text-center">
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-jade/20 flex items-center justify-center group-hover:bg-jade/30 transition-colors">
+                    <Play className="h-6 w-6 text-jade" />
+                  </div>
+                  <h4 className="font-medium text-foreground mb-1">TCM Brain</h4>
+                  <p className="text-xs text-muted-foreground">שימוש במאגר הידע ובינה מלאכותית</p>
+                  <span className="text-xs text-jade mt-2 inline-block">3:45 דק׳</span>
+                </CardContent>
+              </Card>
+            </div>
+            <p className="text-center text-xs text-muted-foreground mt-4">
+              לחצו על כרטיס לצפייה בסרטון ההדרכה
+            </p>
           </div>
 
           {/* Footer section */}
