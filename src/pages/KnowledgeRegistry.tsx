@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { FileText, Download, CheckCircle, Clock, AlertCircle, Shield, Database, FileCheck, Upload, Trash2, Pause, Play, RotateCcw, XCircle, ArrowLeft, ShieldAlert, Loader2, Languages } from 'lucide-react';
+import { FileText, Download, CheckCircle, Clock, AlertCircle, Shield, Database, FileCheck, Upload, Trash2, Pause, Play, RotateCcw, XCircle, ArrowLeft, ShieldAlert, Loader2, Languages, Sparkles } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { format } from 'date-fns';
 
@@ -498,6 +498,14 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'wellness_sport',
     defaultLanguage: 'en',
   },
+  // TCM Herbal Formulas Comprehensive
+  {
+    id: 'tcm-herbal-formulas-comprehensive',
+    label: '🌿 TCM Herbal Formulas Comprehensive (91 Formulas + Acupoints)',
+    path: '/knowledge-assets/TCM_Herbal_Formulas_Comprehensive.csv',
+    defaultCategory: 'tcm_theory',
+    defaultLanguage: 'en',
+  },
   // Brain Health Across Life Stages
   {
     id: 'brain-health-tcm',
@@ -576,6 +584,8 @@ export default function KnowledgeRegistry() {
   // Embedding generation state
   const [isGeneratingEmbeddings, setIsGeneratingEmbeddings] = useState(false);
   const [embeddingProgress, setEmbeddingProgress] = useState<{ processed: number; remaining: number; errors: number } | null>(null);
+  const [generatingEmbeddingsDocId, setGeneratingEmbeddingsDocId] = useState<string | null>(null);
+  const [docEmbeddingProgress, setDocEmbeddingProgress] = useState<Record<string, { status: 'idle' | 'generating' | 'done' | 'error'; processed?: number }>>({});
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   // Data fetching hooks
@@ -1135,6 +1145,80 @@ ${report.verificationInstructions || ''}
       toast.error('Failed to generate embeddings');
     } finally {
       setIsGeneratingEmbeddings(false);
+    }
+  };
+
+  // Generate embeddings for a single document
+  const generateSingleDocEmbeddings = async (docId: string, docName: string) => {
+    if (generatingEmbeddingsDocId) {
+      toast.error('Embedding generation already in progress');
+      return;
+    }
+
+    setGeneratingEmbeddingsDocId(docId);
+    setDocEmbeddingProgress(prev => ({
+      ...prev,
+      [docId]: { status: 'generating', processed: 0 }
+    }));
+
+    try {
+      let totalProcessed = 0;
+      let remaining = 1;
+
+      while (remaining > 0) {
+        const { data, error } = await supabase.functions.invoke('generate-embeddings', {
+          body: { 
+            batchSize: 50,
+            documentId: docId
+          }
+        });
+
+        if (error) {
+          console.error(`Embedding error for ${docId}:`, error);
+          setDocEmbeddingProgress(prev => ({
+            ...prev,
+            [docId]: { status: 'error', processed: totalProcessed }
+          }));
+          toast.error(`Failed to generate embeddings for ${docName}`);
+          return;
+        }
+
+        if (data) {
+          totalProcessed += data.processed || 0;
+          remaining = data.remaining || 0;
+
+          setDocEmbeddingProgress(prev => ({
+            ...prev,
+            [docId]: { status: 'generating', processed: totalProcessed }
+          }));
+
+          if (data.processed === 0 && remaining === 0) {
+            break;
+          }
+        }
+      }
+
+      setDocEmbeddingProgress(prev => ({
+        ...prev,
+        [docId]: { status: 'done', processed: totalProcessed }
+      }));
+
+      if (totalProcessed > 0) {
+        toast.success(`Generated ${totalProcessed} embeddings for "${docName}"`);
+      } else {
+        toast.info(`All chunks in "${docName}" already have embeddings`);
+      }
+
+      refetchChunkStats();
+    } catch (err) {
+      console.error('Embedding generation failed:', err);
+      setDocEmbeddingProgress(prev => ({
+        ...prev,
+        [docId]: { status: 'error' }
+      }));
+      toast.error(`Failed to generate embeddings for ${docName}`);
+    } finally {
+      setGeneratingEmbeddingsDocId(null);
     }
   };
 
@@ -1726,6 +1810,7 @@ ${report.verificationInstructions || ''}
                   <TableHead>Hash (SHA-256)</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Indexed At</TableHead>
+                  <TableHead>Embeddings</TableHead>
                   <TableHead>Translate</TableHead>
                 </TableRow>
               </TableHeader>
@@ -1747,6 +1832,51 @@ ${report.verificationInstructions || ''}
                       <TableCell>{getStatusBadge(doc.status)}</TableCell>
                       <TableCell>
                         {doc.indexed_at ? format(new Date(doc.indexed_at), 'MMM d, yyyy HH:mm') : '-'}
+                      </TableCell>
+                      <TableCell>
+                        {(() => {
+                          const docEmbStatus = docEmbeddingProgress[doc.id];
+                          const isGeneratingThis = generatingEmbeddingsDocId === doc.id;
+                          
+                          return (
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => generateSingleDocEmbeddings(doc.id, doc.original_name)}
+                                disabled={!!generatingEmbeddingsDocId || isGeneratingEmbeddings}
+                                className="gap-1 h-8"
+                                title="Generate embeddings for this document"
+                              >
+                                {isGeneratingThis ? (
+                                  <>
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                    <span className="text-xs">
+                                      {docEmbStatus?.processed || 0}...
+                                    </span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Sparkles className="w-3 h-3" />
+                                    <span className="text-xs">Embed</span>
+                                  </>
+                                )}
+                              </Button>
+                              {docEmbStatus?.status === 'done' && (
+                                <Badge variant="secondary" className="text-xs bg-jade-100 text-jade-700">
+                                  <CheckCircle className="w-3 h-3 mr-1" />
+                                  {docEmbStatus.processed}
+                                </Badge>
+                              )}
+                              {docEmbStatus?.status === 'error' && (
+                                <Badge variant="destructive" className="text-xs">
+                                  <AlertCircle className="w-3 h-3 mr-1" />
+                                  Error
+                                </Badge>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </TableCell>
                       <TableCell>
                         {isEnglishDoc ? (
