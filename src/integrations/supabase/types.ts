@@ -680,6 +680,36 @@ export type Database = {
           },
         ]
       }
+      herbal_legal_acknowledgments: {
+        Row: {
+          acknowledged_at: string
+          id: string
+          ip_address: string | null
+          language: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          acknowledged_at?: string
+          id?: string
+          ip_address?: string | null
+          language?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          acknowledged_at?: string
+          id?: string
+          ip_address?: string | null
+          language?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       herbs: {
         Row: {
           actions: string[] | null

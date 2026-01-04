@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { useRef } from 'react';
 import { 
   Search, 
   Pill, 
@@ -24,7 +25,8 @@ import {
   Zap,
   Heart,
   Scale,
-  X
+  X,
+  Printer
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -274,6 +276,8 @@ export function HerbalMasterWidget({ className }: { className?: string }) {
     }
     return false;
   });
+  const [isSavingAcknowledgment, setIsSavingAcknowledgment] = useState(false);
+  const legalContentRef = useRef<HTMLDivElement>(null);
 
   // Show legal modal on first load
   useEffect(() => {
@@ -282,16 +286,104 @@ export function HerbalMasterWidget({ className }: { className?: string }) {
     }
   }, [legalAccepted]);
 
-  const handleAcceptLegal = () => {
-    setLegalAccepted(true);
-    setShowLegalModal(false);
-    if (typeof window !== 'undefined') {
+  const handleAcceptLegal = async () => {
+    setIsSavingAcknowledgment(true);
+    
+    try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Save acknowledgment to database
+      const { error } = await supabase
+        .from('herbal_legal_acknowledgments')
+        .insert({
+          user_id: user?.id || null,
+          user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+          session_id: sessionStorage.getItem('sessionId') || crypto.randomUUID(),
+          language: navigator.language || 'en',
+        });
+
+      if (error) {
+        console.error('Failed to save legal acknowledgment:', error);
+        // Still allow acceptance even if DB save fails
+      }
+      
+      setLegalAccepted(true);
+      setShowLegalModal(false);
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('herbalLegalAccepted', 'true');
+      }
+      
+      toast.success('Legal acknowledgment recorded');
+    } catch (err) {
+      console.error('Error saving acknowledgment:', err);
+      // Still allow acceptance
+      setLegalAccepted(true);
+      setShowLegalModal(false);
       sessionStorage.setItem('herbalLegalAccepted', 'true');
+    } finally {
+      setIsSavingAcknowledgment(false);
     }
   };
 
   const openLegalModal = () => {
     setShowLegalModal(true);
+  };
+
+  const handlePrintDisclaimer = () => {
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Legal Disclaimer - Herbal Formulas</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
+          h1 { color: #c53030; border-bottom: 2px solid #c53030; padding-bottom: 10px; }
+          .section { margin: 30px 0; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; }
+          .section-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; }
+          .flag { font-size: 20px; margin-right: 8px; }
+          p { line-height: 1.6; color: #4a5568; }
+          strong { color: #2d3748; }
+          .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #718096; }
+          @media print { body { padding: 20px; } }
+        </style>
+      </head>
+      <body>
+        <h1>⚖️ Legal Disclaimer / הבהרה משפטית</h1>
+        <p style="color: #718096; margin-bottom: 30px;">Important regulatory information regarding herbal formulas and dietary supplements</p>
+        
+        <div class="section" dir="rtl">
+          <div class="section-title"><span class="flag">🇮🇱</span> הבהרה משפטית חשובה</div>
+          <p>הפורמולות והצמחים המוצגים ביישום זה <strong>אינם מהווים תרופה</strong> ואינם מאושרים ככאלו על ידי משרד הבריאות. מדובר בתוספי תזונה/צמחים בלבד המשמשים כטיפול משלים.</p>
+          <p><strong>הנחיות שימוש:</strong> השימוש במוצרים אלו מחייב התייעצות וקבלת <strong>מרשם כתוב ומסודר</strong> ממטפל מוסמך. המידע ביישום זה אינו מהווה תחליף לייעוץ רפואי מקצועי, אבחון או טיפול רפואי קונבנציונלי.</p>
+        </div>
+
+        <div class="section" dir="ltr">
+          <div class="section-title"><span class="flag">🇺🇸</span> Legal Disclaimer</div>
+          <p>The herbal formulas presented here are <strong>dietary supplements</strong> and are <strong>NOT medication approved by the Ministry of Health</strong>. They are intended for use solely as complementary support.</p>
+          <p><strong>Usage Protocol:</strong> These products must be used strictly under the <strong>written guidance and prescription</strong> of a qualified therapist. This information does not constitute medical advice or a substitute for professional medical diagnosis or treatment.</p>
+        </div>
+
+        <div class="section" dir="ltr">
+          <div class="section-title"><span class="flag">🇷🇺</span> Отказ от ответственности</div>
+          <p>Представленные здесь травяные формулы являются <strong>пищевыми добавками</strong> и <strong>НЕ являются лекарственными средствами</strong>, одобренными Министерством здравоохранения. Они предназначены исключительно для использования в качестве дополнительной поддержки.</p>
+          <p><strong>Правила использования:</strong> Эти продукты должны использоваться строго в соответствии с <strong>письменным предписанием</strong> квалифицированного специалиста. Данная информация не заменяет профессиональную медицинскую консультацию.</p>
+        </div>
+
+        <div class="footer">
+          <p>Printed on: ${new Date().toLocaleString()}</p>
+          <p>Document Version: 1.0</p>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.print();
+    }
   };
 
   // Search formulas - uses embedded data as fallback
@@ -964,12 +1056,21 @@ export function HerbalMasterWidget({ className }: { className?: string }) {
             </div>
           </div>
 
-          <DialogFooter className="px-6 py-4 bg-muted/30 border-t border-border">
+          <DialogFooter className="px-6 py-4 bg-muted/30 border-t border-border flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline"
+              onClick={handlePrintDisclaimer}
+              className="w-full sm:w-auto"
+            >
+              <Printer className="h-4 w-4 mr-2" />
+              Print / הדפס
+            </Button>
             <Button 
               onClick={handleAcceptLegal}
               className="w-full sm:w-auto"
+              disabled={isSavingAcknowledgment}
             >
-              I Acknowledge / אני מאשר/ת
+              {isSavingAcknowledgment ? 'Saving...' : 'I Acknowledge / אני מאשר/ת'}
             </Button>
           </DialogFooter>
         </DialogContent>
