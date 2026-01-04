@@ -191,6 +191,7 @@
   body {
     @apply bg-background text-foreground font-bold overflow-x-hidden;
     font-family: var(--font-body);
+    direction: rtl; /* Force Hebrew RTL direction */
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 
