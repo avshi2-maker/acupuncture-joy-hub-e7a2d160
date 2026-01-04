@@ -343,6 +343,23 @@ export const FIGURE_MAPPINGS: FigureMapping[] = [
                  'KI1', 'KI2', 'KI3', 'KI4', 'KI5', 'KI6',
                  'SP1', 'SP2', 'SP3', 'SP4', 'SP5', 'SP6'],
     clinicalPriority: 'Medium'
+  },
+  {
+    filename: 'child_pediatric_en.png',
+    bodyPart: 'Child (Pediatric)',
+    view: 'Anterior/Posterior',
+    keyMeridians: ['CV', 'ST', 'SP', 'LU', 'BL', 'HT', 'PC', 'LI', 'GV'],
+    pointCodes: ['CV12', 'CV8', 'CV2', 'CV17', 'ST36', 'SP6', 'LU1', 'LU2', 'BL13', 
+                 'HT7', 'PC6', 'LI4', 'GV20', 'Yintang', 'EarShenmen'],
+    clinicalPriority: 'High'
+  },
+  {
+    filename: 'child_pediatric_he.png',
+    bodyPart: 'Child (Pediatric Hebrew)',
+    view: 'Anterior/Posterior',
+    keyMeridians: ['CV', 'ST', 'SP', 'LU', 'BL', 'HT', 'PC', 'LI', 'GV'],
+    pointCodes: ['CV12', 'CV8', 'LU2', 'BL13', 'HT7', 'PC6', 'LI4', 'GV20', 'ST36', 'EarShenmen'],
+    clinicalPriority: 'High'
   }
 ];
 
