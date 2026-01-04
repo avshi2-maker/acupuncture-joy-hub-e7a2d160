@@ -42,6 +42,8 @@ const tiers = [
     nameHe: 'ניסיון',
     price: 'חינם',
     period: '7 ימי ניסיון',
+    queriesLimit: '500 שאילתות/חודש',
+    tokensInfo: '~50K טוקנים',
     description: '7 ימי ניסיון חינם לכל הפיצ׳רים הבסיסיים',
     features: [
       { name: 'מאגר ידע - TCM Brain', included: true },
@@ -59,6 +61,8 @@ const tiers = [
     price: '₪40',
     period: '/ חודש',
     periodSub: '+ מע״מ',
+    queriesLimit: '1,200 שאילתות/חודש',
+    tokensInfo: '~150K טוקנים',
     description: 'כולל תזכורות אוטומטיות למטופלים',
     features: [
       { name: 'מאגר ידע - TCM Brain', included: true },
@@ -77,6 +81,8 @@ const tiers = [
     price: '₪50',
     period: '/ חודש',
     periodSub: '+ מע״מ',
+    queriesLimit: '5,000 שאילתות/חודש',
+    tokensInfo: '~600K טוקנים',
     description: 'כל הפיצ׳רים כולל פגישות וידאו',
     features: [
       { name: 'מאגר ידע - TCM Brain', included: true },
@@ -524,9 +530,18 @@ export default function Gate() {
                           )}
                         </div>
                         {tier.periodSub && (
-                          <p className="text-xs text-gray-500 mb-3">{tier.periodSub}</p>
+                          <p className="text-xs text-gray-500 mb-2">{tier.periodSub}</p>
                         )}
-                        {!tier.periodSub && <div className="mb-3" />}
+
+                        {/* Limits */}
+                        <div className="flex items-center justify-center gap-2 mb-3">
+                          <span className="text-xs font-semibold bg-jade/10 text-jade-dark rounded-full px-3 py-1">
+                            {tier.queriesLimit}
+                          </span>
+                          <span className="text-xs font-semibold bg-gold/10 text-gold-dark rounded-full px-3 py-1">
+                            {tier.tokensInfo}
+                          </span>
+                        </div>
 
                         {/* Features List */}
                         <ul className="space-y-1.5 mb-4 flex-1 text-right">
@@ -1010,7 +1025,7 @@ export default function Gate() {
               <Play className="h-5 w-5 text-jade" />
               סרטוני הדרכה
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-4 max-w-sm mx-auto">
               {/* Tutorial 1 - Getting Started */}
               <Card className="bg-background/80 backdrop-blur-sm border-white/20 hover:border-jade/50 transition-all group cursor-pointer">
                 <CardContent className="p-4 text-center">
@@ -1020,30 +1035,6 @@ export default function Gate() {
                   <h4 className="font-medium text-foreground mb-1">התחלה מהירה</h4>
                   <p className="text-xs text-muted-foreground">איך להתחבר ולהתחיל לעבוד במערכת</p>
                   <span className="text-xs text-jade mt-2 inline-block">2:30 דק׳</span>
-                </CardContent>
-              </Card>
-
-              {/* Tutorial 2 - Patient Management */}
-              <Card className="bg-background/80 backdrop-blur-sm border-white/20 hover:border-jade/50 transition-all group cursor-pointer">
-                <CardContent className="p-4 text-center">
-                  <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-jade/20 flex items-center justify-center group-hover:bg-jade/30 transition-colors">
-                    <Play className="h-6 w-6 text-jade" />
-                  </div>
-                  <h4 className="font-medium text-foreground mb-1">ניהול מטופלים</h4>
-                  <p className="text-xs text-muted-foreground">יצירת כרטיס מטופל ותיעוד ביקורים</p>
-                  <span className="text-xs text-jade mt-2 inline-block">4:15 דק׳</span>
-                </CardContent>
-              </Card>
-
-              {/* Tutorial 3 - TCM Brain */}
-              <Card className="bg-background/80 backdrop-blur-sm border-white/20 hover:border-jade/50 transition-all group cursor-pointer">
-                <CardContent className="p-4 text-center">
-                  <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-jade/20 flex items-center justify-center group-hover:bg-jade/30 transition-colors">
-                    <Play className="h-6 w-6 text-jade" />
-                  </div>
-                  <h4 className="font-medium text-foreground mb-1">TCM Brain</h4>
-                  <p className="text-xs text-muted-foreground">שימוש במאגר הידע ובינה מלאכותית</p>
-                  <span className="text-xs text-jade mt-2 inline-block">3:45 דק׳</span>
                 </CardContent>
               </Card>
             </div>
