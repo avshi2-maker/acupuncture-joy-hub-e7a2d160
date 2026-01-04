@@ -17,6 +17,7 @@ interface TierCardProps {
   savings?: string;
   features: { name: string; included: boolean }[];
   highlighted?: boolean;
+  bestValue?: boolean;
   onSelect: () => void;
   buttonText?: string;
 }
@@ -34,15 +35,24 @@ export function TierCard({
   savings,
   features, 
   highlighted = false,
+  bestValue = false,
   onSelect,
   buttonText = 'בחר תוכנית'
 }: TierCardProps) {
   return (
     <Card className={cn(
       'relative flex flex-col transition-all duration-300 hover:shadow-elevated',
-      highlighted && 'border-gold shadow-gold scale-105 z-10'
+      highlighted && 'border-gold shadow-gold scale-105 z-10',
+      bestValue && 'border-emerald-500 shadow-emerald-500/20'
     )}>
-      {highlighted && (
+      {bestValue && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+          <span className="bg-emerald-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+            הכי משתלם
+          </span>
+        </div>
+      )}
+      {highlighted && !bestValue && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="bg-gold text-primary-foreground px-4 py-1 rounded-full text-sm font-medium">
             הכי פופולרי

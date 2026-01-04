@@ -153,6 +153,7 @@ const getAnnualTiers = () => [
       { name: 'פגישות וידאו', included: false },
     ],
     highlighted: true,
+    bestValue: true,
   },
   {
     name: 'Premium',
