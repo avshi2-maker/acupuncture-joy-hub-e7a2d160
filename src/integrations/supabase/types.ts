@@ -438,6 +438,36 @@ export type Database = {
           },
         ]
       }
+      clinic_wallets: {
+        Row: {
+          created_at: string
+          credits_balance: number
+          id: string
+          last_top_up_at: string | null
+          total_purchased: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_balance?: number
+          id?: string
+          last_top_up_at?: string | null
+          total_purchased?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_balance?: number
+          id?: string
+          last_top_up_at?: string | null
+          total_purchased?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       clinical_trials: {
         Row: {
           citation: string | null
@@ -630,6 +660,75 @@ export type Database = {
           symptoms?: string[] | null
           tcm_patterns?: string[] | null
           treatment_principles?: string[] | null
+        }
+        Relationships: []
+      }
+      credit_packs: {
+        Row: {
+          created_at: string
+          credits: number
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          name_he: string
+          price_ils: number
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          credits: number
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          name_he: string
+          price_ils: number
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          credits?: number
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_he?: string
+          price_ils?: number
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      credit_transactions: {
+        Row: {
+          amount: number
+          balance_after: number
+          created_at: string
+          description: string | null
+          id: string
+          metadata: Json | null
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          transaction_type?: string
+          user_id?: string
         }
         Relationships: []
       }
