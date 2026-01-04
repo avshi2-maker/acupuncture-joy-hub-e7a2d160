@@ -111,6 +111,7 @@ import { TcmBrainPanel } from '@/components/video/TcmBrainPanel';
 import { SessionBriefPanel } from '@/components/video/SessionBriefPanel';
 import { PregnancySafetyDialog, ElderlyLifestyleDialog } from '@/components/clinical';
 import { HerbalMasterWidget } from '@/components/herbal/HerbalMasterWidget';
+import { EmotionalProcessingPanel } from '@/components/session/EmotionalProcessingPanel';
 
 import { SessionWorkflowIndicator } from '@/components/video/SessionWorkflowIndicator';
 import { SessionPhaseIndicator, useSafetyGate } from '@/components/session';
@@ -172,6 +173,8 @@ export default function VideoSession() {
   const [showSessionBrief, setShowSessionBrief] = useState(false);
   const [showPregnancyCalc, setShowPregnancyCalc] = useState(false);
   const [showElderlyGuide, setShowElderlyGuide] = useState(false);
+  const [showEmotionalPanel, setShowEmotionalPanel] = useState(false);
+  const [emotionalPanelEmotion, setEmotionalPanelEmotion] = useState<'grief' | 'trauma' | 'fear' | 'anger'>('grief');
   const [voiceAlwaysOn, setVoiceAlwaysOn] = useState(false);
   const [voiceWakeWord, setVoiceWakeWord] = useState(() => getVoiceWakeWord());
   const [voiceWakeWordEnabled, setVoiceWakeWordEnabled] = useState(() => getVoiceWakeWordEnabled());
@@ -1712,16 +1715,6 @@ export default function VideoSession() {
                 id: 'wellness-category',
                 boxes: [
                   {
-                    id: 'grief',
-                    name: 'Grief',
-                    nameHe: 'אבל',
-                    icon: Heart,
-                    color: 'text-rose-500',
-                    borderColor: 'border-rose-300',
-                    tooltip: 'TCM Grief Q&A - Lung-Heart, Shen, Po processing with formulas',
-                    onClick: () => setShowTcmBrainPanel(true),
-                  },
-                  {
                     id: 'stress-biofeedback',
                     name: 'Stress',
                     nameHe: 'לחץ',
@@ -1732,6 +1725,50 @@ export default function VideoSession() {
                     onClick: () => setShowTcmBrainPanel(true),
                   },
                   {
+                    id: 'grief',
+                    name: 'Grief',
+                    nameHe: 'אבל',
+                    icon: Heart,
+                    color: 'text-rose-500',
+                    borderColor: 'border-rose-300',
+                    isActive: showEmotionalPanel && emotionalPanelEmotion === 'grief',
+                    tooltip: 'TCM Grief & Emotional Processing - Lung, Po, letting go',
+                    onClick: () => { setEmotionalPanelEmotion('grief'); setShowEmotionalPanel(true); },
+                  },
+                  {
+                    id: 'trauma',
+                    name: 'Trauma',
+                    nameHe: 'טראומה',
+                    icon: Brain,
+                    color: 'text-purple-500',
+                    borderColor: 'border-purple-300',
+                    isActive: showEmotionalPanel && emotionalPanelEmotion === 'trauma',
+                    tooltip: 'TCM Trauma Processing - Heart-Kidney, Shen, Zhi',
+                    onClick: () => { setEmotionalPanelEmotion('trauma'); setShowEmotionalPanel(true); },
+                  },
+                  {
+                    id: 'fear',
+                    name: 'Fear',
+                    nameHe: 'פחד',
+                    icon: Activity,
+                    color: 'text-blue-500',
+                    borderColor: 'border-blue-300',
+                    isActive: showEmotionalPanel && emotionalPanelEmotion === 'fear',
+                    tooltip: 'TCM Fear Processing - Kidney, Zhi, willpower',
+                    onClick: () => { setEmotionalPanelEmotion('fear'); setShowEmotionalPanel(true); },
+                  },
+                  {
+                    id: 'anger',
+                    name: 'Anger',
+                    nameHe: 'כעס',
+                    icon: Activity,
+                    color: 'text-red-500',
+                    borderColor: 'border-red-300',
+                    isActive: showEmotionalPanel && emotionalPanelEmotion === 'anger',
+                    tooltip: 'TCM Anger Processing - Liver, Hun, decision-making',
+                    onClick: () => { setEmotionalPanelEmotion('anger'); setShowEmotionalPanel(true); },
+                  },
+                  {
                     id: 'nutrition',
                     name: 'Nutrition',
                     nameHe: 'תזונה',
@@ -1740,16 +1777,6 @@ export default function VideoSession() {
                     borderColor: 'border-green-300',
                     tooltip: 'Diet & nutrition TCM guidance',
                     onClick: () => toast.info('Nutrition & Diet guidance - access TCM Brain for details'),
-                  },
-                  {
-                    id: 'brain-health',
-                    name: 'Brain',
-                    nameHe: 'מוח',
-                    icon: Activity,
-                    color: 'text-violet-600',
-                    borderColor: 'border-violet-300',
-                    tooltip: 'Pediatric, adult & geriatric brain health protocols',
-                    onClick: () => toast.info('Brain Health TCM - 100 Q&A for all life stages'),
                   },
                 ],
               },
@@ -2570,6 +2597,18 @@ export default function VideoSession() {
       <ElderlyLifestyleDialog 
         open={showElderlyGuide} 
         onOpenChange={setShowElderlyGuide}
+      />
+      
+      {/* Emotional Processing Panel */}
+      <EmotionalProcessingPanel
+        isOpen={showEmotionalPanel}
+        onClose={() => setShowEmotionalPanel(false)}
+        initialEmotion={emotionalPanelEmotion}
+        onAskQuestion={(question) => {
+          setShowEmotionalPanel(false);
+          setShowTcmBrainPanel(true);
+          toast.info(`Asking: ${question.slice(0, 50)}...`);
+        }}
       />
       
       {/* Floating Quick Actions - Long press on timer */}

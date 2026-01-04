@@ -61,6 +61,7 @@ import { TierBadge } from '@/components/layout/TierBadge';
 import { FloatingHelpGuide } from '@/components/ui/FloatingHelpGuide';
 import { PregnancySafetyDialog, ElderlyLifestyleDialog, PediatricAcupunctureDialog, VagusNerveDialog, VagusStimulationDialog, HRVTrackerDialog } from '@/components/clinical';
 import { SessionBriefPanel } from '@/components/video/SessionBriefPanel';
+import { EmotionalProcessingPanel } from '@/components/session/EmotionalProcessingPanel';
 import { PediatricTCMAssistant } from '@/components/tcm-brain/PediatricTCMAssistant';
 import { HerbalMasterWidget } from '@/components/herbal/HerbalMasterWidget';
 import { toast } from 'sonner';
@@ -81,6 +82,8 @@ export default function TcmBrain() {
   const [showHRVTracker, setShowHRVTracker] = useState(false);
   const [showSessionBrief, setShowSessionBrief] = useState(false);
   const [showPediatricAssistant, setShowPediatricAssistant] = useState(false);
+  const [showEmotionalPanel, setShowEmotionalPanel] = useState(false);
+  const [emotionalPanelEmotion, setEmotionalPanelEmotion] = useState<'grief' | 'trauma' | 'fear' | 'anger'>('grief');
   const [qaFavoritesCount, setQaFavoritesCount] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
   const quickActionsRef = useRef<QuickActionsRef>(null);
@@ -605,8 +608,42 @@ export default function TcmBrain() {
                     icon: Heart,
                     color: 'text-rose-500',
                     borderColor: 'border-rose-300',
-                    tooltip: 'TCM Grief & Emotional Processing - 50 Q&A with acupoints & formulas',
-                    onClick: () => streamChat('What are the best acupuncture points and herbal formulas for grief and emotional processing according to TCM?'),
+                    isActive: showEmotionalPanel && emotionalPanelEmotion === 'grief',
+                    tooltip: 'TCM Grief & Emotional Processing - Lung, Po, letting go',
+                    onClick: () => { setEmotionalPanelEmotion('grief'); setShowEmotionalPanel(true); },
+                  },
+                  {
+                    id: 'trauma',
+                    name: 'Trauma',
+                    nameHe: 'טראומה',
+                    icon: Brain,
+                    color: 'text-purple-500',
+                    borderColor: 'border-purple-300',
+                    isActive: showEmotionalPanel && emotionalPanelEmotion === 'trauma',
+                    tooltip: 'TCM Trauma Processing - Heart-Kidney, Shen, Zhi',
+                    onClick: () => { setEmotionalPanelEmotion('trauma'); setShowEmotionalPanel(true); },
+                  },
+                  {
+                    id: 'fear',
+                    name: 'Fear',
+                    nameHe: 'פחד',
+                    icon: Activity,
+                    color: 'text-blue-500',
+                    borderColor: 'border-blue-300',
+                    isActive: showEmotionalPanel && emotionalPanelEmotion === 'fear',
+                    tooltip: 'TCM Fear Processing - Kidney, Zhi, willpower',
+                    onClick: () => { setEmotionalPanelEmotion('fear'); setShowEmotionalPanel(true); },
+                  },
+                  {
+                    id: 'anger',
+                    name: 'Anger',
+                    nameHe: 'כעס',
+                    icon: Activity,
+                    color: 'text-red-500',
+                    borderColor: 'border-red-300',
+                    isActive: showEmotionalPanel && emotionalPanelEmotion === 'anger',
+                    tooltip: 'TCM Anger Processing - Liver, Hun, decision-making',
+                    onClick: () => { setEmotionalPanelEmotion('anger'); setShowEmotionalPanel(true); },
                   },
                   {
                     id: 'nutrition',
@@ -617,16 +654,6 @@ export default function TcmBrain() {
                     borderColor: 'border-green-300',
                     tooltip: 'Diet & nutrition TCM guidance',
                     onClick: () => toast.info('Nutrition guidance available in Knowledge assets'),
-                  },
-                  {
-                    id: 'brain-health',
-                    name: 'Brain',
-                    nameHe: 'מוח',
-                    icon: Activity,
-                    color: 'text-violet-600',
-                    borderColor: 'border-violet-300',
-                    tooltip: 'Pediatric, adult & geriatric brain health protocols',
-                    onClick: () => toast.info('Brain health TCM protocols - 100 Q&A for all ages'),
                   },
                 ],
               },
@@ -1056,6 +1083,18 @@ export default function TcmBrain() {
             toast.success(`📌 Pinned: "${question.slice(0, 50)}..."`);
           }}
           autoTrigger={true}
+        />
+        
+        {/* Emotional Processing Panel */}
+        <EmotionalProcessingPanel
+          isOpen={showEmotionalPanel}
+          onClose={() => setShowEmotionalPanel(false)}
+          initialEmotion={emotionalPanelEmotion}
+          onAskQuestion={(question) => {
+            streamChat(question);
+            setShowEmotionalPanel(false);
+            setActiveTab('symptoms');
+          }}
         />
       </div>
     </>
