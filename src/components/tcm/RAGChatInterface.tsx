@@ -55,6 +55,10 @@ interface HybridSearchConfidence {
   meetsThreshold: boolean;
   threshold: number;
   hybridChunksFound: number;
+  searchType?: 'hybrid' | 'keyword_fallback';
+  topVectorScore?: number;
+  topKeywordScore?: number;
+  topCombinedScore?: number;
 }
 
 interface ExtractedPoints {
@@ -600,9 +604,12 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
                         isExternal={message.isExternal ?? false}
                         warnings={message.traceData.hallucinationCheck?.warnings ?? []}
                         hybridScore={message.metadata?.hybridSearchConfidence ? {
-                          combinedScore: message.metadata.hybridSearchConfidence.averageScore,
+                          combinedScore: message.metadata.hybridSearchConfidence.topCombinedScore ?? message.metadata.hybridSearchConfidence.averageScore,
                           threshold: message.metadata.hybridSearchConfidence.threshold,
                           meetsThreshold: message.metadata.hybridSearchConfidence.meetsThreshold,
+                          vectorScore: message.metadata.hybridSearchConfidence.topVectorScore,
+                          keywordScore: message.metadata.hybridSearchConfidence.topKeywordScore,
+                          searchType: message.metadata.hybridSearchConfidence.searchType,
                         } : undefined}
                         onShowDetails={() => setShowTracePanel(true)}
                       />
@@ -618,9 +625,12 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
                         sourceNames={message.sources?.map(s => s.fileName) ?? []}
                         isExternal={message.isExternal ?? false}
                         hybridScore={message.metadata?.hybridSearchConfidence ? {
-                          combinedScore: message.metadata.hybridSearchConfidence.averageScore,
+                          combinedScore: message.metadata.hybridSearchConfidence.topCombinedScore ?? message.metadata.hybridSearchConfidence.averageScore,
                           threshold: message.metadata.hybridSearchConfidence.threshold,
                           meetsThreshold: message.metadata.hybridSearchConfidence.meetsThreshold,
+                          vectorScore: message.metadata.hybridSearchConfidence.topVectorScore,
+                          keywordScore: message.metadata.hybridSearchConfidence.topKeywordScore,
+                          searchType: message.metadata.hybridSearchConfidence.searchType,
                         } : undefined}
                         onShowDetails={() => setShowTracePanel(true)}
                       />

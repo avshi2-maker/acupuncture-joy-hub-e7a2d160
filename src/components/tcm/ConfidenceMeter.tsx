@@ -20,6 +20,7 @@ interface HybridSearchScore {
   combinedScore: number;
   threshold: number;
   meetsThreshold: boolean;
+  searchType?: 'hybrid' | 'keyword_fallback';
 }
 
 interface ConfidenceMeterProps {
@@ -148,9 +149,20 @@ export function ConfidenceMeter({
                     <span className="opacity-60">/ {(hybridScore.threshold * 100).toFixed(0)}%</span>
                   </div>
                 </TooltipTrigger>
-                <TooltipContent side="left" className="max-w-[200px]">
+                <TooltipContent side="left" className="max-w-[220px]">
                   <div className="space-y-1">
                     <p className="font-medium text-xs">Hybrid Search Score</p>
+                    {hybridScore.searchType && (
+                      <p className="text-[10px] flex items-center gap-1">
+                        <span className={`px-1.5 py-0.5 rounded text-[9px] ${
+                          hybridScore.searchType === 'hybrid' 
+                            ? 'bg-blue-500/20 text-blue-600' 
+                            : 'bg-orange-500/20 text-orange-600'
+                        }`}>
+                          {hybridScore.searchType === 'hybrid' ? '🔮 Vector+Keyword' : '📝 Keyword Only'}
+                        </span>
+                      </p>
+                    )}
                     <p className="text-[10px]">
                       Combined: {(hybridScore.combinedScore * 100).toFixed(1)}%
                     </p>

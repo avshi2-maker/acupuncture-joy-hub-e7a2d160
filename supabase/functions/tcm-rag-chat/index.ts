@@ -735,7 +735,9 @@ interface HybridSearchResult {
   file_name: string;
   original_name: string;
   category: string;
+  vector_score: number;
   keyword_score: number;
+  combined_score: number;
   confidence: string;
 }
 
@@ -745,10 +747,49 @@ interface SearchConfidenceResult {
   averageScore: number;
   meetsThreshold: boolean;
   extractedPoints: ExtractedPoints;
+  searchType: 'hybrid' | 'keyword_fallback';
+}
+
+const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+
+/**
+ * Generate embedding for a query using OpenAI
+ */
+async function generateQueryEmbedding(text: string): Promise<number[] | null> {
+  if (!OPENAI_API_KEY) {
+    console.warn('OPENAI_API_KEY not set, cannot generate embeddings');
+    return null;
+  }
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/embeddings', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'text-embedding-3-small',
+        input: text.slice(0, 8000), // Limit input length
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('OpenAI embedding API error:', error);
+      return null;
+    }
+
+    const data = await response.json();
+    return data.data?.[0]?.embedding || null;
+  } catch (error) {
+    console.error('Failed to generate embedding:', error);
+    return null;
+  }
 }
 
 /**
- * Perform keyword search with confidence scoring
+ * Perform true hybrid search with vector similarity + keyword matching
  */
 async function performHybridSearch(
   supabaseClient: any,
@@ -760,41 +801,92 @@ async function performHybridSearch(
   console.log('Query:', queryText);
   console.log('Language filter:', languageFilter);
   
-  // Call the keyword_search function (fallback since we don't have embeddings yet)
-  const { data: results, error } = await supabaseClient.rpc('keyword_search', {
-    query_text: queryText,
-    match_threshold: 0.15, // Low threshold to get candidates, we'll filter by confidence
-    match_count: matchCount,
-    language_filter: languageFilter
-  });
+  // Try to generate embedding for true hybrid search
+  const queryEmbedding = await generateQueryEmbedding(queryText);
   
-  if (error) {
-    console.error('Hybrid search error:', error);
-    return {
-      chunks: [],
-      overallConfidence: 'none',
-      averageScore: 0,
-      meetsThreshold: false,
-      extractedPoints: { codes: [], extraPoints: [], allPoints: [], figureReferences: [] }
-    };
+  let results: HybridSearchResult[] = [];
+  let searchType: 'hybrid' | 'keyword_fallback' = 'keyword_fallback';
+  
+  if (queryEmbedding) {
+    console.log('Using hybrid search with vector embeddings');
+    searchType = 'hybrid';
+    
+    // Call the hybrid_search function with embeddings
+    const { data, error } = await supabaseClient.rpc('hybrid_search', {
+      query_embedding: JSON.stringify(queryEmbedding),
+      query_text: queryText,
+      match_threshold: 0.40, // Combined score threshold
+      match_count: matchCount,
+      language_filter: languageFilter
+    });
+    
+    if (error) {
+      console.error('Hybrid search error, falling back to keyword search:', error);
+      searchType = 'keyword_fallback';
+    } else {
+      results = (data || []) as HybridSearchResult[];
+    }
   }
   
-  const chunks = (results || []) as HybridSearchResult[];
+  // Fallback to keyword-only search if no embedding or hybrid search failed
+  if (searchType === 'keyword_fallback') {
+    console.log('Using keyword-only fallback search');
+    
+    const { data, error } = await supabaseClient.rpc('keyword_search', {
+      query_text: queryText,
+      match_threshold: 0.15,
+      match_count: matchCount,
+      language_filter: languageFilter
+    });
+    
+    if (error) {
+      console.error('Keyword search error:', error);
+      return {
+        chunks: [],
+        overallConfidence: 'none',
+        averageScore: 0,
+        meetsThreshold: false,
+        extractedPoints: { codes: [], extraPoints: [], allPoints: [], figureReferences: [] },
+        searchType: 'keyword_fallback'
+      };
+    }
+    
+    // Convert keyword results to hybrid format
+    results = ((data || []) as any[]).map(r => ({
+      ...r,
+      vector_score: 0,
+      combined_score: r.keyword_score || 0,
+    }));
+  }
   
-  // Calculate overall confidence
-  const avgScore = chunks.length > 0 
-    ? chunks.reduce((sum, c) => sum + (c.keyword_score || 0), 0) / chunks.length 
+  const chunks = results;
+  
+  // Calculate overall confidence based on combined score (or keyword score for fallback)
+  const topScore = chunks.length > 0 
+    ? (chunks[0]?.combined_score || chunks[0]?.keyword_score || 0)
     : 0;
   
-  const topScore = chunks.length > 0 ? chunks[0]?.keyword_score || 0 : 0;
+  const avgScore = chunks.length > 0 
+    ? chunks.reduce((sum, c) => sum + (c.combined_score || c.keyword_score || 0), 0) / chunks.length 
+    : 0;
   
-  // Determine overall confidence based on top scores
+  // Determine overall confidence based on combined scores
   let overallConfidence: 'very_high' | 'high' | 'medium' | 'low' | 'none';
-  if (topScore >= 0.70) overallConfidence = 'very_high';
-  else if (topScore >= 0.50) overallConfidence = 'high';
-  else if (topScore >= 0.30) overallConfidence = 'medium';
-  else if (topScore >= 0.15) overallConfidence = 'low';
-  else overallConfidence = 'none';
+  if (searchType === 'hybrid') {
+    // Hybrid search uses higher thresholds (combined score 0-1)
+    if (topScore >= 0.90) overallConfidence = 'very_high';
+    else if (topScore >= 0.80) overallConfidence = 'high';
+    else if (topScore >= 0.60) overallConfidence = 'medium';
+    else if (topScore >= 0.40) overallConfidence = 'low';
+    else overallConfidence = 'none';
+  } else {
+    // Keyword fallback uses lower thresholds
+    if (topScore >= 0.70) overallConfidence = 'very_high';
+    else if (topScore >= 0.50) overallConfidence = 'high';
+    else if (topScore >= 0.30) overallConfidence = 'medium';
+    else if (topScore >= 0.15) overallConfidence = 'low';
+    else overallConfidence = 'none';
+  }
   
   // Filter chunks that meet threshold
   const confidentChunks = chunks.filter(c => 
@@ -806,10 +898,11 @@ async function performHybridSearch(
   const extractedPoints = extractPointCodes(allContent);
   
   console.log('=== HYBRID SEARCH RESULTS ===');
+  console.log('Search type:', searchType);
   console.log('Total results:', chunks.length);
   console.log('Confident chunks (medium+):', confidentChunks.length);
-  console.log('Top score:', topScore);
-  console.log('Average score:', avgScore);
+  console.log('Top score:', topScore.toFixed(3));
+  console.log('Average score:', avgScore.toFixed(3));
   console.log('Overall confidence:', overallConfidence);
   console.log('Extracted points:', extractedPoints.allPoints.slice(0, 10).join(', '));
   
@@ -818,7 +911,8 @@ async function performHybridSearch(
     overallConfidence,
     averageScore: avgScore,
     meetsThreshold: overallConfidence !== 'none' && overallConfidence !== 'low',
-    extractedPoints
+    extractedPoints,
+    searchType
   };
 }
 
@@ -1627,7 +1721,12 @@ ${trial.sapir_notes ? `Dr. Sapir Notes: ${trial.sapir_notes}` : ''}
         averageScore: hybridSearchResult.averageScore,
         meetsThreshold: hybridSearchResult.meetsThreshold,
         threshold: CONFIDENCE_THRESHOLD,
-        hybridChunksFound: hybridSearchResult.chunks.length
+        hybridChunksFound: hybridSearchResult.chunks.length,
+        searchType: hybridSearchResult.searchType,
+        // Include top chunk scores for display
+        topVectorScore: hybridSearchResult.chunks[0]?.vector_score || 0,
+        topKeywordScore: hybridSearchResult.chunks[0]?.keyword_score || 0,
+        topCombinedScore: hybridSearchResult.chunks[0]?.combined_score || 0
       },
       // EXTRACTED POINTS METADATA
       extractedPoints: {
