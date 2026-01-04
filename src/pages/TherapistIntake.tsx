@@ -19,6 +19,16 @@ import {
   ArrowLeft, ArrowRight, Loader2, Building2, Phone, Mail, 
   GraduationCap, Briefcase, Calendar, Save, Trash2, CloudOff
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { validateIsraeliId, looksLikeIsraeliId } from '@/utils/israeliIdValidation';
 import { CrossPlatformBackButton } from '@/components/ui/CrossPlatformBackButton';
@@ -82,6 +92,7 @@ export default function TherapistIntake() {
   const [idCheckStatus, setIdCheckStatus] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle');
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [hasDraft, setHasDraft] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   
   // Disclaimer state
   const [confirmLicensed, setConfirmLicensed] = useState(false);
@@ -156,17 +167,16 @@ export default function TherapistIntake() {
 
   // Clear form and start fresh
   const handleClearForm = () => {
-    if (confirm('האם אתה בטוח שברצונך למחוק את הטופס ולהתחיל מחדש?')) {
-      localStorage.removeItem(INTAKE_DRAFT_KEY);
-      form.reset();
-      setStep(1);
-      setConfirmLicensed(false);
-      setConfirmRead(false);
-      setSignature(null);
-      setIsSaved(false);
-      setHasDraft(false);
-      toast.success('הטופס נוקה בהצלחה');
-    }
+    localStorage.removeItem(INTAKE_DRAFT_KEY);
+    form.reset();
+    setStep(1);
+    setConfirmLicensed(false);
+    setConfirmRead(false);
+    setSignature(null);
+    setIsSaved(false);
+    setHasDraft(false);
+    setShowClearConfirm(false);
+    toast.success('הטופס נוקה בהצלחה');
   };
 
   // Check if already completed
@@ -446,7 +456,7 @@ export default function TherapistIntake() {
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={handleClearForm}
+                onClick={() => setShowClearConfirm(true)}
                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
               >
                 <Trash2 className="h-4 w-4 ml-1" />
@@ -939,6 +949,27 @@ export default function TherapistIntake() {
           </form>
         </Form>
       </div>
+
+      {/* Clear Form Confirmation Dialog */}
+      <AlertDialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
+        <AlertDialogContent className="text-right" dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>ניקוי הטופס</AlertDialogTitle>
+            <AlertDialogDescription>
+              האם אתה בטוח שברצונך למחוק את כל הנתונים ולהתחיל מחדש? פעולה זו אינה ניתנת לביטול.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row-reverse gap-2">
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleClearForm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              נקה טופס
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
