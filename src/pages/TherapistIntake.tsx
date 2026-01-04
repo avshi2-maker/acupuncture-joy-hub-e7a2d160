@@ -17,7 +17,7 @@ import { toast } from 'sonner';
 import { 
   AlertTriangle, FileDown, CheckCircle2, Shield, User, Award, 
   ArrowLeft, ArrowRight, Loader2, Building2, Phone, Mail, 
-  GraduationCap, Briefcase, Calendar 
+  GraduationCap, Briefcase, Calendar, Save, Trash2, CloudOff
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { validateIsraeliId, looksLikeIsraeliId } from '@/utils/israeliIdValidation';
@@ -80,6 +80,8 @@ export default function TherapistIntake() {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [idCheckStatus, setIdCheckStatus] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle');
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [hasDraft, setHasDraft] = useState(false);
   
   // Disclaimer state
   const [confirmLicensed, setConfirmLicensed] = useState(false);
@@ -115,6 +117,7 @@ export default function TherapistIntake() {
         const draft = JSON.parse(savedDraft);
         if (draft.formData) {
           form.reset(draft.formData);
+          setHasDraft(true);
         }
         if (draft.step) {
           setStep(draft.step);
@@ -131,6 +134,7 @@ export default function TherapistIntake() {
   // Auto-save form data on changes
   const formValues = form.watch();
   useEffect(() => {
+    setAutoSaveStatus('saving');
     const timeoutId = setTimeout(() => {
       const draft = {
         formData: formValues,
@@ -140,10 +144,30 @@ export default function TherapistIntake() {
         savedAt: new Date().toISOString(),
       };
       localStorage.setItem(INTAKE_DRAFT_KEY, JSON.stringify(draft));
+      setAutoSaveStatus('saved');
+      setHasDraft(true);
+      
+      // Reset to idle after 2 seconds
+      setTimeout(() => setAutoSaveStatus('idle'), 2000);
     }, 1000); // Debounce 1 second
     
     return () => clearTimeout(timeoutId);
   }, [formValues, step, confirmLicensed, confirmRead]);
+
+  // Clear form and start fresh
+  const handleClearForm = () => {
+    if (confirm('האם אתה בטוח שברצונך למחוק את הטופס ולהתחיל מחדש?')) {
+      localStorage.removeItem(INTAKE_DRAFT_KEY);
+      form.reset();
+      setStep(1);
+      setConfirmLicensed(false);
+      setConfirmRead(false);
+      setSignature(null);
+      setIsSaved(false);
+      setHasDraft(false);
+      toast.success('הטופס נוקה בהצלחה');
+    }
+  };
 
   // Check if already completed
   useEffect(() => {
@@ -385,7 +409,52 @@ export default function TherapistIntake() {
 
       {/* Glassmorphism Form Container */}
       <div className="w-full max-w-2xl bg-white/92 backdrop-blur-md rounded-xl shadow-2xl p-6 md:p-10 my-4 md:my-8 space-y-6">
-        <CrossPlatformBackButton fallbackPath="/dashboard" />
+        {/* Header with Back Button, Auto-save indicator, and Clear button */}
+        <div className="flex items-center justify-between gap-2">
+          <CrossPlatformBackButton fallbackPath="/dashboard" />
+          
+          <div className="flex items-center gap-2">
+            {/* Auto-save indicator */}
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              autoSaveStatus === 'saving' 
+                ? 'bg-amber-100 text-amber-700' 
+                : autoSaveStatus === 'saved' 
+                  ? 'bg-green-100 text-green-700' 
+                  : 'bg-muted text-muted-foreground'
+            }`}>
+              {autoSaveStatus === 'saving' ? (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <span>שומר...</span>
+                </>
+              ) : autoSaveStatus === 'saved' ? (
+                <>
+                  <Save className="h-3 w-3" />
+                  <span>נשמר</span>
+                </>
+              ) : (
+                <>
+                  <CloudOff className="h-3 w-3" />
+                  <span>טיוטה</span>
+                </>
+              )}
+            </div>
+            
+            {/* Clear form button */}
+            {hasDraft && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleClearForm}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="h-4 w-4 ml-1" />
+                נקה טופס
+              </Button>
+            )}
+          </div>
+        </div>
 
         {/* Registration Flow Progress - shown when coming from Gate */}
         {isFromGate && (
