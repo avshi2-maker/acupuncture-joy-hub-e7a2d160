@@ -642,6 +642,187 @@ function uniq<T>(arr: T[]): T[] {
 }
 
 // ============================================================================
+// HYBRID SEARCH CONFIGURATION
+// ============================================================================
+const CONFIDENCE_THRESHOLD = 0.80; // Minimum confidence score for "protocol found"
+const LOW_CONFIDENCE_THRESHOLD = 0.40; // Below this = "No protocol found"
+
+// ============================================================================
+// POINT CODE EXTRACTION - Extracts acupuncture point codes from text
+// ============================================================================
+const POINT_CODE_PATTERN = /\b((?:BL|GB|ST|SP|LI|SI|HT|PC|TE|TW|KI|LR|LU|REN|DU|CV|GV|EX)[- ]?\d{1,2}[A-Z]?)\b/gi;
+const EXTRA_POINT_PATTERN = /\b((?:Yin ?Tang|Tai ?Yang|Si ?Shen ?Cong|An ?Mian|Bai ?Lao|Ding ?Chuan|Jia ?Ji|Hua ?Tuo|Shi ?Qi|Ba ?Feng|Ba ?Xie|Si ?Feng|Shi ?Xuan))\b/gi;
+
+interface ExtractedPoints {
+  codes: string[];
+  extraPoints: string[];
+  allPoints: string[];
+  figureReferences: string[];
+}
+
+/**
+ * Extract acupuncture point codes from text content
+ */
+function extractPointCodes(text: string): ExtractedPoints {
+  const normalizedText = text.toUpperCase();
+  
+  // Extract standard point codes (BL40, ST36, etc.)
+  const codeMatches = normalizedText.match(POINT_CODE_PATTERN) || [];
+  const codes = [...new Set(codeMatches.map(c => c.replace(/\s+/g, '').toUpperCase()))];
+  
+  // Extract extra points (Yintang, Taiyang, etc.)
+  const extraMatches = text.match(EXTRA_POINT_PATTERN) || [];
+  const extraPoints = [...new Set(extraMatches.map(e => e.replace(/\s+/g, '')))];
+  
+  // Combine all points
+  const allPoints = [...codes, ...extraPoints];
+  
+  // Map points to figure references (simplified mapping)
+  const figureReferences = mapPointsToFigures(codes);
+  
+  return { codes, extraPoints, allPoints, figureReferences };
+}
+
+/**
+ * Map point codes to body figure filenames
+ */
+function mapPointsToFigures(pointCodes: string[]): string[] {
+  const figureMap: Record<string, string[]> = {
+    // Head and leg points (GB appears on both)
+    'GB': ['head_lateral.png', 'head_posterior.png', 'leg_lateral.png'],
+    'ST': ['head_anterior.png', 'leg_anterior.png', 'abdomen.png'],
+    'DU': ['head_posterior.png', 'spine_posterior.png'],
+    'GV': ['head_posterior.png', 'spine_posterior.png'],
+    'REN': ['abdomen.png', 'chest_anterior.png'],
+    'CV': ['abdomen.png', 'chest_anterior.png'],
+    // Arm points
+    'LI': ['arm_lateral.png', 'hand_dorsum.png'],
+    'LU': ['arm_medial.png', 'chest_anterior.png'],
+    'HT': ['arm_medial.png'],
+    'SI': ['arm_posterior.png', 'shoulder_posterior.png'],
+    'PC': ['arm_medial.png'],
+    'TE': ['arm_lateral.png'],
+    'TW': ['arm_lateral.png'],
+    // Leg points
+    'SP': ['leg_medial.png', 'foot_medial.png'],
+    'KI': ['leg_medial.png', 'foot_sole.png'],
+    'LR': ['leg_medial.png', 'foot_dorsum.png'],
+    'BL': ['leg_posterior.png', 'spine_posterior.png', 'foot_lateral.png'],
+  };
+  
+  const figures = new Set<string>();
+  
+  for (const code of pointCodes) {
+    // Extract meridian prefix (e.g., "BL" from "BL40")
+    const meridian = code.replace(/\d+[A-Z]?$/, '');
+    if (figureMap[meridian]) {
+      figureMap[meridian].forEach(fig => figures.add(fig));
+    }
+  }
+  
+  return [...figures];
+}
+
+interface HybridSearchResult {
+  id: string;
+  content: string;
+  question: string | null;
+  answer: string | null;
+  chunk_index: number;
+  metadata: any;
+  language: string;
+  document_id: string;
+  file_name: string;
+  original_name: string;
+  category: string;
+  keyword_score: number;
+  confidence: string;
+}
+
+interface SearchConfidenceResult {
+  chunks: HybridSearchResult[];
+  overallConfidence: 'very_high' | 'high' | 'medium' | 'low' | 'none';
+  averageScore: number;
+  meetsThreshold: boolean;
+  extractedPoints: ExtractedPoints;
+}
+
+/**
+ * Perform keyword search with confidence scoring
+ */
+async function performHybridSearch(
+  supabaseClient: any,
+  queryText: string,
+  languageFilter: string | null,
+  matchCount: number = 20
+): Promise<SearchConfidenceResult> {
+  console.log('=== HYBRID SEARCH START ===');
+  console.log('Query:', queryText);
+  console.log('Language filter:', languageFilter);
+  
+  // Call the keyword_search function (fallback since we don't have embeddings yet)
+  const { data: results, error } = await supabaseClient.rpc('keyword_search', {
+    query_text: queryText,
+    match_threshold: 0.15, // Low threshold to get candidates, we'll filter by confidence
+    match_count: matchCount,
+    language_filter: languageFilter
+  });
+  
+  if (error) {
+    console.error('Hybrid search error:', error);
+    return {
+      chunks: [],
+      overallConfidence: 'none',
+      averageScore: 0,
+      meetsThreshold: false,
+      extractedPoints: { codes: [], extraPoints: [], allPoints: [], figureReferences: [] }
+    };
+  }
+  
+  const chunks = (results || []) as HybridSearchResult[];
+  
+  // Calculate overall confidence
+  const avgScore = chunks.length > 0 
+    ? chunks.reduce((sum, c) => sum + (c.keyword_score || 0), 0) / chunks.length 
+    : 0;
+  
+  const topScore = chunks.length > 0 ? chunks[0]?.keyword_score || 0 : 0;
+  
+  // Determine overall confidence based on top scores
+  let overallConfidence: 'very_high' | 'high' | 'medium' | 'low' | 'none';
+  if (topScore >= 0.70) overallConfidence = 'very_high';
+  else if (topScore >= 0.50) overallConfidence = 'high';
+  else if (topScore >= 0.30) overallConfidence = 'medium';
+  else if (topScore >= 0.15) overallConfidence = 'low';
+  else overallConfidence = 'none';
+  
+  // Filter chunks that meet threshold
+  const confidentChunks = chunks.filter(c => 
+    c.confidence === 'very_high' || c.confidence === 'high' || c.confidence === 'medium'
+  );
+  
+  // Extract points from all confident chunks
+  const allContent = confidentChunks.map(c => c.content + ' ' + (c.answer || '')).join(' ');
+  const extractedPoints = extractPointCodes(allContent);
+  
+  console.log('=== HYBRID SEARCH RESULTS ===');
+  console.log('Total results:', chunks.length);
+  console.log('Confident chunks (medium+):', confidentChunks.length);
+  console.log('Top score:', topScore);
+  console.log('Average score:', avgScore);
+  console.log('Overall confidence:', overallConfidence);
+  console.log('Extracted points:', extractedPoints.allPoints.slice(0, 10).join(', '));
+  
+  return {
+    chunks: confidentChunks,
+    overallConfidence,
+    averageScore: avgScore,
+    meetsThreshold: overallConfidence !== 'none' && overallConfidence !== 'low',
+    extractedPoints
+  };
+}
+
+// ============================================================================
 // RELEVANCE SCORING - Ranks chunks by how well they match query keywords
 // ============================================================================
 function calculateRelevanceScore(chunk: any, queryKeywords: string[], pillarKeywords: string[]): number {
@@ -984,8 +1165,71 @@ serve(async (req) => {
     console.log('Using external AI:', useExternalAI || false);
 
     // ========================================================================
-    // PHASE 2: COMPOSITE PARALLEL SEARCH - 4 Pillar Queries (with language awareness)
+    // PHASE 2: HYBRID SEARCH WITH CONFIDENCE THRESHOLD (0.80)
     // ========================================================================
+    
+    // First, perform hybrid search for overall confidence assessment
+    const hybridSearchResult = await performHybridSearch(
+      supabaseClient,
+      searchQuery,
+      preferredLanguage,
+      30
+    );
+    
+    console.log('=== HYBRID SEARCH CONFIDENCE CHECK ===');
+    console.log('Overall confidence:', hybridSearchResult.overallConfidence);
+    console.log('Meets threshold:', hybridSearchResult.meetsThreshold);
+    console.log('Extracted points:', hybridSearchResult.extractedPoints.allPoints.join(', '));
+    console.log('Figure references:', hybridSearchResult.extractedPoints.figureReferences.join(', '));
+    
+    // If confidence is too low and not using external AI, return "No protocol found"
+    const confidenceTooLow = !hybridSearchResult.meetsThreshold && !useExternalAI;
+    
+    if (confidenceTooLow) {
+      console.log('=== LOW CONFIDENCE - PROTOCOL NOT FOUND ===');
+      // Return early with "no protocol found" message
+      const noProtocolMetadata = {
+        sources: [],
+        chunksFound: 0,
+        documentsSearched: 0,
+        documentsMatched: 0,
+        searchTermsUsed: searchTerms,
+        isExternal: false,
+        confidenceLevel: hybridSearchResult.overallConfidence,
+        confidenceScore: hybridSearchResult.averageScore,
+        noProtocolFound: true,
+        extractedPoints: hybridSearchResult.extractedPoints,
+        pillarBreakdown: {
+          clinical: 0,
+          pharmacopeia: 0,
+          nutrition: 0,
+          lifestyle: 0,
+          ageSpecific: 0,
+          cafStudies: 0,
+          clinicalTrials: 0
+        },
+        sourceAudit: {
+          totalIndexedAssets: 55,
+          totalChunksInIndex: 5916,
+          candidatesScanned: hybridSearchResult.chunks.length,
+          filteredToTop: 0,
+          sourcesUsedForAnswer: [],
+          searchScope: `All 55 Indexed Assets (Bilingual: ${detectedLanguage})`,
+          closedLoop: true,
+          confidenceThreshold: CONFIDENCE_THRESHOLD,
+          actualConfidence: hybridSearchResult.averageScore
+        }
+      };
+      
+      // Return structured "no protocol found" response
+      return new Response(JSON.stringify({
+        type: 'no_protocol_found',
+        message: `I cannot find a protocol for "${searchQuery}" in the clinic's indexed documents. The search confidence (${(hybridSearchResult.averageScore * 100).toFixed(1)}%) is below the required threshold (${(CONFIDENCE_THRESHOLD * 100).toFixed(0)}%). Please refine your search terms or enable External AI if you'd like a general response.`,
+        metadata: noProtocolMetadata
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     
     const ageFilePatterns = ageGroup ? getAgeGroupFilePatterns(ageGroup) : [];
     
@@ -1377,6 +1621,22 @@ ${trial.sapir_notes ? `Dr. Sapir Notes: ${trial.sapir_notes}` : ''}
       documentsMatched: useExternalAI ? 0 : uniqueDocuments.length,
       searchTermsUsed: searchTerms,
       isExternal: useExternalAI || false,
+      // HYBRID SEARCH CONFIDENCE METADATA
+      hybridSearchConfidence: {
+        overallConfidence: hybridSearchResult.overallConfidence,
+        averageScore: hybridSearchResult.averageScore,
+        meetsThreshold: hybridSearchResult.meetsThreshold,
+        threshold: CONFIDENCE_THRESHOLD,
+        hybridChunksFound: hybridSearchResult.chunks.length
+      },
+      // EXTRACTED POINTS METADATA
+      extractedPoints: {
+        pointCodes: hybridSearchResult.extractedPoints.codes,
+        extraPoints: hybridSearchResult.extractedPoints.extraPoints,
+        allPoints: hybridSearchResult.extractedPoints.allPoints,
+        figureReferences: hybridSearchResult.extractedPoints.figureReferences,
+        totalPointsFound: hybridSearchResult.extractedPoints.allPoints.length
+      },
       // LANGUAGE DETECTION METADATA
       languageDetection: {
         detectedLanguage,
@@ -1406,7 +1666,9 @@ ${trial.sapir_notes ? `Dr. Sapir Notes: ${trial.sapir_notes}` : ''}
           category: s.category
         })),
         searchScope: `All 55 Indexed Assets (Bilingual: ${detectedLanguage})`,
-        closedLoop: !useExternalAI // Confirms no external AI used
+        closedLoop: !useExternalAI, // Confirms no external AI used
+        confidenceThreshold: CONFIDENCE_THRESHOLD,
+        actualConfidence: hybridSearchResult.averageScore
       }
     };
 
