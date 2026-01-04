@@ -35,3 +35,5 @@ Number,Filename,Body_Part,View,Category,Clinical_Priority,Key_Meridians,Point_Co
 34,child_back.png,Child (Pediatric),Posterior (Back),Pediatric,Medium,"Pediatric Back Shu, GV",Age-appropriate,"BL 11-30 (reduced), GV spine points, Tuina zones"
 35,abdomen_zoomed.png,Abdomen (Zoomed),Anterior Close-up,Torso,High,"CV, ST, KI, SP",40 points,"Enhanced detail: CV 2-14, ST 19-30, KI 11-21"
 36,ankle_side.png,Ankle,Lateral (Side),Lower Extremity,Medium,"BL, KI, GB",14 points,"BL 60-62, KI 3-6, GB 39-40"
+37,child_pediatric_en.png,Child (Pediatric Full),Anterior/Posterior,Pediatric,High,"CV, ST, SP, LU, BL, HT, PC, LI, GV",20+ points,"CV 12, CV 8, ST 36, SP 6, LU 1-2, BL 13, HT 7, PC 6, LI 4, GV 20, Yintang - Digestion/Respiratory/Sleep/Immune"
+38,child_pediatric_he.png,Child (Pediatric Full Hebrew),Anterior/Posterior,Pediatric,High,"CV, ST, SP, LU, BL, HT, PC, LI, GV",20+ points,"CV 12, CV 8, ST 36, SP 6, LU 2, BL 13, HT 7, PC 6, LI 4, GV 20 - Hebrew labels"
