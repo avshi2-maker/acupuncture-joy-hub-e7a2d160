@@ -1,10 +1,23 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+export interface UsageBreakdown {
+  chat: number;
+  diagnosis: number;
+  treatment: number;
+  herbs: number;
+  points: number;
+  summary: number;
+  transcription: number;
+  other: number;
+}
 
 interface UsageData {
   currentUsed: number;
   tierLimit: number;
   uniquePatients: number;
+  breakdown: UsageBreakdown;
 }
 
 interface TierLimits {
@@ -19,13 +32,14 @@ const TIER_LIMITS: TierLimits = {
   premium: 5000,
 };
 
-const ALERT_THRESHOLDS = [80, 90] as const;
+const ALERT_THRESHOLDS = [50, 75, 90] as const;
 
 export const useUsageTracking = () => {
   const [usageData, setUsageData] = useState<UsageData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const alertsSentRef = useRef<Set<number>>(new Set());
+  const toastShownRef = useRef<Set<number>>(new Set());
 
   const checkAndSendAlerts = useCallback(async (currentUsed: number, tierLimit: number, userTier: keyof TierLimits) => {
     try {
@@ -87,6 +101,29 @@ export const useUsageTracking = () => {
     }
   }, []);
 
+  // Show in-app toast for thresholds
+  const showThresholdToast = useCallback((percentage: number, remaining: number) => {
+    if (percentage >= 90 && !toastShownRef.current.has(90)) {
+      toastShownRef.current.add(90);
+      toast.error('שימו לב! נותרו מעט שאילתות', {
+        description: `נותרו ${remaining} שאילתות החודש. שקלו לשדרג את החבילה.`,
+        duration: 8000,
+      });
+    } else if (percentage >= 75 && percentage < 90 && !toastShownRef.current.has(75)) {
+      toastShownRef.current.add(75);
+      toast.warning('השתמשתם ב-75% מהמכסה החודשית', {
+        description: `נותרו ${remaining} שאילתות.`,
+        duration: 5000,
+      });
+    } else if (percentage >= 50 && percentage < 75 && !toastShownRef.current.has(50)) {
+      toastShownRef.current.add(50);
+      toast.info('השתמשתם בחצי מהמכסה החודשית', {
+        description: `נותרו ${remaining} שאילתות.`,
+        duration: 4000,
+      });
+    }
+  }, []);
+
   const fetchUsageData = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -99,16 +136,52 @@ export const useUsageTracking = () => {
           currentUsed: 350,
           tierLimit: 500,
           uniquePatients: 70,
+          breakdown: { chat: 120, diagnosis: 90, treatment: 50, herbs: 40, points: 30, summary: 15, transcription: 5, other: 0 },
         });
         return;
       }
 
+      // Fetch overall usage stats
       const { data: usageResult, error: usageError } = await supabase
         .rpc('get_user_monthly_usage');
 
       if (usageError) {
         console.error('Error fetching usage:', usageError);
         throw usageError;
+      }
+
+      // Fetch breakdown by action_type for current month
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+
+      const { data: breakdownData, error: breakdownError } = await supabase
+        .from('usage_logs' as any)
+        .select('action_type')
+        .eq('user_id', user.id)
+        .gte('created_at', startOfMonth.toISOString());
+
+      // Calculate breakdown from real data
+      const breakdown: UsageBreakdown = {
+        chat: 0,
+        diagnosis: 0,
+        treatment: 0,
+        herbs: 0,
+        points: 0,
+        summary: 0,
+        transcription: 0,
+        other: 0,
+      };
+
+      if (!breakdownError && breakdownData) {
+        breakdownData.forEach((log: any) => {
+          const actionType = log.action_type as keyof UsageBreakdown;
+          if (actionType in breakdown) {
+            breakdown[actionType]++;
+          } else {
+            breakdown.other++;
+          }
+        });
       }
 
       // Try to get tier from localStorage (set by useTier hook)
@@ -118,14 +191,20 @@ export const useUsageTracking = () => {
 
       const usage = usageResult?.[0] || { total_queries: 0, total_tokens: 0, unique_patients: 0 };
       const currentUsed = Number(usage.total_queries) || 0;
+      const remaining = tierLimit - currentUsed;
+      const percentage = Math.round((currentUsed / tierLimit) * 100);
 
       setUsageData({
         currentUsed,
         tierLimit,
         uniquePatients: Number(usage.unique_patients) || 0,
+        breakdown,
       });
 
-      // Check for threshold alerts (80% and 90%)
+      // Show in-app threshold toasts
+      showThresholdToast(percentage, remaining);
+
+      // Check for threshold alerts (email - 80% and 90%)
       await checkAndSendAlerts(currentUsed, tierLimit, userTier);
     } catch (err) {
       console.error('Error fetching usage data:', err);
@@ -134,11 +213,12 @@ export const useUsageTracking = () => {
         currentUsed: 350,
         tierLimit: 500,
         uniquePatients: 70,
+        breakdown: { chat: 120, diagnosis: 90, treatment: 50, herbs: 40, points: 30, summary: 15, transcription: 5, other: 0 },
       });
     } finally {
       setIsLoading(false);
     }
-  }, [checkAndSendAlerts]);
+  }, [checkAndSendAlerts, showThresholdToast]);
 
   // Auto-track AI feature usage
   const trackAIUsage = useCallback(async (

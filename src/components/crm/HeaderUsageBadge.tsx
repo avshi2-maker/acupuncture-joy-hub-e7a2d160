@@ -41,14 +41,19 @@ export function HeaderUsageBadge() {
     premium: 'פרימיום',
   };
 
-  // Mock usage breakdown (would come from real data)
+  // Real usage breakdown from database
+  const breakdown = usageData.breakdown;
+  const totalBreakdown = Object.values(breakdown).reduce((a, b) => a + b, 0) || 1;
+  
   const usageBreakdown = [
-    { type: 'chat', label: 'צ׳אט AI', icon: MessageCircle, count: Math.round(usageData.currentUsed * 0.35), color: 'text-blue-500' },
-    { type: 'diagnosis', label: 'אבחון', icon: Stethoscope, count: Math.round(usageData.currentUsed * 0.25), color: 'text-jade' },
-    { type: 'herbs', label: 'צמחים', icon: Leaf, count: Math.round(usageData.currentUsed * 0.15), color: 'text-green-600' },
-    { type: 'summary', label: 'סיכומים', icon: FileText, count: Math.round(usageData.currentUsed * 0.15), color: 'text-amber-500' },
-    { type: 'transcription', label: 'תמלול', icon: Mic, count: Math.round(usageData.currentUsed * 0.10), color: 'text-purple-500' },
-  ];
+    { type: 'chat', label: 'צ׳אט AI', icon: MessageCircle, count: breakdown.chat, color: 'text-blue-500' },
+    { type: 'diagnosis', label: 'אבחון', icon: Stethoscope, count: breakdown.diagnosis, color: 'text-jade' },
+    { type: 'treatment', label: 'טיפול', icon: Stethoscope, count: breakdown.treatment, color: 'text-teal-500' },
+    { type: 'herbs', label: 'צמחים', icon: Leaf, count: breakdown.herbs, color: 'text-green-600' },
+    { type: 'points', label: 'נקודות', icon: Sparkles, count: breakdown.points, color: 'text-indigo-500' },
+    { type: 'summary', label: 'סיכומים', icon: FileText, count: breakdown.summary, color: 'text-amber-500' },
+    { type: 'transcription', label: 'תמלול', icon: Mic, count: breakdown.transcription, color: 'text-purple-500' },
+  ].filter(item => item.count > 0); // Only show features with usage
 
   return (
     <Drawer open={open} onOpenChange={setOpen}>
@@ -113,7 +118,7 @@ export function HeaderUsageBadge() {
               פירוט שימוש
             </h3>
             <div className="space-y-2">
-              {usageBreakdown.map((item) => (
+              {usageBreakdown.length > 0 ? usageBreakdown.map((item) => (
                 <div key={item.type} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
                   <div className="flex items-center gap-2">
                     <item.icon className={`h-4 w-4 ${item.color}`} />
@@ -124,12 +129,14 @@ export function HeaderUsageBadge() {
                     <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
                       <div 
                         className={`h-full rounded-full ${item.color.replace('text-', 'bg-')}`}
-                        style={{ width: `${(item.count / usageData.currentUsed) * 100}%` }}
+                        style={{ width: `${(item.count / totalBreakdown) * 100}%` }}
                       />
                     </div>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <p className="text-sm text-muted-foreground text-center py-2">אין נתוני שימוש עדיין</p>
+              )}
             </div>
           </div>
 
