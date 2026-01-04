@@ -610,36 +610,15 @@ export default function Gate() {
                   </div>
                 )}
 
-                {/* Quick Test Access for Daily Testing */}
-                <div className="text-center space-y-3">
-                  <div className="flex items-center justify-center gap-4 flex-wrap">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        // Set trial tier for 24 hours
-                        const tomorrow = new Date();
-                        tomorrow.setHours(23, 59, 59, 999);
-                        setTier('trial');
-                        setExpiresAt(tomorrow);
-                        toast.success('Trial access activated for today!');
-                        navigate('/tcm-brain');
-                      }}
-                      className="border-white/50 text-white hover:bg-white/20 backdrop-blur-sm"
-                    >
-                      <Play className="h-4 w-4 ml-2" />
-                      Quick Test Access (Daily)
-                    </Button>
-                    <Button 
-                      variant="link" 
-                      onClick={() => setCurrentStep('password')}
-                      className="text-white hover:text-gold"
-                    >
-                      כבר יש לי סיסמה - דלגו לכניסה
-                    </Button>
-                  </div>
-                  <p className="text-xs text-white/70">
-                    Test access expires at midnight. For full access, select a plan above.
-                  </p>
+                {/* Skip to password entry */}
+                <div className="text-center">
+                  <Button 
+                    variant="link" 
+                    onClick={() => setCurrentStep('password')}
+                    className="text-white hover:text-gold"
+                  >
+                    כבר יש לי סיסמה - דלגו לכניסה
+                  </Button>
                 </div>
               </>
             )}
