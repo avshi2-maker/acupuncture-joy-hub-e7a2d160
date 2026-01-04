@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 type AgeGroup = 'infant' | 'young_child' | 'school_age' | 'teenager';
-type Condition = 'immunity' | 'nausea' | 'pain' | 'fatigue' | 'anxiety';
+type Condition = 'immunity' | 'nausea' | 'pain' | 'fatigue' | 'mucositis' | 'anxiety';
 
 interface ProtocolData {
   dosing: {
@@ -100,18 +100,25 @@ const CONDITION_PROTOCOLS: Record<Condition, { label: string; labelHe: string; p
     alternatives: 'Gentle tuina, TENS on auricular points, Warm compresses, Guided imagery + breathing'
   },
   fatigue: {
-    label: 'Fatigue / Low Energy',
-    labelHe: 'עייפות / חולשה',
-    points: ['ST36 (Zusanli)', 'SP3 (Taibai)', 'CV4 (Guanyuan)', 'GV20 (Baihui)', 'KI3 (Taixi)'],
-    formula: 'Si Jun Zi Tang (Modified)',
-    alternatives: 'Gentle moxa on CV4/CV6, Pediatric tuina, Rest and sleep optimization'
+    label: 'Cancer-Related Fatigue',
+    labelHe: 'עייפות מסרטן',
+    points: ['ST36 (Zusanli)', 'SP3 (Taibai)', 'CV4 (Guanyuan)', 'GV20 (Baihui)', 'KI3 (Taixi)', 'BL20 (Pishu)'],
+    formula: 'Si Jun Zi Tang + Bu Zhong Yi Qi Tang (Modified)',
+    alternatives: 'Gentle moxa on CV4/CV6, Pediatric tuina on back-shu, Rest optimization, Qi Gong breathing'
+  },
+  mucositis: {
+    label: 'Mucositis (Mouth Sores)',
+    labelHe: 'מוקוזיטיס (פצעי פה)',
+    points: ['LI4 (Hegu)', 'ST44 (Neiting)', 'SP6 (Sanyinjiao)', 'CV23 (Lianquan)', 'ST6 (Jiache)'],
+    formula: 'Gan Lu Yin / Qing Wei San (Modified)',
+    alternatives: 'Honey rinse, Cooling herbal mouthwash, External Shonishin around jaw, Ice chips before chemo'
   },
   anxiety: {
-    label: 'Anxiety / Emotional',
-    labelHe: 'חרדה / רגשי',
-    points: ['HT7 (Shenmen)', 'PC6 (Neiguan)', 'GV20 (Baihui)', 'Yintang', 'SP6 (Sanyinjiao)'],
-    formula: 'Gui Pi Tang (Modified)',
-    alternatives: 'Auricular seeds on Shenmen, Breathing exercises, Guided meditation for children'
+    label: 'Anxiety & Procedural Fear',
+    labelHe: 'חרדה ופחד מפרוצדורות',
+    points: ['HT7 (Shenmen)', 'PC6 (Neiguan)', 'GV20 (Baihui)', 'Yintang', 'KI1 (Yongquan)'],
+    formula: 'Gui Pi Tang / An Shen Ding Zhi Wan (Modified)',
+    alternatives: 'Auricular seeds on Shenmen, Play therapy, Breathing exercises, Child-friendly guided imagery'
   }
 };
 
