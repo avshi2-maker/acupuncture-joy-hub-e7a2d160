@@ -44,6 +44,100 @@ interface SafetyFilter {
   elderly: boolean;
 }
 
+// Embedded sample formula data from TCM_Herbal_Formulas_Comprehensive.csv
+const SAMPLE_FORMULAS: FormulaData[] = [
+  {
+    id: '1',
+    formula_name: 'Si Jun Zi Tang (四君子汤)',
+    question: 'What is Si Jun Zi Tang used for?',
+    answer: 'Si Jun Zi Tang is a foundational formula for tonifying Qi. It treats Spleen and Stomach Qi deficiency presenting with fatigue, poor appetite, loose stools, and a pale tongue.',
+    content: 'Si Jun Zi Tang: Ren Shen, Bai Zhu, Fu Ling, Zhi Gan Cao. Tonifies Qi, strengthens Spleen. For Spleen Qi deficiency.',
+    acupoints: 'ST36, SP6, CV12, BL20',
+    pharmacopeia: 'Chinese Pharmacopoeia 2020 Edition, Vol. I',
+  },
+  {
+    id: '2',
+    formula_name: 'Ba Zhen Tang (八珍汤)',
+    question: 'What does Ba Zhen Tang treat?',
+    answer: 'Ba Zhen Tang tonifies both Qi and Blood. It is the combination of Si Jun Zi Tang and Si Wu Tang, treating dual deficiency of Qi and Blood with pallor, fatigue, dizziness, and palpitations.',
+    content: 'Ba Zhen Tang: Ren Shen, Bai Zhu, Fu Ling, Zhi Gan Cao, Dang Gui, Chuan Xiong, Bai Shao, Shu Di Huang. For Qi and Blood deficiency.',
+    acupoints: 'ST36, SP6, BL17, BL20, CV4',
+    pharmacopeia: 'Chinese Pharmacopoeia 2020 Edition, Vol. I',
+  },
+  {
+    id: '3',
+    formula_name: 'Liu Wei Di Huang Wan (六味地黄丸)',
+    question: 'What is the primary indication for Liu Wei Di Huang Wan?',
+    answer: 'Liu Wei Di Huang Wan nourishes Kidney Yin. It treats Kidney Yin deficiency with symptoms like night sweats, heat in the five palms, dizziness, tinnitus, and soreness of the lower back.',
+    content: 'Liu Wei Di Huang Wan: Shu Di Huang, Shan Zhu Yu, Shan Yao, Ze Xie, Mu Dan Pi, Fu Ling. Nourishes Kidney Yin.',
+    acupoints: 'KI3, KI6, SP6, CV4, BL23',
+    pharmacopeia: 'Chinese Pharmacopoeia 2020 Edition, Vol. I',
+  },
+  {
+    id: '4',
+    formula_name: 'Gui Pi Tang (归脾汤)',
+    question: 'What pattern does Gui Pi Tang address?',
+    answer: 'Gui Pi Tang tonifies Spleen Qi and Heart Blood, calms the Shen. It treats Heart and Spleen deficiency with insomnia, poor memory, palpitations, fatigue, and poor appetite.',
+    content: 'Gui Pi Tang: Ren Shen, Huang Qi, Bai Zhu, Fu Shen, Dang Gui, Long Yan Rou, Suan Zao Ren, Yuan Zhi, Mu Xiang, Zhi Gan Cao, Sheng Jiang, Da Zao.',
+    acupoints: 'HT7, SP6, ST36, BL15, BL20',
+    pharmacopeia: 'Chinese Pharmacopoeia 2020 Edition, Vol. I',
+  },
+  {
+    id: '5',
+    formula_name: 'Xiao Yao San (逍遥散)',
+    question: 'What is Xiao Yao San used for?',
+    answer: 'Xiao Yao San spreads Liver Qi, strengthens Spleen, and nourishes Blood. It treats Liver Qi stagnation with Blood deficiency - irritability, depression, fatigue, irregular menstruation.',
+    content: 'Xiao Yao San: Chai Hu, Dang Gui, Bai Shao, Bai Zhu, Fu Ling, Zhi Gan Cao, Sheng Jiang, Bo He.',
+    acupoints: 'LV3, LV14, PC6, SP6, GB34',
+    pharmacopeia: 'Chinese Pharmacopoeia 2020 Edition, Vol. I',
+  },
+  {
+    id: '6',
+    formula_name: 'Tao Hong Si Wu Tang (桃红四物汤)',
+    question: 'What does Tao Hong Si Wu Tang treat?',
+    answer: 'Tao Hong Si Wu Tang invigorates Blood and dispels stasis while nourishing Blood. Contains Tao Ren (peach kernel) and Hong Hua (safflower) - CONTRAINDICATED IN PREGNANCY.',
+    content: 'Tao Hong Si Wu Tang: Shu Di Huang, Dang Gui, Bai Shao, Chuan Xiong, Tao Ren, Hong Hua. Blood stasis with Blood deficiency. WARNING: Contains Hong Hua and Tao Ren - contraindicated in pregnancy.',
+    acupoints: 'SP10, LV3, BL17, SP6',
+    pharmacopeia: 'Modern Chinese Patent Medicine Formulary',
+  },
+  {
+    id: '7',
+    formula_name: 'Bu Zhong Yi Qi Tang (补中益气汤)',
+    question: 'What is the key indication for Bu Zhong Yi Qi Tang?',
+    answer: 'Bu Zhong Yi Qi Tang tonifies Qi of the Middle Jiao and raises Yang. It treats Spleen and Stomach Qi deficiency with sinking of Yang - organ prolapse, chronic diarrhea, shortness of breath.',
+    content: 'Bu Zhong Yi Qi Tang: Huang Qi, Ren Shen, Bai Zhu, Zhi Gan Cao, Dang Gui, Chen Pi, Sheng Ma, Chai Hu.',
+    acupoints: 'CV6, ST36, BL20, GV20',
+    pharmacopeia: 'Chinese Pharmacopoeia 2020 Edition, Vol. I',
+  },
+  {
+    id: '8',
+    formula_name: 'Xue Fu Zhu Yu Tang (血府逐瘀汤)',
+    question: 'What is Xue Fu Zhu Yu Tang used for?',
+    answer: 'Xue Fu Zhu Yu Tang invigorates Blood and dispels stasis in the chest (Xue Fu). It treats chest pain, headache, chronic stubborn pain, and emotional disorders from Blood stasis.',
+    content: 'Xue Fu Zhu Yu Tang: Tao Ren, Hong Hua, Dang Gui, Sheng Di Huang, Chuan Xiong, Chi Shao, Niu Xi, Chai Hu, Zhi Ke, Jie Geng, Gan Cao. WARNING: Contains Tao Ren, Hong Hua, Niu Xi - contraindicated in pregnancy.',
+    acupoints: 'PC6, LV3, SP10, BL17, CV17',
+    pharmacopeia: 'Modern Chinese Patent Medicine Formulary',
+  },
+  {
+    id: '9',
+    formula_name: 'Yin Qiao San (银翘散)',
+    question: 'What does Yin Qiao San treat?',
+    answer: 'Yin Qiao San releases the exterior and clears Heat. It is for early-stage Wind-Heat invasion - fever, sore throat, headache, slight thirst, and a floating rapid pulse.',
+    content: 'Yin Qiao San: Jin Yin Hua, Lian Qiao, Jie Geng, Niu Bang Zi, Bo He, Dan Dou Chi, Jing Jie, Dan Zhu Ye, Gan Cao, Lu Gen.',
+    acupoints: 'LI4, LI11, LU7, GV14',
+    pharmacopeia: 'Chinese Pharmacopoeia 2020 Edition, Vol. I',
+  },
+  {
+    id: '10',
+    formula_name: 'Ma Huang Tang (麻黄汤)',
+    question: 'When is Ma Huang Tang indicated?',
+    answer: 'Ma Huang Tang releases the exterior and disperses Cold. It treats exterior Wind-Cold excess with aversion to cold, fever without sweating, body aches, and a floating tight pulse.',
+    content: 'Ma Huang Tang: Ma Huang, Gui Zhi, Xing Ren, Zhi Gan Cao. Caution in children, elderly, and those with cardiovascular conditions.',
+    acupoints: 'LU7, LI4, BL12, GV14',
+    pharmacopeia: 'Chinese Pharmacopoeia 2020 Edition, Vol. I',
+  },
+];
+
 // Forbidden herbs during pregnancy
 const PREGNANCY_FORBIDDEN = [
   'Da Huang', 'Hong Hua', 'Niu Xi', 'San Leng', 'E Zhu', 'Shui Zhi', 
@@ -75,7 +169,7 @@ export function HerbalMasterWidget({ className }: { className?: string }) {
   const [currentFlashcardIndex, setCurrentFlashcardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
 
-  // Search formulas from knowledge base
+  // Search formulas - uses embedded data as fallback
   const searchFormulas = useCallback(async (query: string) => {
     if (!query.trim()) {
       setSearchResults([]);
@@ -84,25 +178,37 @@ export function HerbalMasterWidget({ className }: { className?: string }) {
 
     setIsSearching(true);
     try {
-      // Search in knowledge_chunks for formula data
+      const lowerQuery = query.toLowerCase();
+      
+      // First try database search
       const { data, error } = await supabase
         .from('knowledge_chunks')
         .select('id, content, question, answer, metadata, document_id')
         .or(`content.ilike.%${query}%,question.ilike.%${query}%,answer.ilike.%${query}%`)
         .limit(10);
 
-      if (error) throw error;
+      let formulas: FormulaData[] = [];
 
-      const formulas: FormulaData[] = (data || []).map((chunk: any) => ({
-        id: chunk.id,
-        formula_name: chunk.question || 'Unknown Formula',
-        question: chunk.question,
-        answer: chunk.answer,
-        content: chunk.content,
-        source: chunk.metadata?.source || 'Knowledge Base',
-        acupoints: chunk.metadata?.acupoints,
-        pharmacopeia: chunk.metadata?.pharmacopeia,
-      }));
+      if (!error && data && data.length > 0) {
+        formulas = data.map((chunk: any) => ({
+          id: chunk.id,
+          formula_name: chunk.question || 'Unknown Formula',
+          question: chunk.question,
+          answer: chunk.answer,
+          content: chunk.content,
+          source: chunk.metadata?.source || 'Knowledge Base',
+          acupoints: chunk.metadata?.acupoints,
+          pharmacopeia: chunk.metadata?.pharmacopeia,
+        }));
+      } else {
+        // Fallback to embedded sample data
+        formulas = SAMPLE_FORMULAS.filter(f => 
+          f.formula_name.toLowerCase().includes(lowerQuery) ||
+          f.content.toLowerCase().includes(lowerQuery) ||
+          (f.answer && f.answer.toLowerCase().includes(lowerQuery)) ||
+          (f.question && f.question.toLowerCase().includes(lowerQuery))
+        );
+      }
 
       setSearchResults(formulas);
 
@@ -118,6 +224,18 @@ export function HerbalMasterWidget({ className }: { className?: string }) {
               warnings.push(`⚠️ ${formula.formula_name}: Contains ${foundForbidden.join(', ')} - CONTRAINDICATED in pregnancy`);
             }
           }
+          if (safetyFilters.children) {
+            if (formula.content.toLowerCase().includes('ma huang') || 
+                formula.content.toLowerCase().includes('caution in children')) {
+              warnings.push(`⚠️ ${formula.formula_name}: Use with caution in pediatric patients - adjust dosage`);
+            }
+          }
+          if (safetyFilters.elderly) {
+            if (formula.content.toLowerCase().includes('ma huang') || 
+                formula.content.toLowerCase().includes('cardiovascular')) {
+              warnings.push(`⚠️ ${formula.formula_name}: Use with caution in elderly - monitor cardiovascular status`);
+            }
+          }
         });
         setSafetyWarnings(warnings);
       } else {
@@ -125,7 +243,13 @@ export function HerbalMasterWidget({ className }: { className?: string }) {
       }
     } catch (error) {
       console.error('Search error:', error);
-      toast.error('Failed to search formulas');
+      // Fallback to embedded data on error
+      const lowerQuery = query.toLowerCase();
+      const formulas = SAMPLE_FORMULAS.filter(f => 
+        f.formula_name.toLowerCase().includes(lowerQuery) ||
+        f.content.toLowerCase().includes(lowerQuery)
+      );
+      setSearchResults(formulas);
     } finally {
       setIsSearching(false);
     }
@@ -141,7 +265,7 @@ export function HerbalMasterWidget({ className }: { className?: string }) {
     return () => clearTimeout(timer);
   }, [searchQuery, activeTab, searchFormulas]);
 
-  // Load quiz formulas
+  // Load quiz formulas - uses embedded data as fallback
   const loadQuizFormulas = useCallback(async () => {
     setQuizLoading(true);
     try {
@@ -151,17 +275,28 @@ export function HerbalMasterWidget({ className }: { className?: string }) {
         .not('question', 'is', null)
         .limit(20);
 
-      if (error) throw error;
+      let formulas: FormulaData[] = [];
 
-      const formulas: FormulaData[] = (data || [])
-        .filter((chunk: any) => chunk.question && chunk.answer)
-        .map((chunk: any) => ({
-          id: chunk.id,
-          formula_name: chunk.question || 'Unknown',
-          question: chunk.question,
-          answer: chunk.answer,
-          content: chunk.content,
+      if (!error && data && data.length > 0) {
+        formulas = data
+          .filter((chunk: any) => chunk.question && chunk.answer)
+          .map((chunk: any) => ({
+            id: chunk.id,
+            formula_name: chunk.question || 'Unknown',
+            question: chunk.question,
+            answer: chunk.answer,
+            content: chunk.content,
+          }));
+      }
+
+      // Use embedded data as fallback if no data from DB
+      if (formulas.length === 0) {
+        formulas = SAMPLE_FORMULAS.map(f => ({
+          ...f,
+          question: f.question || f.formula_name,
+          answer: f.answer || f.content,
         }));
+      }
 
       // Shuffle for randomness
       const shuffled = formulas.sort(() => Math.random() - 0.5);
@@ -170,12 +305,16 @@ export function HerbalMasterWidget({ className }: { className?: string }) {
       setShowAnswer(false);
     } catch (error) {
       console.error('Quiz load error:', error);
+      // Use embedded data on error
+      const shuffled = [...SAMPLE_FORMULAS].sort(() => Math.random() - 0.5);
+      setQuizFormulas(shuffled);
+      setCurrentQuizIndex(0);
     } finally {
       setQuizLoading(false);
     }
   }, []);
 
-  // Load flashcard formulas
+  // Load flashcard formulas - uses embedded data as fallback
   const loadFlashcardFormulas = useCallback(async () => {
     try {
       const { data, error } = await supabase
@@ -184,21 +323,30 @@ export function HerbalMasterWidget({ className }: { className?: string }) {
         .not('question', 'is', null)
         .limit(30);
 
-      if (error) throw error;
+      let formulas: FormulaData[] = [];
 
-      const formulas: FormulaData[] = (data || []).map((chunk: any) => ({
-        id: chunk.id,
-        formula_name: chunk.question || 'Unknown',
-        question: chunk.question,
-        answer: chunk.answer,
-        content: chunk.content,
-      }));
+      if (!error && data && data.length > 0) {
+        formulas = data.map((chunk: any) => ({
+          id: chunk.id,
+          formula_name: chunk.question || 'Unknown',
+          question: chunk.question,
+          answer: chunk.answer,
+          content: chunk.content,
+        }));
+      }
+
+      // Use embedded data as fallback
+      if (formulas.length === 0) {
+        formulas = SAMPLE_FORMULAS;
+      }
 
       setFlashcardFormulas(formulas);
       setCurrentFlashcardIndex(0);
       setIsFlipped(false);
     } catch (error) {
       console.error('Flashcard load error:', error);
+      setFlashcardFormulas(SAMPLE_FORMULAS);
+      setCurrentFlashcardIndex(0);
     }
   }, []);
 
