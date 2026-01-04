@@ -25,75 +25,7 @@ import gateBg from '@/assets/gate-background.png';
 // Dev test password for development/testing
 const DEV_TEST_PASSWORD = 'dev2025';
 
-// Session expiry timer component
-function SessionExpiryTimer() {
-  const { expiresAt, clearTier } = useTier();
-  const navigate = useNavigate();
-  const [timeLeft, setTimeLeft] = useState<string>('');
-  const [isExpired, setIsExpired] = useState(false);
-  
-  useEffect(() => {
-    if (!expiresAt) return;
-    
-    const updateTimer = () => {
-      const now = new Date();
-      const expiry = new Date(expiresAt);
-      const diff = expiry.getTime() - now.getTime();
-      
-      if (diff <= 0) {
-        setTimeLeft('Expired');
-        setIsExpired(true);
-        return;
-      }
-      
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      
-      if (days > 0) {
-        setTimeLeft(`${days}d ${hours}h`);
-      } else if (hours > 0) {
-        setTimeLeft(`${hours}h ${minutes}m`);
-      } else {
-        setTimeLeft(`${minutes}m`);
-      }
-    };
-    
-    updateTimer();
-    const interval = setInterval(updateTimer, 60000); // Update every minute
-    return () => clearInterval(interval);
-  }, [expiresAt]);
-
-  const handleReLogin = () => {
-    clearTier();
-    navigate('/gate', { replace: true });
-  };
-  
-  if (!expiresAt || !timeLeft) return null;
-  
-  if (isExpired) {
-    return (
-      <div className="fixed top-4 left-4 z-50 flex items-center gap-3 px-4 py-2 rounded-full bg-destructive/90 backdrop-blur-sm border border-destructive shadow-lg text-sm text-destructive-foreground">
-        <Clock className="h-4 w-4" />
-        <span>Session expired</span>
-        <button 
-          onClick={handleReLogin}
-          className="ml-1 px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 transition-colors font-medium"
-        >
-          Re-login
-        </button>
-      </div>
-    );
-  }
-  
-  return (
-    <div className="fixed top-4 left-4 z-50 flex items-center gap-2 px-3 py-2 rounded-full bg-background/80 backdrop-blur-sm border shadow-lg text-sm">
-      <Clock className="h-4 w-4 text-jade" />
-      <span className="text-muted-foreground">Session:</span>
-      <span className="font-medium text-jade">{timeLeft}</span>
-    </div>
-  );
-}
+// Session expiry timer component - REMOVED per user request
 
 const gateSchema = z.object({
   password: z
@@ -462,9 +394,6 @@ export default function Gate() {
         <title>כניסה למטפלים | TCM Clinic</title>
         <meta name="description" content="בחרו תוכנית והזינו סיסמת גישה" />
       </Helmet>
-      
-      {/* Session expiry timer */}
-      <SessionExpiryTimer />
 
       <div className="min-h-screen relative overflow-hidden" dir="rtl">
         {/* Beautiful bamboo background */}

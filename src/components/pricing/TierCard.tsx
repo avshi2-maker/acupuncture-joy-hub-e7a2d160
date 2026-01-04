@@ -1,7 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, X } from 'lucide-react';
+import { Check, X, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TierCardProps {
   name: string;
@@ -9,6 +10,8 @@ interface TierCardProps {
   price: string;
   priceRange?: string;
   queriesLimit?: string;
+  tokensInfo?: string;
+  tokensTooltip?: string;
   description: string;
   features: { name: string; included: boolean }[];
   highlighted?: boolean;
@@ -22,6 +25,8 @@ export function TierCard({
   price, 
   priceRange,
   queriesLimit,
+  tokensInfo,
+  tokensTooltip,
   description, 
   features, 
   highlighted = false,
@@ -51,6 +56,27 @@ export function TierCard({
             <div className="text-sm font-medium text-jade mt-2 bg-jade/10 rounded-full px-3 py-1 inline-block">
               {queriesLimit}
             </div>
+          )}
+          {tokensInfo && (
+            <TooltipProvider>
+              <div className="flex items-center justify-center gap-1 mt-2">
+                <span className="text-sm font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 rounded-full px-3 py-1">
+                  {tokensInfo}
+                </span>
+                {tokensTooltip && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button className="text-muted-foreground hover:text-foreground transition-colors">
+                        <Info className="h-4 w-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-xs text-right">
+                      <p>{tokensTooltip}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
+            </TooltipProvider>
           )}
         </div>
         <p className="text-sm text-muted-foreground mt-2">{description}</p>

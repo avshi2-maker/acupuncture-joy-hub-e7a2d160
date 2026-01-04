@@ -44,6 +44,8 @@ const tiers = [
     price: 'חינם',
     priceRange: '7 ימים',
     queriesLimit: '500 שאילתות/חודש',
+    tokensInfo: '~50K טוקנים',
+    tokensTooltip: 'טוקנים הם יחידות עיבוד AI. כל שאילתה צורכת בממוצע 100-500 טוקנים בהתאם לאורך השאלה והתשובה.',
     description: '7 ימי ניסיון חינם לכל הפיצ׳רים הבסיסיים',
     features: [
       { name: 'TCM Brain - מאגר ידע', included: true },
@@ -62,6 +64,8 @@ const tiers = [
     price: '₪40',
     priceRange: '/חודש',
     queriesLimit: '1,200 שאילתות/חודש',
+    tokensInfo: '~150K טוקנים',
+    tokensTooltip: 'טוקנים הם יחידות עיבוד AI. כל שאילתה צורכת בממוצע 100-500 טוקנים בהתאם לאורך השאלה והתשובה.',
     description: 'כולל תזכורות אוטומטיות למטופלים + מע״מ',
     features: [
       { name: 'TCM Brain - מאגר ידע', included: true },
@@ -81,6 +85,8 @@ const tiers = [
     price: '₪50',
     priceRange: '/חודש',
     queriesLimit: '5,000 שאילתות/חודש',
+    tokensInfo: '~600K טוקנים',
+    tokensTooltip: 'טוקנים הם יחידות עיבוד AI. כל שאילתה צורכת בממוצע 100-500 טוקנים בהתאם לאורך השאלה והתשובה.',
     description: 'כל הפיצ׳רים כולל פגישות וידאו + מע״מ',
     features: [
       { name: 'TCM Brain - מאגר ידע', included: true },
