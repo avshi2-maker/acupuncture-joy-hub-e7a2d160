@@ -62,6 +62,7 @@ import newLogo from '@/assets/new-logo.png';
 import { PatientEducationWidget } from '@/components/education/PatientEducationWidget';
 import { PediatricInfographicCard, VagusNerveCard, VagusStimulationDialog, StressWellnessCard, AssessmentCenterCard, PediatricProtocolCard } from '@/components/clinical';
 import { UsageWidget, UsageCard } from '@/components/usage/UnifiedUsageMeter';
+import { ClinicWalletCard } from '@/components/wallet/ClinicWalletCard';
 import { HerbalMasterWidget } from '@/components/herbal/HerbalMasterWidget';
 import roiWidgetBg from '@/assets/roi-widget-bg.png';
 
@@ -1182,15 +1183,16 @@ export default function Dashboard() {
           </Link>
         </div>
 
-        {/* Patient Education Widget + Usage Widget + Token Meter + Stress Wellness + Assessment Center */}
+        {/* Clinic Wallet + Patient Education Widget + Usage Widget + Stress Wellness + Assessment Center */}
         <div className="mb-8 grid md:grid-cols-8 gap-4 opacity-0 animate-fade-in" style={{ animationDelay: '500ms', animationFillMode: 'forwards' }}>
+          <div className="md:col-span-2">
+            <ClinicWalletCard />
+          </div>
           <UsageWidget backgroundImage={roiWidgetBg} />
-          <UsageCard />
           <PatientEducationWidget />
           <PediatricInfographicCard animationDelay={550} />
           <PediatricProtocolCard animationDelay={575} />
           <VagusNerveCard />
-          <StressWellnessCard animationDelay={600} />
           <AssessmentCenterCard animationDelay={650} />
         </div>
 
