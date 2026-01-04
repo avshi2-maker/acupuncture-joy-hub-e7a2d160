@@ -1,7 +1,7 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
-import { SmartROISimulator } from '@/components/roi/SmartROISimulator';
+import { ClinicROICalculator } from '@/components/roi/ClinicROICalculator';
 import { useUsageTracking } from '@/hooks/useUsageTracking';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Home } from 'lucide-react';
@@ -13,8 +13,8 @@ const ROISimulator: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>סימולטור ROI חכם | Smart ROI Simulator</title>
-        <meta name="description" content="סימולטור צמיחה אינטראקטיבי לקליניקה - חשב את החזר ההשקעה שלך" />
+        <title>מחשבון ROI לקליניקה | Clinic ROI Calculator</title>
+        <meta name="description" content="מחשבון ROI מקיף לקליניקה - חשב עלויות קבועות, הכנסות ורווחיות" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background">
@@ -33,7 +33,7 @@ const ROISimulator: React.FC = () => {
             
             <h1 className="text-lg font-bold text-foreground flex items-center gap-2">
               <span className="text-xl">📊</span>
-              סימולטור ROI חכם
+              מחשבון ROI לקליניקה
             </h1>
 
             <div className="w-20" /> {/* Spacer for centering */}
@@ -47,12 +47,12 @@ const ROISimulator: React.FC = () => {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
             </div>
           ) : usageData ? (
-            <SmartROISimulator
+            <ClinicROICalculator
               currentUsed={usageData.currentUsed}
               tierLimit={usageData.tierLimit}
             />
           ) : (
-            <SmartROISimulator />
+            <ClinicROICalculator />
           )}
 
           {/* Call to Action */}
@@ -69,7 +69,7 @@ const ROISimulator: React.FC = () => {
 
         {/* Footer */}
         <footer className="py-6 text-center text-sm text-muted-foreground">
-          <p>הסימולטור הזה מספק הערכות בלבד. התוצאות בפועל עשויות להשתנות.</p>
+          <p>המחשבון הזה מספק הערכות בלבד. התוצאות בפועל עשויות להשתנות.</p>
         </footer>
       </div>
     </>

@@ -47,9 +47,11 @@ interface SafetyFilter {
   pregnancy: boolean;
   children: boolean;
   elderly: boolean;
+  bleeding: boolean;
+  yinFire: boolean;
 }
 
-// Expanded Embedded Database (v6) - 19 Formulas with Safety Warnings
+// Expanded Embedded Database (v7) - 22 Formulas with Safety Warnings including Bleeding/Yin-Fire
 const SAMPLE_FORMULAS: FormulaData[] = [
   {
     id: '1',
@@ -101,7 +103,7 @@ const SAMPLE_FORMULAS: FormulaData[] = [
     formula_name: 'Xue Fu Zhu Yu Tang (血府逐瘀汤)',
     question: 'What is Xue Fu Zhu Yu Tang used for?',
     answer: 'Xue Fu Zhu Yu Tang invigorates Blood and dispels stasis in the chest (Xue Fu). It treats chest pain, headache, chronic stubborn pain, and emotional disorders from Blood stasis.',
-    content: 'Xue Fu Zhu Yu Tang: Tao Ren, Hong Hua, Dang Gui, Sheng Di Huang, Chuan Xiong, Chi Shao, Niu Xi, Chai Hu, Zhi Ke, Jie Geng, Gan Cao. Pattern: Blood Stasis in Chest. ⛔ PREGNANCY CONTRAINDICATED: Contains Hong Hua (Carthami), Tao Ren (Persicae), Niu Xi - strong blood movers.',
+    content: 'Xue Fu Zhu Yu Tang: Tao Ren, Hong Hua, Dang Gui, Sheng Di Huang, Chuan Xiong, Chi Shao, Niu Xi, Chai Hu, Zhi Ke, Jie Geng, Gan Cao. Pattern: Blood Stasis in Chest. ⛔ PREGNANCY CONTRAINDICATED: Contains Hong Hua (Carthami), Tao Ren (Persicae), Niu Xi - strong blood movers. ⛔ BLEEDING CONTRAINDICATED: Do NOT use if active bleeding is present.',
     acupoints: 'PC6, LV3, SP10, BL17, CV17',
     pharmacopeia: 'Modern Chinese Patent Medicine Formulary',
   },
@@ -110,7 +112,7 @@ const SAMPLE_FORMULAS: FormulaData[] = [
     formula_name: 'Tao He Cheng Qi Tang (桃核承气汤)',
     question: 'What does Tao He Cheng Qi Tang treat?',
     answer: 'Tao He Cheng Qi Tang drains Heat and breaks Blood stasis in the Lower Jiao. It treats acute Blood stasis with Heat signs - lower abdominal pain, restlessness, thirst.',
-    content: 'Tao He Cheng Qi Tang: Tao Ren, Da Huang, Gui Zhi, Mang Xiao, Zhi Gan Cao. Pattern: Blood Stasis with Heat in Lower Jiao. ⛔ PREGNANCY FORBIDDEN: Contains Tao Ren (breaks blood), Da Huang, Mang Xiao (harsh purgatives).',
+    content: 'Tao He Cheng Qi Tang: Tao Ren, Da Huang, Gui Zhi, Mang Xiao, Zhi Gan Cao. Pattern: Blood Stasis with Heat in Lower Jiao. ⛔ PREGNANCY FORBIDDEN: Contains Tao Ren (breaks blood), Da Huang, Mang Xiao (harsh purgatives). ⛔ BLEEDING CONTRAINDICATED: Strongly moves blood - avoid in hemorrhagic conditions.',
     acupoints: 'SP10, LV3, ST25, CV6',
     pharmacopeia: 'Shang Han Lun Classical Formula',
   },
@@ -141,7 +143,7 @@ const SAMPLE_FORMULAS: FormulaData[] = [
     acupoints: 'CV6, ST36, BL20, GV20',
     pharmacopeia: 'Chinese Pharmacopoeia 2020 Edition, Vol. I',
   },
-  // NEW v4 FORMULAS - Wind-Damp, Phlegm-Damp, Food Stagnation
+  // Wind-Damp, Phlegm-Damp, Food Stagnation
   {
     id: '11',
     formula_name: 'Du Huo Ji Sheng Tang (独活寄生汤)',
@@ -169,13 +171,13 @@ const SAMPLE_FORMULAS: FormulaData[] = [
     acupoints: 'CV12, ST36, ST21, PC6',
     pharmacopeia: 'Dan Xi Xin Fa (Era of Dan-Xi)',
   },
-  // NEW v5 FORMULAS - Heat-Clearing, Exterior-Releasing, Shen-Calming
+  // Heat-Clearing, Exterior-Releasing, Shen-Calming
   {
     id: '14',
     formula_name: 'Huang Lian Jie Du Tang (黄连解毒汤)',
     question: 'What is Huang Lian Jie Du Tang used for?',
     answer: 'Huang Lian Jie Du Tang drains Fire and resolves Toxin from all three Jiaos. It treats severe Heat/Fire patterns with high fever, irritability, dry mouth, insomnia, or skin eruptions.',
-    content: 'Huang Lian Jie Du Tang: Huang Lian, Huang Qin, Huang Bai, Zhi Zi. Pattern: Fire Toxin in All Three Jiaos. ⛔ PREGNANCY CONTRAINDICATED: Strongly draining and cold - may damage fetus. ⚠️ ELDERLY CAUTION: Very cold nature may damage Stomach Qi - use short-term only.',
+    content: 'Huang Lian Jie Du Tang: Huang Lian, Huang Qin, Huang Bai, Zhi Zi. Pattern: Fire Toxin in All Three Jiaos. ⛔ PREGNANCY CONTRAINDICATED: Strongly draining and cold - may damage fetus. ⚠️ ELDERLY CAUTION: Very cold nature may damage Stomach Qi - use short-term only. ⚠️ YIN DEFICIENCY CAUTION: Extremely cold - may further damage Yin if Empty Heat is present.',
     acupoints: 'LI11, GV14, PC8, LV2',
     pharmacopeia: 'Wai Tai Mi Yao (Arcane Essentials)',
   },
@@ -197,13 +199,13 @@ const SAMPLE_FORMULAS: FormulaData[] = [
     acupoints: 'HT7, PC6, SP6, KI6, CV14',
     pharmacopeia: 'She Sheng Mi Pou (Secret Investigations into Obtaining Health)',
   },
-  // NEW v6 FORMULAS - Interior-Warming, Drain Dampness, Regulate Qi
+  // Interior-Warming, Drain Dampness, Regulate Qi
   {
     id: '17',
     formula_name: 'Li Zhong Wan (理中丸)',
     question: 'What is Li Zhong Wan used for?',
     answer: 'Li Zhong Wan warms the Middle Jiao and strengthens Spleen Yang. It treats Spleen Yang deficiency with cold abdomen, loose stools, poor appetite, and fatigue.',
-    content: 'Li Zhong Wan: Ren Shen, Bai Zhu, Gan Jiang, Zhi Gan Cao. Pattern: Spleen Yang Deficiency with Interior Cold. ⚠️ YIN DEFICIENCY CAUTION: Do not use if signs of Empty Heat or Yin Deficiency exist - may aggravate heat symptoms.',
+    content: 'Li Zhong Wan: Ren Shen, Bai Zhu, Gan Jiang, Zhi Gan Cao. Pattern: Spleen Yang Deficiency with Interior Cold. ⚠️ YIN DEFICIENCY CAUTION: Do NOT use if signs of Empty Heat or Yin Deficiency exist - may aggravate heat symptoms. ⛔ YIN-FIRE CONTRAINDICATED: Hot nature will worsen Yin-Fire (虚火) conditions with night sweats, hot flashes, malar flush.',
     acupoints: 'CV12, ST36, CV6, BL20',
     pharmacopeia: 'Shang Han Lun (Treatise on Cold Damage)',
   },
@@ -225,15 +227,43 @@ const SAMPLE_FORMULAS: FormulaData[] = [
     acupoints: 'CV22, PC6, ST40, LV3',
     pharmacopeia: 'Jin Gui Yao Lue (Essential Prescriptions of the Golden Cabinet)',
   },
+  // NEW v7 FORMULAS - Yin-Nourishing, Yang-Warming, Blood-Stopping
+  {
+    id: '20',
+    formula_name: 'Zhi Bai Di Huang Wan (知柏地黄丸)',
+    question: 'What is Zhi Bai Di Huang Wan used for?',
+    answer: 'Zhi Bai Di Huang Wan nourishes Kidney Yin and clears Empty Fire. It treats Kidney Yin deficiency with Fire flaring - night sweats, hot flashes, malar flush, dry mouth, tinnitus, and spermatorrhea.',
+    content: 'Zhi Bai Di Huang Wan: Shu Di Huang, Shan Zhu Yu, Shan Yao, Ze Xie, Mu Dan Pi, Fu Ling, Zhi Mu, Huang Bai. Pattern: Kidney Yin Deficiency with Empty Fire (Yin-Fire/虚火). Base is Liu Wei Di Huang Wan + Zhi Mu/Huang Bai to clear deficiency heat. ⚠️ SPLEEN CAUTION: Cloying and cold - may impair digestion in Spleen Qi deficiency. Add tonics if digestion weak. ⛔ YANG DEFICIENCY CONTRAINDICATED: Cold herbs Zhi Mu/Huang Bai will damage Yang - avoid if true cold signs present.',
+    acupoints: 'KI3, KI6, SP6, KI2, HT6',
+    pharmacopeia: 'Yi Zong Jin Jian (Golden Mirror of Medicine)',
+  },
+  {
+    id: '21',
+    formula_name: 'Jin Gui Shen Qi Wan (金匮肾气丸)',
+    question: 'What does Jin Gui Shen Qi Wan treat?',
+    answer: 'Jin Gui Shen Qi Wan warms and tonifies Kidney Yang. It treats Kidney Yang deficiency with cold limbs, lower back weakness, frequent urination, edema of lower limbs, and fatigue.',
+    content: 'Jin Gui Shen Qi Wan: Shu Di Huang, Shan Zhu Yu, Shan Yao, Ze Xie, Mu Dan Pi, Fu Ling, Rou Gui, Fu Zi (Aconite). Pattern: Kidney Yang Deficiency. Base is Liu Wei Di Huang Wan + Rou Gui/Fu Zi to warm Yang. ⛔ YIN DEFICIENCY CONTRAINDICATED: Warming herbs Fu Zi/Rou Gui will aggravate Empty Heat and Yin-Fire - avoid if night sweats, hot flashes, malar flush present. ⛔ PREGNANCY CONTRAINDICATED: Fu Zi is toxic and contraindicated in pregnancy. ⚠️ CAREFUL DOSING: Fu Zi requires proper preparation (Zhi Fu Zi) - raw form is toxic.',
+    acupoints: 'KI3, KI7, CV4, CV6, BL23, GV4',
+    pharmacopeia: 'Jin Gui Yao Lue (Essential Prescriptions of the Golden Cabinet)',
+  },
+  {
+    id: '22',
+    formula_name: 'Shi Hui San (十灰散)',
+    question: 'What is Shi Hui San indicated for?',
+    answer: 'Shi Hui San cools Blood and stops bleeding. It treats bleeding due to Blood Heat - hematemesis (vomiting blood), hemoptysis (coughing blood), epistaxis (nosebleed), and hematuria with bright red blood.',
+    content: 'Shi Hui San: Da Ji (charred), Xiao Ji (charred), He Ye (charred), Ce Bai Ye (charred), Bai Mao Gen (charred), Qian Cao Gen (charred), Zhi Zi (charred), Da Huang (charred), Mu Dan Pi (charred), Zong Lu Pi (charred). Pattern: Blood Heat Causing Bleeding. All herbs are charred (炭) to enhance hemostatic action. ⛔ BLOOD STASIS CAUTION: Stops bleeding but may cause stasis if used long-term - discontinue once bleeding stops. ⚠️ COLD PATTERN CONTRAINDICATED: For Hot bleeding only - avoid if blood is dark, clotted, or accompanied by cold signs. ⛔ PREGNANCY CAUTION: Contains Da Huang (even charred) - use with extreme caution.',
+    acupoints: 'SP1, SP10, LI11, PC3, BL17',
+    pharmacopeia: 'Shi Yao Shen Shu (Divine Book of Ten Remedies)',
+  },
 ];
 
-// Forbidden herbs during pregnancy (expanded list v6)
+// Forbidden herbs during pregnancy (expanded list v7)
 const PREGNANCY_FORBIDDEN = [
   'Da Huang', 'Hong Hua', 'Niu Xi', 'San Leng', 'E Zhu', 'Shui Zhi', 
   'Mang Chong', 'Ban Mao', 'Wu Gong', 'Quan Xie', 'Chan Su', 'Xiong Huang',
   'Qian Niu Zi', 'Ba Dou', 'Gan Sui', 'Da Ji', 'Yuan Hua', 'She Xiang',
   'Tao Ren', 'Yi Mu Cao', 'Mang Xiao', 'Carthami', 'Persicae', 'Huang Lian', 'Huang Qin', 'Huang Bai',
-  'Ban Xia', 'Hou Po', 'Zi Su Ye'
+  'Ban Xia', 'Hou Po', 'Zi Su Ye', 'Fu Zi', 'Aconite'
 ];
 
 // Herbs requiring caution in elderly (cloying/stimulant/cold)
@@ -242,8 +272,19 @@ const ELDERLY_CAUTION = ['Ma Huang', 'Shu Di Huang', 'cardiovascular', 'stimulan
 // Herbs requiring caution in children
 const CHILDREN_CAUTION = ['Ma Huang', 'stimulant'];
 
-// Formulas contraindicated with Yin Deficiency/Empty Heat
-const YIN_DEF_CAUTION = ['Li Zhong Wan', 'Gan Jiang', 'interior warming'];
+// Formulas/herbs contraindicated with active bleeding
+const BLEEDING_CONTRAINDICATED = [
+  'Hong Hua', 'Tao Ren', 'Chuan Xiong', 'Niu Xi', 'San Leng', 'E Zhu',
+  'blood moving', 'blood stasis', 'invigorate blood', 'Xue Fu Zhu Yu', 'Tao He Cheng Qi',
+  'bleeding contraindicated'
+];
+
+// Formulas/herbs contraindicated with Yin Deficiency/Yin-Fire (虚火)
+const YIN_FIRE_CONTRAINDICATED = [
+  'Li Zhong Wan', 'Jin Gui Shen Qi Wan', 'Fu Zi', 'Aconite', 'Rou Gui', 'Gan Jiang',
+  'interior warming', 'warm yang', 'yang deficiency contraindicated', 'yin-fire contraindicated',
+  'yin deficiency contraindicated'
+];
 
 export function HerbalMasterWidget({ className }: { className?: string }) {
   const [activeTab, setActiveTab] = useState('search');
@@ -254,6 +295,8 @@ export function HerbalMasterWidget({ className }: { className?: string }) {
     pregnancy: false,
     children: false,
     elderly: false,
+    bleeding: false,
+    yinFire: false,
   });
   const [safetyWarnings, setSafetyWarnings] = useState<string[]>([]);
 
@@ -430,7 +473,7 @@ export function HerbalMasterWidget({ className }: { className?: string }) {
       setSearchResults(formulas);
 
       // Run safety check if filters are active
-      if (safetyFilters.pregnancy || safetyFilters.children || safetyFilters.elderly) {
+      if (safetyFilters.pregnancy || safetyFilters.children || safetyFilters.elderly || safetyFilters.bleeding || safetyFilters.yinFire) {
         const warnings: string[] = [];
         formulas.forEach(formula => {
           const lowerContent = formula.content.toLowerCase();
@@ -453,6 +496,18 @@ export function HerbalMasterWidget({ className }: { className?: string }) {
             const foundCaution = ELDERLY_CAUTION.some(term => lowerContent.includes(term.toLowerCase()));
             if (foundCaution || lowerContent.includes('elderly caution')) {
               warnings.push(`⚠️ ${formula.formula_name}: ELDERLY CAUTION - Cloying/stimulant herbs. Monitor digestion & cardiovascular status.`);
+            }
+          }
+          if (safetyFilters.bleeding) {
+            const foundBleeding = BLEEDING_CONTRAINDICATED.some(term => lowerContent.includes(term.toLowerCase()));
+            if (foundBleeding || lowerContent.includes('bleeding contraindicated')) {
+              warnings.push(`🩸 ${formula.formula_name}: BLEEDING CONTRAINDICATED - Contains blood-moving herbs. Do NOT use with active bleeding.`);
+            }
+          }
+          if (safetyFilters.yinFire) {
+            const foundYinFire = YIN_FIRE_CONTRAINDICATED.some(term => lowerContent.includes(term.toLowerCase()));
+            if (foundYinFire || lowerContent.includes('yin-fire contraindicated') || lowerContent.includes('yin deficiency contraindicated')) {
+              warnings.push(`🔥 ${formula.formula_name}: YIN-FIRE CONTRAINDICATED - Warming herbs will aggravate Empty Heat. Avoid if night sweats/hot flashes present.`);
             }
           }
         });
@@ -659,7 +714,7 @@ export function HerbalMasterWidget({ className }: { className?: string }) {
                 </h3>
               </div>
               <p className="text-xs text-white/70">
-                Master Herbalist & Safety Guard
+                Herbal Master v7 • 22 Formulas
               </p>
             </div>
             
@@ -751,6 +806,30 @@ export function HerbalMasterWidget({ className }: { className?: string }) {
               >
                 <User className="h-3.5 w-3.5 mr-1" />
                 👴 גיל שלישי
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => toggleSafetyFilter('bleeding')}
+                className={cn(
+                  "transition-all",
+                  safetyFilters.bleeding && "bg-red-600 text-white border-red-600 hover:bg-red-700"
+                )}
+              >
+                <AlertTriangle className="h-3.5 w-3.5 mr-1" />
+                🩸 דימום
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => toggleSafetyFilter('yinFire')}
+                className={cn(
+                  "transition-all",
+                  safetyFilters.yinFire && "bg-orange-500 text-white border-orange-500 hover:bg-orange-600"
+                )}
+              >
+                <Zap className="h-3.5 w-3.5 mr-1" />
+                🔥 יין-אש
               </Button>
             </div>
           </div>
