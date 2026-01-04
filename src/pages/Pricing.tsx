@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { TierCard } from '@/components/pricing/TierCard';
+import { PricingFAQ } from '@/components/pricing/PricingFAQ';
 import { ArrowLeft, HelpCircle, Sparkles, CreditCard, MessageCircle } from 'lucide-react';
 import newLogo from '@/assets/new-logo.png';
 import { Link } from 'react-router-dom';
@@ -151,6 +152,9 @@ export default function Pricing() {
               />
             ))}
           </div>
+
+          {/* FAQ Section */}
+          <PricingFAQ />
 
           <div className="text-center mt-12 space-y-4">
             <p className="text-sm text-muted-foreground">
