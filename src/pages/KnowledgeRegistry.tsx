@@ -514,6 +514,13 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'clinical_protocols',
     defaultLanguage: 'en',
   },
+  {
+    id: 'tcm-herbal-formulas-comprehensive',
+    label: '🌿 TCM Herbal Formulas Comprehensive (91 Formulas + Acupoints)',
+    path: '/knowledge-assets/TCM_Herbal_Formulas_Comprehensive.csv',
+    defaultCategory: 'tcm_theory',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 type QueueItemStatus = 'pending' | 'importing' | 'done' | 'error';
@@ -566,6 +573,10 @@ export default function KnowledgeRegistry() {
   const [isPaused, setIsPaused] = useState(false);
   const isPausedRef = useRef(false);
 
+  // Embedding generation state
+  const [isGeneratingEmbeddings, setIsGeneratingEmbeddings] = useState(false);
+  const [embeddingProgress, setEmbeddingProgress] = useState<{ processed: number; remaining: number; errors: number } | null>(null);
+
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   // Data fetching hooks
   const { data: documents, isLoading } = useQuery({
@@ -581,16 +592,29 @@ export default function KnowledgeRegistry() {
     enabled: !!isAdmin, // Only fetch when admin
   });
 
-  const { data: chunkStats } = useQuery({
+  const { data: chunkStats, refetch: refetchChunkStats } = useQuery({
     queryKey: ['knowledge-chunks-stats'],
     queryFn: async () => {
-      const { count, error } = await supabase
+      // Get total chunks
+      const { count: totalChunks, error: countError } = await supabase
         .from('knowledge_chunks')
         .select('*', { count: 'exact', head: true });
-      if (error) throw error;
-      return { totalChunks: count || 0 };
+      if (countError) throw countError;
+      
+      // Get chunks with embeddings
+      const { count: chunksWithEmbeddings, error: embError } = await supabase
+        .from('knowledge_chunks')
+        .select('*', { count: 'exact', head: true })
+        .not('embedding', 'is', null);
+      if (embError) throw embError;
+      
+      return { 
+        totalChunks: totalChunks || 0,
+        chunksWithEmbeddings: chunksWithEmbeddings || 0,
+        chunksWithoutEmbeddings: (totalChunks || 0) - (chunksWithEmbeddings || 0)
+      };
     },
-    enabled: !!isAdmin, // Only fetch when admin
+    enabled: !!isAdmin,
   });
 
   // Keep latest queue in a ref so async processing never uses stale state
@@ -1059,6 +1083,61 @@ ${report.verificationInstructions || ''}
     processQueue();
   };
 
+  // Generate embeddings for all chunks that don't have them
+  const generateEmbeddings = async (documentId?: string) => {
+    setIsGeneratingEmbeddings(true);
+    setEmbeddingProgress(null);
+    
+    try {
+      let totalProcessed = 0;
+      let totalErrors = 0;
+      let remaining = 1; // Start with 1 to enter the loop
+      
+      // Process in batches until no more chunks remain
+      while (remaining > 0) {
+        const { data, error } = await supabase.functions.invoke('generate-embeddings', {
+          body: { 
+            batchSize: 50,
+            documentId: documentId || undefined
+          }
+        });
+        
+        if (error) {
+          console.error('Embedding generation error:', error);
+          toast.error(`Error generating embeddings: ${error.message}`);
+          totalErrors++;
+          break;
+        }
+        
+        if (data) {
+          totalProcessed += data.processed || 0;
+          totalErrors += data.errors || 0;
+          remaining = data.remaining || 0;
+          
+          setEmbeddingProgress({
+            processed: totalProcessed,
+            remaining: remaining,
+            errors: totalErrors
+          });
+          
+          // If no chunks were processed and none remain, we're done
+          if (data.processed === 0 && remaining === 0) {
+            break;
+          }
+        }
+      }
+      
+      toast.success(`Embeddings generated: ${totalProcessed} chunks processed`);
+      refetchChunkStats();
+      
+    } catch (err) {
+      console.error('Embedding generation failed:', err);
+      toast.error('Failed to generate embeddings');
+    } finally {
+      setIsGeneratingEmbeddings(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'indexed':
@@ -1135,7 +1214,7 @@ ${report.verificationInstructions || ''}
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Documents</CardTitle>
@@ -1162,6 +1241,24 @@ ${report.verificationInstructions || ''}
         </Card>
         <Card>
           <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Embeddings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-jade-600">
+              {chunkStats?.chunksWithEmbeddings || 0}
+              <span className="text-sm font-normal text-muted-foreground ml-1">
+                / {chunkStats?.totalChunks || 0}
+              </span>
+            </div>
+            {(chunkStats?.chunksWithoutEmbeddings || 0) > 0 && (
+              <div className="text-xs text-amber-600 mt-1">
+                {chunkStats?.chunksWithoutEmbeddings} pending
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Data Sources</CardTitle>
           </CardHeader>
           <CardContent>
@@ -1169,6 +1266,50 @@ ${report.verificationInstructions || ''}
           </CardContent>
         </Card>
       </div>
+
+      {/* Embedding Generation Section */}
+      {(chunkStats?.chunksWithoutEmbeddings || 0) > 0 && (
+        <Card className="mb-8 border-amber-500/50 bg-amber-50/50 dark:bg-amber-950/20">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+              <AlertCircle className="w-5 h-5" />
+              Embeddings Required for RAG Search
+            </CardTitle>
+            <CardDescription>
+              {chunkStats?.chunksWithoutEmbeddings} knowledge entries need embeddings generated for semantic search.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-4">
+              <Button
+                onClick={() => generateEmbeddings()}
+                disabled={isGeneratingEmbeddings}
+                className="bg-jade-600 hover:bg-jade-700"
+              >
+                {isGeneratingEmbeddings ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 mr-2" />
+                    Generate All Embeddings
+                  </>
+                )}
+              </Button>
+              {embeddingProgress && (
+                <div className="text-sm text-muted-foreground">
+                  Processed: {embeddingProgress.processed} | Remaining: {embeddingProgress.remaining}
+                  {embeddingProgress.errors > 0 && (
+                    <span className="text-red-500 ml-2">Errors: {embeddingProgress.errors}</span>
+                  )}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Import Queue Section */}
       <Card className="mb-8 border-dashed border-2">

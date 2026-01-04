@@ -307,6 +307,17 @@ serve(async (req) => {
             answer = `**Condition/Formula:** ${conditionName}\n\n**Q&A:**\n${qaText}\n\n**Acupuncture Points:** ${acupoints}\n**Source:** ${pharmacopeia}`;
             content = `TCM Oncology: ${conditionName}\n${qaText}\nAcupoints: ${acupoints}\nPharmacopeia: ${pharmacopeia}`;
             contentType = 'oncology';
+          } else if (row['Formula Name'] && row['Q&A (Questions and Answers)'] && row['TCM Trigger Acupuncture Points']) {
+            // TCM Herbal Formulas Comprehensive format
+            const formulaName = row['Formula Name'] || '';
+            const qaText = row['Q&A (Questions and Answers)'] || '';
+            const acupoints = row['TCM Trigger Acupuncture Points'] || '';
+            const pharmacopeia = row['Pharmacopeia'] || '';
+            
+            question = `What is ${formulaName} and how is it used in TCM?`;
+            answer = `**Formula:** ${formulaName}\n\n**Q&A:**\n${qaText}\n\n**Trigger Acupuncture Points:** ${acupoints}\n**Source:** ${pharmacopeia}`;
+            content = `TCM Herbal Formula: ${formulaName}\n${qaText}\nAcupoints: ${acupoints}\nPharmacopeia: ${pharmacopeia}`;
+            contentType = 'herbal-formula';
           } else {
             // Generic: join all values
             content = Object.values(row).filter(Boolean).join(' | ');
