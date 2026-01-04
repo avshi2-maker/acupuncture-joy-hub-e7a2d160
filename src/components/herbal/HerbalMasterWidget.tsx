@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { 
   Search, 
   Pill, 
@@ -21,7 +22,9 @@ import {
   Leaf,
   Shield,
   Zap,
-  Heart
+  Heart,
+  Scale,
+  X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -262,6 +265,34 @@ export function HerbalMasterWidget({ className }: { className?: string }) {
   const [flashcardFormulas, setFlashcardFormulas] = useState<FormulaData[]>([]);
   const [currentFlashcardIndex, setCurrentFlashcardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
+
+  // Legal disclaimer state
+  const [showLegalModal, setShowLegalModal] = useState(false);
+  const [legalAccepted, setLegalAccepted] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('herbalLegalAccepted') === 'true';
+    }
+    return false;
+  });
+
+  // Show legal modal on first load
+  useEffect(() => {
+    if (!legalAccepted) {
+      setShowLegalModal(true);
+    }
+  }, [legalAccepted]);
+
+  const handleAcceptLegal = () => {
+    setLegalAccepted(true);
+    setShowLegalModal(false);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('herbalLegalAccepted', 'true');
+    }
+  };
+
+  const openLegalModal = () => {
+    setShowLegalModal(true);
+  };
 
   // Search formulas - uses embedded data as fallback
   const searchFormulas = useCallback(async (query: string) => {
@@ -852,6 +883,97 @@ export function HerbalMasterWidget({ className }: { className?: string }) {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Legal Disclaimer Footer */}
+      <div 
+        className="bg-muted/50 border-t border-border p-3 text-center cursor-pointer hover:bg-muted/80 transition-colors"
+        onClick={openLegalModal}
+      >
+        <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+          <Scale className="h-3.5 w-3.5" />
+          <span>הבהרה משפטית: המוצרים אינם תרופות (לחץ לפרטים)</span>
+        </div>
+        <p className="text-[10px] text-muted-foreground/70 mt-0.5">
+          Disclaimer: Not MOH Approved Medicine | Отказ от ответственности
+        </p>
+      </div>
+
+      {/* Legal Disclaimer Modal */}
+      <Dialog open={showLegalModal} onOpenChange={setShowLegalModal}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col p-0">
+          {/* Red top border indicator */}
+          <div className="h-1.5 bg-destructive w-full" />
+          
+          <DialogHeader className="px-6 pt-4 pb-2">
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Scale className="h-5 w-5 text-destructive" />
+              Legal Disclaimer / הבהרה משפטית
+            </DialogTitle>
+            <DialogDescription>
+              Important regulatory information in multiple languages
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+            {/* Hebrew Section */}
+            <div className="border-b border-dashed border-border pb-6" dir="rtl">
+              <div className="flex items-center gap-2 font-bold text-lg mb-3 text-foreground">
+                <span>🇮🇱</span>
+                <span>הבהרה משפטית חשובה</span>
+              </div>
+              <div className="text-sm text-muted-foreground leading-relaxed space-y-3">
+                <p>
+                  הפורמולות והצמחים המוצגים ביישום זה <strong className="text-foreground">אינם מהווים תרופה</strong> ואינם מאושרים ככאלו על ידי משרד הבריאות. מדובר בתוספי תזונה/צמחים בלבד המשמשים כטיפול משלים.
+                </p>
+                <p>
+                  <strong className="text-foreground">הנחיות שימוש:</strong> השימוש במוצרים אלו מחייב התייעצות וקבלת <strong className="text-foreground">מרשם כתוב ומסודר</strong> ממטפל מוסמך. המידע ביישום זה אינו מהווה תחליף לייעוץ רפואי מקצועי, אבחון או טיפול רפואי קונבנציונלי.
+                </p>
+              </div>
+            </div>
+
+            {/* English Section */}
+            <div className="border-b border-dashed border-border pb-6" dir="ltr">
+              <div className="flex items-center gap-2 font-bold text-lg mb-3 text-foreground">
+                <span>🇺🇸</span>
+                <span>Legal Disclaimer</span>
+              </div>
+              <div className="text-sm text-muted-foreground leading-relaxed space-y-3">
+                <p>
+                  The herbal formulas presented here are <strong className="text-foreground">dietary supplements</strong> and are <strong className="text-foreground">NOT medication approved by the Ministry of Health</strong>. They are intended for use solely as complementary support.
+                </p>
+                <p>
+                  <strong className="text-foreground">Usage Protocol:</strong> These products must be used strictly under the <strong className="text-foreground">written guidance and prescription</strong> of a qualified therapist. This information does not constitute medical advice or a substitute for professional medical diagnosis or treatment.
+                </p>
+              </div>
+            </div>
+
+            {/* Russian Section */}
+            <div dir="ltr">
+              <div className="flex items-center gap-2 font-bold text-lg mb-3 text-foreground">
+                <span>🇷🇺</span>
+                <span>Отказ от ответственности</span>
+              </div>
+              <div className="text-sm text-muted-foreground leading-relaxed space-y-3">
+                <p>
+                  Представленные здесь травяные формулы являются <strong className="text-foreground">пищевыми добавками</strong> и <strong className="text-foreground">НЕ являются лекарственными средствами</strong>, одобренными Министерством здравоохранения. Они предназначены исключительно для использования в качестве дополнительной поддержки.
+                </p>
+                <p>
+                  <strong className="text-foreground">Правила использования:</strong> Эти продукты должны использоваться строго в соответствии с <strong className="text-foreground">письменным предписанием</strong> квалифицированного специалиста. Данная информация не заменяет профессиональную медицинскую консультацию.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="px-6 py-4 bg-muted/30 border-t border-border">
+            <Button 
+              onClick={handleAcceptLegal}
+              className="w-full sm:w-auto"
+            >
+              I Acknowledge / אני מאשר/ת
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
