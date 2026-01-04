@@ -296,6 +296,17 @@ serve(async (req) => {
             answer = `**TCM Mechanism:** ${tcmMechanism}\n**Acupuncture Points:** ${acupoints}\n**Herbal Formula:** ${formula}`;
             content = `Neurodegenerative TCM (Alzheimer's/Parkinson's)\nSymptom/Question: ${questionSymptom}\nTCM Mechanism: ${tcmMechanism}\nAcupoints: ${acupoints}\nFormula: ${formula}`;
             contentType = 'neuro-degenerative';
+          } else if (row['Condition/Formula Name'] && row['Q&A (Questions and Answers)'] && row['TCM Trigger Acupuncture Points']) {
+            // TCM Oncology Comprehensive format
+            const conditionName = row['Condition/Formula Name'] || '';
+            const qaText = row['Q&A (Questions and Answers)'] || '';
+            const acupoints = row['TCM Trigger Acupuncture Points'] || '';
+            const pharmacopeia = row['Pharmacopeia'] || '';
+            
+            question = `What is the TCM approach for ${conditionName}?`;
+            answer = `**Condition/Formula:** ${conditionName}\n\n**Q&A:**\n${qaText}\n\n**Acupuncture Points:** ${acupoints}\n**Source:** ${pharmacopeia}`;
+            content = `TCM Oncology: ${conditionName}\n${qaText}\nAcupoints: ${acupoints}\nPharmacopeia: ${pharmacopeia}`;
+            contentType = 'oncology';
           } else {
             // Generic: join all values
             content = Object.values(row).filter(Boolean).join(' | ');
