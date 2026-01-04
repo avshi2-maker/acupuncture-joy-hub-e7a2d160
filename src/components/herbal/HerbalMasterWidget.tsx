@@ -44,14 +44,14 @@ interface SafetyFilter {
   elderly: boolean;
 }
 
-// Embedded sample formula data from TCM_Herbal_Formulas_Comprehensive.csv
+// Expanded Embedded Database (v3) - 10 Formulas with Safety Warnings
 const SAMPLE_FORMULAS: FormulaData[] = [
   {
     id: '1',
     formula_name: 'Si Jun Zi Tang (四君子汤)',
     question: 'What is Si Jun Zi Tang used for?',
     answer: 'Si Jun Zi Tang is a foundational formula for tonifying Qi. It treats Spleen and Stomach Qi deficiency presenting with fatigue, poor appetite, loose stools, and a pale tongue.',
-    content: 'Si Jun Zi Tang: Ren Shen, Bai Zhu, Fu Ling, Zhi Gan Cao. Tonifies Qi, strengthens Spleen. For Spleen Qi deficiency.',
+    content: 'Si Jun Zi Tang: Ren Shen, Bai Zhu, Fu Ling, Zhi Gan Cao. Tonifies Qi, strengthens Spleen. Pattern: Spleen Qi Deficiency. Safe for children with dose adjustment.',
     acupoints: 'ST36, SP6, CV12, BL20',
     pharmacopeia: 'Chinese Pharmacopoeia 2020 Edition, Vol. I',
   },
@@ -60,7 +60,7 @@ const SAMPLE_FORMULAS: FormulaData[] = [
     formula_name: 'Ba Zhen Tang (八珍汤)',
     question: 'What does Ba Zhen Tang treat?',
     answer: 'Ba Zhen Tang tonifies both Qi and Blood. It is the combination of Si Jun Zi Tang and Si Wu Tang, treating dual deficiency of Qi and Blood with pallor, fatigue, dizziness, and palpitations.',
-    content: 'Ba Zhen Tang: Ren Shen, Bai Zhu, Fu Ling, Zhi Gan Cao, Dang Gui, Chuan Xiong, Bai Shao, Shu Di Huang. For Qi and Blood deficiency.',
+    content: 'Ba Zhen Tang: Ren Shen, Bai Zhu, Fu Ling, Zhi Gan Cao, Dang Gui, Chuan Xiong, Bai Shao, Shu Di Huang. Pattern: Qi and Blood Deficiency. Postpartum recovery formula.',
     acupoints: 'ST36, SP6, BL17, BL20, CV4',
     pharmacopeia: 'Chinese Pharmacopoeia 2020 Edition, Vol. I',
   },
@@ -69,82 +69,88 @@ const SAMPLE_FORMULAS: FormulaData[] = [
     formula_name: 'Liu Wei Di Huang Wan (六味地黄丸)',
     question: 'What is the primary indication for Liu Wei Di Huang Wan?',
     answer: 'Liu Wei Di Huang Wan nourishes Kidney Yin. It treats Kidney Yin deficiency with symptoms like night sweats, heat in the five palms, dizziness, tinnitus, and soreness of the lower back.',
-    content: 'Liu Wei Di Huang Wan: Shu Di Huang, Shan Zhu Yu, Shan Yao, Ze Xie, Mu Dan Pi, Fu Ling. Nourishes Kidney Yin.',
+    content: 'Liu Wei Di Huang Wan: Shu Di Huang, Shan Zhu Yu, Shan Yao, Ze Xie, Mu Dan Pi, Fu Ling. Pattern: Kidney Yin Deficiency. ⚠️ ELDERLY CAUTION: Cloying herbs may impair digestion. Use with SP-tonics if digestion is weak.',
     acupoints: 'KI3, KI6, SP6, CV4, BL23',
     pharmacopeia: 'Chinese Pharmacopoeia 2020 Edition, Vol. I',
   },
   {
     id: '4',
-    formula_name: 'Gui Pi Tang (归脾汤)',
-    question: 'What pattern does Gui Pi Tang address?',
-    answer: 'Gui Pi Tang tonifies Spleen Qi and Heart Blood, calms the Shen. It treats Heart and Spleen deficiency with insomnia, poor memory, palpitations, fatigue, and poor appetite.',
-    content: 'Gui Pi Tang: Ren Shen, Huang Qi, Bai Zhu, Fu Shen, Dang Gui, Long Yan Rou, Suan Zao Ren, Yuan Zhi, Mu Xiang, Zhi Gan Cao, Sheng Jiang, Da Zao.',
-    acupoints: 'HT7, SP6, ST36, BL15, BL20',
-    pharmacopeia: 'Chinese Pharmacopoeia 2020 Edition, Vol. I',
-  },
-  {
-    id: '5',
     formula_name: 'Xiao Yao San (逍遥散)',
     question: 'What is Xiao Yao San used for?',
     answer: 'Xiao Yao San spreads Liver Qi, strengthens Spleen, and nourishes Blood. It treats Liver Qi stagnation with Blood deficiency - irritability, depression, fatigue, irregular menstruation.',
-    content: 'Xiao Yao San: Chai Hu, Dang Gui, Bai Shao, Bai Zhu, Fu Ling, Zhi Gan Cao, Sheng Jiang, Bo He.',
+    content: 'Xiao Yao San: Chai Hu, Dang Gui, Bai Shao, Bai Zhu, Fu Ling, Zhi Gan Cao, Sheng Jiang, Bo He. Pattern: Liver Qi Stagnation with Blood Deficiency. Safe in pregnancy at standard doses.',
     acupoints: 'LV3, LV14, PC6, SP6, GB34',
     pharmacopeia: 'Chinese Pharmacopoeia 2020 Edition, Vol. I',
   },
   {
-    id: '6',
-    formula_name: 'Tao Hong Si Wu Tang (桃红四物汤)',
-    question: 'What does Tao Hong Si Wu Tang treat?',
-    answer: 'Tao Hong Si Wu Tang invigorates Blood and dispels stasis while nourishing Blood. Contains Tao Ren (peach kernel) and Hong Hua (safflower) - CONTRAINDICATED IN PREGNANCY.',
-    content: 'Tao Hong Si Wu Tang: Shu Di Huang, Dang Gui, Bai Shao, Chuan Xiong, Tao Ren, Hong Hua. Blood stasis with Blood deficiency. WARNING: Contains Hong Hua and Tao Ren - contraindicated in pregnancy.',
-    acupoints: 'SP10, LV3, BL17, SP6',
-    pharmacopeia: 'Modern Chinese Patent Medicine Formulary',
-  },
-  {
-    id: '7',
-    formula_name: 'Bu Zhong Yi Qi Tang (补中益气汤)',
-    question: 'What is the key indication for Bu Zhong Yi Qi Tang?',
-    answer: 'Bu Zhong Yi Qi Tang tonifies Qi of the Middle Jiao and raises Yang. It treats Spleen and Stomach Qi deficiency with sinking of Yang - organ prolapse, chronic diarrhea, shortness of breath.',
-    content: 'Bu Zhong Yi Qi Tang: Huang Qi, Ren Shen, Bai Zhu, Zhi Gan Cao, Dang Gui, Chen Pi, Sheng Ma, Chai Hu.',
-    acupoints: 'CV6, ST36, BL20, GV20',
+    id: '5',
+    formula_name: 'Gui Pi Tang (归脾汤)',
+    question: 'What pattern does Gui Pi Tang address?',
+    answer: 'Gui Pi Tang tonifies Spleen Qi and Heart Blood, calms the Shen. It treats Heart and Spleen deficiency with insomnia, poor memory, palpitations, fatigue, and poor appetite.',
+    content: 'Gui Pi Tang: Ren Shen, Huang Qi, Bai Zhu, Fu Shen, Dang Gui, Long Yan Rou, Suan Zao Ren, Yuan Zhi, Mu Xiang, Zhi Gan Cao. Pattern: Heart and Spleen Deficiency.',
+    acupoints: 'HT7, SP6, ST36, BL15, BL20',
     pharmacopeia: 'Chinese Pharmacopoeia 2020 Edition, Vol. I',
   },
   {
-    id: '8',
+    id: '6',
     formula_name: 'Xue Fu Zhu Yu Tang (血府逐瘀汤)',
     question: 'What is Xue Fu Zhu Yu Tang used for?',
     answer: 'Xue Fu Zhu Yu Tang invigorates Blood and dispels stasis in the chest (Xue Fu). It treats chest pain, headache, chronic stubborn pain, and emotional disorders from Blood stasis.',
-    content: 'Xue Fu Zhu Yu Tang: Tao Ren, Hong Hua, Dang Gui, Sheng Di Huang, Chuan Xiong, Chi Shao, Niu Xi, Chai Hu, Zhi Ke, Jie Geng, Gan Cao. WARNING: Contains Tao Ren, Hong Hua, Niu Xi - contraindicated in pregnancy.',
+    content: 'Xue Fu Zhu Yu Tang: Tao Ren, Hong Hua, Dang Gui, Sheng Di Huang, Chuan Xiong, Chi Shao, Niu Xi, Chai Hu, Zhi Ke, Jie Geng, Gan Cao. Pattern: Blood Stasis in Chest. ⛔ PREGNANCY CONTRAINDICATED: Contains Hong Hua (Carthami), Tao Ren (Persicae), Niu Xi - strong blood movers.',
     acupoints: 'PC6, LV3, SP10, BL17, CV17',
     pharmacopeia: 'Modern Chinese Patent Medicine Formulary',
   },
   {
-    id: '9',
+    id: '7',
+    formula_name: 'Tao He Cheng Qi Tang (桃核承气汤)',
+    question: 'What does Tao He Cheng Qi Tang treat?',
+    answer: 'Tao He Cheng Qi Tang drains Heat and breaks Blood stasis in the Lower Jiao. It treats acute Blood stasis with Heat signs - lower abdominal pain, restlessness, thirst.',
+    content: 'Tao He Cheng Qi Tang: Tao Ren, Da Huang, Gui Zhi, Mang Xiao, Zhi Gan Cao. Pattern: Blood Stasis with Heat in Lower Jiao. ⛔ PREGNANCY FORBIDDEN: Contains Tao Ren (breaks blood), Da Huang, Mang Xiao (harsh purgatives).',
+    acupoints: 'SP10, LV3, ST25, CV6',
+    pharmacopeia: 'Shang Han Lun Classical Formula',
+  },
+  {
+    id: '8',
     formula_name: 'Yin Qiao San (银翘散)',
     question: 'What does Yin Qiao San treat?',
     answer: 'Yin Qiao San releases the exterior and clears Heat. It is for early-stage Wind-Heat invasion - fever, sore throat, headache, slight thirst, and a floating rapid pulse.',
-    content: 'Yin Qiao San: Jin Yin Hua, Lian Qiao, Jie Geng, Niu Bang Zi, Bo He, Dan Dou Chi, Jing Jie, Dan Zhu Ye, Gan Cao, Lu Gen.',
+    content: 'Yin Qiao San: Jin Yin Hua, Lian Qiao, Jie Geng, Niu Bang Zi, Bo He, Dan Dou Chi, Jing Jie, Dan Zhu Ye, Gan Cao, Lu Gen. Pattern: Wind-Heat Invasion. Safe formula for children at adjusted doses.',
     acupoints: 'LI4, LI11, LU7, GV14',
     pharmacopeia: 'Chinese Pharmacopoeia 2020 Edition, Vol. I',
   },
   {
-    id: '10',
+    id: '9',
     formula_name: 'Ma Huang Tang (麻黄汤)',
     question: 'When is Ma Huang Tang indicated?',
     answer: 'Ma Huang Tang releases the exterior and disperses Cold. It treats exterior Wind-Cold excess with aversion to cold, fever without sweating, body aches, and a floating tight pulse.',
-    content: 'Ma Huang Tang: Ma Huang, Gui Zhi, Xing Ren, Zhi Gan Cao. Caution in children, elderly, and those with cardiovascular conditions.',
+    content: 'Ma Huang Tang: Ma Huang, Gui Zhi, Xing Ren, Zhi Gan Cao. Pattern: Wind-Cold Excess. ⚠️ CAUTION: Ma Huang is a stimulant. Reduce dose or avoid in children, elderly, hypertension, cardiovascular conditions.',
     acupoints: 'LU7, LI4, BL12, GV14',
+    pharmacopeia: 'Chinese Pharmacopoeia 2020 Edition, Vol. I',
+  },
+  {
+    id: '10',
+    formula_name: 'Bu Zhong Yi Qi Tang (补中益气汤)',
+    question: 'What is the key indication for Bu Zhong Yi Qi Tang?',
+    answer: 'Bu Zhong Yi Qi Tang tonifies Qi of the Middle Jiao and raises Yang. It treats Spleen and Stomach Qi deficiency with sinking of Yang - organ prolapse, chronic diarrhea, shortness of breath.',
+    content: 'Bu Zhong Yi Qi Tang: Huang Qi, Ren Shen, Bai Zhu, Zhi Gan Cao, Dang Gui, Chen Pi, Sheng Ma, Chai Hu. Pattern: Middle Qi Deficiency with Yang Sinking. Safe for elderly; good for chronic fatigue.',
+    acupoints: 'CV6, ST36, BL20, GV20',
     pharmacopeia: 'Chinese Pharmacopoeia 2020 Edition, Vol. I',
   },
 ];
 
-// Forbidden herbs during pregnancy
+// Forbidden herbs during pregnancy (expanded list)
 const PREGNANCY_FORBIDDEN = [
   'Da Huang', 'Hong Hua', 'Niu Xi', 'San Leng', 'E Zhu', 'Shui Zhi', 
   'Mang Chong', 'Ban Mao', 'Wu Gong', 'Quan Xie', 'Chan Su', 'Xiong Huang',
   'Qian Niu Zi', 'Ba Dou', 'Gan Sui', 'Da Ji', 'Yuan Hua', 'She Xiang',
-  'Tao Ren', 'Yi Mu Cao'
+  'Tao Ren', 'Yi Mu Cao', 'Mang Xiao', 'Carthami', 'Persicae'
 ];
+
+// Herbs requiring caution in elderly (cloying/stimulant)
+const ELDERLY_CAUTION = ['Ma Huang', 'Shu Di Huang', 'cardiovascular', 'stimulant', 'cloying'];
+
+// Herbs requiring caution in children
+const CHILDREN_CAUTION = ['Ma Huang', 'stimulant'];
 
 export function HerbalMasterWidget({ className }: { className?: string }) {
   const [activeTab, setActiveTab] = useState('search');
@@ -216,24 +222,26 @@ export function HerbalMasterWidget({ className }: { className?: string }) {
       if (safetyFilters.pregnancy || safetyFilters.children || safetyFilters.elderly) {
         const warnings: string[] = [];
         formulas.forEach(formula => {
+          const lowerContent = formula.content.toLowerCase();
+          
           if (safetyFilters.pregnancy) {
             const foundForbidden = PREGNANCY_FORBIDDEN.filter(herb => 
-              formula.content.toLowerCase().includes(herb.toLowerCase())
+              lowerContent.includes(herb.toLowerCase())
             );
-            if (foundForbidden.length > 0) {
-              warnings.push(`⚠️ ${formula.formula_name}: Contains ${foundForbidden.join(', ')} - CONTRAINDICATED in pregnancy`);
+            if (foundForbidden.length > 0 || lowerContent.includes('pregnancy contraindicated') || lowerContent.includes('pregnancy forbidden')) {
+              warnings.push(`⛔ ${formula.formula_name}: PREGNANCY CONTRAINDICATED - Contains blood-moving or purgative herbs (${foundForbidden.slice(0, 3).join(', ')}${foundForbidden.length > 3 ? '...' : ''})`);
             }
           }
           if (safetyFilters.children) {
-            if (formula.content.toLowerCase().includes('ma huang') || 
-                formula.content.toLowerCase().includes('caution in children')) {
-              warnings.push(`⚠️ ${formula.formula_name}: Use with caution in pediatric patients - adjust dosage`);
+            const foundCaution = CHILDREN_CAUTION.some(term => lowerContent.includes(term.toLowerCase()));
+            if (foundCaution || lowerContent.includes('caution') && lowerContent.includes('children')) {
+              warnings.push(`⚠️ ${formula.formula_name}: PEDIATRIC CAUTION - Contains stimulants. Reduce dose or substitute.`);
             }
           }
           if (safetyFilters.elderly) {
-            if (formula.content.toLowerCase().includes('ma huang') || 
-                formula.content.toLowerCase().includes('cardiovascular')) {
-              warnings.push(`⚠️ ${formula.formula_name}: Use with caution in elderly - monitor cardiovascular status`);
+            const foundCaution = ELDERLY_CAUTION.some(term => lowerContent.includes(term.toLowerCase()));
+            if (foundCaution || lowerContent.includes('elderly caution')) {
+              warnings.push(`⚠️ ${formula.formula_name}: ELDERLY CAUTION - Cloying/stimulant herbs. Monitor digestion & cardiovascular status.`);
             }
           }
         });
