@@ -188,7 +188,7 @@ export default function Auth() {
       <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-teal-800 to-emerald-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin h-12 w-12 border-4 border-white/30 border-t-white rounded-full mx-auto mb-4" />
-          <p className="text-white/80 text-lg font-medium">Loading Sanctuary...</p>
+          <p className="text-white/80 text-lg font-medium">טוען מרחב עבודה...</p>
         </div>
       </div>
     );
@@ -224,11 +224,11 @@ export default function Auth() {
             {/* Tagline */}
             <div className="text-center max-w-md">
               <h2 className="text-5xl font-display font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-200 via-white to-teal-200 mb-6">
-                Healing Intelligence.
+                אינטליגנציה טיפולית.
               </h2>
               <p className="text-lg text-emerald-100/80 leading-relaxed">
-                Bridging ancient wisdom with modern precision. 
-                Enter the secure gateway to manage patient care, herbal protocols, and clinical diagnostics.
+                גשר בין חוכמה עתיקה לדיוק מודרני.
+                הכנסו לשער המאובטח לניהול טיפולים, פורמולות ואבחנות קליניות.
               </p>
             </div>
           </div>
@@ -237,15 +237,15 @@ export default function Auth() {
           <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-8 text-sm text-emerald-200/70">
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-4 w-4" />
-              HIPAA Secure
+              מאובטח HIPAA
             </div>
             <div className="flex items-center gap-2">
               <Activity className="h-4 w-4" />
-              Real-time Vitals
+              מדדים בזמן אמת
             </div>
             <div className="flex items-center gap-2">
               <Lock className="h-4 w-4" />
-              Encrypted Data
+              מידע מוצפן
             </div>
           </div>
         </div>
@@ -260,7 +260,7 @@ export default function Auth() {
               className="inline-flex items-center gap-2 text-slate-500 hover:text-emerald-600 transition-colors text-sm font-medium"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back
+              חזרה
             </Link>
           </div>
 
