@@ -8,11 +8,13 @@ interface TierCardProps {
   name: string;
   nameHe: string;
   price: string;
+  originalPrice?: string;
   priceRange?: string;
   queriesLimit?: string;
   tokensInfo?: string;
   tokensTooltip?: string;
   description: string;
+  savings?: string;
   features: { name: string; included: boolean }[];
   highlighted?: boolean;
   onSelect: () => void;
@@ -23,11 +25,13 @@ export function TierCard({
   name, 
   nameHe, 
   price, 
+  originalPrice,
   priceRange,
   queriesLimit,
   tokensInfo,
   tokensTooltip,
-  description, 
+  description,
+  savings,
   features, 
   highlighted = false,
   onSelect,
@@ -50,8 +54,18 @@ export function TierCard({
         <CardTitle className="font-display text-2xl">{nameHe}</CardTitle>
         <CardDescription className="text-sm">{name}</CardDescription>
         <div className="mt-4">
-          <span className="text-4xl font-bold text-foreground">{price}</span>
-          {priceRange && <span className="text-muted-foreground mr-1">{priceRange}</span>}
+          <div className="flex items-baseline justify-center gap-2">
+            {originalPrice && (
+              <span className="text-xl text-muted-foreground line-through">{originalPrice}</span>
+            )}
+            <span className="text-4xl font-bold text-foreground">{price}</span>
+            {priceRange && <span className="text-muted-foreground">{priceRange}</span>}
+          </div>
+          {savings && (
+            <div className="text-sm font-medium text-emerald-500 mt-1">
+              {savings}
+            </div>
+          )}
           {queriesLimit && (
             <div className="text-sm font-medium text-jade mt-2 bg-jade/10 rounded-full px-3 py-1 inline-block">
               {queriesLimit}
