@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Baby, Pill, Syringe, ShieldAlert, Calculator, Info, AlertTriangle, Droplet, Heart } from 'lucide-react';
+import { Baby, Pill, Syringe, ShieldAlert, Calculator, AlertTriangle, Droplet, Heart, Radiation, Activity, CheckCircle2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 
-type TabType = 'dosing' | 'needle' | 'safety';
+type TabType = 'dosing' | 'needle' | 'safety' | 'oncology';
 type MethodType = 'weight' | 'age';
+type OncologyStatus = 'none' | 'chemo' | 'radiation' | 'surgery';
 
 interface NeedleSpec {
   gauge: string;
@@ -59,8 +60,34 @@ const AGE_FACTORS: Record<string, { factor: number; label: string }> = {
   '12+': { factor: 0.75, label: '12+ years' }
 };
 
+const ONCOLOGY_WARNINGS = {
+  chemo: {
+    title: 'Chemotherapy Detected',
+    warnings: [
+      'Avoid strong blood-moving herbs (Tao Ren, Hong Hua, San Leng, E Zhu)',
+      'Verify platelet count before acupuncture (bleeding risk if <50k)',
+      'High-dose antioxidants may interfere with oxidative chemo drugs',
+      'Prioritize gentle Qi tonics and nausea relief formulas'
+    ]
+  },
+  radiation: {
+    title: 'Radiation Therapy Detected',
+    warnings: [
+      'Avoid topical treatment on irradiated skin areas',
+      'Focus on Yin-nourishing herbs to counter radiation dryness',
+      'Monitor for radiation-induced Heat patterns',
+      'Support bone marrow with blood-building formulas post-treatment'
+    ]
+  }
+};
+
 export function PediatricTCMAssistant() {
   const [activeTab, setActiveTab] = useState<TabType>('dosing');
+  
+  // Oncology safety state
+  const [oncologyStatus, setOncologyStatus] = useState<OncologyStatus>('none');
+  const [safetyAcknowledged, setSafetyAcknowledged] = useState(false);
+  const [showOncologyAlert, setShowOncologyAlert] = useState(false);
   
   // Dosing calculator state
   const [adultDose, setAdultDose] = useState('');
@@ -73,6 +100,17 @@ export function PediatricTCMAssistant() {
   // Needle spec state
   const [selectedAgeGroup, setSelectedAgeGroup] = useState('infant');
 
+  // Handle oncology status changes
+  useEffect(() => {
+    if (oncologyStatus === 'chemo' || oncologyStatus === 'radiation') {
+      setShowOncologyAlert(true);
+      setSafetyAcknowledged(false);
+    } else {
+      setShowOncologyAlert(false);
+      setSafetyAcknowledged(true);
+    }
+  }, [oncologyStatus]);
+
   const calculateDose = () => {
     const adult = parseFloat(adultDose);
     if (isNaN(adult) || adult <= 0) return;
@@ -83,7 +121,6 @@ export function PediatricTCMAssistant() {
     if (method === 'weight') {
       const weight = parseFloat(childWeight);
       if (isNaN(weight) || weight <= 0) return;
-      // Clark's Rule: (weight in kg / 70) * adult dose
       dose = (weight / 70) * adult;
       methodName = "Clark's Rule (Weight-based)";
     } else {
@@ -97,11 +134,14 @@ export function PediatricTCMAssistant() {
   };
 
   const currentNeedleSpec = NEEDLE_SPECS[selectedAgeGroup];
+  const isOncologyActive = oncologyStatus === 'chemo' || oncologyStatus === 'radiation';
+  const isBlocked = isOncologyActive && !safetyAcknowledged;
 
   const tabs = [
-    { id: 'dosing' as TabType, label: 'Dosing Calc', icon: Calculator },
-    { id: 'needle' as TabType, label: 'Needle Specs', icon: Syringe },
-    { id: 'safety' as TabType, label: 'Safety & Alts', icon: ShieldAlert },
+    { id: 'dosing' as TabType, label: 'Dosing', icon: Calculator },
+    { id: 'needle' as TabType, label: 'Needle', icon: Syringe },
+    { id: 'oncology' as TabType, label: 'Oncology', icon: Radiation },
+    { id: 'safety' as TabType, label: 'Safety', icon: ShieldAlert },
   ];
 
   return (
@@ -113,8 +153,55 @@ export function PediatricTCMAssistant() {
             <Baby className="h-5 w-5" />
             Pediatric TCM Assistant
           </h3>
-          <Pill className="h-6 w-6" />
+          <div className="flex items-center gap-2">
+            {isOncologyActive && (
+              <Tooltip>
+                <TooltipTrigger>
+                  <div className={`p-1 rounded-full ${safetyAcknowledged ? 'bg-green-600' : 'bg-red-500 animate-pulse'}`}>
+                    {safetyAcknowledged ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {safetyAcknowledged ? 'Safety protocols acknowledged' : 'Safety acknowledgment required'}
+                </TooltipContent>
+              </Tooltip>
+            )}
+            <Pill className="h-6 w-6" />
+          </div>
         </CardHeader>
+
+        {/* Oncology Alert Banner */}
+        <AnimatePresence>
+          {showOncologyAlert && !safetyAcknowledged && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="bg-red-50 border-r-4 border-red-500 overflow-hidden"
+            >
+              <div className="p-4">
+                <div className="flex items-center gap-2 text-red-700 font-bold text-sm mb-2">
+                  <AlertTriangle className="h-5 w-5" />
+                  ⚠️ {ONCOLOGY_WARNINGS[oncologyStatus as 'chemo' | 'radiation']?.title || 'Oncology Alert'}
+                </div>
+                <ul className="text-sm text-red-800 space-y-1 mr-5 list-disc list-inside">
+                  {ONCOLOGY_WARNINGS[oncologyStatus as 'chemo' | 'radiation']?.warnings.map((warning, i) => (
+                    <li key={i}>{warning}</li>
+                  ))}
+                </ul>
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSafetyAcknowledged(true)}
+                  className="mt-3 border-red-300 text-red-700 hover:bg-red-100"
+                >
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  I acknowledge these safety protocols
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Tabs */}
         <div className="flex border-b border-slate-200">
@@ -126,7 +213,7 @@ export function PediatricTCMAssistant() {
                 activeTab === tab.id
                   ? 'bg-white text-green-600 border-b-3 border-green-500'
                   : 'bg-slate-50 text-slate-500 hover:text-slate-700'
-              }`}
+              } ${tab.id === 'oncology' && isOncologyActive ? (safetyAcknowledged ? 'text-green-600' : 'text-red-500') : ''}`}
             >
               <tab.icon className="h-4 w-4" />
               <span className="hidden sm:inline">{tab.label}</span>
@@ -134,7 +221,32 @@ export function PediatricTCMAssistant() {
           ))}
         </div>
 
-        <CardContent className="p-5 min-h-[280px]">
+        <CardContent className="p-5 min-h-[280px] relative">
+          {/* Blocked Overlay */}
+          <AnimatePresence>
+            {isBlocked && activeTab !== 'oncology' && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-white/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 text-center"
+              >
+                <AlertTriangle className="h-12 w-12 text-red-500 mb-3" />
+                <p className="text-red-700 font-semibold mb-2">Oncology Safety Check Required</p>
+                <p className="text-sm text-slate-600 mb-4">
+                  Please acknowledge the safety protocols before accessing dosing and needle recommendations.
+                </p>
+                <Button 
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setActiveTab('oncology')}
+                >
+                  Go to Oncology Status
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <AnimatePresence mode="wait">
             {/* Dosing Calculator */}
             {activeTab === 'dosing' && (
@@ -212,6 +324,12 @@ export function PediatricTCMAssistant() {
                     <div className="text-sm text-green-600 mt-1">
                       Based on {doseMethod}
                     </div>
+                    {isOncologyActive && (
+                      <div className="text-xs text-amber-600 mt-2 flex items-center justify-center gap-1">
+                        <AlertTriangle className="h-3 w-3" />
+                        Review oncology contraindications
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </motion.div>
@@ -260,9 +378,89 @@ export function PediatricTCMAssistant() {
                   </div>
                 </div>
 
+                {isOncologyActive && oncologyStatus === 'chemo' && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700 flex items-start gap-2">
+                    <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                    <span>Verify platelet count &gt;50k before needling. Consider non-needle alternatives.</span>
+                  </div>
+                )}
+
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
                   {currentNeedleSpec.note}
                 </div>
+              </motion.div>
+            )}
+
+            {/* Oncology Status */}
+            {activeTab === 'oncology' && (
+              <motion.div
+                key="oncology"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-4"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <Radiation className="h-5 w-5 text-purple-600" />
+                  <h4 className="font-semibold text-slate-700">Oncology Treatment Status</h4>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold text-slate-600">
+                    Is the patient currently undergoing active treatment?
+                  </Label>
+                  <Select value={oncologyStatus} onValueChange={(v) => setOncologyStatus(v as OncologyStatus)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No Active Treatment</SelectItem>
+                      <SelectItem value="chemo">Chemotherapy</SelectItem>
+                      <SelectItem value="radiation">Radiation Therapy</SelectItem>
+                      <SelectItem value="surgery">Pre/Post Surgery</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {oncologyStatus === 'none' && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                    <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                    <p className="text-sm text-green-700">No active oncology treatment. Standard pediatric protocols apply.</p>
+                  </div>
+                )}
+
+                {oncologyStatus === 'surgery' && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 text-amber-700 font-semibold mb-2">
+                      <Activity className="h-5 w-5" />
+                      Pre/Post Surgery Guidelines
+                    </div>
+                    <ul className="text-sm text-amber-800 space-y-1 list-disc list-inside">
+                      <li>Avoid blood-moving herbs 7 days pre-surgery</li>
+                      <li>Post-surgery: Support healing with Qi & Blood tonics</li>
+                      <li>Gentle acupuncture OK 2+ weeks post-op</li>
+                    </ul>
+                  </div>
+                )}
+
+                {isOncologyActive && (
+                  <div className={`rounded-lg p-4 ${safetyAcknowledged ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                    {safetyAcknowledged ? (
+                      <div className="flex items-center gap-2 text-green-700">
+                        <CheckCircle2 className="h-5 w-5" />
+                        <span className="font-semibold">Safety protocols acknowledged</span>
+                      </div>
+                    ) : (
+                      <Button 
+                        onClick={() => setSafetyAcknowledged(true)}
+                        className="w-full bg-red-600 hover:bg-red-700"
+                      >
+                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                        Acknowledge Safety Protocols
+                      </Button>
+                    )}
+                  </div>
+                )}
               </motion.div>
             )}
 
