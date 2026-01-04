@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ArrowLeft, Brain, ShieldCheck, Lock, Activity, Eye, EyeOff, Mail } from 'lucide-react';
+import { ArrowLeft, Brain, ShieldCheck, Lock, Activity, Eye, EyeOff, Mail, MessageCircle, RefreshCw } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import clinicLogo from '@/assets/clinic-logo.png';
 
@@ -59,6 +59,40 @@ export default function Auth() {
   const [isSendingReset, setIsSendingReset] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
+  const [isResendingVerification, setIsResendingVerification] = useState(false);
+
+  // WhatsApp CTA
+  const whatsappNumber = '972544634923';
+  const whatsappMessage = encodeURIComponent('שלום, אני מעוניין לקבל מידע נוסף על מערכת CM Clinic AI');
+  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
+
+  // Handle Resend Verification Email
+  const handleResendVerification = async () => {
+    if (!verificationEmail) {
+      toast.error('נא להזין כתובת אימייל');
+      return;
+    }
+    setIsResendingVerification(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: verificationEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth`,
+        },
+      });
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success('מייל אימות נשלח מחדש בהצלחה!');
+        setShowVerificationDialog(false);
+      }
+    } finally {
+      setIsResendingVerification(false);
+    }
+  };
 
   // Handle Google OAuth
   const handleGoogleSignIn = async () => {
@@ -119,28 +153,30 @@ export default function Auth() {
   }, [user, navigate, location.search]);
 
   // Handle Login/Register
-  const onSubmit = async (data: AuthForm) => {
+  const onSubmit = async (formData: AuthForm) => {
     setIsSubmitting(true);
     try {
       if (activeTab === 'login') {
-        const { error } = await signIn(data.email, data.password);
+        const { error } = await signIn(formData.email, formData.password);
         if (error) {
           toast.error(error.message);
           return;
         }
         toast.success('התחברת בהצלחה!');
       } else {
-        const { error } = await signUp(data.email, data.password);
-        if (error) {
-          if (error.message.includes('already registered')) {
+        const result = await signUp(formData.email, formData.password);
+        if (result.error) {
+          if (result.error.message.includes('already registered')) {
             toast.error('כתובת האימייל כבר רשומה');
           } else {
-            toast.error(error.message);
+            toast.error(result.error.message);
           }
           return;
         }
-        toast.success('נרשמת בהצלחה! ניתן להתחבר כעת.');
-        setActiveTab('login');
+        // Show verification dialog after signup
+        setVerificationEmail(formData.email);
+        toast.success('נרשמת בהצלחה! נשלח אליך מייל אימות.');
+        setShowVerificationDialog(true);
       }
     } finally {
       setIsSubmitting(false);
@@ -469,6 +505,17 @@ export default function Auth() {
                 </TabsContent>
               </Tabs>
 
+              {/* Resend Verification Email Link */}
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  onClick={() => setShowVerificationDialog(true)}
+                  className="text-sm text-emerald-600 hover:text-emerald-700 hover:underline transition-colors"
+                >
+                  לא קיבלת מייל אימות? לחץ כאן לשליחה מחדש
+                </button>
+              </div>
+
               <div className="mt-6 text-center">
                 <Link 
                   to="/" 
@@ -479,6 +526,17 @@ export default function Auth() {
               </div>
             </CardContent>
           </Card>
+
+          {/* WhatsApp CTA - Fixed Position */}
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="fixed bottom-6 left-6 z-50 flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all group"
+          >
+            <MessageCircle className="h-5 w-5" />
+            <span className="hidden sm:inline font-medium">צור קשר בוואטסאפ</span>
+          </a>
         </div>
 
         {/* Forgot Password Dialog */}
@@ -515,6 +573,53 @@ export default function Auth() {
                   'שלח קישור לאיפוס'
                 )}
               </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Email Verification Dialog */}
+        <Dialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog}>
+          <DialogContent className="sm:max-w-md" dir="rtl">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-display flex items-center gap-2">
+                <Mail className="h-5 w-5 text-emerald-600" />
+                אימות כתובת אימייל
+              </DialogTitle>
+              <DialogDescription>
+                שלחנו לך מייל אימות. אם לא קיבלת אותו, תוכל לשלוח שוב.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div className="relative">
+                <Input
+                  type="email"
+                  placeholder="you@clinic.com"
+                  value={verificationEmail}
+                  onChange={(e) => setVerificationEmail(e.target.value)}
+                  className="bg-slate-50 border-slate-200 focus:border-emerald-500 h-11 pr-10"
+                />
+                <Mail className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              </div>
+              <Button
+                onClick={handleResendVerification}
+                disabled={isResendingVerification}
+                className="w-full h-11 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+              >
+                {isResendingVerification ? (
+                  <span className="flex items-center gap-2">
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    שולח מחדש...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <RefreshCw className="h-4 w-4" />
+                    שלח מייל אימות מחדש
+                  </span>
+                )}
+              </Button>
+              <p className="text-xs text-slate-500 text-center">
+                בדוק גם את תיקיית הספאם אם לא קיבלת את המייל
+              </p>
             </div>
           </DialogContent>
         </Dialog>
