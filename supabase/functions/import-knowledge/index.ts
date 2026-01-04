@@ -353,8 +353,29 @@ serve(async (req) => {
           .update({ status: 'indexed', indexed_at: new Date().toISOString() })
           .eq('id', newDoc.id);
 
-        results.push({ fileName, success: true, chunksCreated: chunks.length });
+        results.push({ fileName, success: true, chunksCreated: chunks.length, documentId: newDoc.id });
         console.log(`Indexed ${fileName}: ${chunks.length} chunks`);
+
+        // Auto-trigger embedding generation for this document (fire-and-forget)
+        // This ensures embeddings are generated immediately after import
+        try {
+          const embeddingUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/generate-embeddings`;
+          fetch(embeddingUrl, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              batchSize: 50, 
+              documentId: newDoc.id 
+            }),
+          }).catch(err => console.error('Auto-embedding trigger error:', err));
+          console.log(`Auto-triggered embedding generation for ${fileName}`);
+        } catch (embErr) {
+          console.error('Failed to trigger auto-embedding:', embErr);
+          // Don't fail the import if embedding trigger fails
+        }
 
       } catch (error) {
         console.error('Document processing error:', error);
