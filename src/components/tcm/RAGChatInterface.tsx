@@ -49,6 +49,22 @@ interface PillarBreakdown {
   clinicalTrials: number;
 }
 
+interface HybridSearchConfidence {
+  overallConfidence: 'very_high' | 'high' | 'medium' | 'low' | 'none';
+  averageScore: number;
+  meetsThreshold: boolean;
+  threshold: number;
+  hybridChunksFound: number;
+}
+
+interface ExtractedPoints {
+  pointCodes: string[];
+  extraPoints: string[];
+  allPoints: string[];
+  figureReferences: string[];
+  totalPointsFound: number;
+}
+
 interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -61,6 +77,8 @@ interface Message {
     auditLogged: boolean;
     pillarBreakdown?: PillarBreakdown;
     sourceAudit?: SourceAuditData;
+    hybridSearchConfidence?: HybridSearchConfidence;
+    extractedPoints?: ExtractedPoints;
   };
   traceData?: {
     steps: TraceStep[];
@@ -219,13 +237,65 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
 
       if (error) throw error;
 
+      // Handle "no protocol found" response from hybrid search confidence threshold
+      if (data.type === 'no_protocol_found') {
+        updateTraceStep('search-kb', { 
+          status: 'completed', 
+          endTime: Date.now(),
+          details: `Low confidence (${(data.metadata?.sourceAudit?.actualConfidence * 100 || 0).toFixed(1)}%) - Below threshold`
+        });
+
+        setRagResults({
+          chunksFound: 0,
+          documentsSearched: data.metadata?.sourceAudit?.totalIndexedAssets || 0,
+          sources: []
+        });
+
+        // Update context chunks for trace panel
+        setCurrentTrace(prev => ({ ...prev, contextChunks: [] }));
+
+        addTraceStep({
+          id: 'confidence-threshold',
+          step: 4,
+          name: 'Confidence Check Failed',
+          status: 'error',
+          startTime: Date.now(),
+          endTime: Date.now(),
+          details: `Score: ${(data.metadata?.sourceAudit?.actualConfidence * 100 || 0).toFixed(1)}% (Required: 80%)`
+        });
+
+        setSearchPhase('rag-not-found');
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setSearchPhase('external-consent');
+        setIsLoading(false);
+        
+        // Add a system message explaining the low confidence
+        const noProtocolMessage: Message = {
+          role: 'assistant',
+          content: data.message || 'No protocol found in clinic assets for this query.',
+          sources: [],
+          isExternal: false,
+          metadata: {
+            chunksFound: 0,
+            documentsSearched: data.metadata?.sourceAudit?.totalIndexedAssets || 0,
+            searchTermsUsed: data.metadata?.searchTermsUsed || '',
+            auditLogged: false,
+            pillarBreakdown: data.metadata?.pillarBreakdown,
+            sourceAudit: data.metadata?.sourceAudit,
+          }
+        };
+        setMessages(prev => [...prev, noProtocolMessage]);
+        return;
+      }
+
       const chunksFound = data.chunksFound || 0;
       const sourceNames: string[] = (data.sources || []).map((s: Source) => s.fileName);
 
       updateTraceStep('search-kb', { 
         status: 'completed', 
         endTime: Date.now(),
-        details: `Found ${chunksFound} matching chunks`
+        details: `Found ${chunksFound} matching chunks (Confidence: ${data.hybridSearchConfidence?.overallConfidence || 'N/A'})`
       });
 
       // Update context chunks for trace panel
