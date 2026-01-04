@@ -107,3 +107,6 @@ verify_jwt = true
 
 [functions.generate-embeddings]
 verify_jwt = false
+
+[functions.send-usage-alert]
+verify_jwt = false

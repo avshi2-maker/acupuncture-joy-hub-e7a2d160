@@ -27,7 +27,7 @@ export const useUsageTracking = () => {
   const [error, setError] = useState<string | null>(null);
   const alertsSentRef = useRef<Set<number>>(new Set());
 
-  const checkAndSendAlerts = useCallback(async (currentUsed: number, tierLimit: number) => {
+  const checkAndSendAlerts = useCallback(async (currentUsed: number, tierLimit: number, userTier: keyof TierLimits) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) return;
@@ -54,6 +54,13 @@ export const useUsageTracking = () => {
             continue;
           }
 
+          // Get tier display name
+          const tierDisplayNames: Record<string, string> = {
+            trial: 'ניסיון',
+            standard: 'סטנדרט',
+            premium: 'פרימיום'
+          };
+
           // Send alert email
           const { error: alertError } = await supabase.functions.invoke('send-usage-alert', {
             body: {
@@ -63,13 +70,15 @@ export const useUsageTracking = () => {
               currentUsed,
               tierLimit,
               threshold,
-              tier: 'trial', // TODO: Get actual tier
+              tier: tierDisplayNames[userTier] || userTier,
             },
           });
 
           if (!alertError) {
             alertsSentRef.current.add(threshold);
-            console.log(`Usage alert sent for ${threshold}% threshold`);
+            console.log(`Usage alert sent for ${threshold}% threshold to ${user.email}`);
+          } else {
+            console.error('Failed to send usage alert:', alertError);
           }
         }
       }
@@ -102,7 +111,9 @@ export const useUsageTracking = () => {
         throw usageError;
       }
 
-      const userTier: keyof TierLimits = 'trial';
+      // Try to get tier from localStorage (set by useTier hook)
+      const storedTier = localStorage.getItem('userTier');
+      const userTier: keyof TierLimits = (storedTier === 'standard' || storedTier === 'premium') ? storedTier : 'trial';
       const tierLimit = TIER_LIMITS[userTier];
 
       const usage = usageResult?.[0] || { total_queries: 0, total_tokens: 0, unique_patients: 0 };
@@ -114,8 +125,8 @@ export const useUsageTracking = () => {
         uniquePatients: Number(usage.unique_patients) || 0,
       });
 
-      // Check for threshold alerts
-      await checkAndSendAlerts(currentUsed, tierLimit);
+      // Check for threshold alerts (80% and 90%)
+      await checkAndSendAlerts(currentUsed, tierLimit, userTier);
     } catch (err) {
       console.error('Error fetching usage data:', err);
       setError('Failed to load usage data');
