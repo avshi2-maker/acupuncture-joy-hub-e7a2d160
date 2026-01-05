@@ -118,29 +118,7 @@ const isIntakeCompleted = (): boolean => {
   }
 };
 
-// Scroll indicator arrow component
-function ScrollIndicator() {
-  return (
-    <motion.div 
-      className="flex flex-col items-center mt-8 mb-4"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 1, duration: 0.5 }}
-    >
-      <motion.p 
-        className="text-sm text-muted-foreground mb-2 font-heebo"
-      >
-        מחשבון טוקנים חכם ⬇️
-      </motion.p>
-      <motion.div
-        animate={{ y: [0, 8, 0] }}
-        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <ChevronDown className="w-8 h-8 text-gold" />
-      </motion.div>
-    </motion.div>
-  );
-}
+// Scroll indicator removed per user request
 
 // Token Calculator with scroll-triggered animation
 interface TokenCalculatorSectionProps {
@@ -158,7 +136,6 @@ function TokenCalculatorSection({ onPlanRecommended }: TokenCalculatorSectionPro
   
   return (
     <>
-      <ScrollIndicator />
       <motion.div
         id="token-calculator"
         ref={ref}
