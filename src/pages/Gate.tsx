@@ -1190,33 +1190,11 @@ export default function Gate() {
                     דף הבית
                   </Link>
                   <Link to="/pricing" className="block text-muted-foreground hover:text-jade transition-colors">
-                    מחירון
+                    מחשבון שימוש TOKEN בהתאם לכמות לקוחות
                   </Link>
                 </div>
               </div>
 
-              {/* Support */}
-              <div className="space-y-2">
-                <h4 className="font-semibold text-foreground mb-3">תמיכה</h4>
-                <div className="space-y-1 text-sm">
-                  <a 
-                    href="https://wa.me/972505231042?text=שלום, אני צריך עזרה עם מערכת TCM Clinic"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center md:justify-start gap-2 text-muted-foreground hover:text-jade transition-colors"
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    וואטסאפ
-                  </a>
-                  <a 
-                    href="mailto:support@tcmclinic.co.il"
-                    className="flex items-center justify-center md:justify-start gap-2 text-muted-foreground hover:text-jade transition-colors"
-                  >
-                    <Mail className="h-4 w-4" />
-                    תמיכה במייל
-                  </a>
-                </div>
-              </div>
             </div>
 
             {/* Copyright */}
