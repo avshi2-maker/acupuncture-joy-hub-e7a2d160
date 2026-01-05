@@ -13,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useTier } from '@/hooks/useTier';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { toast } from 'sonner';
-import { Lock, ArrowLeft, CreditCard, Upload, CheckCircle, ArrowRight, MessageCircle, Mail, Loader2, Play, Fingerprint, Eye, EyeOff, HelpCircle, Leaf } from 'lucide-react';
+import { Lock, ArrowLeft, CreditCard, Upload, CheckCircle, ArrowRight, MessageCircle, Mail, Loader2, Play, Fingerprint, Eye, EyeOff, HelpCircle, Leaf, ChevronDown } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import newLogo from '@/assets/new-logo.png';
 import { Link } from 'react-router-dom';
@@ -118,55 +118,96 @@ const isIntakeCompleted = (): boolean => {
   }
 };
 
-// Token Calculator with scroll-triggered animation
+// Scroll indicator arrow component
+function ScrollIndicator() {
+  return (
+    <motion.div 
+      className="flex flex-col items-center mt-8 mb-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 1, duration: 0.5 }}
+    >
+      <motion.p 
+        className="text-sm text-muted-foreground mb-2 font-heebo"
+      >
+        מחשבון טוקנים חכם ⬇️
+      </motion.p>
+      <motion.div
+        animate={{ y: [0, 8, 0] }}
+        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <ChevronDown className="w-8 h-8 text-gold" />
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// Token Calculator with scroll-triggered animation and confetti
 function TokenCalculatorSection() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const [showConfetti, setShowConfetti] = useState(false);
+  
+  // Trigger confetti when calculator comes into view
+  useEffect(() => {
+    if (isInView) {
+      const timer = setTimeout(() => {
+        setShowConfetti(true);
+        // Reset confetti after animation
+        setTimeout(() => setShowConfetti(false), 3500);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [isInView]);
   
   return (
-    <motion.div
-      ref={ref}
-      className="mt-8"
-      initial={{ opacity: 0, y: 50 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-    >
+    <>
+      <Confetti isActive={showConfetti} duration={3500} />
+      <ScrollIndicator />
       <motion.div
-        className="relative bg-white/90 backdrop-blur-xl rounded-2xl p-6 border border-gold/30 overflow-hidden"
-        initial={{ boxShadow: "0 10px 40px rgba(212,175,55,0.1)" }}
-        animate={isInView ? {
-          boxShadow: [
-            "0 10px 40px rgba(212,175,55,0.1)",
-            "0 15px 60px rgba(212,175,55,0.35)",
-            "0 12px 45px rgba(212,175,55,0.2)",
-          ],
-        } : {}}
-        transition={{
-          duration: 2,
-          times: [0, 0.5, 1],
-          ease: "easeInOut",
-        }}
-        whileHover={{ 
-          boxShadow: "0 20px 60px rgba(212,175,55,0.3)",
-          scale: 1.01,
-        }}
+        ref={ref}
+        className="mt-2"
+        initial={{ opacity: 0, y: 50 }}
+        animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
       >
-        {/* Animated glow border effect */}
         <motion.div
-          className="absolute inset-0 rounded-2xl pointer-events-none"
-          initial={{ opacity: 0 }}
-          animate={isInView ? { opacity: [0, 1, 0.6] } : { opacity: 0 }}
-          transition={{ duration: 2, times: [0, 0.5, 1] }}
-          style={{
-            background: "linear-gradient(90deg, transparent, rgba(212,175,55,0.3), transparent)",
-            filter: "blur(20px)",
+          className="relative bg-white/90 backdrop-blur-xl rounded-2xl p-6 border border-gold/30 overflow-hidden"
+          initial={{ boxShadow: "0 10px 40px rgba(212,175,55,0.1)" }}
+          animate={isInView ? {
+            boxShadow: [
+              "0 10px 40px rgba(212,175,55,0.1)",
+              "0 15px 60px rgba(212,175,55,0.35)",
+              "0 12px 45px rgba(212,175,55,0.2)",
+            ],
+          } : {}}
+          transition={{
+            duration: 2,
+            times: [0, 0.5, 1],
+            ease: "easeInOut",
           }}
-        />
-        <div className="relative z-10">
-          <TokenCalculator />
-        </div>
+          whileHover={{ 
+            boxShadow: "0 20px 60px rgba(212,175,55,0.3)",
+            scale: 1.01,
+          }}
+        >
+          {/* Animated glow border effect */}
+          <motion.div
+            className="absolute inset-0 rounded-2xl pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={isInView ? { opacity: [0, 1, 0.6] } : { opacity: 0 }}
+            transition={{ duration: 2, times: [0, 0.5, 1] }}
+            style={{
+              background: "linear-gradient(90deg, transparent, rgba(212,175,55,0.3), transparent)",
+              filter: "blur(20px)",
+            }}
+          />
+          <div className="relative z-10">
+            <TokenCalculator />
+          </div>
+        </motion.div>
       </motion.div>
-    </motion.div>
+    </>
   );
 }
 
