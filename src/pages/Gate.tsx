@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -13,11 +13,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useTier } from '@/hooks/useTier';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { toast } from 'sonner';
-import { Lock, ArrowLeft, CreditCard, Upload, CheckCircle, ArrowRight, MessageCircle, Mail, Loader2, Play, Fingerprint, Eye, EyeOff, HelpCircle, Leaf, ChevronDown } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, ChevronDown, CreditCard, Eye, EyeOff, Fingerprint, HelpCircle, Leaf, Loader2, Lock, Mail, MessageCircle, Upload } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import newLogo from '@/assets/new-logo.png';
-import { Link } from 'react-router-dom';
-import { TierCard } from '@/components/pricing/TierCard';
 
 import { BackToTopButton } from '@/components/ui/BackToTopButton';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -27,9 +24,6 @@ import tokenSimulatorBg from '@/assets/token-simulator-bg.png';
 import { VideoShowcaseCards } from '@/components/gate/VideoShowcaseCards';
 import { TokenCalculator } from '@/components/pricing/TokenCalculator';
 import { FeatureComparisonTable } from '@/components/pricing/FeatureComparisonTable';
-
-// Dev test password for development/testing
-const DEV_TEST_PASSWORD = 'dev2025';
 
 // Session expiry timer component - REMOVED per user request
 
@@ -312,7 +306,7 @@ export default function Gate() {
     navigate('/therapist-intake?from=gate');
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setProofFile(e.target.files[0]);
     }
@@ -566,7 +560,7 @@ export default function Gate() {
                 </div>
 
                 {/* Glass Cards Grid */}
-                <div id="tier-selection" className="grid md:grid-cols-3 gap-3 lg:gap-4 mb-4 pt-12 md:pt-14 items-center scroll-mt-24">
+                <div id="tier-selection" className="grid overflow-visible md:grid-cols-3 gap-3 lg:gap-4 mb-4 pt-12 md:pt-14 items-center scroll-mt-24">
                   {isPageLoading ? (
                     // Skeleton loading state
                     <>
@@ -598,7 +592,7 @@ export default function Gate() {
                         id={`tier-card-${tier.name.toLowerCase()}`}
                         key={tier.name}
                         data-tier={tier.name}
-                        className="relative"
+                        className="relative overflow-visible"
                       >
                         {/* Badge for highlighted (kept outside blur layer to prevent clipping) */}
                         {tier.highlighted && (
