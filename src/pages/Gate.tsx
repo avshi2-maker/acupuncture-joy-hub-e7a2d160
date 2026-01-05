@@ -165,8 +165,9 @@ function TokenCalculatorSection() {
       <Confetti isActive={showConfetti} duration={3500} />
       <ScrollIndicator />
       <motion.div
+        id="token-calculator"
         ref={ref}
-        className="mt-2"
+        className="mt-2 scroll-mt-8"
         initial={{ opacity: 0, y: 50 }}
         animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
@@ -673,6 +674,31 @@ export default function Gate() {
                           style={tier.highlighted ? { background: 'linear-gradient(135deg, #d4af37, #b89628)' } : {}}
                         >
                           {tier.name === 'Trial' ? 'התחל ניסיון' : 'בחר חבילה'}
+                        </button>
+                        
+                        {/* Try Calculator Button */}
+                        <button
+                          onClick={() => {
+                            document.getElementById('token-calculator')?.scrollIntoView({ 
+                              behavior: 'smooth',
+                              block: 'center'
+                            });
+                          }}
+                          className="w-full mt-2 py-1.5 text-xs text-gray-500 hover:text-jade transition-colors flex items-center justify-center gap-1.5 group"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 group-hover:text-gold transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect width="16" height="20" x="4" y="2" rx="2"/>
+                            <line x1="8" x2="16" y1="6" y2="6"/>
+                            <line x1="16" x2="16" y1="14" y2="18"/>
+                            <path d="M16 10h.01"/>
+                            <path d="M12 10h.01"/>
+                            <path d="M8 10h.01"/>
+                            <path d="M12 14h.01"/>
+                            <path d="M8 14h.01"/>
+                            <path d="M12 18h.01"/>
+                            <path d="M8 18h.01"/>
+                          </svg>
+                          נסה את המחשבון
                         </button>
                       </div>
                     ))

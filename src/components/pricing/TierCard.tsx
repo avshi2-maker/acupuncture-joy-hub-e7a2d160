@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, X, Info } from 'lucide-react';
+import { Check, X, Info, Calculator } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -20,6 +20,7 @@ interface TierCardProps {
   bestValue?: boolean;
   onSelect: () => void;
   buttonText?: string;
+  onCalculatorClick?: () => void;
 }
 
 export function TierCard({ 
@@ -37,7 +38,8 @@ export function TierCard({
   highlighted = false,
   bestValue = false,
   onSelect,
-  buttonText = 'בחר תוכנית'
+  buttonText = 'בחר תוכנית',
+  onCalculatorClick
 }: TierCardProps) {
   return (
     <Card className={cn(
@@ -126,7 +128,7 @@ export function TierCard({
         </ul>
       </CardContent>
       
-      <CardFooter>
+      <CardFooter className="flex flex-col gap-2">
         <Button 
           onClick={onSelect}
           className={cn(
@@ -137,6 +139,17 @@ export function TierCard({
         >
           {buttonText}
         </Button>
+        {onCalculatorClick && (
+          <Button 
+            onClick={onCalculatorClick}
+            variant="ghost"
+            size="sm"
+            className="w-full text-muted-foreground hover:text-foreground group"
+          >
+            <Calculator className="h-4 w-4 ml-2 group-hover:text-gold transition-colors" />
+            נסה את המחשבון
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );
