@@ -64,7 +64,7 @@ const tiers = [
     period: '/ חודש',
     periodSub: '+ מע״מ',
     queriesLimit: '1,200 שאילתות/חודש',
-    tokensInfo: '~150K טוקנים',
+    tokensInfo: '~200K טוקנים',
     description: 'כולל תזכורות אוטומטיות למטופלים',
     features: [
       { name: 'מאגר ידע - TCM Brain', included: true },
@@ -84,7 +84,7 @@ const tiers = [
     period: '/ חודש',
     periodSub: '+ מע״מ',
     queriesLimit: '5,000 שאילתות/חודש',
-    tokensInfo: '~600K טוקנים',
+    tokensInfo: '~250K טוקנים',
     description: 'כל הפיצ׳רים כולל פגישות וידאו',
     features: [
       { name: 'מאגר ידע - TCM Brain', included: true },
