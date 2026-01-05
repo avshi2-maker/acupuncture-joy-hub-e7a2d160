@@ -19,9 +19,11 @@ import newLogo from '@/assets/new-logo.png';
 import { Link } from 'react-router-dom';
 import { TierCard } from '@/components/pricing/TierCard';
 import { Confetti } from '@/components/ui/Confetti';
+import { BackToTopButton } from '@/components/ui/BackToTopButton';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Checkbox } from '@/components/ui/checkbox';
 import gateBg from '@/assets/gate-background.png';
+import tokenSimulatorBg from '@/assets/token-simulator-bg.png';
 import { VideoShowcaseCards } from '@/components/gate/VideoShowcaseCards';
 import { TokenCalculator } from '@/components/pricing/TokenCalculator';
 
@@ -148,6 +150,14 @@ function TokenCalculatorSection() {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [showConfetti, setShowConfetti] = useState(false);
   
+  // Scroll to tier cards and highlight the recommended plan
+  const scrollToTier = (planName: string) => {
+    const tierSection = document.getElementById('tier-selection');
+    if (tierSection) {
+      tierSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+  
   // Trigger confetti when calculator comes into view
   useEffect(() => {
     if (isInView) {
@@ -173,7 +183,7 @@ function TokenCalculatorSection() {
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
         <motion.div
-          className="relative bg-white/90 backdrop-blur-xl rounded-2xl p-6 border border-gold/30 overflow-hidden"
+          className="relative rounded-2xl p-6 border border-gold/30 overflow-hidden"
           initial={{ boxShadow: "0 10px 40px rgba(212,175,55,0.1)" }}
           animate={isInView ? {
             boxShadow: [
@@ -192,6 +202,14 @@ function TokenCalculatorSection() {
             scale: 1.01,
           }}
         >
+          {/* Background Image */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center opacity-15"
+            style={{ backgroundImage: `url(${tokenSimulatorBg})` }}
+          />
+          {/* Overlay for readability */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/95 via-white/90 to-white/85 backdrop-blur-sm" />
+          
           {/* Animated glow border effect */}
           <motion.div
             className="absolute inset-0 rounded-2xl pointer-events-none"
@@ -204,7 +222,7 @@ function TokenCalculatorSection() {
             }}
           />
           <div className="relative z-10">
-            <TokenCalculator />
+            <TokenCalculator onPlanRecommended={scrollToTier} />
           </div>
         </motion.div>
       </motion.div>
@@ -1221,6 +1239,9 @@ export default function Gate() {
           <HelpCircle className="h-5 w-5" />
           <span className="text-sm font-medium">צריכים עזרה?</span>
         </a>
+        
+        {/* Back to Top Button */}
+        <BackToTopButton threshold={600} />
       </div>
     </>
   );

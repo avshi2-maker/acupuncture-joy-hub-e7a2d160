@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { Calculator, Users, Zap, CheckCircle2, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Calculator, Users, Zap, CheckCircle2, ArrowUp } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 const TOKENS_PER_PATIENT = 1250; // Average tokens per patient treatment
 
@@ -38,7 +39,11 @@ const PLANS = [
   },
 ];
 
-export function TokenCalculator() {
+interface TokenCalculatorProps {
+  onPlanRecommended?: (planName: string) => void;
+}
+
+export function TokenCalculator({ onPlanRecommended }: TokenCalculatorProps) {
   const [patientsPerWeek, setPatientsPerWeek] = useState(10);
   const [sessionsPerPatient, setSessionsPerPatient] = useState(3);
 
@@ -53,6 +58,18 @@ export function TokenCalculator() {
   };
 
   const recommendedPlan = getRecommendedPlan();
+  
+  // Notify parent when plan recommendation changes
+  useEffect(() => {
+    onPlanRecommended?.(recommendedPlan);
+  }, [recommendedPlan, onPlanRecommended]);
+  
+  const scrollToTiers = () => {
+    const tierSection = document.getElementById('tier-selection');
+    if (tierSection) {
+      tierSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
 
   return (
     <section className="space-y-6">
@@ -173,7 +190,15 @@ export function TokenCalculator() {
                     {PLANS.find(p => p.name === recommendedPlan)?.price}
                   </div>
                 </div>
-                <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                <Button
+                  onClick={scrollToTiers}
+                  size="sm"
+                  variant="ghost"
+                  className="group"
+                >
+                  <ArrowUp className="h-4 w-4 ml-1 group-hover:text-gold transition-colors" />
+                  בחר תוכנית
+                </Button>
               </div>
             </div>
           </div>
