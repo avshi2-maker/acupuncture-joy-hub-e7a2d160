@@ -572,6 +572,27 @@ export default function Gate() {
                   </p>
                 </div>
 
+                {/* Simulation Calculators Button */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex justify-center mb-6"
+                >
+                  <Link to="/simulation-calculators">
+                    <Button 
+                      size="lg"
+                      className="bg-gradient-to-r from-jade to-jade/80 hover:from-jade/90 hover:to-jade/70 text-white shadow-lg gap-3 px-6 py-6 text-base md:text-lg rounded-xl"
+                    >
+                      <Calculator className="h-5 w-5 md:h-6 md:w-6" />
+                      <span className="text-right leading-tight">
+                        כניסה למחשבון סימולציה<br/>
+                        <span className="text-xs md:text-sm opacity-90">הכנסות, הוצאות ותחשיב עלויות טוקנים</span>
+                      </span>
+                    </Button>
+                  </Link>
+                </motion.div>
+
                 {/* Clinic Efficiency Calculator - Price Anchoring Strategy */}
                 <ClinicEfficiencyCalculator onTierRecommended={setRecommendedPlan} />
 
