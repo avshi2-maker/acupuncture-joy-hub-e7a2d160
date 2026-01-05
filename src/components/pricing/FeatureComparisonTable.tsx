@@ -106,11 +106,18 @@ export function FeatureComparisonTable() {
   );
   const [showStickyCTA, setShowStickyCTA] = useState(false);
   const [showSwipeHint, setShowSwipeHint] = useState(true);
+  const [activeTierFilter, setActiveTierFilter] = useState<string | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
+  const tierRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // Check if all categories are expanded
   const allExpanded = Object.values(openCategories).every(Boolean);
-  const allCollapsed = Object.values(openCategories).every(v => !v);
+
+  // Scroll to specific tier
+  const scrollToTier = (tierName: string) => {
+    setActiveTierFilter(tierName);
+    tierRefs.current[tierName]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
 
   // Toggle category open/close
   const toggleCategory = (category: string) => {
@@ -168,6 +175,30 @@ export function FeatureComparisonTable() {
 
       {/* Mobile: Card-based layout with collapsible categories */}
       <div className="md:hidden space-y-4 pb-20 relative">
+        {/* Tier Quick Navigation Tabs */}
+        <div className="flex gap-2 p-1 bg-muted/50 rounded-xl sticky top-0 z-10 backdrop-blur-sm">
+          {TIERS.map((tier) => (
+            <button
+              key={tier.name}
+              onClick={() => scrollToTier(tier.name)}
+              className={cn(
+                "flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all",
+                activeTierFilter === tier.name
+                  ? cn("bg-background shadow-sm", tier.textClass)
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="font-semibold">{tier.nameHe}</span>
+                <span className="text-[10px] opacity-70">{tier.price}</span>
+              </div>
+              {tier.badge && (
+                <Crown className="h-3 w-3 text-gold mx-auto mt-0.5" />
+              )}
+            </button>
+          ))}
+        </div>
+
         {/* Swipe hint animation */}
         <AnimatePresence>
           {showSwipeHint && (
@@ -213,10 +244,12 @@ export function FeatureComparisonTable() {
         {TIERS.map((tier) => (
           <div 
             key={tier.name}
+            ref={(el) => { tierRefs.current[tier.name] = el; }}
             className={cn(
-              "rounded-xl border p-4",
+              "rounded-xl border p-4 scroll-mt-20",
               tier.headerClass,
-              tier.highlighted && "ring-2 ring-gold"
+              tier.highlighted && "ring-2 ring-gold",
+              activeTierFilter === tier.name && "ring-2 ring-primary"
             )}
           >
             <div className="flex items-center justify-between mb-3">
