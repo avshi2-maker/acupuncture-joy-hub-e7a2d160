@@ -8,6 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Calculator, TrendingUp, Calendar, CalendarDays } from "lucide-react";
+import roiBgImage from "@/assets/roi-therapist-bg.png";
 
 const TIERS = [
   { id: "standard", name: "מסלול רגיל", value: 149, label: "Standard", color: "hsl(var(--primary))" },
@@ -52,7 +53,11 @@ export default function TherapistROICalculator() {
         <meta name="description" content="חשב את פוטנציאל ההכנסה שלך כמטפל עם כלי ה-AI המתקדמים שלנו" />
       </Helmet>
 
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5" dir="rtl">
+      <div 
+        className="min-h-screen bg-cover bg-center bg-fixed" 
+        dir="rtl"
+        style={{ backgroundImage: `linear-gradient(rgba(255,255,255,0.88), rgba(255,255,255,0.92)), url(${roiBgImage})` }}
+      >
         {/* Header */}
         <header className="border-b border-border/40 bg-background/80 backdrop-blur-sm sticky top-0 z-50">
           <div className="container mx-auto px-4 py-4 flex items-center justify-between">
