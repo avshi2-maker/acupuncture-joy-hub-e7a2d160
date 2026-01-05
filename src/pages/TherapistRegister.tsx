@@ -14,6 +14,7 @@ import { Leaf, ArrowLeft, MessageCircle, CheckCircle2, XCircle, Loader2, AlertTr
 import { Link } from 'react-router-dom';
 import { WhatsAppWithTemplates, REGISTRATION_TEMPLATES } from '@/components/ui/WhatsAppTemplates';
 import { validateIsraeliId, looksLikeIsraeliId } from '@/utils/israeliIdValidation';
+import { RegistrationProgressSteps } from '@/components/registration/RegistrationProgressSteps';
 
 const registerSchema = z.object({
   idNumber: z.string().min(5, 'מספר ת.ז. חייב להכיל לפחות 5 ספרות').max(15, 'מספר ת.ז. ארוך מדי'),
@@ -132,8 +133,9 @@ export default function TherapistRegister() {
         return;
       }
 
-      toast.success('ההרשמה התקבלה בהצלחה!');
-      navigate('/pricing');
+      toast.success('פרטים נשמרו! המשך לטופס קליטה');
+      // Navigate to intake form with registration flow context
+      navigate('/therapist-intake?from=register');
     } catch (error) {
       toast.error('שגיאה בהרשמה. נסה שוב.');
     } finally {
@@ -150,9 +152,12 @@ export default function TherapistRegister() {
 
       <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
         <div className="w-full max-w-md">
+          {/* Progress Steps */}
+          <RegistrationProgressSteps currentStep={1} className="mb-8" />
+
           <Link 
             to="/" 
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 transition-colors"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 transition-colors text-sm"
           >
             <ArrowLeft className="h-4 w-4" />
             חזרה לדף הבית
@@ -265,8 +270,8 @@ export default function TherapistRegister() {
                     )}
                   />
 
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? 'שולח...' : 'המשך לבחירת תוכנית'}
+                  <Button type="submit" className="w-full bg-jade hover:bg-jade/90" disabled={isLoading}>
+                    {isLoading ? 'שומר...' : 'המשך לטופס קליטה →'}
                   </Button>
                 </form>
               </Form>
