@@ -233,60 +233,60 @@ export function TokenCalculator({ onPlanRecommended }: TokenCalculatorProps) {
             <span className="text-sm text-muted-foreground">השוואה לתוכניות:</span>
           </div>
           <div className="relative flex rounded-xl overflow-hidden border border-border/30" dir="rtl">
-            {/* Trial: 50K - light green */}
-            <button
-              onClick={() => {
-                const tierCard = document.getElementById('tier-card-trial');
-                tierCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                tierCard?.classList.add('ring-4', 'ring-primary');
-                setTimeout(() => tierCard?.classList.remove('ring-4', 'ring-primary'), 2000);
-              }}
-              className={cn(
-                "flex-[1] py-4 px-3 flex flex-col items-center justify-center transition-all hover:opacity-90 cursor-pointer",
-                "bg-emerald-100/80",
-                recommendedPlan === 'Trial' ? "ring-2 ring-primary ring-inset" : ""
-              )}
-            >
-              <span className="text-teal-700 font-bold text-sm">ניסיון</span>
-              <span className="text-teal-600 font-semibold text-base mt-1">חינם <span className="text-xs font-normal">7 ימים</span></span>
-              <span className="text-teal-600/70 text-xs mt-0.5">~50K טוקנים</span>
-            </button>
-            {/* Standard: 150K - yellow/amber */}
-            <button
-              onClick={() => {
-                const tierCard = document.getElementById('tier-card-standard');
-                tierCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                tierCard?.classList.add('ring-4', 'ring-primary');
-                setTimeout(() => tierCard?.classList.remove('ring-4', 'ring-primary'), 2000);
-              }}
-              className={cn(
-                "flex-[2] py-4 px-3 flex flex-col items-center justify-center transition-all hover:opacity-90 cursor-pointer",
-                "bg-amber-100/80",
-                recommendedPlan === 'Standard' ? "ring-2 ring-primary ring-inset" : ""
-              )}
-            >
-              <span className="text-amber-700 font-bold text-sm">סטנדרט</span>
-              <span className="text-amber-600 font-semibold text-base mt-1">₪40 <span className="text-xs font-normal">/חודש</span></span>
-              <span className="text-amber-600/70 text-xs mt-0.5">~150K טוקנים</span>
-            </button>
-            {/* Premium: 600K - bold teal/green */}
-            <button
-              onClick={() => {
-                const tierCard = document.getElementById('tier-card-premium');
-                tierCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                tierCard?.classList.add('ring-4', 'ring-gold');
-                setTimeout(() => tierCard?.classList.remove('ring-4', 'ring-gold'), 2000);
-              }}
-              className={cn(
-                "flex-[4] py-4 px-3 flex flex-col items-center justify-center transition-all hover:opacity-90 cursor-pointer",
-                "bg-teal-600",
-                recommendedPlan === 'Premium' ? "ring-2 ring-gold ring-inset" : ""
-              )}
-            >
-              <span className="text-white font-bold text-sm">פרימיום</span>
-              <span className="text-white font-semibold text-base mt-1">₪50 <span className="text-xs font-normal">/חודש</span></span>
-              <span className="text-white/80 text-xs mt-0.5">~600K טוקנים</span>
-            </button>
+          {/* Trial: 50K - light green */}
+          <button
+            onClick={() => {
+              const tierCard = document.querySelector('[data-tier="Trial"]');
+              tierCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              tierCard?.classList.add('ring-4', 'ring-emerald-500');
+              setTimeout(() => tierCard?.classList.remove('ring-4', 'ring-emerald-500'), 2000);
+            }}
+            className={cn(
+              "flex-[1] py-4 px-3 flex flex-col items-center justify-center transition-all hover:opacity-90 cursor-pointer",
+              "bg-emerald-100/80",
+              recommendedPlan === 'Trial' ? "ring-2 ring-emerald-500 ring-inset" : ""
+            )}
+          >
+            <span className="text-teal-700 font-bold text-sm">ניסיון</span>
+            <span className="text-teal-600 font-semibold text-base mt-1">חינם <span className="text-xs font-normal">7 ימים</span></span>
+            <span className="text-teal-600/70 text-xs mt-0.5">~50K טוקנים</span>
+          </button>
+          {/* Standard: 150K - yellow/amber */}
+          <button
+            onClick={() => {
+              const tierCard = document.querySelector('[data-tier="Standard"]');
+              tierCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              tierCard?.classList.add('ring-4', 'ring-amber-500');
+              setTimeout(() => tierCard?.classList.remove('ring-4', 'ring-amber-500'), 2000);
+            }}
+            className={cn(
+              "flex-[2] py-4 px-3 flex flex-col items-center justify-center transition-all hover:opacity-90 cursor-pointer",
+              "bg-amber-100/80",
+              recommendedPlan === 'Standard' ? "ring-2 ring-amber-500 ring-inset" : ""
+            )}
+          >
+            <span className="text-amber-700 font-bold text-sm">סטנדרט</span>
+            <span className="text-amber-600 font-semibold text-base mt-1">₪40 <span className="text-xs font-normal">/חודש</span></span>
+            <span className="text-amber-600/70 text-xs mt-0.5">~150K טוקנים</span>
+          </button>
+          {/* Premium: 600K - bold teal/green */}
+          <button
+            onClick={() => {
+              const tierCard = document.querySelector('[data-tier="Premium"]');
+              tierCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              tierCard?.classList.add('ring-4', 'ring-gold');
+              setTimeout(() => tierCard?.classList.remove('ring-4', 'ring-gold'), 2000);
+            }}
+            className={cn(
+              "flex-[4] py-4 px-3 flex flex-col items-center justify-center transition-all hover:opacity-90 cursor-pointer",
+              "bg-teal-600",
+              recommendedPlan === 'Premium' ? "ring-2 ring-gold ring-inset" : ""
+            )}
+          >
+            <span className="text-white font-bold text-sm">פרימיום</span>
+            <span className="text-white font-semibold text-base mt-1">₪50 <span className="text-xs font-normal">/חודש</span></span>
+            <span className="text-white/80 text-xs mt-0.5">~600K טוקנים</span>
+          </button>
           </div>
           <div className="flex justify-between mt-2 text-xs text-muted-foreground px-1" dir="rtl">
             <span>0</span>

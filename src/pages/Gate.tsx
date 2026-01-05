@@ -597,20 +597,21 @@ export default function Gate() {
                       <div
                         id={`tier-card-${tier.name.toLowerCase()}`}
                         key={tier.name}
+                        data-tier={tier.name}
                         className={`
                           relative flex flex-col h-full
                           rounded-[16px] p-4 md:p-5 text-center
                           transition-all duration-500
                           backdrop-blur-xl border
                           ${tier.highlighted 
-                            ? 'bg-white/[0.92] border-2 border-[#d4af37] scale-[1.02] z-10 shadow-[0_10px_30px_rgba(212,175,55,0.25)]' 
-                            : 'bg-white/85 border-white/40 hover:bg-white/95 shadow-[0_8px_20px_rgba(0,0,0,0.2)]'
+                            ? 'bg-amber-50/70 border-2 border-[#d4af37] scale-[1.02] z-10 shadow-[0_10px_30px_rgba(212,175,55,0.25)]' 
+                            : 'bg-amber-50/60 border-amber-200/40 hover:bg-amber-50/80 shadow-[0_8px_20px_rgba(0,0,0,0.15)]'
                           }
                           ${isRecommended 
-                            ? 'ring-4 ring-gold/60 animate-pulse shadow-[0_0_40px_rgba(212,175,55,0.5)] scale-[1.03]' 
+                            ? 'ring-4 ring-amber-400/70 shadow-[0_0_30px_rgba(212,175,55,0.4)]' 
                             : ''
                           }
-                          hover:-translate-y-1 hover:shadow-[0_12px_25px_rgba(0,0,0,0.3)]
+                          hover:-translate-y-1 hover:shadow-[0_12px_25px_rgba(0,0,0,0.2)]
                         `}
                         style={{ fontFamily: "'Heebo', sans-serif" }}
                       >
