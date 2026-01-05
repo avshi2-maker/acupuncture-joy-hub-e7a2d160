@@ -145,13 +145,18 @@ function ScrollIndicator() {
 }
 
 // Token Calculator with scroll-triggered animation and confetti
-function TokenCalculatorSection() {
+interface TokenCalculatorSectionProps {
+  onPlanRecommended?: (planName: string) => void;
+}
+
+function TokenCalculatorSection({ onPlanRecommended }: TokenCalculatorSectionProps) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [showConfetti, setShowConfetti] = useState(false);
   
   // Scroll to tier cards and highlight the recommended plan
   const scrollToTier = (planName: string) => {
+    onPlanRecommended?.(planName);
     const tierSection = document.getElementById('tier-selection');
     if (tierSection) {
       tierSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -245,6 +250,7 @@ export default function Gate() {
   const [rememberMe, setRememberMe] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [recommendedPlan, setRecommendedPlan] = useState<string | null>(null);
   
   // Biometric authentication
   const { isAvailable: isBiometricAvailable, isEnabled: isBiometricEnabled, authenticate, enableBiometric, isAuthenticating } = useBiometricAuth();
@@ -603,17 +609,23 @@ export default function Gate() {
                     </>
                   ) : (
                     // Compact Glass Tier Cards
-                    tiers.map((tier) => (
+                    tiers.map((tier) => {
+                      const isRecommended = recommendedPlan === tier.name;
+                      return (
                       <div
                         key={tier.name}
                         className={`
                           relative flex flex-col h-full
                           rounded-[16px] p-4 md:p-5 text-center
-                          transition-all duration-300
+                          transition-all duration-500
                           backdrop-blur-xl border
                           ${tier.highlighted 
                             ? 'bg-white/[0.92] border-2 border-[#d4af37] scale-[1.02] z-10 shadow-[0_10px_30px_rgba(212,175,55,0.25)]' 
                             : 'bg-white/85 border-white/40 hover:bg-white/95 shadow-[0_8px_20px_rgba(0,0,0,0.2)]'
+                          }
+                          ${isRecommended 
+                            ? 'ring-4 ring-gold/60 animate-pulse shadow-[0_0_40px_rgba(212,175,55,0.5)] scale-[1.03]' 
+                            : ''
                           }
                           hover:-translate-y-1 hover:shadow-[0_12px_25px_rgba(0,0,0,0.3)]
                         `}
@@ -719,12 +731,12 @@ export default function Gate() {
                           נסה את המחשבון
                         </button>
                       </div>
-                    ))
+                    )})
                   )}
                 </div>
 
                 {/* Token Calculator - Scroll-Triggered Animation with Glow */}
-                <TokenCalculatorSection />
+                <TokenCalculatorSection onPlanRecommended={setRecommendedPlan} />
 
                 {hasStoredSession && isBiometricEnabled && (
                   <div className="mb-8">

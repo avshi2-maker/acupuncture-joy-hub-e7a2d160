@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Calculator, Users, Zap, CheckCircle2, ArrowUp } from 'lucide-react';
+import { Calculator, Users, Zap, CheckCircle2, ArrowUp, Info } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const TOKENS_PER_PATIENT = 1250; // Average tokens per patient treatment
 
@@ -154,9 +155,31 @@ export function TokenCalculator({ onPlanRecommended }: TokenCalculatorProps) {
               
               <div className="flex items-center justify-between py-2">
                 <span className="text-sm font-medium">טוקנים נדרשים</span>
-                <span className="text-xl font-bold text-primary">
-                  ~{(estimatedTokens / 1000).toFixed(0)}K
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-bold text-primary">
+                    ~{(estimatedTokens / 1000).toFixed(0)}K
+                  </span>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button className="text-muted-foreground hover:text-foreground transition-colors">
+                          <Info className="h-4 w-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-xs text-right">
+                        <p className="font-medium mb-1">עלות חודשית משוערת:</p>
+                        <p className="text-sm">
+                          {estimatedTokens <= 50000 
+                            ? 'חינם (תקופת ניסיון)'
+                            : estimatedTokens <= 150000 
+                              ? '₪40 + מע״מ'
+                              : '₪50 + מע״מ'
+                          }
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
               </div>
             </div>
 
