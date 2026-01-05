@@ -26,6 +26,7 @@ import gateBg from '@/assets/gate-background.png';
 import tokenSimulatorBg from '@/assets/token-simulator-bg.png';
 import { VideoShowcaseCards } from '@/components/gate/VideoShowcaseCards';
 import { TokenCalculator } from '@/components/pricing/TokenCalculator';
+import { FeatureComparisonTable } from '@/components/pricing/FeatureComparisonTable';
 
 // Dev test password for development/testing
 const DEV_TEST_PASSWORD = 'dev2025';
@@ -737,6 +738,11 @@ export default function Gate() {
 
                 {/* Token Calculator - Scroll-Triggered Animation with Glow */}
                 <TokenCalculatorSection onPlanRecommended={setRecommendedPlan} />
+
+                {/* Feature Comparison Table */}
+                <div className="mt-12 bg-white/90 backdrop-blur-xl rounded-2xl p-6 border border-white/40 shadow-xl">
+                  <FeatureComparisonTable />
+                </div>
 
                 {hasStoredSession && isBiometricEnabled && (
                   <div className="mb-8">
