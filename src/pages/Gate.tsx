@@ -775,7 +775,8 @@ export default function Gate() {
                 )}
               </div>
 
-              {/* Feature Comparison Table moved up */}
+              {/* Token Calculator - For detailed token evaluation */}
+              <TokenCalculatorSection onPlanRecommended={setRecommendedPlan} />
 
                 {/* Feature Comparison Table */}
                 <div className="mt-12 bg-white/90 backdrop-blur-xl rounded-2xl p-6 border border-white/40 shadow-xl">
