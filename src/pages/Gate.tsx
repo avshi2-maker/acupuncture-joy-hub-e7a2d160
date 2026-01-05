@@ -18,7 +18,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import newLogo from '@/assets/new-logo.png';
 import { Link } from 'react-router-dom';
 import { TierCard } from '@/components/pricing/TierCard';
-import { Confetti } from '@/components/ui/Confetti';
+
 import { BackToTopButton } from '@/components/ui/BackToTopButton';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -145,7 +145,7 @@ function ScrollIndicator() {
   );
 }
 
-// Token Calculator with scroll-triggered animation and confetti
+// Token Calculator with scroll-triggered animation
 interface TokenCalculatorSectionProps {
   onPlanRecommended?: (planName: string) => void;
 }
@@ -153,32 +153,18 @@ interface TokenCalculatorSectionProps {
 function TokenCalculatorSection({ onPlanRecommended }: TokenCalculatorSectionProps) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
-  const [showConfetti, setShowConfetti] = useState(false);
   
   // Scroll to tier cards and highlight the recommended plan
   const scrollToTier = (planName: string) => {
     onPlanRecommended?.(planName);
-    const tierSection = document.getElementById('tier-selection');
-    if (tierSection) {
-      tierSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const tierCard = document.getElementById(`tier-card-${planName.toLowerCase()}`);
+    if (tierCard) {
+      tierCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   };
   
-  // Trigger confetti when calculator comes into view
-  useEffect(() => {
-    if (isInView) {
-      const timer = setTimeout(() => {
-        setShowConfetti(true);
-        // Reset confetti after animation
-        setTimeout(() => setShowConfetti(false), 3500);
-      }, 800);
-      return () => clearTimeout(timer);
-    }
-  }, [isInView]);
-  
   return (
     <>
-      <Confetti isActive={showConfetti} duration={3500} />
       <ScrollIndicator />
       <motion.div
         id="token-calculator"
@@ -247,7 +233,7 @@ export default function Gate() {
   const [isUploading, setIsUploading] = useState(false);
   const [therapistName, setTherapistName] = useState('');
   const [therapistPhone, setTherapistPhone] = useState('');
-  const [showConfetti, setShowConfetti] = useState(false);
+  
   const [rememberMe, setRememberMe] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -423,9 +409,6 @@ export default function Gate() {
         action: 'password_login',
         details: { tier: result.tier },
       });
-
-      // Show confetti celebration
-      setShowConfetti(true);
       
       // Offer to enable biometric for next time (if available and not already enabled)
       if (isBiometricAvailable && !isBiometricEnabled) {
@@ -471,8 +454,6 @@ export default function Gate() {
         if (storedExpiry) {
           setExpiresAt(new Date(storedExpiry));
         }
-        
-        setShowConfetti(true);
         
         await supabase.from('access_logs').insert({
           action: 'biometric_login',
@@ -614,6 +595,7 @@ export default function Gate() {
                       const isRecommended = recommendedPlan === tier.name;
                       return (
                       <div
+                        id={`tier-card-${tier.name.toLowerCase()}`}
                         key={tier.name}
                         className={`
                           relative flex flex-col h-full
@@ -1098,9 +1080,6 @@ export default function Gate() {
               </Card>
             </div>
           )}
-          
-          {/* Confetti celebration */}
-          <Confetti isActive={showConfetti} duration={3000} />
 
           {/* FAQ Section */}
           <div className="mt-12 max-w-2xl mx-auto" id="faq-section">

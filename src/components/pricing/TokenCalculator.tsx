@@ -236,8 +236,10 @@ export function TokenCalculator({ onPlanRecommended }: TokenCalculatorProps) {
             {/* Trial: 50K - light green */}
             <button
               onClick={() => {
-                const tierSection = document.getElementById('tier-selection');
-                tierSection?.scrollIntoView({ behavior: 'smooth' });
+                const tierCard = document.getElementById('tier-card-trial');
+                tierCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                tierCard?.classList.add('ring-4', 'ring-primary');
+                setTimeout(() => tierCard?.classList.remove('ring-4', 'ring-primary'), 2000);
               }}
               className={cn(
                 "flex-[1] py-4 px-3 flex flex-col items-center justify-center transition-all hover:opacity-90 cursor-pointer",
@@ -252,8 +254,10 @@ export function TokenCalculator({ onPlanRecommended }: TokenCalculatorProps) {
             {/* Standard: 150K - yellow/amber */}
             <button
               onClick={() => {
-                const tierSection = document.getElementById('tier-selection');
-                tierSection?.scrollIntoView({ behavior: 'smooth' });
+                const tierCard = document.getElementById('tier-card-standard');
+                tierCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                tierCard?.classList.add('ring-4', 'ring-primary');
+                setTimeout(() => tierCard?.classList.remove('ring-4', 'ring-primary'), 2000);
               }}
               className={cn(
                 "flex-[2] py-4 px-3 flex flex-col items-center justify-center transition-all hover:opacity-90 cursor-pointer",
@@ -268,8 +272,10 @@ export function TokenCalculator({ onPlanRecommended }: TokenCalculatorProps) {
             {/* Premium: 600K - bold teal/green */}
             <button
               onClick={() => {
-                const tierSection = document.getElementById('tier-selection');
-                tierSection?.scrollIntoView({ behavior: 'smooth' });
+                const tierCard = document.getElementById('tier-card-premium');
+                tierCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                tierCard?.classList.add('ring-4', 'ring-gold');
+                setTimeout(() => tierCard?.classList.remove('ring-4', 'ring-gold'), 2000);
               }}
               className={cn(
                 "flex-[4] py-4 px-3 flex flex-col items-center justify-center transition-all hover:opacity-90 cursor-pointer",
