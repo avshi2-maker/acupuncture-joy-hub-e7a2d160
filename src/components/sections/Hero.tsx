@@ -1,4 +1,4 @@
-import { Sparkles, BookOpen, Play } from "lucide-react";
+import { Sparkles, Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import heroBg from "@/assets/hero-meridian-bg.png";
@@ -75,18 +75,6 @@ const Hero = () => {
               Our certified practitioners combine 5,000 years of wisdom with 
               personalized care to help you achieve optimal health and vitality.
             </p>
-
-            {/* Encyclopedia Button */}
-            <div className="animate-fade-in-up delay-300">
-              <Button 
-                size="lg"
-                onClick={() => navigate('/encyclopedia')}
-                className="bg-gradient-to-r from-gold to-gold-dark hover:opacity-90 text-primary-foreground text-lg px-8 py-6 shadow-lg shadow-gold/30"
-              >
-                <BookOpen className="mr-2 h-5 w-5" />
-                CM Digital Encyclopedia
-              </Button>
-            </div>
 
           </div>
         </div>
