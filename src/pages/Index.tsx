@@ -213,16 +213,6 @@ const Index = () => {
           {/* Overlay for better text readability */}
           <div className="absolute inset-0 bg-jade/40" />
 
-        {/* Top left - Home button */}
-        <div className="absolute top-4 left-4 md:top-6 md:left-6 z-20">
-          <Link 
-            to="/"
-            className="flex items-center justify-center w-10 h-10 bg-cream/10 hover:bg-cream/20 backdrop-blur-sm rounded-full transition-all border border-cream/30"
-            aria-label="Home"
-          >
-            <Home className="h-5 w-5 text-cream" />
-          </Link>
-        </div>
 
         {/* Top right navigation */}
         <nav className="absolute top-4 right-4 md:top-6 md:right-6 z-20 flex items-center gap-3">
