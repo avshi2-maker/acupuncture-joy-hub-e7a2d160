@@ -175,7 +175,7 @@ function TokenCalculatorSection({ onPlanRecommended }: TokenCalculatorSectionPro
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
         <motion.div
-          className="relative rounded-2xl p-6 border border-gold/30 overflow-hidden"
+          className="relative rounded-2xl p-6 border border-gold/30 overflow-visible"
           initial={{ boxShadow: "0 10px 40px rgba(212,175,55,0.1)" }}
           animate={isInView ? {
             boxShadow: [
@@ -196,11 +196,11 @@ function TokenCalculatorSection({ onPlanRecommended }: TokenCalculatorSectionPro
         >
           {/* Background Image */}
           <div 
-            className="absolute inset-0 bg-cover bg-center opacity-15"
+            className="absolute inset-0 rounded-2xl bg-cover bg-center opacity-15"
             style={{ backgroundImage: `url(${tokenSimulatorBg})` }}
           />
           {/* Overlay for readability */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/95 via-white/90 to-white/85 backdrop-blur-sm" />
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/95 via-white/90 to-white/85 backdrop-blur-sm" />
           
           {/* Animated glow border effect */}
           <motion.div
@@ -598,41 +598,40 @@ export default function Gate() {
                         id={`tier-card-${tier.name.toLowerCase()}`}
                         key={tier.name}
                         data-tier={tier.name}
-                        className={`
-                          relative flex flex-col h-full
-                          rounded-[16px] px-4 pb-4 pt-10 md:px-5 md:pb-5 md:pt-11 text-center
-                          transition-all duration-500
-                          backdrop-blur-xl border
-                          ${tier.highlighted 
-                            ? 'bg-amber-50/70 border-2 border-[#d4af37] scale-[1.02] z-10 shadow-[0_10px_30px_rgba(212,175,55,0.25)]' 
-                            : 'bg-amber-50/60 border-amber-200/40 hover:bg-amber-50/80 shadow-[0_8px_20px_rgba(0,0,0,0.15)]'
-                          }
-                          ${isRecommended 
-                            ? 'ring-4 ring-amber-400/70 shadow-[0_0_30px_rgba(212,175,55,0.4)]' 
-                            : ''
-                          }
-                          hover:-translate-y-1 hover:shadow-[0_12px_25px_rgba(0,0,0,0.2)]
-                        `}
-                        style={{ fontFamily: "'Heebo', sans-serif" }}
+                        className="relative"
                       >
-                        {/* Badge for highlighted */}
+                        {/* Badge for highlighted (kept outside blur layer to prevent clipping) */}
                         {tier.highlighted && (
-                          <div 
-                            className="absolute top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-white text-sm font-bold"
-                            style={{ 
-                              background: '#d4af37',
-                              boxShadow: '0 4px 10px rgba(212, 175, 55, 0.4)'
-                            }}
-                          >
-                            הכי פופולרי
+                          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20">
+                            <span className="bg-gold text-primary-foreground px-4 py-1 rounded-full text-sm font-bold shadow-gold">
+                              הכי פופולרי
+                            </span>
                           </div>
                         )}
 
-                        {/* Plan Name */}
-                        <h3 className="text-lg font-bold mb-0.5" style={{ color: '#2c6e49' }}>
-                          {tier.nameHe}
-                        </h3>
-                        <p className="text-xs text-gray-500 mb-2">{tier.name}</p>
+                        <div
+                          className={`
+                            relative flex flex-col h-full
+                            rounded-[16px] px-4 pb-4 ${tier.highlighted ? 'pt-12 md:pt-14' : 'pt-10 md:pt-11'} md:px-5 md:pb-5 text-center
+                            transition-all duration-500
+                            backdrop-blur-xl border
+                            ${tier.highlighted 
+                              ? 'bg-amber-50/70 border-2 border-[#d4af37] scale-[1.02] z-10 shadow-[0_10px_30px_rgba(212,175,55,0.25)]' 
+                              : 'bg-amber-50/60 border-amber-200/40 hover:bg-amber-50/80 shadow-[0_8px_20px_rgba(0,0,0,0.15)]'
+                            }
+                            ${isRecommended 
+                              ? 'ring-4 ring-amber-400/70 shadow-[0_0_30px_rgba(212,175,55,0.4)]' 
+                              : ''
+                            }
+                            hover:-translate-y-1 hover:shadow-[0_12px_25px_rgba(0,0,0,0.2)]
+                          `}
+                          style={{ fontFamily: "'Heebo', sans-serif" }}
+                        >
+                          {/* Plan Name */}
+                          <h3 className="text-lg font-bold mb-0.5" style={{ color: '#2c6e49' }}>
+                            {tier.nameHe}
+                          </h3>
+                          <p className="text-xs text-gray-500 mb-2">{tier.name}</p>
 
                         {/* Price */}
                         <div className="mb-1">
@@ -715,12 +714,14 @@ export default function Gate() {
                           נסה את המחשבון
                         </button>
                       </div>
-                    )})
-                  )}
-                </div>
+                    </div>
+                  );
+                })
+                )}
+              </div>
 
-                {/* Token Calculator - Scroll-Triggered Animation with Glow */}
-                <TokenCalculatorSection onPlanRecommended={setRecommendedPlan} />
+              {/* Token Calculator - Scroll-Triggered Animation with Glow */}
+              <TokenCalculatorSection onPlanRecommended={setRecommendedPlan} />
 
                 {/* Feature Comparison Table */}
                 <div className="mt-12 bg-white/90 backdrop-blur-xl rounded-2xl p-6 border border-white/40 shadow-xl">
