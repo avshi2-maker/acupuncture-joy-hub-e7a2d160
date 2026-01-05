@@ -58,13 +58,7 @@ export function ClinicEfficiencyCalculator({ onTierRecommended }: ClinicEfficien
     onTierRecommended?.(recommendation.tierName);
   }, [recommendation.tierName, onTierRecommended]);
   
-  // Scroll to tier cards
-  const scrollToTiers = () => {
-    const tierSection = document.getElementById('tier-selection');
-    const mobileTierSection = document.querySelector('[data-tier]');
-    const target = tierSection || mobileTierSection?.parentElement;
-    target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  };
+  // Scroll removed per user request
 
   return (
     <motion.div
@@ -191,20 +185,7 @@ export function ClinicEfficiencyCalculator({ onTierRecommended }: ClinicEfficien
         </div>
       </div>
       
-      {/* Scroll Down Indicator */}
-      <motion.div 
-        className="flex flex-col items-center mt-6"
-        animate={{ y: [0, 8, 0] }}
-        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <button
-          onClick={scrollToTiers}
-          className="flex flex-col items-center gap-1 text-white/80 hover:text-white transition-colors"
-        >
-          <span className="text-sm">בחרו את החבילה שלכם</span>
-          <ChevronDown className="h-6 w-6" />
-        </button>
-      </motion.div>
+      {/* Scroll indicator removed per user request */}
     </motion.div>
   );
 }

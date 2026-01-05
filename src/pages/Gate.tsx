@@ -582,10 +582,7 @@ export default function Gate() {
                     recommendedPlan={recommendedPlan}
                     onSelectTier={handleSelectTier}
                     onCalculatorClick={() => {
-                      document.getElementById('token-calculator')?.scrollIntoView({ 
-                        behavior: 'smooth',
-                        block: 'center'
-                      });
+                      // Scroll removed per user request
                     }}
                   />
                 </div>
@@ -719,10 +716,7 @@ export default function Gate() {
                         {/* Try Calculator Button - Enhanced touch target */}
                         <button
                           onClick={() => {
-                            document.getElementById('token-calculator')?.scrollIntoView({ 
-                              behavior: 'smooth',
-                              block: 'center'
-                            });
+                            // Scroll removed per user request
                           }}
                           className="w-full mt-3 md:mt-2 py-2.5 md:py-1.5 text-sm md:text-xs text-gray-500 hover:text-jade transition-colors flex items-center justify-center gap-1.5 group min-h-[44px] md:min-h-0 touch-manipulation"
                         >
