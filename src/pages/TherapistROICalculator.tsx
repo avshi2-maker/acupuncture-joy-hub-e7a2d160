@@ -60,8 +60,8 @@ export default function TherapistROICalculator() {
         <meta name="description" content="חשב את פוטנציאל ההכנסה שלך כמטפל עם כלי ה-AI המתקדמים שלנו" />
       </Helmet>
 
-      <div 
-        className="min-h-screen bg-cover bg-center bg-fixed" 
+      <div
+        className="min-h-screen bg-cover bg-center"
         dir="rtl"
         style={{ backgroundImage: `linear-gradient(rgba(255,255,255,0.88), rgba(255,255,255,0.92)), url(${roiBgImage})` }}
       >

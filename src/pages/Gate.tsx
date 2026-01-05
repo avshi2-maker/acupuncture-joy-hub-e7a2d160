@@ -524,23 +524,22 @@ export default function Gate() {
         <meta name="description" content="בחרו תוכנית והזינו סיסמת גישה" />
       </Helmet>
 
-      <div className="min-h-screen relative overflow-x-hidden overflow-y-visible" dir="rtl">
-        {/* Beautiful bamboo background */}
-        <div 
-          className="fixed inset-0 -z-20"
+      <div className="min-h-screen relative overflow-x-hidden" dir="rtl">
+        {/* Beautiful bamboo background (pointer-events disabled to avoid click/scroll bugs on mobile) */}
+        <div
+          className="fixed inset-0 -z-20 pointer-events-none"
           style={{
             backgroundImage: `url(${gateBg})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            backgroundAttachment: 'fixed',
           }}
         />
-        
+
         {/* Dark overlay for text readability */}
-        <div className="fixed inset-0 -z-10 bg-black/20" />
-        
+        <div className="fixed inset-0 -z-10 bg-black/20 pointer-events-none" />
+
         {/* Vignette effect */}
-        <div 
+        <div
           className="fixed inset-0 -z-10 pointer-events-none"
           style={{
             background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.3) 100%)',
