@@ -10,6 +10,7 @@ interface TierCardProps {
   price: string;
   originalPrice?: string;
   priceRange?: string;
+  vatNotice?: string;
   queriesLimit?: string;
   tokensInfo?: string;
   tokensTooltip?: string;
@@ -30,6 +31,7 @@ export function TierCard({
   price, 
   originalPrice,
   priceRange,
+  vatNotice,
   queriesLimit,
   tokensInfo,
   tokensTooltip,
@@ -76,6 +78,11 @@ export function TierCard({
             <span className="text-4xl font-bold text-foreground">{price}</span>
             {priceRange && <span className="text-muted-foreground">{priceRange}</span>}
           </div>
+          {vatNotice && (
+            <div className="text-xs font-medium text-amber-600 mt-1">
+              {vatNotice}
+            </div>
+          )}
           {savings && (
             <div className="text-sm font-medium text-emerald-500 mt-1">
               {savings}
