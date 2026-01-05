@@ -1260,15 +1260,15 @@ export default function Gate() {
           </div>
         </div>
 
-        {/* Floating Help Button */}
+        {/* Floating WhatsApp Button */}
         <a
-          href="https://wa.me/972505231042?text=שלום, אני צריך עזרה עם מערכת TCM Clinic"
+          href="https://wa.me/972505231042?text=שלום, יש לי שאלה לגבי מערכת TCM Clinic"
           target="_blank"
           rel="noopener noreferrer"
-          className="fixed bottom-6 left-6 z-50 flex items-center gap-2 px-4 py-3 rounded-full bg-jade text-white shadow-lg hover:bg-jade-dark hover:scale-105 transition-all duration-200"
+          className="fixed bottom-6 left-6 z-50 flex items-center gap-2 px-4 py-3 rounded-full bg-[#25D366] text-white shadow-lg hover:bg-[#1da851] hover:scale-105 transition-all duration-200"
         >
-          <HelpCircle className="h-5 w-5" />
-          <span className="text-sm font-medium">צריכים עזרה?</span>
+          <MessageCircle className="h-5 w-5" />
+          <span className="text-sm font-medium">שלחו הודעה</span>
         </a>
         
         {/* Back to Top Button */}
