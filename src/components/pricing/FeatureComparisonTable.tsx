@@ -1,4 +1,4 @@
-import { Check, X, Minus } from 'lucide-react';
+import { Check, X, Minus, Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const FEATURE_CATEGORIES = [
@@ -61,6 +61,7 @@ const TIERS = [
     headerClass: 'bg-gold/10 border-gold/30',
     textClass: 'text-gold',
     highlighted: true,
+    badge: 'הכי משתלם',
   },
   { 
     name: 'Premium', 
@@ -97,7 +98,7 @@ function FeatureIcon({ included }: { included: boolean | 'partial' }) {
 
 export function FeatureComparisonTable() {
   return (
-    <section className="mt-16 space-y-6">
+    <section className="mt-8 space-y-6">
       <div className="text-center">
         <h2 className="font-display text-2xl md:text-3xl mb-3">השוואת תוכניות מלאה</h2>
         <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -105,7 +106,63 @@ export function FeatureComparisonTable() {
         </p>
       </div>
 
-      <div className="overflow-x-auto">
+      {/* Mobile: Card-based layout */}
+      <div className="md:hidden space-y-4">
+        {TIERS.map((tier) => (
+          <div 
+            key={tier.name}
+            className={cn(
+              "rounded-xl border p-4",
+              tier.headerClass,
+              tier.highlighted && "ring-2 ring-gold"
+            )}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <div className={cn("font-display text-lg font-bold", tier.textClass)}>
+                  {tier.nameHe}
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-xl font-bold">{tier.price}</span>
+                  <span className="text-xs text-muted-foreground">{tier.period}</span>
+                </div>
+              </div>
+              {tier.badge && (
+                <div className="flex items-center gap-1 bg-gold text-white text-xs font-bold px-2 py-1 rounded-full">
+                  <Crown className="h-3 w-3" />
+                  {tier.badge}
+                </div>
+              )}
+            </div>
+            <div className="text-xs text-muted-foreground mb-3">~{tier.tokens} טוקנים</div>
+            
+            {FEATURE_CATEGORIES.map((category, catIdx) => (
+              <div key={catIdx} className="mb-3">
+                <div className="text-xs font-semibold text-muted-foreground mb-1.5 border-b border-border/30 pb-1">
+                  {category.category}
+                </div>
+                <div className="space-y-1">
+                  {category.features.map((feature, featIdx) => {
+                    const included = tier.name === 'Trial' ? feature.trial : 
+                                    tier.name === 'Standard' ? feature.standard : feature.premium;
+                    return (
+                      <div key={featIdx} className="flex items-center gap-2 text-sm">
+                        <FeatureIcon included={included} />
+                        <span className={cn(!included && "text-muted-foreground/60")}>
+                          {feature.name}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: Table layout */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full border-collapse min-w-[600px]">
           {/* Header */}
           <thead>
@@ -117,11 +174,17 @@ export function FeatureComparisonTable() {
                 <th 
                   key={tier.name}
                   className={cn(
-                    "p-4 text-center border rounded-t-xl min-w-[140px]",
+                    "p-4 text-center border rounded-t-xl min-w-[140px] relative",
                     tier.headerClass,
                     tier.highlighted && "ring-2 ring-gold ring-offset-2 ring-offset-background"
                   )}
                 >
+                  {tier.badge && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-gold text-white text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
+                      <Crown className="h-3 w-3" />
+                      {tier.badge}
+                    </div>
+                  )}
                   <div className={cn("font-display text-lg", tier.textClass)}>
                     {tier.nameHe}
                   </div>
