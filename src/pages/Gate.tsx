@@ -21,6 +21,7 @@ import { Confetti } from '@/components/ui/Confetti';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Checkbox } from '@/components/ui/checkbox';
 import gateBg from '@/assets/gate-background.png';
+import { CinematicVideoBackground } from '@/components/gate/CinematicVideoBackground';
 
 // Dev test password for development/testing
 const DEV_TEST_PASSWORD = 'dev2025';
@@ -446,139 +447,142 @@ export default function Gate() {
               </div>
             </div>
 
-            {/* Step 1: Tier Selection - Stunning Glass Design */}
+            {/* Step 1: Tier Selection - Cinematic Video Background */}
             {currentStep === 'tiers' && (
               <>
-                {/* Header with text shadow for dark backgrounds */}
-                <div className="text-center mb-4 text-white" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
-                  <h1 className="font-display text-2xl md:text-3xl font-bold mb-1">
-                    ברוכים הבאים לקליניקה
-                  </h1>
-                  <p className="text-base opacity-90">
-                    בחרו את הנתיב המתאים ביותר לביקור שלכם היום
-                  </p>
-                </div>
+                {/* Cinematic Video Section with Tier Cards */}
+                <CinematicVideoBackground>
+                  {/* Header with text shadow for dark backgrounds */}
+                  <div className="text-center mb-6 text-white" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
+                    <h1 className="font-display text-2xl md:text-3xl font-bold mb-1">
+                      ברוכים הבאים לקליניקה
+                    </h1>
+                    <p className="text-base opacity-90">
+                      בחרו את הנתיב המתאים ביותר לביקור שלכם היום
+                    </p>
+                  </div>
 
-                {/* Glass Cards Grid */}
-                <div className="grid md:grid-cols-3 gap-3 lg:gap-4 mb-4 items-center">
-                  {isPageLoading ? (
-                    // Skeleton loading state
-                    <>
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="rounded-2xl bg-white/80 backdrop-blur-xl p-6 space-y-4 animate-pulse">
-                          <div className="space-y-2">
-                            <Skeleton className="h-6 w-24 mx-auto" />
-                            <Skeleton className="h-10 w-20 mx-auto" />
-                            <Skeleton className="h-4 w-40 mx-auto" />
+                  {/* Glass Cards Grid */}
+                  <div className="grid md:grid-cols-3 gap-3 lg:gap-4 mb-4 items-center">
+                    {isPageLoading ? (
+                      // Skeleton loading state
+                      <>
+                        {[1, 2, 3].map((i) => (
+                          <div key={i} className="rounded-2xl bg-white/80 backdrop-blur-xl p-6 space-y-4 animate-pulse">
+                            <div className="space-y-2">
+                              <Skeleton className="h-6 w-24 mx-auto" />
+                              <Skeleton className="h-10 w-20 mx-auto" />
+                              <Skeleton className="h-4 w-40 mx-auto" />
+                            </div>
+                            <div className="space-y-2 pt-4">
+                              {[1, 2, 3, 4, 5, 6, 7].map((j) => (
+                                <div key={j} className="flex items-center gap-2">
+                                  <Skeleton className="h-4 w-4 rounded-full" />
+                                  <Skeleton className="h-4 flex-1" />
+                                </div>
+                              ))}
+                            </div>
+                            <Skeleton className="h-10 w-full mt-4" />
                           </div>
-                          <div className="space-y-2 pt-4">
-                            {[1, 2, 3, 4, 5, 6, 7].map((j) => (
-                              <div key={j} className="flex items-center gap-2">
-                                <Skeleton className="h-4 w-4 rounded-full" />
-                                <Skeleton className="h-4 flex-1" />
-                              </div>
-                            ))}
-                          </div>
-                          <Skeleton className="h-10 w-full mt-4" />
-                        </div>
-                      ))}
-                    </>
-                  ) : (
-                    // Compact Glass Tier Cards
-                    tiers.map((tier) => (
-                      <div
-                        key={tier.name}
-                        className={`
-                          relative flex flex-col h-full
-                          rounded-[16px] p-4 md:p-5 text-center
-                          transition-all duration-300
-                          backdrop-blur-xl border
-                          ${tier.highlighted 
-                            ? 'bg-white/[0.92] border-2 border-[#d4af37] scale-[1.02] z-10 shadow-[0_10px_30px_rgba(212,175,55,0.25)]' 
-                            : 'bg-white/85 border-white/40 hover:bg-white/95 shadow-[0_8px_20px_rgba(0,0,0,0.2)]'
-                          }
-                          hover:-translate-y-1 hover:shadow-[0_12px_25px_rgba(0,0,0,0.3)]
-                        `}
-                        style={{ fontFamily: "'Heebo', sans-serif" }}
-                      >
-                        {/* Badge for highlighted */}
-                        {tier.highlighted && (
-                          <div 
-                            className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-white text-sm font-bold"
-                            style={{ 
-                              background: '#d4af37',
-                              boxShadow: '0 4px 10px rgba(212, 175, 55, 0.4)'
-                            }}
-                          >
-                            הכי פופולרי
-                          </div>
-                        )}
-
-                        {/* Plan Name */}
-                        <h3 className="text-lg font-bold mb-0.5" style={{ color: '#2c6e49' }}>
-                          {tier.nameHe}
-                        </h3>
-                        <p className="text-xs text-gray-500 mb-2">{tier.name}</p>
-
-                        {/* Price */}
-                        <div className="mb-1">
-                          <span className="text-2xl md:text-3xl font-extrabold" style={{ color: '#1a202c' }}>
-                            {tier.price}
-                          </span>
-                          {tier.period && (
-                            <span className="text-sm text-gray-600 mr-1">{tier.period}</span>
-                          )}
-                        </div>
-                        {tier.periodSub && (
-                          <p className="text-xs text-gray-500 mb-2">{tier.periodSub}</p>
-                        )}
-
-                        {/* Limits */}
-                        <div className="flex items-center justify-center gap-2 mb-3">
-                          <span className="text-xs font-semibold bg-jade/10 text-jade-dark rounded-full px-3 py-1">
-                            {tier.queriesLimit}
-                          </span>
-                          <span className="text-xs font-semibold bg-gold/10 text-gold-dark rounded-full px-3 py-1">
-                            {tier.tokensInfo}
-                          </span>
-                        </div>
-
-                        {/* Features List */}
-                        <ul className="space-y-1.5 mb-4 flex-1 text-right">
-                          {tier.features.map((feature, idx) => (
-                            <li 
-                              key={idx} 
-                              className={`flex items-center text-sm ${feature.included ? 'text-gray-700' : 'text-gray-400 line-through'}`}
-                            >
-                              <span 
-                                className={`ml-2.5 font-bold w-5 text-center ${feature.included ? 'text-[#2c6e49]' : 'text-gray-300'}`}
-                              >
-                                {feature.included ? '✓' : '✕'}
-                              </span>
-                              {feature.name}
-                            </li>
-                          ))}
-                        </ul>
-
-                        {/* CTA Button */}
-                        <button
-                          onClick={() => handleSelectTier(tier.name)}
+                        ))}
+                      </>
+                    ) : (
+                      // Compact Glass Tier Cards
+                      tiers.map((tier) => (
+                        <div
+                          key={tier.name}
                           className={`
-                            w-full py-2.5 rounded-lg font-bold text-sm
+                            relative flex flex-col h-full
+                            rounded-[16px] p-4 md:p-5 text-center
                             transition-all duration-300
+                            backdrop-blur-xl border
                             ${tier.highlighted 
-                              ? 'text-white shadow-[0_4px_15px_rgba(184,150,40,0.3)] hover:brightness-110' 
-                              : 'bg-transparent border-2 border-[#2c6e49] text-[#2c6e49] hover:bg-[#2c6e49] hover:text-white'
+                              ? 'bg-white/[0.92] border-2 border-[#d4af37] scale-[1.02] z-10 shadow-[0_10px_30px_rgba(212,175,55,0.25)]' 
+                              : 'bg-white/85 border-white/40 hover:bg-white/95 shadow-[0_8px_20px_rgba(0,0,0,0.2)]'
                             }
+                            hover:-translate-y-1 hover:shadow-[0_12px_25px_rgba(0,0,0,0.3)]
                           `}
-                          style={tier.highlighted ? { background: 'linear-gradient(135deg, #d4af37, #b89628)' } : {}}
+                          style={{ fontFamily: "'Heebo', sans-serif" }}
                         >
-                          {tier.name === 'Trial' ? 'התחל ניסיון' : 'בחר חבילה'}
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
+                          {/* Badge for highlighted */}
+                          {tier.highlighted && (
+                            <div 
+                              className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-white text-sm font-bold"
+                              style={{ 
+                                background: '#d4af37',
+                                boxShadow: '0 4px 10px rgba(212, 175, 55, 0.4)'
+                              }}
+                            >
+                              הכי פופולרי
+                            </div>
+                          )}
+
+                          {/* Plan Name */}
+                          <h3 className="text-lg font-bold mb-0.5" style={{ color: '#2c6e49' }}>
+                            {tier.nameHe}
+                          </h3>
+                          <p className="text-xs text-gray-500 mb-2">{tier.name}</p>
+
+                          {/* Price */}
+                          <div className="mb-1">
+                            <span className="text-2xl md:text-3xl font-extrabold" style={{ color: '#1a202c' }}>
+                              {tier.price}
+                            </span>
+                            {tier.period && (
+                              <span className="text-sm text-gray-600 mr-1">{tier.period}</span>
+                            )}
+                          </div>
+                          {tier.periodSub && (
+                            <p className="text-xs text-gray-500 mb-2">{tier.periodSub}</p>
+                          )}
+
+                          {/* Limits */}
+                          <div className="flex items-center justify-center gap-2 mb-3">
+                            <span className="text-xs font-semibold bg-jade/10 text-jade-dark rounded-full px-3 py-1">
+                              {tier.queriesLimit}
+                            </span>
+                            <span className="text-xs font-semibold bg-gold/10 text-gold-dark rounded-full px-3 py-1">
+                              {tier.tokensInfo}
+                            </span>
+                          </div>
+
+                          {/* Features List */}
+                          <ul className="space-y-1.5 mb-4 flex-1 text-right">
+                            {tier.features.map((feature, idx) => (
+                              <li 
+                                key={idx} 
+                                className={`flex items-center text-sm ${feature.included ? 'text-gray-700' : 'text-gray-400 line-through'}`}
+                              >
+                                <span 
+                                  className={`ml-2.5 font-bold w-5 text-center ${feature.included ? 'text-[#2c6e49]' : 'text-gray-300'}`}
+                                >
+                                  {feature.included ? '✓' : '✕'}
+                                </span>
+                                {feature.name}
+                              </li>
+                            ))}
+                          </ul>
+
+                          {/* CTA Button */}
+                          <button
+                            onClick={() => handleSelectTier(tier.name)}
+                            className={`
+                              w-full py-2.5 rounded-lg font-bold text-sm
+                              transition-all duration-300
+                              ${tier.highlighted 
+                                ? 'text-white shadow-[0_4px_15px_rgba(184,150,40,0.3)] hover:brightness-110' 
+                                : 'bg-transparent border-2 border-[#2c6e49] text-[#2c6e49] hover:bg-[#2c6e49] hover:text-white'
+                              }
+                            `}
+                            style={tier.highlighted ? { background: 'linear-gradient(135deg, #d4af37, #b89628)' } : {}}
+                          >
+                            {tier.name === 'Trial' ? 'התחל ניסיון' : 'בחר חבילה'}
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </CinematicVideoBackground>
 
                 {/* Quick Login for Returning Therapists */}
                 {hasStoredSession && isBiometricEnabled && (
