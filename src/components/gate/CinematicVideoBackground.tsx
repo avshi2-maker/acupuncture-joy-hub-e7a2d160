@@ -4,13 +4,13 @@ import { useLanguage } from '@/contexts/LanguageContext';
 const videos = [
   {
     src: '/videos/gate-ancient-roots.mp4',
-    title: { en: 'Ancient Roots.', he: 'שורשים עתיקים.', ru: 'Древние корни.' },
-    subtitle: { en: 'Modern Precision.', he: 'דיוק מודרני.', ru: 'Современная точность.' },
+    title: { en: 'Ancient Roots.', he: 'שורשים עתיקים.' },
+    subtitle: { en: 'Modern Precision.', he: 'דיוק מודרני.' },
   },
   {
     src: '/videos/gate-unlock-potential.mp4',
-    title: { en: 'Unlock Your', he: 'שחרר את', ru: 'Раскройте' },
-    subtitle: { en: "Body's Potential.", he: 'הפוטנציאל של גופך.', ru: 'потенциал тела.' },
+    title: { en: 'Unlock Your', he: 'שחרר את' },
+    subtitle: { en: "Body's Potential.", he: 'הפוטנציאל של גופך.' },
   },
 ];
 
