@@ -7,7 +7,8 @@ import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Calculator, TrendingUp, Calendar, CalendarDays } from "lucide-react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { ArrowLeft, Calculator, TrendingUp, Calendar, CalendarDays, ZoomIn } from "lucide-react";
 import roiBgImage from "@/assets/roi-therapist-bg.png";
 import infographicRoi from "@/assets/infographic_roi.png";
 
@@ -89,13 +90,29 @@ export default function TherapistROICalculator() {
           </div>
 
           {/* Infographic */}
-          <div className="mb-6">
-            <img 
-              src={infographicRoi} 
-              alt="Income streams and resources infographic" 
-              className="w-full rounded-xl opacity-75"
-            />
-          </div>
+          <Dialog>
+            <DialogTrigger asChild>
+              <div className="mb-6 relative cursor-pointer group">
+                <img 
+                  src={infographicRoi} 
+                  alt="Income streams and resources infographic" 
+                  className="w-full rounded-xl opacity-75 transition-opacity group-hover:opacity-90"
+                />
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="bg-background/80 backdrop-blur-sm rounded-full p-3">
+                    <ZoomIn className="h-6 w-6 text-primary" />
+                  </div>
+                </div>
+              </div>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl p-2">
+              <img 
+                src={infographicRoi} 
+                alt="Income streams and resources infographic" 
+                className="w-full rounded-lg"
+              />
+            </DialogContent>
+          </Dialog>
 
           <Card className="border-t-4 border-t-primary shadow-xl bg-card/95 backdrop-blur">
             <CardContent className="p-6 space-y-8">
