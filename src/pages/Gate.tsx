@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { motion, useInView } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { z } from 'zod';
@@ -116,6 +117,58 @@ const isIntakeCompleted = (): boolean => {
     return false;
   }
 };
+
+// Token Calculator with scroll-triggered animation
+function TokenCalculatorSection() {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  
+  return (
+    <motion.div
+      ref={ref}
+      className="mt-8"
+      initial={{ opacity: 0, y: 50 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+    >
+      <motion.div
+        className="relative bg-white/90 backdrop-blur-xl rounded-2xl p-6 border border-gold/30 overflow-hidden"
+        initial={{ boxShadow: "0 10px 40px rgba(212,175,55,0.1)" }}
+        animate={isInView ? {
+          boxShadow: [
+            "0 10px 40px rgba(212,175,55,0.1)",
+            "0 15px 60px rgba(212,175,55,0.35)",
+            "0 12px 45px rgba(212,175,55,0.2)",
+          ],
+        } : {}}
+        transition={{
+          duration: 2,
+          times: [0, 0.5, 1],
+          ease: "easeInOut",
+        }}
+        whileHover={{ 
+          boxShadow: "0 20px 60px rgba(212,175,55,0.3)",
+          scale: 1.01,
+        }}
+      >
+        {/* Animated glow border effect */}
+        <motion.div
+          className="absolute inset-0 rounded-2xl pointer-events-none"
+          initial={{ opacity: 0 }}
+          animate={isInView ? { opacity: [0, 1, 0.6] } : { opacity: 0 }}
+          transition={{ duration: 2, times: [0, 0.5, 1] }}
+          style={{
+            background: "linear-gradient(90deg, transparent, rgba(212,175,55,0.3), transparent)",
+            filter: "blur(20px)",
+          }}
+        />
+        <div className="relative z-10">
+          <TokenCalculator />
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
 
 export default function Gate() {
   const navigate = useNavigate();
@@ -585,12 +638,8 @@ export default function Gate() {
                   )}
                 </div>
 
-                {/* Token Calculator - Animated Feature */}
-                <div className="mt-8 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-                  <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 border border-gold/30 shadow-[0_10px_40px_rgba(212,175,55,0.15)] hover:shadow-[0_15px_50px_rgba(212,175,55,0.25)] transition-all duration-500">
-                    <TokenCalculator />
-                  </div>
-                </div>
+                {/* Token Calculator - Scroll-Triggered Animation with Glow */}
+                <TokenCalculatorSection />
 
                 {hasStoredSession && isBiometricEnabled && (
                   <div className="mb-8">
