@@ -32,6 +32,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { validateIsraeliId, looksLikeIsraeliId } from '@/utils/israeliIdValidation';
 import { CrossPlatformBackButton } from '@/components/ui/CrossPlatformBackButton';
+import { RegistrationProgressSteps } from '@/components/registration/RegistrationProgressSteps';
 import therapistIntakeBg from '@/assets/therapist-intake-bg.jpg';
 
 // Form schema
@@ -87,6 +88,7 @@ export default function TherapistIntake() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isFromGate = searchParams.get('from') === 'gate';
+  const isFromRegister = searchParams.get('from') === 'register';
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [idCheckStatus, setIdCheckStatus] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle');
@@ -361,8 +363,11 @@ export default function TherapistIntake() {
 
       toast.success('טופס הקליטה הושלם בהצלחה!');
       
-      // Check if coming from Gate registration flow
-      if (isFromGate) {
+      // Check navigation context
+      if (isFromRegister) {
+        // From new registration flow - go to tier selection (Gate page)
+        navigate('/gate');
+      } else if (isFromGate) {
         const selectedTier = sessionStorage.getItem('selected_tier_for_intake');
         if (selectedTier === 'trial') {
           // Trial users go directly to password step
@@ -465,6 +470,11 @@ export default function TherapistIntake() {
             )}
           </div>
         </div>
+
+        {/* Registration Flow Progress - shown when coming from registration */}
+        {isFromRegister && (
+          <RegistrationProgressSteps currentStep={2} className="mb-6" />
+        )}
 
         {/* Registration Flow Progress - shown when coming from Gate */}
         {isFromGate && (
