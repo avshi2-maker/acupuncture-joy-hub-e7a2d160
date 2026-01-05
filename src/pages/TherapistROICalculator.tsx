@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Calculator, TrendingUp, Calendar, CalendarDays } from "lucide-react";
 import roiBgImage from "@/assets/roi-therapist-bg.png";
+import infographicRoi from "@/assets/infographic_roi.png";
 
 const TIERS = [
   { id: "standard", name: "מסלול סטנדרט", value: 40, label: "Standard", color: "hsl(var(--primary))", vatNotice: "+18% מע״מ" },
@@ -78,13 +79,22 @@ export default function TherapistROICalculator() {
 
         {/* Main Content */}
         <main className="container mx-auto px-4 py-8 max-w-lg">
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-foreground mb-3">
               מחשבון פוטנציאל הכנסה
             </h1>
             <p className="text-muted-foreground">
               גלה כמה תוכל להרוויח עם הכלים שלנו
             </p>
+          </div>
+
+          {/* Infographic */}
+          <div className="mb-6">
+            <img 
+              src={infographicRoi} 
+              alt="Income streams and resources infographic" 
+              className="w-full rounded-xl opacity-75"
+            />
           </div>
 
           <Card className="border-t-4 border-t-primary shadow-xl bg-card/95 backdrop-blur">
