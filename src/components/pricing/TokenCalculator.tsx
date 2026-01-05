@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Calculator, Users, Zap, CheckCircle2, ArrowRight } from 'lucide-react';
-import { Card } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 
@@ -56,19 +55,19 @@ export function TokenCalculator() {
   const recommendedPlan = getRecommendedPlan();
 
   return (
-    <section className="mt-16 space-y-6">
+    <section className="space-y-6">
       <div className="text-center">
-        <div className="inline-flex items-center gap-2 bg-gold/10 text-gold px-4 py-2 rounded-full mb-4">
-          <Calculator className="h-4 w-4" />
-          <span className="text-sm font-medium">מחשבון טוקנים</span>
+        <div className="inline-flex items-center gap-2 bg-gradient-to-r from-gold/20 to-gold/10 text-gold-dark px-4 py-2 rounded-full mb-4 animate-pulse">
+          <Calculator className="h-5 w-5" />
+          <span className="text-sm font-bold">מחשבון טוקנים</span>
         </div>
-        <h2 className="font-display text-2xl md:text-3xl mb-3">כמה טוקנים אתה צריך?</h2>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
+        <h2 className="font-display text-2xl md:text-3xl mb-3 text-slate-800">כמה טוקנים אתה צריך?</h2>
+        <p className="text-slate-600 max-w-2xl mx-auto">
           הזן את מספר המטופלים הצפוי וקבל המלצה לתוכנית המתאימה
         </p>
       </div>
 
-      <Card className="p-6 md:p-8 bg-gradient-to-br from-card to-card/80 border-border/50">
+      <div className="p-6 md:p-8 bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200/50 shadow-inner">
         <div className="grid md:grid-cols-2 gap-8">
           {/* Inputs */}
           <div className="space-y-8">
@@ -218,7 +217,7 @@ export function TokenCalculator() {
             <span>600K</span>
           </div>
         </div>
-      </Card>
+      </div>
     </section>
   );
 }

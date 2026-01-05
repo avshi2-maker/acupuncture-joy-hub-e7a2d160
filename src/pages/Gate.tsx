@@ -22,6 +22,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Checkbox } from '@/components/ui/checkbox';
 import gateBg from '@/assets/gate-background.png';
 import { VideoShowcaseCards } from '@/components/gate/VideoShowcaseCards';
+import { TokenCalculator } from '@/components/pricing/TokenCalculator';
 
 // Dev test password for development/testing
 const DEV_TEST_PASSWORD = 'dev2025';
@@ -584,7 +585,13 @@ export default function Gate() {
                   )}
                 </div>
 
-                {/* Quick Login for Returning Therapists */}
+                {/* Token Calculator - Animated Feature */}
+                <div className="mt-8 animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                  <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 border border-gold/30 shadow-[0_10px_40px_rgba(212,175,55,0.15)] hover:shadow-[0_15px_50px_rgba(212,175,55,0.25)] transition-all duration-500">
+                    <TokenCalculator />
+                  </div>
+                </div>
+
                 {hasStoredSession && isBiometricEnabled && (
                   <div className="mb-8">
                     <div className="bg-white/90 backdrop-blur-xl rounded-2xl p-6 max-w-md mx-auto border border-gold/30 shadow-xl">
@@ -1052,9 +1059,6 @@ export default function Gate() {
                   </Link>
                   <Link to="/pricing" className="block text-muted-foreground hover:text-jade transition-colors">
                     מחירון
-                  </Link>
-                  <Link to="/about" className="block text-muted-foreground hover:text-jade transition-colors">
-                    אודות
                   </Link>
                 </div>
               </div>
