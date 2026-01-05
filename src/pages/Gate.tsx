@@ -566,7 +566,7 @@ export default function Gate() {
                 </div>
 
                 {/* Glass Cards Grid */}
-                <div id="tier-selection" className="grid md:grid-cols-3 gap-3 lg:gap-4 mb-4 items-center">
+                <div id="tier-selection" className="grid md:grid-cols-3 gap-3 lg:gap-4 mb-4 pt-4 items-center">
                   {isPageLoading ? (
                     // Skeleton loading state
                     <>
