@@ -14,9 +14,9 @@ const PLANS = [
     tokens: 50000,
     price: 'חינם',
     maxPatients: 40,
-    color: 'bg-emerald-500',
-    borderColor: 'border-emerald-500',
-    textColor: 'text-emerald-500',
+    color: 'bg-emerald-300',
+    borderColor: 'border-emerald-300',
+    textColor: 'text-emerald-600',
   },
   {
     name: 'Standard',
@@ -24,9 +24,9 @@ const PLANS = [
     tokens: 150000,
     price: '₪40/חודש',
     maxPatients: 120,
-    color: 'bg-gold',
-    borderColor: 'border-gold',
-    textColor: 'text-gold',
+    color: 'bg-amber-200',
+    borderColor: 'border-amber-200',
+    textColor: 'text-amber-700',
   },
   {
     name: 'Premium',
@@ -34,9 +34,9 @@ const PLANS = [
     tokens: 600000,
     price: '₪50/חודש',
     maxPatients: 480,
-    color: 'bg-primary',
-    borderColor: 'border-primary',
-    textColor: 'text-primary',
+    color: 'bg-teal-600',
+    borderColor: 'border-teal-600',
+    textColor: 'text-teal-600',
   },
 ];
 
@@ -232,37 +232,51 @@ export function TokenCalculator({ onPlanRecommended }: TokenCalculatorProps) {
           <div className="flex items-center gap-2 mb-3">
             <span className="text-sm text-muted-foreground">השוואה לתוכניות:</span>
           </div>
-          <div className="relative h-8 bg-background/50 rounded-full overflow-hidden">
-            {PLANS.map((plan, index) => {
-              const prevTokens = index === 0 ? 0 : PLANS[index - 1].tokens;
-              const width = ((plan.tokens - prevTokens) / 600000) * 100;
-              const left = (prevTokens / 600000) * 100;
-              
-              return (
-                <div
-                  key={plan.name}
-                  className={cn(
-                    "absolute top-0 h-full flex items-center justify-center text-xs font-medium transition-opacity",
-                    plan.color,
-                    recommendedPlan === plan.name ? "opacity-100" : "opacity-40"
-                  )}
-                  style={{ left: `${left}%`, width: `${width}%` }}
-                >
-                  <span className="text-white drop-shadow-sm">{plan.nameHe}</span>
-                </div>
-              );
-            })}
+          <div className="relative h-8 bg-background/50 rounded-full overflow-hidden" dir="ltr">
+            {/* Premium: 600K - bold green (75% width) */}
+            <div
+              className={cn(
+                "absolute top-0 h-full flex items-center justify-center text-xs font-semibold transition-opacity",
+                "bg-teal-600",
+                recommendedPlan === 'Premium' ? "opacity-100" : "opacity-60"
+              )}
+              style={{ left: '0%', width: '75%' }}
+            >
+              <span className="text-white drop-shadow-sm">פרימיום</span>
+            </div>
+            {/* Standard: 150K - yellow (16.67% width) */}
+            <div
+              className={cn(
+                "absolute top-0 h-full flex items-center justify-center text-xs font-medium transition-opacity",
+                "bg-amber-200",
+                recommendedPlan === 'Standard' ? "opacity-100" : "opacity-60"
+              )}
+              style={{ left: '75%', width: '16.67%' }}
+            >
+              <span className="text-amber-800 drop-shadow-sm">סטנדרט</span>
+            </div>
+            {/* Trial: 50K - light green (8.33% width) */}
+            <div
+              className={cn(
+                "absolute top-0 h-full flex items-center justify-center text-xs font-medium transition-opacity",
+                "bg-emerald-300",
+                recommendedPlan === 'Trial' ? "opacity-100" : "opacity-60"
+              )}
+              style={{ left: '91.67%', width: '8.33%' }}
+            >
+              <span className="text-emerald-800 drop-shadow-sm">ניסיון</span>
+            </div>
             {/* Usage indicator */}
             <div 
               className="absolute top-0 h-full w-1 bg-foreground z-10 transition-all duration-300"
-              style={{ left: `${Math.min((estimatedTokens / 600000) * 100, 100)}%` }}
+              style={{ left: `${Math.min(((600000 - estimatedTokens) / 600000) * 100, 100)}%` }}
             />
           </div>
-          <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-            <span>0</span>
-            <span>50K</span>
-            <span>150K</span>
+          <div className="flex justify-between mt-2 text-xs text-muted-foreground" dir="ltr">
             <span>600K</span>
+            <span>150K</span>
+            <span>50K</span>
+            <span>0</span>
           </div>
         </div>
       </div>
