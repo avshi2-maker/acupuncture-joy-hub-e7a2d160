@@ -163,9 +163,12 @@ export default function TherapistRegister() {
               <div className="mx-auto w-16 h-16 bg-jade-light rounded-full flex items-center justify-center">
                 <Leaf className="h-8 w-8 text-jade" />
               </div>
-              <CardTitle className="font-display text-3xl">הרשמה למטפלים</CardTitle>
-              <CardDescription>
-                הצטרפו למערכת הניהול המתקדמת למטפלים ברפואה סינית
+              <CardTitle className="font-display text-3xl">הרשמה למטפלים חדשים</CardTitle>
+              <CardDescription className="space-y-2">
+                <span className="block">הצטרפו למערכת הניהול המתקדמת למטפלים ברפואה סינית</span>
+                <span className="block text-xs text-muted-foreground">
+                  מלאו את הפרטים → בחרו תוכנית → התחילו לעבוד
+                </span>
               </CardDescription>
             </CardHeader>
 
@@ -268,12 +271,21 @@ export default function TherapistRegister() {
                 </form>
               </Form>
 
-              <p className="text-center text-sm text-muted-foreground mt-6">
-                כבר רשום?{' '}
-                <Link to="/gate" className="text-jade hover:underline">
-                  כניסה למערכת
-                </Link>
-              </p>
+              {/* Clear options section */}
+              <div className="mt-6 pt-6 border-t border-border space-y-4">
+                <div className="text-center">
+                  <p className="text-sm font-medium text-foreground mb-2">
+                    כבר רשום במערכת?
+                  </p>
+                  <Link 
+                    to="/gate" 
+                    className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-md bg-muted hover:bg-muted/80 text-foreground font-medium transition-colors"
+                  >
+                    כניסה למערכת
+                    <ArrowLeft className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
 
               {/* WhatsApp Help Section */}
               <div className="mt-8 pt-6 border-t border-border">
