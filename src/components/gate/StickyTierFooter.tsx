@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronUp } from 'lucide-react';
+import { ChevronUp, Calculator } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface Tier {
   name: string;
@@ -60,6 +61,15 @@ export function StickyTierFooter({
                 החלף
               </button>
             </div>
+
+            {/* ROI Calculator Link */}
+            <Link 
+              to="/therapist-roi"
+              className="flex items-center justify-center gap-1.5 text-xs text-gray-500 hover:text-jade transition-colors mb-2"
+            >
+              <Calculator className="h-3 w-3" />
+              מחשבון פוטנציאל הכנסה
+            </Link>
 
             {/* CTA Button */}
             <button

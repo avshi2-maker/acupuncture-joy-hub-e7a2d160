@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect, type TouchEvent } from 'react';
+import { useState, useRef, type TouchEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calculator } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface Tier {
   name: string;
@@ -226,6 +227,17 @@ export function MobileTierCarousel({
       <p className="text-center text-white/60 text-xs mt-3">
         החליקו ימינה/שמאלה לראות חבילות נוספות
       </p>
+
+      {/* ROI Calculator Link */}
+      <div className="mt-4 text-center">
+        <Link 
+          to="/therapist-roi"
+          className="inline-flex items-center gap-2 text-sm text-white/80 hover:text-white transition-colors underline-offset-4 hover:underline"
+        >
+          <Calculator className="h-4 w-4" />
+          מחשבון פוטנציאל הכנסה
+        </Link>
+      </div>
     </div>
   );
 }
