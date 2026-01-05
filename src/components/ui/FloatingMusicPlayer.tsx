@@ -277,6 +277,11 @@ export function FloatingMusicPlayer() {
 
   const hasFavorites = favorites.length > 0;
 
+  // Hide on ROI page
+  if (location.pathname === '/therapist-roi') {
+    return null;
+  }
+
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
