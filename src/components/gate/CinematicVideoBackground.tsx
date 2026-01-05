@@ -1,15 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const videos = [
   {
     src: '/videos/gate-ancient-roots.mp4',
-    title: 'Ancient Roots.',
-    subtitle: 'Modern Precision.',
+    title: { en: 'Ancient Roots.', he: 'שורשים עתיקים.', ru: 'Древние корни.' },
+    subtitle: { en: 'Modern Precision.', he: 'דיוק מודרני.', ru: 'Современная точность.' },
   },
   {
     src: '/videos/gate-unlock-potential.mp4',
-    title: 'Unlock Your',
-    subtitle: "Body's Potential.",
+    title: { en: 'Unlock Your', he: 'שחרר את', ru: 'Раскройте' },
+    subtitle: { en: "Body's Potential.", he: 'הפוטנציאל של גופך.', ru: 'потенциал тела.' },
   },
 ];
 
@@ -22,8 +23,11 @@ export function CinematicVideoBackground({ children }: CinematicVideoBackgroundP
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showText, setShowText] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const { language, dir } = useLanguage();
 
   const currentVideo = videos[currentVideoIndex];
+  const currentTitle = currentVideo.title[language] || currentVideo.title.en;
+  const currentSubtitle = currentVideo.subtitle[language] || currentVideo.subtitle.en;
 
   useEffect(() => {
     const video = videoRef.current;
@@ -90,13 +94,18 @@ export function CinematicVideoBackground({ children }: CinematicVideoBackgroundP
         className={`absolute top-6 left-0 right-0 z-20 text-center transition-all duration-700 ${
           showText ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
         }`}
+        dir={dir}
       >
         <div className="inline-block px-8 py-4 rounded-2xl bg-black/20 backdrop-blur-sm border border-white/10">
-          <p className="text-white/90 text-lg md:text-xl font-light tracking-[0.3em] uppercase">
-            {currentVideo.title}
+          <p className={`text-white/90 text-lg md:text-xl font-light uppercase ${
+            language === 'he' ? 'tracking-normal' : 'tracking-[0.3em]'
+          }`}>
+            {currentTitle}
           </p>
-          <p className="text-gold text-xl md:text-2xl font-semibold tracking-wider mt-1">
-            {currentVideo.subtitle}
+          <p className={`text-gold text-xl md:text-2xl font-semibold mt-1 ${
+            language === 'he' ? 'tracking-normal' : 'tracking-wider'
+          }`}>
+            {currentSubtitle}
           </p>
         </div>
       </div>
