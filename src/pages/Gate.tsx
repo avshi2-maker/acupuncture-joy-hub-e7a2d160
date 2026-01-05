@@ -1025,16 +1025,20 @@ export default function Gate() {
                 <div className="space-y-1 text-sm text-muted-foreground">
                   <p>ד״ר רוני ספיר</p>
                   <a 
-                    href="tel:+972505231042" 
-                    className="block hover:text-jade transition-colors"
+                    href="https://wa.me/972544634923?text=שלום ד״ר רוני, אשמח לשמוע עוד על השירותים שלכם"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center md:justify-start gap-1 hover:text-jade transition-colors"
                   >
-                    050-5231042
+                    <MessageCircle className="h-3 w-3" />
+                    054-4634923
+                    <span className="text-xs text-amber-600">(הודעות בלבד)</span>
                   </a>
                   <a 
-                    href="mailto:dr.roni@tcmclinic.co.il" 
+                    href="mailto:dr.roni.sapir@gmail.com" 
                     className="block hover:text-jade transition-colors"
                   >
-                    dr.roni@tcmclinic.co.il
+                    dr.roni.sapir@gmail.com
                   </a>
                 </div>
               </div>
