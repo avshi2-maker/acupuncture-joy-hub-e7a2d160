@@ -489,7 +489,7 @@ export default function Gate() {
         <meta name="description" content="בחרו תוכנית והזינו סיסמת גישה" />
       </Helmet>
 
-      <div className="min-h-screen relative overflow-hidden" dir="rtl">
+      <div className="min-h-screen relative overflow-x-hidden overflow-y-visible" dir="rtl">
         {/* Beautiful bamboo background */}
         <div 
           className="fixed inset-0 -z-20"
@@ -566,7 +566,7 @@ export default function Gate() {
                 </div>
 
                 {/* Glass Cards Grid */}
-                <div id="tier-selection" className="grid md:grid-cols-3 gap-3 lg:gap-4 mb-4 pt-8 items-center">
+                <div id="tier-selection" className="grid md:grid-cols-3 gap-3 lg:gap-4 mb-4 pt-12 md:pt-14 items-center scroll-mt-24">
                   {isPageLoading ? (
                     // Skeleton loading state
                     <>
@@ -600,7 +600,7 @@ export default function Gate() {
                         data-tier={tier.name}
                         className={`
                           relative flex flex-col h-full
-                          rounded-[16px] p-4 md:p-5 text-center
+                          rounded-[16px] px-4 pb-4 pt-10 md:px-5 md:pb-5 md:pt-11 text-center
                           transition-all duration-500
                           backdrop-blur-xl border
                           ${tier.highlighted 
@@ -618,7 +618,7 @@ export default function Gate() {
                         {/* Badge for highlighted */}
                         {tier.highlighted && (
                           <div 
-                            className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-white text-sm font-bold"
+                            className="absolute top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-white text-sm font-bold"
                             style={{ 
                               background: '#d4af37',
                               boxShadow: '0 4px 10px rgba(212, 175, 55, 0.4)'
