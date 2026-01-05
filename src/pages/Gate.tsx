@@ -151,13 +151,9 @@ function TokenCalculatorSection({ onPlanRecommended }: TokenCalculatorSectionPro
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   
-  // Scroll to tier cards and highlight the recommended plan
-  const scrollToTier = (planName: string) => {
+  // Keep the tier highlight in sync with the calculator (no auto-scroll)
+  const handlePlanRecommended = (planName: string) => {
     onPlanRecommended?.(planName);
-    const tierCard = document.getElementById(`tier-card-${planName.toLowerCase()}`);
-    if (tierCard) {
-      tierCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
   };
   
   return (
@@ -211,7 +207,7 @@ function TokenCalculatorSection({ onPlanRecommended }: TokenCalculatorSectionPro
             }}
           />
           <div className="relative z-10">
-            <TokenCalculator onPlanRecommended={scrollToTier} />
+            <TokenCalculator onPlanRecommended={handlePlanRecommended} />
           </div>
         </motion.div>
         
