@@ -464,7 +464,7 @@ export default function Gate() {
                 </div>
 
                 {/* Glass Cards Grid */}
-                <div className="grid md:grid-cols-3 gap-3 lg:gap-4 mb-4 items-center">
+                <div id="tier-selection" className="grid md:grid-cols-3 gap-3 lg:gap-4 mb-4 items-center">
                   {isPageLoading ? (
                     // Skeleton loading state
                     <>
@@ -944,8 +944,21 @@ export default function Gate() {
           <Confetti isActive={showConfetti} duration={3000} />
 
           {/* FAQ Section */}
-          <div className="mt-12 max-w-2xl mx-auto">
-            <h3 className="text-xl font-semibold text-center mb-6 text-foreground">שאלות נפוצות</h3>
+          <div className="mt-12 max-w-2xl mx-auto" id="faq-section">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-foreground">שאלות נפוצות</h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  document.getElementById('tier-selection')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="flex items-center gap-2 bg-white/80 hover:bg-white"
+              >
+                <ArrowRight className="h-4 w-4" />
+                חזרה לתוכניות
+              </Button>
+            </div>
             <Card className="bg-background/80 backdrop-blur-sm border-white/20">
               <CardContent className="p-4">
                 <Accordion type="single" collapsible className="w-full">
