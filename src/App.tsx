@@ -69,6 +69,7 @@ import PatientValuator from "./pages/PatientValuator";
 import ProfessionalInvite from "./pages/ProfessionalInvite";
 import ClinicalTrialsBrowser from "./pages/ClinicalTrialsBrowser";
 import ROISimulator from "./pages/ROISimulator";
+import UISmokeTest from "./pages/UISmokeTest";
 
 const queryClient = new QueryClient();
 
@@ -149,6 +150,7 @@ const App = () => (
                       <Route path="/clinical-trials" element={<RequireTier><ClinicalTrialsBrowser /></RequireTier>} />
                       <Route path="/patient-valuator" element={<RequireTier><PatientValuator /></RequireTier>} />
                       <Route path="/roi-simulator" element={<ROISimulator />} />
+                      <Route path="/ui-smoke-test" element={<UISmokeTest />} />
 
                       <Route path="*" element={<NotFound />} />
                     </Routes>
