@@ -559,8 +559,8 @@ export default function Gate() {
                   </p>
                 </div>
 
-                {/* Glass Cards Grid */}
-                <div id="tier-selection" className="grid overflow-visible md:grid-cols-3 gap-3 lg:gap-4 mb-4 pt-12 md:pt-14 items-center scroll-mt-24">
+                {/* Glass Cards Grid - Mobile optimized */}
+                <div id="tier-selection" className="grid overflow-visible grid-cols-1 md:grid-cols-3 gap-4 md:gap-3 lg:gap-4 mb-4 pt-10 md:pt-14 items-stretch scroll-mt-24 px-1 md:px-0">
                   {isPageLoading ? (
                     // Skeleton loading state
                     <>
@@ -606,18 +606,21 @@ export default function Gate() {
                         <div
                           className={`
                             relative flex flex-col h-full
-                            rounded-[16px] px-4 pb-4 ${tier.highlighted ? 'pt-12 md:pt-14' : 'pt-10 md:pt-11'} md:px-5 md:pb-5 text-center
+                            rounded-[20px] md:rounded-[16px] 
+                            px-5 pb-5 md:px-5 md:pb-5 
+                            ${tier.highlighted ? 'pt-14 md:pt-14' : 'pt-6 md:pt-11'} 
+                            text-center
                             transition-all duration-500
                             backdrop-blur-xl border
                             ${tier.highlighted 
-                              ? 'bg-amber-50/70 border-2 border-[#d4af37] scale-[1.02] z-10 shadow-[0_10px_30px_rgba(212,175,55,0.25)]' 
+                              ? 'bg-amber-50/70 border-2 border-[#d4af37] md:scale-[1.02] z-10 shadow-[0_10px_30px_rgba(212,175,55,0.25)]' 
                               : 'bg-amber-50/60 border-amber-200/40 hover:bg-amber-50/80 shadow-[0_8px_20px_rgba(0,0,0,0.15)]'
                             }
                             ${isRecommended 
                               ? 'ring-4 ring-amber-400/70 shadow-[0_0_30px_rgba(212,175,55,0.4)]' 
                               : ''
                             }
-                            hover:-translate-y-1 hover:shadow-[0_12px_25px_rgba(0,0,0,0.2)]
+                            md:hover:-translate-y-1 hover:shadow-[0_12px_25px_rgba(0,0,0,0.2)]
                           `}
                           style={{ fontFamily: "'Heebo', sans-serif" }}
                         >
@@ -667,12 +670,13 @@ export default function Gate() {
                           ))}
                         </ul>
 
-                        {/* CTA Button */}
+                        {/* CTA Button - Enhanced touch target for mobile */}
                         <button
                           onClick={() => handleSelectTier(tier.name)}
                           className={`
-                            w-full py-2.5 rounded-lg font-bold text-sm
-                            transition-all duration-300
+                            w-full py-3.5 md:py-2.5 rounded-xl md:rounded-lg font-bold text-base md:text-sm
+                            transition-all duration-300 min-h-[48px] md:min-h-0
+                            active:scale-[0.98] touch-manipulation
                             ${tier.highlighted 
                               ? 'text-white shadow-[0_4px_15px_rgba(184,150,40,0.3)] hover:brightness-110' 
                               : 'bg-transparent border-2 border-[#2c6e49] text-[#2c6e49] hover:bg-[#2c6e49] hover:text-white'
@@ -683,7 +687,7 @@ export default function Gate() {
                           {tier.name === 'Trial' ? 'התחל ניסיון' : 'בחר חבילה'}
                         </button>
                         
-                        {/* Try Calculator Button */}
+                        {/* Try Calculator Button - Enhanced touch target */}
                         <button
                           onClick={() => {
                             document.getElementById('token-calculator')?.scrollIntoView({ 
@@ -691,7 +695,7 @@ export default function Gate() {
                               block: 'center'
                             });
                           }}
-                          className="w-full mt-2 py-1.5 text-xs text-gray-500 hover:text-jade transition-colors flex items-center justify-center gap-1.5 group"
+                          className="w-full mt-3 md:mt-2 py-2.5 md:py-1.5 text-sm md:text-xs text-gray-500 hover:text-jade transition-colors flex items-center justify-center gap-1.5 group min-h-[44px] md:min-h-0 touch-manipulation"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 group-hover:text-gold transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <rect width="16" height="20" x="4" y="2" rx="2"/>
