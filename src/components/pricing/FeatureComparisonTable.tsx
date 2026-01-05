@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { Check, X, Minus, Crown, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, X, Minus, Crown, ChevronDown, ChevronUp, Hand } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const FEATURE_CATEGORIES = [
   {
@@ -104,11 +105,24 @@ export function FeatureComparisonTable() {
     FEATURE_CATEGORIES.reduce((acc, cat) => ({ ...acc, [cat.category]: true }), {})
   );
   const [showStickyCTA, setShowStickyCTA] = useState(false);
+  const [showSwipeHint, setShowSwipeHint] = useState(true);
   const sectionRef = useRef<HTMLElement>(null);
+
+  // Check if all categories are expanded
+  const allExpanded = Object.values(openCategories).every(Boolean);
+  const allCollapsed = Object.values(openCategories).every(v => !v);
 
   // Toggle category open/close
   const toggleCategory = (category: string) => {
     setOpenCategories(prev => ({ ...prev, [category]: !prev[category] }));
+  };
+
+  // Toggle all categories
+  const toggleAllCategories = () => {
+    const newState = allExpanded ? false : true;
+    setOpenCategories(
+      FEATURE_CATEGORIES.reduce((acc, cat) => ({ ...acc, [cat.category]: newState }), {})
+    );
   };
 
   // Track scroll position for sticky CTA on mobile
@@ -130,6 +144,12 @@ export function FeatureComparisonTable() {
     };
   }, []);
 
+  // Hide swipe hint after first scroll/touch on mobile cards
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSwipeHint(false), 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const scrollToTiers = () => {
     document.getElementById('tier-selection')?.scrollIntoView({ 
       behavior: 'smooth',
@@ -147,7 +167,49 @@ export function FeatureComparisonTable() {
       </div>
 
       {/* Mobile: Card-based layout with collapsible categories */}
-      <div className="md:hidden space-y-4 pb-20">
+      <div className="md:hidden space-y-4 pb-20 relative">
+        {/* Swipe hint animation */}
+        <AnimatePresence>
+          {showSwipeHint && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-2"
+            >
+              <motion.div
+                animate={{ x: [0, -10, 0] }}
+                transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+              >
+                <Hand className="h-4 w-4" />
+              </motion.div>
+              <span>גלול למטה לראות את כל התוכניות</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Expand/Collapse All Toggle */}
+        <div className="flex justify-end mb-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleAllCategories}
+            className="text-xs gap-1"
+          >
+            {allExpanded ? (
+              <>
+                <ChevronUp className="h-3 w-3" />
+                כווץ הכל
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-3 w-3" />
+                הרחב הכל
+              </>
+            )}
+          </Button>
+        </div>
+
         {TIERS.map((tier) => (
           <div 
             key={tier.name}
