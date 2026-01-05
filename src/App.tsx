@@ -18,7 +18,7 @@ import { CRMErrorBoundary } from "@/components/crm/CRMErrorBoundary";
 
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import TherapistRegister from "./pages/TherapistRegister";
+import { Navigate } from "react-router-dom";
 import Pricing from "./pages/Pricing";
 import PaymentInstructions from "./pages/PaymentInstructions";
 import Gate from "./pages/Gate";
@@ -92,7 +92,7 @@ const App = () => (
                     <Routes>
                     {/* Public */}
                       <Route path="/" element={<Index />} />
-                      <Route path="/therapist-register" element={<TherapistRegister />} />
+                      <Route path="/therapist-register" element={<Navigate to="/therapist-intake" replace />} />
                       <Route path="/pricing" element={<Pricing />} />
                       <Route path="/payment-instructions" element={<PaymentInstructions />} />
                       <Route path="/gate" element={<Gate />} />
