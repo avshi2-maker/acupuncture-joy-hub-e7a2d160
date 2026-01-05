@@ -26,6 +26,7 @@ import { MobileTierCarousel } from '@/components/gate/MobileTierCarousel';
 import { StickyTierFooter } from '@/components/gate/StickyTierFooter';
 import { TokenCalculator } from '@/components/pricing/TokenCalculator';
 import { FeatureComparisonTable } from '@/components/pricing/FeatureComparisonTable';
+import { ClinicEfficiencyCalculator } from '@/components/gate/ClinicEfficiencyCalculator';
 
 // Session expiry timer component - REMOVED per user request
 
@@ -599,16 +600,8 @@ export default function Gate() {
                   </p>
                 </div>
 
-                {/* ROI Calculator Button */}
-                <div className="flex justify-center mb-4">
-                  <Link
-                    to="/therapist-roi"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-gold to-amber-500 text-white font-medium shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
-                  >
-                    <Calculator className="h-4 w-4" />
-                    מחשבון ROI למטפלים
-                  </Link>
-                </div>
+                {/* Clinic Efficiency Calculator - Price Anchoring Strategy */}
+                <ClinicEfficiencyCalculator onTierRecommended={setRecommendedPlan} />
 
                 {/* Mobile Swipeable Carousel */}
                 <div ref={tierSectionRef} className="pt-6 md:pt-0">
@@ -782,8 +775,7 @@ export default function Gate() {
                 )}
               </div>
 
-              {/* Token Calculator - Scroll-Triggered Animation with Glow */}
-              <TokenCalculatorSection onPlanRecommended={setRecommendedPlan} />
+              {/* Feature Comparison Table moved up */}
 
                 {/* Feature Comparison Table */}
                 <div className="mt-12 bg-white/90 backdrop-blur-xl rounded-2xl p-6 border border-white/40 shadow-xl">
