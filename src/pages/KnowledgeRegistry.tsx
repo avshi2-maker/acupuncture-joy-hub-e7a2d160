@@ -554,6 +554,13 @@ const BUILTIN_ASSETS = [
     defaultLanguage: 'en',
   },
   {
+    id: 'tcm-grief-insomnia-points',
+    label: '😴 TCM Grief-Insomnia Acupuncture Points (17 Points + Research Evidence)',
+    path: '/knowledge-assets/TCM_Grief_Insomnia_Acupuncture_Points.csv',
+    defaultCategory: 'anxiety_mental',
+    defaultLanguage: 'en',
+  },
+  {
     id: 'tcm-trauma-qa',
     label: '🛡️ TCM Trauma Q&A (22 Q&A - Kidney-Heart, Zhi, Po, Formulas)',
     path: '/knowledge-assets/tcm-trauma-qa.csv',
