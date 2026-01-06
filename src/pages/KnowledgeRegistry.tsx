@@ -378,6 +378,13 @@ const BUILTIN_ASSETS = [
     defaultLanguage: 'en',
   },
   {
+    id: 'tcm-adults-18-50-conditions',
+    label: '👩 TCM Adults 18-50 Conditions (50 Reproductive/Fertility + Patterns + Points + Formulas)',
+    path: '/knowledge-assets/TCM_Adults_18_50_Comprehensive_CONDITIONS.csv',
+    defaultCategory: 'womens_health',
+    defaultLanguage: 'en',
+  },
+  {
     id: 'age-prompts-adults-50-70',
     label: 'Age Prompts Adults (50-70)',
     path: '/knowledge-assets/age-prompts-adults-50-70.csv',
