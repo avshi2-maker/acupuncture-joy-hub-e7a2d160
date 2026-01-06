@@ -782,13 +782,16 @@ export function ClinicalNavigatorAdvanced({
             </Tabs>
           </div>
 
-          {/* 3D Body Figure - Celebration Integration */}
+          {/* 3D Body Figure - Celebration Integration with Sequential Tour */}
           <div className="lg:col-span-1">
             <RAGBodyFigureDisplay
               pointCodes={report.extractedPoints}
               onPointSelect={handlePointClick}
               allowSelection={true}
               celebratingPoint={activePointForCelebration}
+              enableTour={true}
+              autoStartTour={true}
+              language={language === 'he' ? 'he' : 'en'}
               className="sticky top-4"
             />
           </div>
