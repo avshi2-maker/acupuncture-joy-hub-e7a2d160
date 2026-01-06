@@ -27,6 +27,7 @@ import {
   Zap,
   X,
   ArrowLeft,
+  ClipboardList,
 } from 'lucide-react';
 import newLogo from '@/assets/new-logo.png';
 import { useNavigate, Link } from 'react-router-dom';
@@ -47,7 +48,7 @@ const managementItems = [
 ];
 
 const toolsItems: { title: string; url: string; icon: any }[] = [
-  // Items removed per user request
+  { title: 'Questionnaire Hub', url: '/questionnaire-hub', icon: ClipboardList },
 ];
 
 export function CRMSidebar() {
