@@ -540,6 +540,13 @@ const BUILTIN_ASSETS = [
     defaultLanguage: 'en',
   },
   {
+    id: 'tcm-grief-symptom-mapping',
+    label: '💔 TCM Grief Symptom-Tongue-Pulse Mapping (33 Symptoms + Patterns)',
+    path: '/knowledge-assets/TCM_Grief_Symptom_Tongue_Pulse_Mapping.csv',
+    defaultCategory: 'anxiety_mental',
+    defaultLanguage: 'en',
+  },
+  {
     id: 'tcm-trauma-qa',
     label: '🛡️ TCM Trauma Q&A (22 Q&A - Kidney-Heart, Zhi, Po, Formulas)',
     path: '/knowledge-assets/tcm-trauma-qa.csv',
