@@ -912,6 +912,9 @@ export type Database = {
           document_id: string
           embedding: string | null
           id: string
+          image_caption: string | null
+          image_ref: string | null
+          image_url: string | null
           language: string | null
           metadata: Json | null
           question: string | null
@@ -925,6 +928,9 @@ export type Database = {
           document_id: string
           embedding?: string | null
           id?: string
+          image_caption?: string | null
+          image_ref?: string | null
+          image_url?: string | null
           language?: string | null
           metadata?: Json | null
           question?: string | null
@@ -938,6 +944,9 @@ export type Database = {
           document_id?: string
           embedding?: string | null
           id?: string
+          image_caption?: string | null
+          image_ref?: string | null
+          image_url?: string | null
           language?: string | null
           metadata?: Json | null
           question?: string | null
