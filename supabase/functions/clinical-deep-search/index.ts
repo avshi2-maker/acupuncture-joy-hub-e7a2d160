@@ -476,10 +476,22 @@ serve(async (req) => {
     const primarySearchTerms = cleanSearchTerms(retrievalSearchQuery);
     console.log(`Primary search terms: ${primarySearchTerms}`);
     
-    // Try full-text search first, fallback to ilike if no results
+    // Search across ALL knowledge chunks (don't filter by module - the module mapping is outdated)
     let primaryResults: any[] = [];
     
-    if (primarySearchTerms) {
+    // Extract clean keywords for search
+    const keywords = retrievalSearchQuery
+      .replace(/[:\-\/\\()[\]{}'"!@#$%^&*+=<>?,;.]/g, ' ')
+      .split(/\s+/)
+      .filter(w => w.length > 2)
+      .slice(0, 6);
+    
+    console.log(`Search keywords: ${keywords.join(', ')}`);
+    
+    if (keywords.length > 0) {
+      // Strategy 1: Simple ILIKE search with OR across keywords (most reliable)
+      const orConditions = keywords.map(k => `content.ilike.%${k}%`).join(',');
+      
       const { data: primaryChunks, error: primaryError } = await supabase
         .from('knowledge_chunks')
         .select(`
@@ -489,67 +501,60 @@ serve(async (req) => {
           answer,
           chunk_index,
           document_id,
-          knowledge_documents!inner(file_name, original_name, category)
+          knowledge_documents(file_name, original_name, category)
         `)
-        .ilike('knowledge_documents.original_name', `%${moduleInfo.knowledgeBase.replace('.csv', '')}%`)
-        .textSearch('content', primarySearchTerms, {
-          type: 'websearch',
-          config: 'english'
-        })
-        .limit(20);
+        .or(orConditions)
+        .limit(25);
       
       if (primaryError) {
-        console.error('Primary search error:', primaryError);
+        console.error('Primary ILIKE search error:', primaryError);
+      } else {
+        primaryResults = primaryChunks || [];
+        console.log(`Primary ILIKE found: ${primaryResults.length} chunks`);
       }
-      primaryResults = primaryChunks || [];
     }
     
-    // Fallback: if no results, try simple ilike search on first few keywords
-    if (primaryResults.length === 0) {
-      console.log('Full-text search returned 0 results, trying ilike fallback...');
-      const keywords = retrievalSearchQuery
-        .replace(/[:\-\/\\()[\]{}'"!@#$%^&*+=<>?,;]/g, ' ')
-        .split(/\s+/)
-        .filter(w => w.length > 3)
-        .slice(0, 3);
+    // Fallback: if still no results, try broader single-keyword search
+    if (primaryResults.length === 0 && keywords.length > 0) {
+      console.log('Trying single-keyword fallback...');
+      const { data: fallbackChunks } = await supabase
+        .from('knowledge_chunks')
+        .select(`
+          id,
+          content,
+          question,
+          answer,
+          chunk_index,
+          document_id,
+          knowledge_documents(file_name, original_name, category)
+        `)
+        .ilike('content', `%${keywords[0]}%`)
+        .limit(25);
       
-      if (keywords.length > 0) {
-        const ilikePattern = `%${keywords.join('%')}%`;
-        const { data: fallbackChunks } = await supabase
-          .from('knowledge_chunks')
-          .select(`
-            id,
-            content,
-            question,
-            answer,
-            chunk_index,
-            document_id,
-            knowledge_documents!inner(file_name, original_name, category)
-          `)
-          .ilike('knowledge_documents.original_name', `%${moduleInfo.knowledgeBase.replace('.csv', '')}%`)
-          .or(keywords.map(k => `content.ilike.%${k}%`).join(','))
-          .limit(20);
-        
-        primaryResults = fallbackChunks || [];
-        console.log(`Fallback ilike found: ${primaryResults.length} chunks`);
-      }
+      primaryResults = fallbackChunks || [];
+      console.log(`Single-keyword fallback found: ${primaryResults.length} chunks`);
     }
 
     console.log(`Primary chunks found: ${primaryResults.length}`);
 
-    // === STEP 2: Secondary Sweep - Cross-reference ===
+    // === STEP 2: Secondary Sweep - Cross-reference by category ===
     console.log(`=== SECONDARY SWEEP: Nutrition, Lifestyle, Mindset ===`);
     
-    const crossSearchTerms = cleanSearchTerms(retrievalSearchQuery);
+    // Map cross-reference types to document categories that exist
+    const CROSS_REF_CATEGORIES: Record<string, string[]> = {
+      nutrition: ['nutrition', 'diet'],
+      lifestyle: ['wellness', 'lifestyle', 'wellness_sport'],
+      mindset: ['anxiety_mental', 'mental', 'mindset'],
+    };
     
-    const crossReferencePromises = Object.entries(CROSS_REFERENCE_MODULES).map(async ([key, module]) => {
-      // Skip if same as primary
-      if (module.moduleId === moduleId) return { key, chunks: [] };
-
+    const crossReferencePromises = Object.entries(CROSS_REF_CATEGORIES).map(async ([key, categories]) => {
       let chunks: any[] = [];
       
-      // Try full-text search first
-      if (crossSearchTerms) {
+      if (keywords.length > 0) {
+        // Search by category with keyword matching
+        const orConditions = keywords.slice(0, 3).map(k => `content.ilike.%${k}%`).join(',');
+        const categoryConditions = categories.map(c => `knowledge_documents.category.ilike.%${c}%`).join(',');
+        
         const { data } = await supabase
           .from('knowledge_chunks')
           .select(`
@@ -561,42 +566,11 @@ serve(async (req) => {
             document_id,
             knowledge_documents!inner(file_name, original_name, category)
           `)
-          .ilike('knowledge_documents.original_name', `%${module.knowledgeBase.replace('.csv', '')}%`)
-          .textSearch('content', crossSearchTerms, {
-            type: 'websearch',
-            config: 'english'
-          })
-          .limit(10);
+          .or(categoryConditions)
+          .or(orConditions)
+          .limit(8);
         
         chunks = data || [];
-      }
-      
-      // Fallback to ilike if no results
-      if (chunks.length === 0) {
-        const keywords = retrievalSearchQuery
-          .replace(/[:\-\/\\()[\]{}'"!@#$%^&*+=<>?,;]/g, ' ')
-          .split(/\s+/)
-          .filter(w => w.length > 3)
-          .slice(0, 2);
-        
-        if (keywords.length > 0) {
-          const { data } = await supabase
-            .from('knowledge_chunks')
-            .select(`
-              id,
-              content,
-              question,
-              answer,
-              chunk_index,
-              document_id,
-              knowledge_documents!inner(file_name, original_name, category)
-            `)
-            .ilike('knowledge_documents.original_name', `%${module.knowledgeBase.replace('.csv', '')}%`)
-            .or(keywords.map(k => `content.ilike.%${k}%`).join(','))
-            .limit(10);
-          
-          chunks = data || [];
-        }
       }
 
       return { key, chunks };
