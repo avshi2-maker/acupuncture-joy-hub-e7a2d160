@@ -91,6 +91,7 @@ import QuestionnaireHub from "./pages/QuestionnaireHub";
 import TongueGallery from "./pages/TongueGallery";
 import PulseGallery from "./pages/PulseGallery";
 import CombinedDiagnosis from "./pages/CombinedDiagnosis";
+import RAGHebrewReport from "./pages/RAGHebrewReport";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -192,6 +193,7 @@ const App = () => (
                       <Route path="/tongue-gallery" element={<RequireTier><TongueGallery /></RequireTier>} />
                       <Route path="/pulse-gallery" element={<RequireTier><PulseGallery /></RequireTier>} />
                       <Route path="/combined-diagnosis" element={<RequireTier><CombinedDiagnosis /></RequireTier>} />
+                      <Route path="/rag-hebrew-report" element={<RequireTier><RAGHebrewReport /></RequireTier>} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                     <FloatingMusicPlayer />
