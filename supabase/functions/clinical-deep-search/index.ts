@@ -6,6 +6,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+class HttpError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
+
 /**
  * Clinical Deep Search Edge Function
  * Implements the "Deep Search" logic for comprehensive clinical reports
@@ -131,6 +140,11 @@ interface DeepSearchResponse {
     knowledgeBasesQueried: string[];
     chunksFound: number;
     crossReferencesFound: number;
+    translationBridge?: {
+      sourceLanguage: 'en' | 'he';
+      rawQuery: string;
+      retrievalQuery: string;
+    };
   };
   error?: string;
 }
@@ -161,30 +175,92 @@ function extractPointCodes(text: string): string[] {
 // Build search query from questionnaire data
 function buildSearchQuery(data: DeepSearchRequest): string {
   const parts: string[] = [];
-  
-  if (data.chiefComplaint) {
-    parts.push(data.chiefComplaint);
+
+  if (data.chiefComplaint?.trim()) {
+    parts.push(data.chiefComplaint.trim());
   }
-  
-  // Extract key symptoms from questionnaire answers
-  Object.entries(data.questionnaireData).forEach(([key, value]) => {
-    if (typeof value === 'string' && value.length > 2) {
-      parts.push(value);
-    } else if (Array.isArray(value)) {
-      parts.push(value.join(' '));
+
+  const isNonSignalAnswer = (v: string) => {
+    const s = v.trim().toLowerCase();
+    return (
+      s === 'yes' ||
+      s === 'no' ||
+      s === 'true' ||
+      s === 'false' ||
+      s === 'y' ||
+      s === 'n' ||
+      s === 'na' ||
+      s === 'n/a' ||
+      s.length < 3
+    );
+  };
+
+  // Extract only free-text answers (ignore yes/no style answers)
+  for (const value of Object.values(data.questionnaireData || {})) {
+    if (typeof value === 'string' && !isNonSignalAnswer(value)) {
+      parts.push(value.trim());
+      continue;
     }
-  });
-  
-  if (data.patientAge) {
-    parts.push(`Patient age: ${data.patientAge}`);
+
+    if (Array.isArray(value)) {
+      const joined = value
+        .filter((x) => typeof x === 'string')
+        .map((x) => (x as string).trim())
+        .filter((x) => x && !isNonSignalAnswer(x))
+        .join(' ');
+      if (joined) parts.push(joined);
+    }
   }
-  
-  if (data.patientGender) {
-    parts.push(`Gender: ${data.patientGender}`);
-  }
-  
+
   return parts.join('. ');
 }
+
+async function translateHebrewToEnglishQuery({
+  apiKey,
+  moduleName,
+  hebrewText,
+}: {
+  apiKey: string;
+  moduleName: string;
+  hebrewText: string;
+}): Promise<string> {
+  const resp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash',
+      messages: [
+        {
+          role: 'system',
+          content:
+            'You convert Hebrew clinical text into a concise English search query for retrieving relevant passages from an English TCM knowledge base. Output ONLY the final English query (5-15 words), no quotes, no bullets, no extra text.',
+        },
+        {
+          role: 'user',
+          content: `Module: ${moduleName}\nHebrew input: ${hebrewText}\nReturn the English search query:`,
+        },
+      ],
+      temperature: 0.2,
+    }),
+  });
+
+  if (!resp.ok) {
+    const t = await resp.text();
+    console.error('Translation gateway error:', resp.status, t);
+    if (resp.status === 429) throw new HttpError(429, 'Rate limits exceeded. Please try again shortly.');
+    if (resp.status === 402) throw new HttpError(402, 'AI credits required. Please add credits and try again.');
+    throw new HttpError(500, 'Translation step failed.');
+  }
+
+  const data = await resp.json();
+  const content = (data.choices?.[0]?.message?.content as string | undefined) ?? '';
+  const cleaned = content.replace(/[\r\n]+/g, ' ').trim().replace(/^"|"$/g, '');
+  return cleaned;
+}
+
 
 serve(async (req) => {
   // Handle CORS
@@ -243,9 +319,48 @@ serve(async (req) => {
       });
     }
 
+    // Prepare AI gateway key (used for both translation bridge + report generation)
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY not configured');
+    }
+
     // Build search query
-    const searchQuery = buildSearchQuery(requestData);
-    console.log(`Search query: ${searchQuery.substring(0, 200)}...`);
+    const rawSearchQuery = buildSearchQuery(requestData);
+    console.log(`Raw search query: ${rawSearchQuery.substring(0, 200)}...`);
+
+    let retrievalSearchQuery = rawSearchQuery;
+    let translationBridge:
+      | {
+          sourceLanguage: 'en' | 'he';
+          rawQuery: string;
+          retrievalQuery: string;
+        }
+      | undefined;
+
+    // Translation Bridge: Hebrew -> English keywords before searching English CSV knowledge
+    if (language === 'he' && rawSearchQuery.trim()) {
+      const translated = await translateHebrewToEnglishQuery({
+        apiKey: LOVABLE_API_KEY,
+        moduleName: moduleInfo.name,
+        hebrewText: rawSearchQuery,
+      });
+
+      if (translated.trim()) {
+        retrievalSearchQuery = translated;
+        translationBridge = {
+          sourceLanguage: 'he',
+          rawQuery: rawSearchQuery,
+          retrievalQuery: retrievalSearchQuery,
+        };
+        console.log(`Translation bridge active. Retrieval query (EN): ${retrievalSearchQuery}`);
+      }
+    }
+
+    if (!retrievalSearchQuery.trim()) {
+      console.log('Warning: empty retrievalSearchQuery (no free-text inputs were provided).');
+    }
+
 
     // === STEP 1: Primary Retrieval ===
     console.log(`=== PRIMARY RETRIEVAL: ${moduleInfo.knowledgeBase} ===`);
@@ -262,7 +377,7 @@ serve(async (req) => {
         knowledge_documents!inner(file_name, original_name, category)
       `)
       .ilike('knowledge_documents.original_name', `%${moduleInfo.knowledgeBase.replace('.csv', '')}%`)
-      .textSearch('content', searchQuery.split(' ').slice(0, 5).join(' | '), {
+      .textSearch('content', retrievalSearchQuery.split(' ').slice(0, 8).join(' | '), {
         type: 'websearch',
         config: 'english'
       })
@@ -290,7 +405,7 @@ serve(async (req) => {
           knowledge_documents!inner(file_name, original_name, category)
         `)
         .ilike('knowledge_documents.original_name', `%${module.knowledgeBase.replace('.csv', '')}%`)
-        .textSearch('content', searchQuery.split(' ').slice(0, 3).join(' | '), {
+        .textSearch('content', retrievalSearchQuery.split(' ').slice(0, 6).join(' | '), {
           type: 'websearch',
           config: 'english'
         })
@@ -339,10 +454,7 @@ ${mindsetContext || 'No specific mindset/mental guidance found.'}
 `;
 
     // === STEP 4: Generate AI Response ===
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
-    }
+    // LOVABLE_API_KEY already validated above (also used for the translation bridge)
 
     const languageInstruction = language === 'he' 
       ? '\n\nIMPORTANT: Respond in Hebrew (עברית). Use Hebrew for all explanatory text while keeping TCM terminology in English/Pinyin.'
@@ -384,7 +496,9 @@ Please analyze this case and provide a complete treatment plan following the str
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
       console.error('AI gateway error:', aiResponse.status, errorText);
-      throw new Error(`AI service error: ${aiResponse.status}`);
+      if (aiResponse.status === 429) throw new HttpError(429, 'Rate limits exceeded. Please try again shortly.');
+      if (aiResponse.status === 402) throw new HttpError(402, 'AI credits required. Please add credits and try again.');
+      throw new HttpError(500, `AI service error: ${aiResponse.status}`);
     }
 
     const aiData = await aiResponse.json();
@@ -476,7 +590,9 @@ Please analyze this case and provide a complete treatment plan following the str
           moduleId,
           moduleName: moduleInfo.name,
           pointsFound: extractedPoints.length,
-          crossRefsFound: totalCrossRefs
+          crossRefsFound: totalCrossRefs,
+          translationBridgeActive: !!translationBridge,
+          retrievalSearchQuery,
         }
       });
     } catch (logErr) {
@@ -498,6 +614,7 @@ Please analyze this case and provide a complete treatment plan following the str
         ],
         chunksFound: primaryResults.length,
         crossReferencesFound: totalCrossRefs,
+        translationBridge,
       },
     };
 
@@ -509,11 +626,15 @@ Please analyze this case and provide a complete treatment plan following the str
 
   } catch (error) {
     console.error('Deep Search error:', error);
-    return new Response(JSON.stringify({ 
+
+    const status = error instanceof HttpError ? error.status : 500;
+    const message = error instanceof Error ? error.message : 'Unknown error';
+
+    return new Response(JSON.stringify({
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error' 
+      error: message,
     }), {
-      status: 500,
+      status,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
