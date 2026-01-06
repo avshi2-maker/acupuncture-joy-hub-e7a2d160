@@ -19,7 +19,7 @@ import {
   Brain, Heart, Stethoscope, Leaf, Apple, Activity,
   Users, User, Sparkles, FileText, Mail,
   MapPin, AlertTriangle, CheckCircle2,
-  Loader2, ArrowLeft, ChevronsUpDown, Search, List, GitCompare
+  Loader2, ArrowLeft, ChevronsUpDown, Search, List, GitCompare, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -37,12 +37,12 @@ import {
   ProtocolRecord,
   getComparisonColoredPoints 
 } from './ProtocolCompare';
-import { VoiceDictationOverlay } from './VoiceDictationOverlay';
 import { ProtocolPDFExport } from './ProtocolPDFExport';
 import { SaveToPatientDialog } from './SaveToPatientDialog';
 import { EmailProtocolDialog } from './EmailProtocolDialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
+import clinicalNavigatorBg from '@/assets/clinical-navigator-bg.jpg';
 
 // Category icons mapping
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
@@ -91,6 +91,7 @@ export function ClinicalNavigatorAdvanced({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [activePointForCelebration, setActivePointForCelebration] = useState<string | null>(null);
   const [activeCategoryTab, setActiveCategoryTab] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   
   // Protocol comparison state
   const [savedProtocols, setSavedProtocols] = useState<ProtocolRecord[]>([]);
@@ -306,12 +307,20 @@ export function ClinicalNavigatorAdvanced({
 
   // Render category selection with tabs
   const renderCategorySelection = () => {
-    // Get modules for current tab
+    // Get modules for current tab with search filter
     const getFilteredModules = () => {
-      if (activeCategoryTab === 'all') {
-        return CLINICAL_QUESTIONNAIRES;
+      let modules = activeCategoryTab === 'all' 
+        ? CLINICAL_QUESTIONNAIRES 
+        : modulesByCategory[activeCategoryTab] || [];
+      
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        modules = modules.filter(m => 
+          m.module_name.toLowerCase().includes(query) ||
+          m.module_name_he.includes(query)
+        );
       }
-      return modulesByCategory[activeCategoryTab] || [];
+      return modules;
     };
 
     const filteredModules = getFilteredModules();
@@ -322,16 +331,34 @@ export function ClinicalNavigatorAdvanced({
           <h2 className="text-2xl font-bold mb-2">
             {language === 'he' ? 'נווט קליני' : 'Clinical Navigator'}
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground font-medium">
             {language === 'he' 
               ? '36 שאלונים מקצועיים עם חיפוש עמוק חוצה-מודולים'
               : '36 professional questionnaires with cross-module Deep Search'}
           </p>
         </div>
 
-        {/* Master Dropdown - Quick Access */}
+        {/* Search Filter */}
         <div className="flex justify-center mb-4">
-          {renderMasterDropdown()}
+          <div className="relative w-full max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={language === 'he' ? 'חפש שאלון...' : 'Search questionnaire...'}
+              className="pl-10 pr-10 font-medium"
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                onClick={() => setSearchQuery('')}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Category Tabs */}
@@ -339,11 +366,11 @@ export function ClinicalNavigatorAdvanced({
           <TabsList className="w-full flex flex-wrap h-auto gap-1 bg-muted/50 p-1">
             <TabsTrigger 
               value="all" 
-              className="flex items-center gap-1.5 data-[state=active]:bg-jade data-[state=active]:text-white"
+              className="flex items-center gap-1.5 font-bold data-[state=active]:bg-jade data-[state=active]:text-white"
             >
               <List className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">{language === 'he' ? 'הכל' : 'All'}</span>
-              <Badge variant="secondary" className="text-[10px] px-1.5">{CLINICAL_QUESTIONNAIRES.length}</Badge>
+              <Badge variant="secondary" className="text-[10px] px-1.5 font-bold">{CLINICAL_QUESTIONNAIRES.length}</Badge>
             </TabsTrigger>
             {Object.entries(MODULE_CATEGORIES).map(([key, category]) => {
               const count = (modulesByCategory[key] || []).length;
@@ -352,14 +379,14 @@ export function ClinicalNavigatorAdvanced({
                   key={key} 
                   value={key}
                   className={cn(
-                    "flex items-center gap-1.5 data-[state=active]:bg-jade data-[state=active]:text-white",
+                    "flex items-center gap-1.5 font-bold data-[state=active]:bg-jade data-[state=active]:text-white",
                     count === 0 && "opacity-50"
                   )}
                   disabled={count === 0}
                 >
                   {CATEGORY_ICONS[key]}
                   <span className="hidden md:inline">{language === 'he' ? category.he : category.en}</span>
-                  <Badge variant="secondary" className="text-[10px] px-1.5">{count}</Badge>
+                  <Badge variant="secondary" className="text-[10px] px-1.5 font-bold">{count}</Badge>
                 </TabsTrigger>
               );
             })}
@@ -378,7 +405,7 @@ export function ClinicalNavigatorAdvanced({
                   >
                     <Card 
                       className={cn(
-                        "cursor-pointer transition-all hover:shadow-md border-l-4",
+                        "cursor-pointer transition-all hover:shadow-md border-l-4 bg-background/80 backdrop-blur-sm",
                         CATEGORY_COLORS[module.category],
                         "hover:border-jade"
                       )}
@@ -387,14 +414,14 @@ export function ClinicalNavigatorAdvanced({
                       <CardHeader className="py-3 px-4">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <Badge variant="outline" className="shrink-0 text-xs px-1.5">
+                            <Badge variant="outline" className="shrink-0 text-xs px-1.5 font-bold">
                               {module.id}
                             </Badge>
-                            <CardTitle className="text-sm font-medium truncate">
+                            <CardTitle className="text-sm font-bold truncate">
                               {language === 'he' ? module.module_name_he : module.module_name}
                             </CardTitle>
                           </div>
-                          <Badge className={cn("shrink-0 text-[10px]", CATEGORY_COLORS[module.category])}>
+                          <Badge className={cn("shrink-0 text-[10px] font-bold", CATEGORY_COLORS[module.category])}>
                             {module.questions.length}Q
                           </Badge>
                         </div>
@@ -701,14 +728,6 @@ export function ClinicalNavigatorAdvanced({
             </Button>
           </div>
         </div>
-
-        {/* Voice Dictation Overlay */}
-        <VoiceDictationOverlay
-          moduleId={selectedModule.id}
-          questions={selectedModule.questions}
-          onAutoFill={handleVoiceAutoFill}
-          language={language === 'he' ? 'he' : 'en'}
-        />
       </div>
     );
   };

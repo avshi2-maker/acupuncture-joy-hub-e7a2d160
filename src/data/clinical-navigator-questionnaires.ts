@@ -3,6 +3,7 @@
 export const clinicalModules = {
   1: {
     name: "TCM Shen Mind Emotions",
+    name_he: "שן - נפש ורגשות",
     questions: [
       "האם אתה חווה בעיקר דאגה (טחול), כעס (כבד), פחד (כליות), עצב (ריאות) או שמחת יתר/מאניה (לב)?",
       "האם יש קושי להירדם, חלומות מטרידים, או יקיצות תכופות מתוך חוסר שקט?",
@@ -23,6 +24,7 @@ export const clinicalModules = {
   },
   2: {
     name: "TCM Pattern Identification",
+    name_he: "זיהוי דפוסים",
     questions: [
       "האם אתה סובל יותר מקור (רתיעה מקור, גפיים קרות) או מחום (צמא, פנים אדומות)?",
       "האם המצב משתפר במנוחה (חסר) או מחמיר במנוחה ומוטב בתנועה (עודף/סטגנציה)?",
@@ -43,6 +45,7 @@ export const clinicalModules = {
   },
   3: {
     name: "TCM Yin Yang Constitution",
+    name_he: "יין-יאנג חוקתי",
     questions: [
       "האם אתה נוטה לרזון ויובש (יין) או למבנה רחב ונוטה להשמנה/נוזלים (יאנג/לחות)?",
       "האם אתה תמיד מחפש מזגן (חום/יאנג) או תמיד לובש סוודר (קור/יין)?",
@@ -63,6 +66,7 @@ export const clinicalModules = {
   },
   4: {
     name: "TCM Pulse Diagnosis",
+    name_he: "אבחון דופק",
     questions: [
       "האם הדופק מהיר (חום), איטי (קור), או רגיל (4-5 פעימות לנשימה)?",
       "האם הדופק מורגש מיד במגע קל (צף - חיצוני) או דורש לחץ עמוק (עמוק - פנימי)?",
@@ -83,6 +87,7 @@ export const clinicalModules = {
   },
   5: {
     name: "TCM Tongue Diagnosis",
+    name_he: "אבחון לשון",
     questions: [
       "האם גוף הלשון חיוור (חסר), ורוד (תקין), אדום (חום), או סגול (סטגנציה)?",
       "האם הלשון רזה/דקה (חסר יין/דם) או תפוחה/שמנה (לחות/חסר יאנג)?",
@@ -771,10 +776,51 @@ export interface QuestionnaireModule {
   questions: QuestionItem[];
 }
 
+// Hebrew names for all modules
+const MODULE_NAMES_HE: Record<number, string> = {
+  1: 'שן - נפש ורגשות',
+  2: 'זיהוי דפוסים',
+  3: 'יין-יאנג חוקתי',
+  4: 'אבחון דופק',
+  5: 'אבחון לשון',
+  6: 'צ\'י, דם ונוזלים',
+  7: 'ששת השלבים',
+  8: 'סאן ג\'יאו וויי צ\'י',
+  9: 'ילדים כללי',
+  10: 'אסטרטגיית צמחים',
+  11: 'פורמולות צמחים',
+  12: 'התאמת צמחים',
+  13: 'אונקולוגיה בסיסית',
+  14: 'תמיכה אונקולוגית',
+  15: 'גינקולוגיה',
+  16: 'תמיכת פוריות',
+  17: 'טיפול בהריון',
+  18: 'תרגום מערבי לסיני',
+  19: 'אבל ושינה',
+  20: 'לחץ וביופידבק',
+  21: 'התמכרויות',
+  22: 'בריאות נפש בני נוער',
+  23: 'משבר עמוק',
+  24: 'התחדשות עור',
+  25: 'מזג אוויר קיצוני',
+  26: 'מבוגרים 50-70',
+  27: 'מבוגרים 18-50',
+  28: 'אורח חיים קשישים',
+  29: 'כאבי ראש ומיגרנה',
+  30: 'תזונה ומטבוליזם',
+  31: 'חשיבה וביצועים',
+  32: 'טראומה ואורתופדיה',
+  33: 'עמידות חיסונית',
+  34: 'בריאות כללית',
+  35: 'ילדים 7-13',
+  36: 'הבדלת דפוסים',
+};
+
 export const CLINICAL_QUESTIONNAIRES: QuestionnaireModule[] = Object.entries(clinicalModules)
   .map(([id, module]) => {
     const numericId = Number(id);
     const name = module?.name ?? `Module ${id}`;
+    const nameHe = MODULE_NAMES_HE[numericId] || name;
     const rawQuestions = module?.questions ?? [];
     const category = MODULE_CATEGORY_MAP[numericId] || 'diagnostic';
 
@@ -790,7 +836,7 @@ export const CLINICAL_QUESTIONNAIRES: QuestionnaireModule[] = Object.entries(cli
       id: numericId,
       category,
       module_name: name,
-      module_name_he: name,
+      module_name_he: nameHe,
       linked_knowledge_base: 'clinical-navigator',
       questions,
     };
