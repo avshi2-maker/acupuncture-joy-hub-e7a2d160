@@ -35,7 +35,8 @@ import {
   Calendar,
   FileText,
   Loader2,
-  X
+  X,
+  Compass
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { usePatients } from '@/hooks/usePatients';
@@ -59,6 +60,7 @@ export default function Patient360() {
       case 'brain': return <Brain className="h-4 w-4 text-violet-500" />;
       case 'body': return <Heart className="h-4 w-4 text-emerald-500" />;
       case 'retreat': return <Palmtree className="h-4 w-4 text-amber-500" />;
+      case 'health_compass': return <Compass className="h-4 w-4 text-rose-500" />;
     }
   };
 
@@ -67,6 +69,7 @@ export default function Patient360() {
       case 'brain': return 'Brain';
       case 'body': return 'Full Body';
       case 'retreat': return 'Retreat';
+      case 'health_compass': return 'Health Compass';
     }
   };
 
@@ -199,6 +202,34 @@ export default function Patient360() {
             )}
           </div>
         )}
+
+        {assessment.assessment_type === 'health_compass' && details && (
+          <div className="space-y-3">
+            {typeof details.version === 'string' && (
+              <div className="p-3 bg-rose-500/10 rounded-lg">
+                <span className="font-medium">גרסה:</span> {details.version}
+              </div>
+            )}
+            {typeof details.completedAt === 'string' && (
+              <div className="p-3 bg-rose-500/10 rounded-lg">
+                <span className="font-medium">הושלם ב:</span> {formatDate(details.completedAt)}
+              </div>
+            )}
+            {details.answers && typeof details.answers === 'object' && (
+              <div className="p-3 bg-rose-500/10 rounded-lg">
+                <span className="font-medium block mb-2">תשובות השאלון:</span>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {Object.entries(details.answers as Record<string, unknown>).map(([key, value], i) => (
+                    <div key={i} className="text-xs p-2 bg-background rounded">
+                      <p className="font-medium text-muted-foreground">שאלה {key}:</p>
+                      <p>{String(value)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     );
   };
@@ -260,7 +291,7 @@ export default function Patient360() {
           {selectedPatientId ? (
             <>
               {/* Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {/* Brain Health Card */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -355,6 +386,37 @@ export default function Patient360() {
                         </>
                       ) : (
                         <p className="text-muted-foreground">לא בוצע התאמה</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
+                {/* Health Compass Card */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <Card className={`h-full ${latestResults?.health_compass ? 'border-rose-500/30 bg-rose-500/5' : 'opacity-60'}`}>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Compass className="h-5 w-5 text-rose-500" />
+                        🧭 המצפן הבריאותי
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {latestResults?.health_compass ? (
+                        <>
+                          <p className="text-2xl font-bold text-rose-600">
+                            {latestResults.health_compass.summary ?? 'הושלם'}
+                          </p>
+                          <p className="text-sm text-muted-foreground flex items-center gap-1 mt-2">
+                            <Calendar className="h-3 w-3" />
+                            עודכן: {formatDate(latestResults.health_compass.created_at)}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-muted-foreground">לא מולא שאלון</p>
                       )}
                     </CardContent>
                   </Card>
