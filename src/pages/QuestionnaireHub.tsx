@@ -27,7 +27,8 @@ import {
   ExternalLink,
   Download,
   Eye,
-  Stethoscope
+  Stethoscope,
+  MapPin
 } from 'lucide-react';
 import { usePatientAssessments, AssessmentType } from '@/hooks/usePatientAssessments';
 import { usePatients } from '@/hooks/usePatients';
@@ -189,6 +190,17 @@ const questionnaires: QuestionnaireInfo[] = [
     descriptionEn: 'Visual & tactile diagnosis questionnaire for pulse and tongue',
     icon: <Eye className="h-6 w-6" />,
     path: '/pulse-tongue-diagnosis',
+    category: 'special',
+    questionCount: 20
+  },
+  {
+    id: 'acupuncture_points',
+    titleHe: 'ספר הנקודות',
+    titleEn: 'Acupuncture Points Book',
+    descriptionHe: 'שאלון מיקומים, תפקודים ואנרגטיקה של נקודות דיקור',
+    descriptionEn: 'Locations, functions & energetics questionnaire for acupuncture points',
+    icon: <MapPin className="h-6 w-6" />,
+    path: '/acupuncture-points',
     category: 'special',
     questionCount: 20
   },
