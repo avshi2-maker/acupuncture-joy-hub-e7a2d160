@@ -80,8 +80,8 @@ const MODULE_KNOWLEDGE_MAP: Record<number, { name: string; promptId: string; kno
   36: { name: 'Pattern Differentiation', promptId: 'nanobanan_bianzheng', knowledgeBase: 'tcm_pattern_differentiation', fallbackKB: 'Diagnostics_Professional' },
   
   // Sports & Performance
-  37: { name: 'Sports Performance', promptId: 'nanobanan_sports', knowledgeBase: 'sport performance recovery', fallbackKB: 'immune-resilience' },
-  38: { name: 'Elite Lifestyle', promptId: 'nanobanan_elite', knowledgeBase: 'wellnesss', fallbackKB: 'Natural Healing' },
+  37: { name: 'Sports Performance', promptId: 'nanobanan_sports', knowledgeBase: 'sport_performance_100', fallbackKB: 'immune-resilience' },
+  38: { name: 'Elite Lifestyle', promptId: 'nanobanan_elite', knowledgeBase: 'elite_lifestyle_longevity', fallbackKB: 'Natural Healing' },
   
   // Brain & Neurology
   39: { name: 'Brain Health', promptId: 'nanobanan_brain', knowledgeBase: 'Brain Health TCM', fallbackKB: 'neuro-degenerative-tcm' },
