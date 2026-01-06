@@ -162,6 +162,17 @@ export const KNOWLEDGE_ASSETS: KnowledgeAsset[] = [
     file: 'TCM_Herbal_Formulas_Comprehensive.csv',
     category: 'treatment'
   },
+  { 
+    id: 'tcm-oncology', 
+    name: 'TCM Oncology', 
+    nameHe: 'אונקולוגיה סינית',
+    icon: Heart, 
+    color: 'text-rose-600', 
+    bgColor: 'bg-rose-50 dark:bg-rose-950/30', 
+    borderColor: 'border-rose-300 dark:border-rose-700',
+    file: 'TCM_Oncology_Comprehensive_All_Ages.csv',
+    category: 'treatment'
+  },
 
   // Specialties Category
   { 
@@ -765,6 +776,7 @@ export function detectActiveAssets(text: string): string[] {
     'qa-professional': ['professional', 'clinical', 'practitioner'],
     'acupuncture-points': ['acupuncture point', 'acupoint', 'LI4', 'ST36', 'SP6', 'LV3'],
     'herbal-formulas': ['herbal formula', 'chinese formula', 'tcm formula', 'decoction', 'tang', 'wan', 'san', 'yin', 'pharmacopeia'],
+    'tcm-oncology': ['oncology', 'cancer', 'tumor', 'chemotherapy', 'chemo', 'radiation', 'bone marrow', 'neuropathy', 'leukemia', 'lymphoma', 'carcinoma'],
   };
 
   for (const [assetId, terms] of Object.entries(keywords)) {

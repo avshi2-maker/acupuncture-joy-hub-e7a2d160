@@ -515,10 +515,10 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'neurology',
     defaultLanguage: 'en',
   },
-  // Oncology - TCM Supportive Care
+  // Oncology - TCM Supportive Care - Updated with 4-Column Format
   {
     id: 'tcm-oncology-comprehensive',
-    label: '🎗️ TCM Oncology Comprehensive (53 Cancer Types - All Ages)',
+    label: '🎗️ TCM Oncology Comprehensive (52 Formulas + Q&A + Acupoints + Pharmacopeia)',
     path: '/knowledge-assets/TCM_Oncology_Comprehensive_All_Ages.csv',
     defaultCategory: 'clinical_protocols',
     defaultLanguage: 'en',
