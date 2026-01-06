@@ -21,51 +21,85 @@ class HttpError extends Error {
  * Cross-references across all knowledge bases for holistic responses
  */
 
-// Module to Knowledge Base mapping (from nanobanan_master_sync.csv)
-const MODULE_KNOWLEDGE_MAP: Record<number, { name: string; promptId: string; knowledgeBase: string }> = {
-  1: { name: 'TCM Shen Mind Emotions', promptId: 'nanobanan_general', knowledgeBase: 'TCM_Foundations.csv' },
-  2: { name: 'TCM Pattern Identification', promptId: 'nanobanan_bianzheng', knowledgeBase: 'tcm_pattern_differentiation_enhanced.csv' },
-  3: { name: 'TCM Yin Yang Constitution', promptId: 'nanobanan_general', knowledgeBase: 'TCM_Foundations.csv' },
-  4: { name: 'TCM Pulse Diagnosis', promptId: 'nanobanan_general', knowledgeBase: 'TCM_Diagnostics.csv' },
-  5: { name: 'TCM Tongue Diagnosis', promptId: 'nanobanan_general', knowledgeBase: 'TCM_Diagnostics.csv' },
-  6: { name: 'TCM Qi Blood Fluids', promptId: 'nanobanan_general', knowledgeBase: 'TCM_Foundations.csv' },
-  7: { name: 'TCM Six Stages', promptId: 'nanobanan_general', knowledgeBase: 'TCM_Foundations.csv' },
-  8: { name: 'TCM San Jiao Wei Qi', promptId: 'nanobanan_general', knowledgeBase: 'TCM_Foundations.csv' },
-  9: { name: 'TCM Pediatric', promptId: 'nanobanan_school_age', knowledgeBase: 'tcm_children_7-13_qa_enhanced.csv' },
-  10: { name: 'TCM Herbal Medicine', promptId: 'nanobanan_general', knowledgeBase: 'TCM_Herbal_Formulas.csv' },
-  11: { name: 'TCM Herbal Formulas', promptId: 'nanobanan_general', knowledgeBase: 'TCM_Herbal_Formulas.csv' },
-  12: { name: 'TCM Herbal Matching', promptId: 'nanobanan_general', knowledgeBase: 'TCM_Herbal_Formulas.csv' },
-  13: { name: 'TCM Oncology Support', promptId: 'nanobanan_oncology', knowledgeBase: 'TCM_Oncology_Support_Enhanced.csv' },
-  14: { name: 'Integrative Oncology', promptId: 'nanobanan_oncology', knowledgeBase: 'TCM_Oncology_Support_Enhanced.csv' },
-  15: { name: 'TCM Gynecology', promptId: 'nanobanan_gynecology', knowledgeBase: 'TCM_Gynecology_Enhanced.csv' },
-  16: { name: 'TCM Fertility Support', promptId: 'nanobanan_fertility', knowledgeBase: 'TCM_Fertility_Enhanced.csv' },
-  17: { name: 'TCM Pregnancy Care', promptId: 'nanobanan_pregnancy', knowledgeBase: 'TCM_Pregnancy_Care_Enhanced.csv' },
-  18: { name: 'Western to TCM Translator', promptId: 'nanobanan_translator', knowledgeBase: 'TCM_Western_Symptom_Translation_Guide.csv' },
-  19: { name: 'Grief Insomnia', promptId: 'nanobanan_insomnia', knowledgeBase: 'TCM_Grief_Insomnia_Acupuncture_Points.csv' },
-  20: { name: 'Stress & Biofeedback', promptId: 'nanobanan_stress', knowledgeBase: 'tcm_stress_biofeedback_75qa.csv' },
-  21: { name: 'TCM Addiction Recovery', promptId: 'nanobanan_addiction', knowledgeBase: 'TCM_Addiction_Recovery_Enhanced.csv' },
-  22: { name: 'Teen Mental Health', promptId: 'nanobanan_teen_health', knowledgeBase: 'TCM_Teenage_Mental_Health_Enhanced_CLEANED.csv' },
-  23: { name: 'Profound Crisis', promptId: 'nanobanan_crisis', knowledgeBase: 'Profound_Crisis_QA_100_CLEANED.csv' },
-  24: { name: 'Renovada Skin', promptId: 'nanobanan_skin', knowledgeBase: 'TCM_Renovada_Skin_Renewal_100QA_CLEANED.csv' },
-  25: { name: 'Extreme Weather', promptId: 'nanobanan_climate', knowledgeBase: 'Extreme_Weather_Climate_TCM_100QA_CLEANED.csv' },
-  26: { name: 'Adults 50-70 Vitality', promptId: 'nanobanan_adults_50_70', knowledgeBase: 'TCM_Adults_50_70_Comprehensive_CONDITIONS.csv' },
-  27: { name: 'Adults 18-50 General', promptId: 'nanobanan_adults_18_50', knowledgeBase: 'TCM_Adults_18_50_Comprehensive_CONDITIONS.csv' },
-  28: { name: 'Elderly Lifestyle', promptId: 'nanobanan_elderly_life', knowledgeBase: 'Elderly_Lifestyle_TCM_Enhanced.csv' },
-  29: { name: 'Geriatrics 70-120', promptId: 'nanobanan_geriatrics', knowledgeBase: 'TCM_Clinic 70-120 _100_Common_Conditions_Complete.csv' },
-  30: { name: 'Diet & Nutrition', promptId: 'nanobanan_nutrition', knowledgeBase: 'TCM_Diet_Nutrition_100_QA_Complete.csv' },
-  31: { name: 'Mindset Performance', promptId: 'nanobanan_mindset', knowledgeBase: 'TCM_Mindset_Mental_100_QA_Complete.csv' },
-  32: { name: 'Trauma & Orthopedics', promptId: 'nanobanan_trauma', knowledgeBase: 'trauma corrected.csv' },
-  33: { name: 'Immune Resilience', promptId: 'nanobanan_immune', knowledgeBase: 'immune-resilience.csv' },
-  34: { name: 'General Wellness', promptId: 'nanobanan_wellness', knowledgeBase: 'wellness_issue_enhanced_fixed.csv' },
-  35: { name: 'Children 7-13 School', promptId: 'nanobanan_school_age', knowledgeBase: 'tcm_children_7-13_qa_enhanced.csv' },
-  36: { name: 'Pattern Differentiation', promptId: 'nanobanan_bianzheng', knowledgeBase: 'tcm_pattern_differentiation_enhanced.csv' },
+// Module to Knowledge Base mapping - UPDATED TO MATCH ACTUAL DATABASE FILENAMES
+// Each module maps to actual original_name values in knowledge_documents table
+// Uses partial matching - search will use ILIKE '%knowledgeBase%'
+const MODULE_KNOWLEDGE_MAP: Record<number, { name: string; promptId: string; knowledgeBase: string; fallbackKB?: string }> = {
+  // TCM Theory & Diagnostics
+  1: { name: 'TCM Shen Mind Emotions', promptId: 'nanobanan_general', knowledgeBase: 'Mental Health TCM Q&A', fallbackKB: 'QA_Professional' },
+  2: { name: 'TCM Pattern Identification', promptId: 'nanobanan_bianzheng', knowledgeBase: 'tcm_pattern_differentiation', fallbackKB: 'QA_Professional' },
+  3: { name: 'TCM Yin Yang Constitution', promptId: 'nanobanan_general', knowledgeBase: 'nine_constitutions_qa_100', fallbackKB: 'QA_Professional' },
+  4: { name: 'TCM Pulse Diagnosis', promptId: 'nanobanan_general', knowledgeBase: 'Pulse Diagnosis Q&A', fallbackKB: 'clinic_pulse_diagnosis' },
+  5: { name: 'TCM Tongue Diagnosis', promptId: 'nanobanan_general', knowledgeBase: 'tongue-diagnosis', fallbackKB: 'clinic_tongue_diagnosis' },
+  6: { name: 'TCM Qi Blood Fluids', promptId: 'nanobanan_general', knowledgeBase: 'energy-channels-100-qa', fallbackKB: 'QA_Professional' },
+  7: { name: 'TCM Six Stages', promptId: 'nanobanan_general', knowledgeBase: 'QA_Professional_Corrected', fallbackKB: 'Diagnostics_Professional' },
+  8: { name: 'TCM San Jiao Wei Qi', promptId: 'nanobanan_general', knowledgeBase: 'energy-channels-100-qa', fallbackKB: 'QA_Professional' },
+  
+  // Pediatrics
+  9: { name: 'TCM Pediatric', promptId: 'nanobanan_school_age', knowledgeBase: 'tcm_children_7-13', fallbackKB: 'Pediatric_QA' },
+  35: { name: 'Children 7-13 School', promptId: 'nanobanan_school_age', knowledgeBase: 'tcm_children_7-13', fallbackKB: 'pediatric-acupuncture' },
+  
+  // Herbal Medicine
+  10: { name: 'TCM Herbal Medicine', promptId: 'nanobanan_general', knowledgeBase: 'herbal 200 formula', fallbackKB: 'TCM Herbal Formulas Comprehensive' },
+  11: { name: 'TCM Herbal Formulas', promptId: 'nanobanan_general', knowledgeBase: 'TCM Herbal Formulas Comprehensive', fallbackKB: 'herbal 200 formula' },
+  12: { name: 'TCM Herbal Matching', promptId: 'nanobanan_general', knowledgeBase: 'herbal 200 formula', fallbackKB: 'TCM Herbal Formulas Comprehensive' },
+  
+  // Oncology
+  13: { name: 'TCM Oncology Support', promptId: 'nanobanan_oncology', knowledgeBase: 'TCM Oncology Comprehensive', fallbackKB: 'QA_Professional' },
+  14: { name: 'Integrative Oncology', promptId: 'nanobanan_oncology', knowledgeBase: 'TCM Oncology Comprehensive', fallbackKB: 'QA_Professional' },
+  
+  // Women's Health
+  15: { name: 'TCM Gynecology', promptId: 'nanobanan_gynecology', knowledgeBase: 'Women Health Guide', fallbackKB: 'Fertility Protocols' },
+  16: { name: 'TCM Fertility Support', promptId: 'nanobanan_fertility', knowledgeBase: 'Fertility Protocols', fallbackKB: 'Women Health Guide' },
+  17: { name: 'TCM Pregnancy Care', promptId: 'nanobanan_pregnancy', knowledgeBase: 'Pregnancy Trimester Guide', fallbackKB: 'Women Health Guide' },
+  
+  // Mental Health & Wellness
+  18: { name: 'Western to TCM Translator', promptId: 'nanobanan_translator', knowledgeBase: 'chief-complaints-tcm', fallbackKB: 'QA_Professional' },
+  19: { name: 'Grief Insomnia', promptId: 'nanobanan_insomnia', knowledgeBase: 'Mental Health TCM Q&A', fallbackKB: 'Work_Stress_Burnout' },
+  20: { name: 'Stress & Biofeedback', promptId: 'nanobanan_stress', knowledgeBase: 'Work_Stress_Burnout', fallbackKB: 'Mental Health TCM Q&A' },
+  21: { name: 'TCM Addiction Recovery', promptId: 'nanobanan_addiction', knowledgeBase: 'Mental Health TCM Q&A', fallbackKB: 'Profound_Crisis' },
+  22: { name: 'Teen Mental Health', promptId: 'nanobanan_teen_health', knowledgeBase: 'Mental Health TCM Q&A', fallbackKB: 'Brain Health TCM' },
+  23: { name: 'Profound Crisis', promptId: 'nanobanan_crisis', knowledgeBase: 'Profound_Crisis_QA_100', fallbackKB: 'Mental Health TCM Q&A' },
+  
+  // Specialty Areas
+  24: { name: 'Renovada Skin', promptId: 'nanobanan_skin', knowledgeBase: 'skin_disease_qa_100', fallbackKB: 'QA_Professional' },
+  25: { name: 'Extreme Weather', promptId: 'nanobanan_climate', knowledgeBase: 'Extreme_Weather_Climate', fallbackKB: 'extreme_weather_climate_conditions' },
+  
+  // Age Groups
+  26: { name: 'Adults 50-70 Vitality', promptId: 'nanobanan_adults_50_70', knowledgeBase: 'adults_50_70', fallbackKB: 'QA_Professional' },
+  27: { name: 'Adults 18-50 General', promptId: 'nanobanan_adults_18_50', knowledgeBase: 'Age Prompts Adults (18-50)', fallbackKB: 'QA_Professional' },
+  28: { name: 'Elderly Lifestyle', promptId: 'nanobanan_elderly_life', knowledgeBase: 'Elderly_Lifestyle_TCM', fallbackKB: 'elderly_lifestyle_recommendations' },
+  29: { name: 'Geriatrics 70-120', promptId: 'nanobanan_geriatrics', knowledgeBase: 'TCM_Clinic 70-120', fallbackKB: 'elderly_lifestyle' },
+  
+  // Additional Categories
+  30: { name: 'Diet & Nutrition', promptId: 'nanobanan_nutrition', knowledgeBase: 'NUTRITION', fallbackKB: 'tcm_clinic_diet_nutrition' },
+  31: { name: 'Mindset Performance', promptId: 'nanobanan_mindset', knowledgeBase: 'TCM_Mindset_Mental_100', fallbackKB: 'Mental Health TCM Q&A' },
+  32: { name: 'Trauma & Orthopedics', promptId: 'nanobanan_trauma', knowledgeBase: 'TCM_Trauma', fallbackKB: 'tcm_trauma_casualties' },
+  33: { name: 'Immune Resilience', promptId: 'nanobanan_immune', knowledgeBase: 'immune-resilience', fallbackKB: 'wellnesss' },
+  34: { name: 'General Wellness', promptId: 'nanobanan_wellness', knowledgeBase: 'wellness_issue_enhanced', fallbackKB: 'wellnesss' },
+  36: { name: 'Pattern Differentiation', promptId: 'nanobanan_bianzheng', knowledgeBase: 'tcm_pattern_differentiation', fallbackKB: 'Diagnostics_Professional' },
+  
+  // Sports & Performance
+  37: { name: 'Sports Performance', promptId: 'nanobanan_sports', knowledgeBase: 'sport performance recovery', fallbackKB: 'immune-resilience' },
+  38: { name: 'Elite Lifestyle', promptId: 'nanobanan_elite', knowledgeBase: 'wellnesss', fallbackKB: 'Natural Healing' },
+  
+  // Brain & Neurology
+  39: { name: 'Brain Health', promptId: 'nanobanan_brain', knowledgeBase: 'Brain Health TCM', fallbackKB: 'neuro-degenerative-tcm' },
+  40: { name: 'Vagus Nerve', promptId: 'nanobanan_vagus', knowledgeBase: 'Vagus Nerve Q&A', fallbackKB: 'neuro-degenerative-tcm' },
+  
+  // Digestive
+  41: { name: 'Digestive Disorders', promptId: 'nanobanan_digestive', knowledgeBase: 'digestive-disorders', fallbackKB: 'Gastric Conditions' },
+  42: { name: 'Gastric Conditions', promptId: 'nanobanan_gastric', knowledgeBase: 'Gastric Conditions', fallbackKB: 'digestive-disorders' },
 };
 
-// Cross-reference databases for secondary sweep
+// Default fallback for unknown modules
+const DEFAULT_KNOWLEDGE_BASE = 'QA_Professional_Corrected_4Columns';
+
+// Cross-reference databases for secondary sweep - UPDATED TO MATCH ACTUAL FILES
 const CROSS_REFERENCE_MODULES = {
-  nutrition: { moduleId: 30, name: 'Diet & Nutrition', knowledgeBase: 'TCM_Diet_Nutrition_100_QA_Complete.csv' },
-  lifestyle: { moduleId: 28, name: 'Elderly Lifestyle', knowledgeBase: 'Elderly_Lifestyle_TCM_Enhanced.csv' },
-  mindset: { moduleId: 31, name: 'Mindset Performance', knowledgeBase: 'TCM_Mindset_Mental_100_QA_Complete.csv' },
+  nutrition: { moduleId: 30, name: 'Diet & Nutrition', knowledgeBase: 'NUTRITION', fallbackKB: 'tcm_clinic_diet_nutrition' },
+  lifestyle: { moduleId: 28, name: 'Elderly Lifestyle', knowledgeBase: 'Elderly_Lifestyle_TCM', fallbackKB: 'Natural Healing' },
+  mindset: { moduleId: 31, name: 'Mindset Performance', knowledgeBase: 'TCM_Mindset_Mental_100', fallbackKB: 'Mental Health TCM Q&A' },
 };
 
 // System prompt for Deep Search with structured output
@@ -463,22 +497,6 @@ serve(async (req) => {
     // === STEP 1: Primary Retrieval ===
     console.log(`=== PRIMARY RETRIEVAL: ${moduleInfo.knowledgeBase} ===`);
     
-    // Clean search query for PostgreSQL full-text search (remove special chars that break websearch)
-    const cleanSearchTerms = (query: string): string => {
-      return query
-        .replace(/[:\-\/\\()[\]{}'"!@#$%^&*+=<>?,;]/g, ' ')  // Remove special chars
-        .split(/\s+/)
-        .filter(word => word.length > 2)  // Only words with 3+ chars
-        .slice(0, 8)  // Limit to 8 terms
-        .join(' | ');
-    };
-    
-    const primarySearchTerms = cleanSearchTerms(retrievalSearchQuery);
-    console.log(`Primary search terms: ${primarySearchTerms}`);
-    
-    // Search across ALL knowledge chunks (don't filter by module - the module mapping is outdated)
-    let primaryResults: any[] = [];
-    
     // Extract clean keywords for search
     const keywords = retrievalSearchQuery
       .replace(/[:\-\/\\()[\]{}'"!@#$%^&*+=<>?,;.]/g, ' ')
@@ -487,11 +505,19 @@ serve(async (req) => {
       .slice(0, 6);
     
     console.log(`Search keywords: ${keywords.join(', ')}`);
+    console.log(`Target knowledge base: ${moduleInfo.knowledgeBase}`);
+    if (moduleInfo.fallbackKB) {
+      console.log(`Fallback knowledge base: ${moduleInfo.fallbackKB}`);
+    }
+    
+    // === SCOPED PRIMARY SEARCH ===
+    let primaryResults: any[] = [];
     
     if (keywords.length > 0) {
-      // Strategy 1: Simple ILIKE search with OR across keywords (most reliable)
-      const orConditions = keywords.map(k => `content.ilike.%${k}%`).join(',');
+      // Build keyword OR conditions
+      const keywordConditions = keywords.map(k => `content.ilike.%${k}%`).join(',');
       
+      // Strategy 1: Search in primary knowledge base (module-scoped)
       const { data: primaryChunks, error: primaryError } = await supabase
         .from('knowledge_chunks')
         .select(`
@@ -501,60 +527,79 @@ serve(async (req) => {
           answer,
           chunk_index,
           document_id,
-          knowledge_documents(file_name, original_name, category)
+          knowledge_documents!inner(file_name, original_name, category)
         `)
-        .or(orConditions)
-        .limit(25);
+        .ilike('knowledge_documents.original_name', `%${moduleInfo.knowledgeBase}%`)
+        .or(keywordConditions)
+        .limit(20);
       
       if (primaryError) {
-        console.error('Primary ILIKE search error:', primaryError);
+        console.error('Primary scoped search error:', primaryError);
       } else {
         primaryResults = primaryChunks || [];
-        console.log(`Primary ILIKE found: ${primaryResults.length} chunks`);
+        console.log(`Primary scoped search found: ${primaryResults.length} chunks from ${moduleInfo.knowledgeBase}`);
       }
-    }
-    
-    // Fallback: if still no results, try broader single-keyword search
-    if (primaryResults.length === 0 && keywords.length > 0) {
-      console.log('Trying single-keyword fallback...');
-      const { data: fallbackChunks } = await supabase
-        .from('knowledge_chunks')
-        .select(`
-          id,
-          content,
-          question,
-          answer,
-          chunk_index,
-          document_id,
-          knowledge_documents(file_name, original_name, category)
-        `)
-        .ilike('content', `%${keywords[0]}%`)
-        .limit(25);
       
-      primaryResults = fallbackChunks || [];
-      console.log(`Single-keyword fallback found: ${primaryResults.length} chunks`);
+      // Strategy 2: If no results, try fallback knowledge base
+      if (primaryResults.length === 0 && moduleInfo.fallbackKB) {
+        console.log(`Trying fallback KB: ${moduleInfo.fallbackKB}`);
+        const { data: fallbackChunks } = await supabase
+          .from('knowledge_chunks')
+          .select(`
+            id,
+            content,
+            question,
+            answer,
+            chunk_index,
+            document_id,
+            knowledge_documents!inner(file_name, original_name, category)
+          `)
+          .ilike('knowledge_documents.original_name', `%${moduleInfo.fallbackKB}%`)
+          .or(keywordConditions)
+          .limit(20);
+        
+        primaryResults = fallbackChunks || [];
+        console.log(`Fallback KB found: ${primaryResults.length} chunks from ${moduleInfo.fallbackKB}`);
+      }
+      
+      // Strategy 3: If still no results, use DEFAULT knowledge base
+      if (primaryResults.length === 0) {
+        console.log(`Trying default KB: ${DEFAULT_KNOWLEDGE_BASE}`);
+        const { data: defaultChunks } = await supabase
+          .from('knowledge_chunks')
+          .select(`
+            id,
+            content,
+            question,
+            answer,
+            chunk_index,
+            document_id,
+            knowledge_documents!inner(file_name, original_name, category)
+          `)
+          .ilike('knowledge_documents.original_name', `%${DEFAULT_KNOWLEDGE_BASE.replace('.csv', '')}%`)
+          .or(keywordConditions)
+          .limit(20);
+        
+        primaryResults = defaultChunks || [];
+        console.log(`Default KB found: ${primaryResults.length} chunks`);
+      }
     }
 
     console.log(`Primary chunks found: ${primaryResults.length}`);
 
-    // === STEP 2: Secondary Sweep - Cross-reference by category ===
+    // === STEP 2: Secondary Sweep - Cross-reference using scoped knowledge bases ===
     console.log(`=== SECONDARY SWEEP: Nutrition, Lifestyle, Mindset ===`);
     
-    // Map cross-reference types to document categories that exist
-    const CROSS_REF_CATEGORIES: Record<string, string[]> = {
-      nutrition: ['nutrition', 'diet'],
-      lifestyle: ['wellness', 'lifestyle', 'wellness_sport'],
-      mindset: ['anxiety_mental', 'mental', 'mindset'],
-    };
-    
-    const crossReferencePromises = Object.entries(CROSS_REF_CATEGORIES).map(async ([key, categories]) => {
+    const crossReferencePromises = Object.entries(CROSS_REFERENCE_MODULES).map(async ([key, module]) => {
+      // Skip if same as primary module
+      if (module.moduleId === moduleId) return { key, chunks: [] };
+
       let chunks: any[] = [];
       
       if (keywords.length > 0) {
-        // Search by category with keyword matching
-        const orConditions = keywords.slice(0, 3).map(k => `content.ilike.%${k}%`).join(',');
-        const categoryConditions = categories.map(c => `knowledge_documents.category.ilike.%${c}%`).join(',');
+        const keywordConditions = keywords.slice(0, 3).map(k => `content.ilike.%${k}%`).join(',');
         
+        // Search in the cross-reference knowledge base
         const { data } = await supabase
           .from('knowledge_chunks')
           .select(`
@@ -566,11 +611,31 @@ serve(async (req) => {
             document_id,
             knowledge_documents!inner(file_name, original_name, category)
           `)
-          .or(categoryConditions)
-          .or(orConditions)
+          .ilike('knowledge_documents.original_name', `%${module.knowledgeBase}%`)
+          .or(keywordConditions)
           .limit(8);
         
         chunks = data || [];
+        
+        // Try fallback if no results
+        if (chunks.length === 0 && module.fallbackKB) {
+          const { data: fallbackData } = await supabase
+            .from('knowledge_chunks')
+            .select(`
+              id,
+              content,
+              question,
+              answer,
+              chunk_index,
+              document_id,
+              knowledge_documents!inner(file_name, original_name, category)
+            `)
+            .ilike('knowledge_documents.original_name', `%${module.fallbackKB}%`)
+            .or(keywordConditions)
+            .limit(8);
+          
+          chunks = fallbackData || [];
+        }
       }
 
       return { key, chunks };
