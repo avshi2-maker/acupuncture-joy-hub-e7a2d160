@@ -124,15 +124,17 @@ export function ClinicalNavigatorAdvanced({
   const [activeCameraAngle, setActiveCameraAngle] = useState<'anterior' | 'posterior' | 'lateral_left' | 'lateral_right' | 'superior' | 'auto'>('auto');
   const [focusedPoint, setFocusedPoint] = useState<string | null>(null);
   const [isTourActive, setIsTourActive] = useState(false);
+  const [aiSelectedView, setAiSelectedView] = useState<string | null>(null); // Track AI-selected view
 
   // Effect to handle body figure commands from AI response
   useEffect(() => {
     if (bodyFigureCommand) {
       console.log('Processing body figure command:', bodyFigureCommand);
       
-      // Set camera angle based on command
+      // Set camera angle based on command and track AI selection
       if (bodyFigureCommand.camera_angle !== 'auto') {
         setActiveCameraAngle(bodyFigureCommand.camera_angle);
+        setAiSelectedView(bodyFigureCommand.camera_angle); // Track that AI selected this
       }
       
       // Handle camera action
@@ -1080,7 +1082,7 @@ export function ClinicalNavigatorAdvanced({
                 variant={activeCameraAngle === 'anterior' ? 'default' : 'ghost'}
                 size="sm"
                 className="h-7 px-2 text-[10px]"
-                onClick={() => setActiveCameraAngle('anterior')}
+                onClick={() => { setActiveCameraAngle('anterior'); setAiSelectedView(null); }}
                 title="Anterior View"
               >
                 <Eye className="h-3 w-3 mr-1" />
@@ -1090,7 +1092,7 @@ export function ClinicalNavigatorAdvanced({
                 variant={activeCameraAngle === 'posterior' ? 'default' : 'ghost'}
                 size="sm"
                 className="h-7 px-2 text-[10px]"
-                onClick={() => setActiveCameraAngle('posterior')}
+                onClick={() => { setActiveCameraAngle('posterior'); setAiSelectedView(null); }}
                 title="Posterior View"
               >
                 <RotateCcw className="h-3 w-3 mr-1" />
@@ -1100,7 +1102,7 @@ export function ClinicalNavigatorAdvanced({
                 variant={activeCameraAngle === 'lateral_left' || activeCameraAngle === 'lateral_right' ? 'default' : 'ghost'}
                 size="sm"
                 className="h-7 px-2 text-[10px]"
-                onClick={() => setActiveCameraAngle(activeCameraAngle === 'lateral_left' ? 'lateral_right' : 'lateral_left')}
+                onClick={() => { setActiveCameraAngle(activeCameraAngle === 'lateral_left' ? 'lateral_right' : 'lateral_left'); setAiSelectedView(null); }}
                 title="Lateral View"
               >
                 <MoveHorizontal className="h-3 w-3 mr-1" />
@@ -1110,13 +1112,41 @@ export function ClinicalNavigatorAdvanced({
                 variant={activeCameraAngle === 'auto' ? 'default' : 'ghost'}
                 size="sm"
                 className="h-7 px-2 text-[10px]"
-                onClick={() => setActiveCameraAngle('auto')}
+                onClick={() => { setActiveCameraAngle('auto'); setAiSelectedView(null); }}
                 title="Auto View"
               >
                 <Sparkles className="h-3 w-3 mr-1" />
                 {language === 'he' ? 'אוטו' : 'Auto'}
               </Button>
             </div>
+            
+            {/* AI-Selected View Indicator */}
+            {aiSelectedView && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-jade/10 border border-jade/30"
+              >
+                <Sparkles className="h-3 w-3 text-jade animate-pulse" />
+                <span className="text-[10px] font-medium text-jade">
+                  {language === 'he' ? 'AI בחר:' : 'AI Selected:'}
+                  {' '}
+                  {aiSelectedView === 'posterior' ? (language === 'he' ? 'אחורי' : 'Back') :
+                   aiSelectedView === 'anterior' ? (language === 'he' ? 'קדמי' : 'Front') :
+                   aiSelectedView === 'lateral_left' ? (language === 'he' ? 'צד שמאל' : 'Left Side') :
+                   aiSelectedView === 'lateral_right' ? (language === 'he' ? 'צד ימין' : 'Right Side') :
+                   aiSelectedView}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-4 w-4 p-0 hover:bg-transparent"
+                  onClick={() => setAiSelectedView(null)}
+                >
+                  <X className="h-3 w-3 text-jade/70" />
+                </Button>
+              </motion.div>
+            )}
           </div>
         </div>
         
