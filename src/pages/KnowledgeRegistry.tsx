@@ -499,10 +499,10 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'wellness_sport',
     defaultLanguage: 'en',
   },
-  // TCM Herbal Formulas Comprehensive
+  // TCM Herbal Formulas Comprehensive - Updated with 4-Column Format
   {
     id: 'tcm-herbal-formulas-comprehensive',
-    label: '🌿 TCM Herbal Formulas Comprehensive (91 Formulas + Acupoints)',
+    label: '🌿 TCM Herbal Formulas Comprehensive (91 Formulas + Q&A + Acupoints + Pharmacopeia)',
     path: '/knowledge-assets/TCM_Herbal_Formulas_Comprehensive.csv',
     defaultCategory: 'tcm_theory',
     defaultLanguage: 'en',

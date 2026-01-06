@@ -151,6 +151,17 @@ export const KNOWLEDGE_ASSETS: KnowledgeAsset[] = [
     file: 'clinic-medications-supplements-intake.csv',
     category: 'treatment'
   },
+  { 
+    id: 'herbal-formulas', 
+    name: 'Herbal Formulas', 
+    nameHe: 'נוסחאות צמחים',
+    icon: Leaf, 
+    color: 'text-green-600', 
+    bgColor: 'bg-green-50 dark:bg-green-950/30', 
+    borderColor: 'border-green-300 dark:border-green-700',
+    file: 'TCM_Herbal_Formulas_Comprehensive.csv',
+    category: 'treatment'
+  },
 
   // Specialties Category
   { 
@@ -753,6 +764,7 @@ export function detectActiveAssets(text: string): string[] {
     'stress-burnout': ['burnout', 'exhaustion', 'overwork', 'fatigue'],
     'qa-professional': ['professional', 'clinical', 'practitioner'],
     'acupuncture-points': ['acupuncture point', 'acupoint', 'LI4', 'ST36', 'SP6', 'LV3'],
+    'herbal-formulas': ['herbal formula', 'chinese formula', 'tcm formula', 'decoction', 'tang', 'wan', 'san', 'yin', 'pharmacopeia'],
   };
 
   for (const [assetId, terms] of Object.entries(keywords)) {
