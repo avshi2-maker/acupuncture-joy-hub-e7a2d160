@@ -561,6 +561,13 @@ const BUILTIN_ASSETS = [
     defaultLanguage: 'en',
   },
   {
+    id: 'ht7-shenmen-needling-complete',
+    label: '📍 HT-7 Shenmen Complete Needling Technique (93 Aspects + Protocols)',
+    path: '/knowledge-assets/HT7_Shenmen_Needling_Technique_Complete.csv',
+    defaultCategory: 'clinical_protocols',
+    defaultLanguage: 'en',
+  },
+  {
     id: 'tcm-trauma-qa',
     label: '🛡️ TCM Trauma Q&A (22 Q&A - Kidney-Heart, Zhi, Po, Formulas)',
     path: '/knowledge-assets/tcm-trauma-qa.csv',
