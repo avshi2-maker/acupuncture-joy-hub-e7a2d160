@@ -115,7 +115,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.clinical-deep-search]
-verify_jwt = true
+verify_jwt = false
 
 [functions.send-protocol-email]
 verify_jwt = false
