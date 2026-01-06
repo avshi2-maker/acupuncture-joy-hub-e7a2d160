@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
 import { UserPlus, Loader2, Save } from 'lucide-react';
 import { usePatients } from '@/hooks/usePatients';
 import { useProtocolHistory } from '@/hooks/useProtocolHistory';
@@ -48,6 +49,7 @@ export function SaveToPatientDialog({
 }: SaveToPatientDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedPatientId, setSelectedPatientId] = useState<string>('');
+  const [distressLevel, setDistressLevel] = useState<number>(5);
   
   const { data: patients = [], isLoading: patientsLoading } = usePatients();
   const { saveProtocol, isSaving } = useProtocolHistory();
@@ -66,13 +68,27 @@ export function SaveToPatientDialog({
       nutritionAdvice,
       lifestyleAdvice,
       answers,
+      distressLevel,
     }, {
       onSuccess: () => {
         setOpen(false);
         setSelectedPatientId('');
+        setDistressLevel(5);
         onSaved?.();
       },
     });
+  };
+
+  const getDistressLabel = (level: number) => {
+    if (level <= 3) return language === 'he' ? 'נמוך' : 'Low';
+    if (level <= 6) return language === 'he' ? 'בינוני' : 'Moderate';
+    return language === 'he' ? 'גבוה' : 'High';
+  };
+
+  const getDistressColor = (level: number) => {
+    if (level <= 3) return 'text-green-600';
+    if (level <= 6) return 'text-yellow-600';
+    return 'text-red-600';
   };
 
   return (
@@ -114,6 +130,28 @@ export function SaveToPatientDialog({
                 </SelectContent>
               </Select>
             )}
+          </div>
+
+          {/* Distress Scale */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>{language === 'he' ? 'רמת מצוקה סובייקטיבית' : 'Subjective Distress Level'}</Label>
+              <span className={`text-lg font-bold ${getDistressColor(distressLevel)}`}>
+                {distressLevel}/10 ({getDistressLabel(distressLevel)})
+              </span>
+            </div>
+            <Slider
+              value={[distressLevel]}
+              onValueChange={([value]) => setDistressLevel(value)}
+              min={0}
+              max={10}
+              step={1}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>{language === 'he' ? 'אין מצוקה' : 'No distress'}</span>
+              <span>{language === 'he' ? 'מצוקה קשה' : 'Severe distress'}</span>
+            </div>
           </div>
 
           <div className="rounded-lg bg-muted/50 p-3 text-sm space-y-1">

@@ -23,6 +23,7 @@ import {
 import { RAGBodyFigureDisplay } from '@/components/acupuncture/RAGBodyFigureDisplay';
 import { ComparisonBodyDisplay } from '@/components/acupuncture/ComparisonBodyDisplay';
 import { getComparisonColoredPointsFromArrays } from '@/components/clinical-navigator/ProtocolCompare';
+import { ProgressChart } from '@/components/clinical-navigator/ProgressChart';
 import { SavedProtocol } from '@/hooks/useProtocolHistory';
 import { Helmet } from 'react-helmet-async';
 
@@ -36,6 +37,7 @@ interface TimelineEntry {
   herbalFormula: string | null;
   nutritionAdvice: string[];
   lifestyleAdvice: string[];
+  distressLevel: number | null;
 }
 
 export default function PatientTimeline() {
@@ -87,6 +89,7 @@ export default function PatientTimeline() {
           herbalFormula: details?.herbalFormula || null,
           nutritionAdvice: details?.nutritionAdvice || [],
           lifestyleAdvice: details?.lifestyleAdvice || [],
+          distressLevel: item.score ?? details?.distressLevel ?? null,
         } as TimelineEntry;
       });
     },
@@ -168,13 +171,23 @@ export default function PatientTimeline() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid md:grid-cols-[1fr,auto] gap-6">
-              {/* Timeline */}
-              <div className="relative">
-                {/* Vertical line */}
-                <div className="absolute left-[18px] top-0 bottom-0 w-0.5 bg-border" />
+            <div className="space-y-6">
+              {/* Progress Chart */}
+              <ProgressChart
+                data={entries.map(e => ({
+                  date: e.date,
+                  distressLevel: e.distressLevel ?? 0,
+                  complaint: e.primaryComplaint,
+                }))}
+              />
+
+              <div className="grid md:grid-cols-[1fr,auto] gap-6">
+                {/* Timeline */}
+                <div className="relative">
+                  {/* Vertical line */}
+                  <div className="absolute left-[18px] top-0 bottom-0 w-0.5 bg-border" />
                 
-                <div className="space-y-4">
+                  <div className="space-y-4">
                   {entries.map((entry, index) => (
                     <div key={entry.id} className="relative flex gap-4">
                       {/* Timeline dot */}
@@ -303,6 +316,7 @@ export default function PatientTimeline() {
                 </Card>
               </div>
             </div>
+          </div>
           )}
         </div>
       </div>

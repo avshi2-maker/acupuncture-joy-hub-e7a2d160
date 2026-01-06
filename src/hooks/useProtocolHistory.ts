@@ -69,6 +69,7 @@ export function useProtocolHistory(patientId?: string) {
       nutritionAdvice?: string[];
       lifestyleAdvice?: string[];
       answers?: Record<string, any>;
+      distressLevel?: number;
     }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
@@ -80,6 +81,7 @@ export function useProtocolHistory(patientId?: string) {
           therapist_id: user.id,
           assessment_type: 'clinical_navigator',
           status: 'saved',
+          score: protocol.distressLevel,
           summary: `${protocol.moduleName} - ${protocol.diagnosis.substring(0, 100)}...`,
           details: {
             moduleId: protocol.moduleId,
@@ -91,6 +93,7 @@ export function useProtocolHistory(patientId?: string) {
             nutritionAdvice: protocol.nutritionAdvice,
             lifestyleAdvice: protocol.lifestyleAdvice,
             answers: protocol.answers,
+            distressLevel: protocol.distressLevel,
           },
         })
         .select()
