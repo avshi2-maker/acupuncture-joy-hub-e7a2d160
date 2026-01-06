@@ -23,6 +23,9 @@ interface Source {
   chunkIndex: number;
   preview: string;
   category?: string;
+  imageRef?: string;
+  imageUrl?: string;
+  imageCaption?: string;
 }
 
 interface SourceAuditData {
@@ -660,6 +663,42 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
                           +{message.sources.length - 5} more
                         </Badge>
                       )}
+                    </div>
+                  )}
+                  
+                  {/* Display Images from Sources (Tongue Diagnosis, etc.) */}
+                  {message.sources && message.sources.some(s => s.imageUrl) && (
+                    <div className="mt-3 w-full max-w-[85%]">
+                      <Collapsible>
+                        <CollapsibleTrigger asChild>
+                          <Button variant="ghost" size="sm" className="text-xs gap-1 h-6">
+                            <Eye className="w-3 h-3" />
+                            View {message.sources.filter(s => s.imageUrl).length} Reference Image(s)
+                          </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="mt-2">
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            {message.sources.filter(s => s.imageUrl).map((source, i) => (
+                              <div key={i} className="relative group">
+                                <img 
+                                  src={source.imageUrl}
+                                  alt={source.imageCaption || `Reference image from ${source.fileName}`}
+                                  className="rounded-lg border border-border/50 object-cover w-full aspect-square hover:border-primary/50 transition-colors cursor-pointer"
+                                  onClick={() => window.open(source.imageUrl, '_blank')}
+                                />
+                                {source.imageCaption && (
+                                  <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-xs p-1 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                    {source.imageCaption}
+                                  </div>
+                                )}
+                                <div className="text-xs text-muted-foreground mt-1 truncate">
+                                  {source.imageRef || source.fileName}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
                     </div>
                   )}
                   

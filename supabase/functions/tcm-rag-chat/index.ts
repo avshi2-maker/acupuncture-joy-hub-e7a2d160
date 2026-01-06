@@ -1656,7 +1656,7 @@ serve(async (req) => {
     // PHASE 3: BUILD STRUCTURED CONTEXT FOR AI
     // ========================================================================
     
-    const sources: Array<{ fileName: string; chunkIndex: number; preview: string; category: string; documentId: string; pillar: string }> = [];
+    const sources: Array<{ fileName: string; chunkIndex: number; preview: string; category: string; documentId: string; pillar: string; imageRef?: string; imageUrl?: string; imageCaption?: string }> = [];
     const chunksMatched: Array<any> = [];
 
     // Helper to build context from chunks
@@ -1675,7 +1675,10 @@ serve(async (req) => {
           preview: (chunk.question || chunk.content).substring(0, 100),
           category,
           documentId,
-          pillar: pillarName
+          pillar: pillarName,
+          imageRef: chunk.image_ref || undefined,
+          imageUrl: chunk.image_url || undefined,
+          imageCaption: chunk.image_caption || undefined,
         });
         
         chunksMatched.push({
@@ -1687,7 +1690,10 @@ serve(async (req) => {
           pillar: pillarName,
           question: chunk.question || undefined,
           answer: chunk.answer || undefined,
-          content: chunk.content
+          content: chunk.content,
+          imageRef: chunk.image_ref || undefined,
+          imageUrl: chunk.image_url || undefined,
+          imageCaption: chunk.image_caption || undefined,
         });
         
         if (chunk.question && chunk.answer) {

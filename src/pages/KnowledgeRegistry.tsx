@@ -13,6 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { FileText, Download, CheckCircle, Clock, AlertCircle, Shield, Database, FileCheck, Upload, Trash2, Pause, Play, RotateCcw, XCircle, ArrowLeft, ShieldAlert, Loader2, Languages, Sparkles, Heart } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { GoldenKnowledgeImport } from '@/components/admin/GoldenKnowledgeImport';
 import { format } from 'date-fns';
 
 // Hook to check if user has admin role
@@ -1494,6 +1495,11 @@ ${report.verificationInstructions || ''}
           </CardContent>
         </Card>
       )}
+
+      {/* Golden Knowledge Base Import - For pre-processed ZIP files */}
+      <div className="mb-8">
+        <GoldenKnowledgeImport />
+      </div>
 
       {/* Import Queue Section */}
       <Card className="mb-8 border-dashed border-2">

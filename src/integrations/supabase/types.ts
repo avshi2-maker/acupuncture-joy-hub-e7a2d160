@@ -1862,32 +1862,62 @@ export type Database = {
         }
         Returns: boolean
       }
-      hybrid_search: {
-        Args: {
-          language_filter?: string
-          match_count?: number
-          match_threshold?: number
-          query_embedding: string
-          query_text: string
-        }
-        Returns: {
-          answer: string
-          category: string
-          chunk_index: number
-          combined_score: number
-          confidence: string
-          content: string
-          document_id: string
-          file_name: string
-          id: string
-          keyword_score: number
-          language: string
-          metadata: Json
-          original_name: string
-          question: string
-          vector_score: number
-        }[]
-      }
+      hybrid_search:
+        | {
+            Args: {
+              language_filter?: string
+              match_count?: number
+              match_threshold?: number
+              query_embedding?: string
+              query_text?: string
+            }
+            Returns: {
+              answer: string
+              category: string
+              chunk_index: number
+              combined_score: number
+              confidence: string
+              content: string
+              document_id: string
+              file_name: string
+              id: string
+              image_caption: string
+              image_ref: string
+              image_url: string
+              keyword_score: number
+              language: string
+              metadata: Json
+              original_name: string
+              question: string
+              vector_score: number
+            }[]
+          }
+        | {
+            Args: {
+              language_filter?: string
+              match_count?: number
+              match_threshold?: number
+              query_embedding: string
+              query_text: string
+            }
+            Returns: {
+              answer: string
+              category: string
+              chunk_index: number
+              combined_score: number
+              confidence: string
+              content: string
+              document_id: string
+              file_name: string
+              id: string
+              keyword_score: number
+              language: string
+              metadata: Json
+              original_name: string
+              question: string
+              vector_score: number
+            }[]
+          }
       is_clinic_admin: {
         Args: { _clinic_id: string; _user_id: string }
         Returns: boolean
@@ -1896,29 +1926,56 @@ export type Database = {
         Args: { _clinic_id: string; _user_id: string }
         Returns: boolean
       }
-      keyword_search: {
-        Args: {
-          language_filter?: string
-          match_count?: number
-          match_threshold?: number
-          query_text: string
-        }
-        Returns: {
-          answer: string
-          category: string
-          chunk_index: number
-          confidence: string
-          content: string
-          document_id: string
-          file_name: string
-          id: string
-          keyword_score: number
-          language: string
-          metadata: Json
-          original_name: string
-          question: string
-        }[]
-      }
+      keyword_search:
+        | {
+            Args: {
+              language_filter?: string
+              match_count?: number
+              match_threshold?: number
+              query_text?: string
+            }
+            Returns: {
+              answer: string
+              category: string
+              chunk_index: number
+              confidence: string
+              content: string
+              document_id: string
+              file_name: string
+              id: string
+              image_caption: string
+              image_ref: string
+              image_url: string
+              keyword_score: number
+              language: string
+              metadata: Json
+              original_name: string
+              question: string
+            }[]
+          }
+        | {
+            Args: {
+              language_filter?: string
+              match_count?: number
+              match_threshold?: number
+              query_text: string
+            }
+            Returns: {
+              answer: string
+              category: string
+              chunk_index: number
+              confidence: string
+              content: string
+              document_id: string
+              file_name: string
+              id: string
+              keyword_score: number
+              language: string
+              metadata: Json
+              original_name: string
+              question: string
+            }[]
+          }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       validate_access_password: {
