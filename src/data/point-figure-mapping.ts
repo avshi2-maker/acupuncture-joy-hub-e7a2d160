@@ -11,6 +11,8 @@ export interface FigureMapping {
   keyMeridians: string[];
   pointCodes: string[];
   clinicalPriority: 'High' | 'Medium' | 'Low';
+  gender?: 'male' | 'female' | 'neutral'; // Gender-specific figure
+  ageGroup?: 'pediatric' | 'adult' | 'elderly'; // Age-specific figure
 }
 
 // Master mapping from CSV with expanded point codes
@@ -24,7 +26,8 @@ export const FIGURE_MAPPINGS: FigureMapping[] = [
                  'ST19', 'ST20', 'ST21', 'ST22', 'ST23', 'ST24', 'ST25', 'ST26', 'ST27', 'ST28', 'ST29', 'ST30',
                  'KI11', 'KI12', 'KI13', 'KI14', 'KI15', 'KI16', 'KI17', 'KI18', 'KI19', 'KI20', 'KI21',
                  'SP13', 'SP14', 'SP15', 'SP16'],
-    clinicalPriority: 'High'
+    clinicalPriority: 'High',
+    gender: 'male'
   },
   {
     filename: 'shoulder_side.png',
@@ -274,7 +277,8 @@ export const FIGURE_MAPPINGS: FigureMapping[] = [
     view: 'Anterior',
     keyMeridians: ['Pediatric'],
     pointCodes: ['CV8', 'CV12', 'ST36', 'SP6'],
-    clinicalPriority: 'Medium'
+    clinicalPriority: 'Medium',
+    ageGroup: 'pediatric'
   },
   {
     filename: 'child_back.png',
@@ -283,7 +287,8 @@ export const FIGURE_MAPPINGS: FigureMapping[] = [
     keyMeridians: ['Pediatric', 'BL', 'GV'],
     pointCodes: ['BL11', 'BL12', 'BL13', 'BL14', 'BL15', 'BL16', 'BL17', 'BL18', 'BL19', 'BL20',
                  'BL21', 'BL22', 'BL23', 'BL24', 'BL25', 'BL26', 'BL27', 'BL28', 'BL29', 'BL30'],
-    clinicalPriority: 'Medium'
+    clinicalPriority: 'Medium',
+    ageGroup: 'pediatric'
   },
   {
     filename: 'abdomen_zoomed.png',
@@ -329,7 +334,8 @@ export const FIGURE_MAPPINGS: FigureMapping[] = [
                  'ST19', 'ST20', 'ST21', 'ST22', 'ST23', 'ST24', 'ST25', 'ST26', 'ST27', 'ST28', 'ST29', 'ST30',
                  'KI11', 'KI12', 'KI13', 'KI14', 'KI15', 'KI16', 'KI17', 'KI18', 'KI19', 'KI20', 'KI21',
                  'SP13', 'SP14', 'SP15', 'SP16'],
-    clinicalPriority: 'High'
+    clinicalPriority: 'High',
+    gender: 'female'
   },
   {
     filename: 'foot.png',
@@ -431,4 +437,97 @@ export function isPointOnFigure(pointCode: string, filename: string): boolean {
   const figure = FIGURE_MAPPINGS.find(f => f.filename === filename);
   if (!figure) return false;
   return figure.pointCodes.map(normalizePointCode).includes(normalizedCode);
+}
+
+export type GenderFilter = 'male' | 'female' | 'neutral' | null;
+export type AgeGroupFilter = 'pediatric' | 'adult' | 'elderly' | null;
+
+/**
+ * Gender-aware figure mapping
+ * Maps generic figures to gender-specific alternatives
+ */
+const GENDER_FIGURE_ALTERNATIVES: Record<string, { male: string; female: string }> = {
+  'abdomen.png': { male: 'abdomen.png', female: 'abdomen_female.png' },
+  'abdomen_zoomed.png': { male: 'abdomen_zoomed.png', female: 'abdomen_female.png' },
+  'chest.png': { male: 'chest.png', female: 'chest.png' },
+};
+
+/**
+ * Age-aware figure mapping
+ * Maps generic figures to age-specific alternatives
+ */
+const AGE_FIGURE_ALTERNATIVES: Record<string, { pediatric: string; adult: string; elderly: string }> = {
+  'upper_back.png': { pediatric: 'child_back.png', adult: 'upper_back.png', elderly: 'upper_back.png' },
+  'lower_back.png': { pediatric: 'child_back.png', adult: 'lower_back.png', elderly: 'lower_back.png' },
+  'abdomen.png': { pediatric: 'child_front.png', adult: 'abdomen.png', elderly: 'abdomen.png' },
+  'chest.png': { pediatric: 'child_front.png', adult: 'chest.png', elderly: 'chest.png' },
+};
+
+/**
+ * Get gender-aware figure filename
+ */
+export function getGenderAwareFigure(filename: string, gender: GenderFilter): string {
+  if (!gender || gender === 'neutral') return filename;
+  const alternatives = GENDER_FIGURE_ALTERNATIVES[filename];
+  return alternatives ? (alternatives[gender] || filename) : filename;
+}
+
+/**
+ * Get age-aware figure filename
+ */
+export function getAgeAwareFigure(filename: string, ageGroup: AgeGroupFilter): string {
+  if (!ageGroup) return filename;
+  const alternatives = AGE_FIGURE_ALTERNATIVES[filename];
+  return alternatives ? (alternatives[ageGroup] || filename) : filename;
+}
+
+/**
+ * Get demographically-appropriate figure filename
+ * Combines gender and age-aware selection
+ */
+export function getDemographicAwareFigure(
+  filename: string, 
+  gender: GenderFilter = null, 
+  ageGroup: AgeGroupFilter = null
+): string {
+  let result = getAgeAwareFigure(filename, ageGroup);
+  if (ageGroup !== 'pediatric') {
+    result = getGenderAwareFigure(result, gender);
+  }
+  return result;
+}
+
+/**
+ * Find figures filtered by demographic criteria
+ */
+export function findFiguresForPointsWithDemographics(
+  pointCodes: string[],
+  gender: GenderFilter = null,
+  ageGroup: AgeGroupFilter = null
+): FigureMapping[] {
+  const baseFigures = findFiguresForPoints(pointCodes);
+  
+  if (!gender && !ageGroup) return baseFigures;
+  
+  return baseFigures
+    .filter(figure => {
+      if (figure.gender && gender && figure.gender !== gender && figure.gender !== 'neutral') {
+        return false;
+      }
+      if (figure.ageGroup && ageGroup && figure.ageGroup !== ageGroup) {
+        return false;
+      }
+      return true;
+    })
+    .map(figure => {
+      const newFilename = getDemographicAwareFigure(figure.filename, gender, ageGroup);
+      if (newFilename !== figure.filename) {
+        const altFigure = FIGURE_MAPPINGS.find(f => f.filename === newFilename);
+        if (altFigure) return altFigure;
+      }
+      return figure;
+    })
+    .filter((figure, index, arr) => 
+      arr.findIndex(f => f.filename === figure.filename) === index
+    );
 }

@@ -8,22 +8,35 @@ import {
   isPointOnFigure,
   normalizePointCode,
   FigureMapping,
-  FIGURE_MAPPINGS
+  FIGURE_MAPPINGS,
+  GenderFilter,
+  AgeGroupFilter,
+  getGenderAwareFigure,
+  getAgeAwareFigure,
+  getDemographicAwareFigure,
+  findFiguresForPointsWithDemographics
 } from '@/data/point-figure-mapping';
 import { parsePointReferences } from '@/components/acupuncture/BodyFigureSelector';
+
+interface DemographicFilters {
+  gender?: GenderFilter;
+  ageGroup?: AgeGroupFilter;
+}
 
 /**
  * Hook for working with point-to-figure mappings
  * Useful for RAG/AI integrations to automatically display correct body figures
  */
-export function usePointFigureMapping() {
+export function usePointFigureMapping(demographics?: DemographicFilters) {
+  const { gender = null, ageGroup = null } = demographics || {};
+
   /**
    * Parse AI response text and find the best matching figures
    */
   const findFiguresFromText = useCallback((text: string): FigureMapping[] => {
     const pointCodes = parsePointReferences(text);
-    return findFiguresForPoints(pointCodes);
-  }, []);
+    return findFiguresForPointsWithDemographics(pointCodes, gender, ageGroup);
+  }, [gender, ageGroup]);
 
   /**
    * Get the primary (best) figure for an AI response
@@ -37,8 +50,8 @@ export function usePointFigureMapping() {
    * Get all figures that should be displayed for a set of points
    */
   const getFiguresForPoints = useCallback((pointCodes: string[]): FigureMapping[] => {
-    return findFiguresForPoints(pointCodes);
-  }, []);
+    return findFiguresForPointsWithDemographics(pointCodes, gender, ageGroup);
+  }, [gender, ageGroup]);
 
   /**
    * Get points that should be highlighted on a specific figure
@@ -58,6 +71,13 @@ export function usePointFigureMapping() {
   const extractPointsFromText = useCallback((text: string): string[] => {
     return parsePointReferences(text);
   }, []);
+
+  /**
+   * Get demographic-aware figure filename
+   */
+  const getDemographicFigure = useCallback((filename: string): string => {
+    return getDemographicAwareFigure(filename, gender, ageGroup);
+  }, [gender, ageGroup]);
 
   /**
    * Get all available figures
@@ -83,6 +103,10 @@ export function usePointFigureMapping() {
     getPointsForFigure,
     isPointOnFigure,
     allFigures,
-    highPriorityFigures
+    highPriorityFigures,
+    // New demographic-aware functions
+    getDemographicFigure,
+    getGenderAwareFigure,
+    getAgeAwareFigure,
   };
 }
