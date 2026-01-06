@@ -102,6 +102,67 @@ const questions = [
     title: 'One Change',
     questionHe: 'אם היית יכול/ה לשנות הרגל תזונתי אחד בלבד שישפר את בריאותך, מה הוא היה?',
     questionEn: 'If you could change just one nutritional habit to improve your health, what would it be?'
+  },
+  // Part 2: Eating Habits & Sensitivities
+  {
+    id: 'diet_veg_vegan',
+    title: 'Diet Style (Veg/Vegan)',
+    questionHe: 'האם התזונה שלך צמחונית או טבעונית? האם את/ה מרגיש/ה קור פנימי או חולשה מאז השינוי?',
+    questionEn: 'Is your diet vegetarian or vegan? Do you feel internal cold or weakness since the change?'
+  },
+  {
+    id: 'diet_keto',
+    title: 'Diet Style (Keto/Low Carb)',
+    questionHe: 'האם את/ה נמנע/ת לחלוטין מפחמימות (דיאטת קיטו/פליאו)? האם את/ה חווה יובש או עצירות?',
+    questionEn: 'Do you completely avoid carbohydrates (keto/paleo diet)? Do you experience dryness or constipation?'
+  },
+  {
+    id: 'eating_speed',
+    title: 'Eating Speed',
+    questionHe: 'האם את/ה נוטה לאכול מהר מאוד, "תוך כדי תנועה" או מול מסכים, מבלי ללעוס היטב?',
+    questionEn: 'Do you tend to eat very fast, "on the go" or in front of screens, without chewing well?'
+  },
+  {
+    id: 'frequency_omad',
+    title: 'Frequency (OMAD/Grazing)',
+    questionHe: 'האם את/ה אוכל/ת ארוחה אחת גדולה ביום (צום לסירוגין) או מנשנש/ת מנות קטנות כל היום?',
+    questionEn: 'Do you eat one large meal a day (intermittent fasting) or snack small portions all day?'
+  },
+  {
+    id: 'processed_fried',
+    title: 'Processed/Fried',
+    questionHe: 'באיזו תדירות את/ה אוכל/ת מזון מטוגן, מעובד או תעשייתי?',
+    questionEn: 'How often do you eat fried, processed, or industrial food?'
+  },
+  {
+    id: 'alcohol',
+    title: 'Alcohol',
+    questionHe: 'מהי תדירות צריכת האלכוהול שלך? (יין, בירה, משקאות חריפים)',
+    questionEn: 'What is your alcohol consumption frequency? (wine, beer, spirits)'
+  },
+  {
+    id: 'red_meat',
+    title: 'Red Meat',
+    questionHe: 'האם אכילת בשר אדום גורמת לך לתחושת כבדות, חום או אי-נוחות?',
+    questionEn: 'Does eating red meat cause you feelings of heaviness, heat, or discomfort?'
+  },
+  {
+    id: 'wheat_gluten',
+    title: 'Wheat/Gluten',
+    questionHe: 'האם את/ה מרגיש/ה נפיחות או עייפות ספציפית לאחר אכילת לחם, פסטה או מאפים (חיטה)?',
+    questionEn: 'Do you feel bloating or specific fatigue after eating bread, pasta, or baked goods (wheat)?'
+  },
+  {
+    id: 'legumes',
+    title: 'Legumes',
+    questionHe: 'האם קטניות (עדשים, שעועית, חומוס) גורמות לך לגזים קשים ונפיחות?',
+    questionEn: 'Do legumes (lentils, beans, chickpeas) cause severe gas and bloating?'
+  },
+  {
+    id: 'fruit_excess',
+    title: 'Fruit Excess',
+    questionHe: 'האם את/ה אוכל/ת פירות בכמות גדולה (יותר מ-2 ביום), במיוחד פירות טרופיים או הדרים?',
+    questionEn: 'Do you eat fruits in large quantities (more than 2 per day), especially tropical or citrus fruits?'
   }
 ];
 
