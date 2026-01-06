@@ -25,7 +25,8 @@ import {
   Stethoscope,
   MapPin,
   ArrowLeft,
-  Filter
+  Filter,
+  Compass
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -378,6 +379,33 @@ const questionnairesData = [
       { id: '18', textHe: 'אילו נקודות פותחות את מרידיאן ה-Dai Mai (החגורה)?', textEn: 'Which points open the Dai Mai (Belt) vessel?', category: 'מרידיאנים יוצאי דופן' },
       { id: '19', textHe: 'מהו התפקוד הרוחני/נפשי של נקודה GV-20 (Baihui)?', textEn: 'What is the spiritual/mental function of GV-20 (Baihui)?', category: 'אנרגטיקה' },
       { id: '20', textHe: 'אילו נקודות משמשות להוצאת חום (Clearing Heat) מהגוף?', textEn: 'Which points are used for Clearing Heat from the body?', category: 'יישומים קליניים' }
+    ]
+  },
+  {
+    id: 'pattern_differentiation',
+    name: 'אבחנה מלאה (ביין ג׳נג)',
+    nameEn: 'Complete Pattern Differentiation (Bian Zheng)',
+    icon: Compass,
+    color: 'text-indigo-500',
+    bgColor: 'bg-indigo-500/10',
+    borderColor: 'border-indigo-500/20',
+    route: '/pattern-differentiation-questionnaire',
+    questions: [
+      { id: 'temperature', textHe: 'האם אתה סובל יותר מקור (גפיים קרות, רתיעה מקור - Yang Def) או מחום (גלי חום, צמא, פנים אדומות - Yin Def/Heat)?', textEn: 'Do you suffer more from cold (cold limbs, aversion to cold - Yang Def) or heat (hot flashes, thirst, red face - Yin Def/Heat)?', category: 'טמפרטורה (קור/חום)' },
+      { id: 'energy_qi', textHe: 'האם יש עייפות כרונית, קוצר נשימה במאמץ, או תחושת כבדות ועצלנות לאחר האוכל?', textEn: 'Is there chronic fatigue, shortness of breath on exertion, or feeling of heaviness and sluggishness after eating?', category: 'רמת אנרגיה (צ׳י)' },
+      { id: 'fluids_dryness', textHe: 'האם אתה סובל מיובש (פה, עור, עיניים), סחרחורות בקימה, או הזעות לילה?', textEn: 'Do you suffer from dryness (mouth, skin, eyes), dizziness when standing, or night sweats?', category: 'נוזלים ויובש (יין/דם)' },
+      { id: 'pain_stagnation', textHe: 'האם יש כאבים המוחמרים בלחץ (Stagnation), או כאבים עמומים המוטבים במגע/חום (Deficiency)?', textEn: 'Are there pains worsened by pressure (Stagnation), or dull pains improved by touch/warmth (Deficiency)?', category: 'כאב ותחושה (סטגנציה)' },
+      { id: 'digestion_spleen', textHe: 'האם יש נפיחות בבטן, יציאות רכות, תאבון ירוד או צניחת איברים (טחורים/רחם)?', textEn: 'Is there abdominal bloating, loose stools, poor appetite, or organ prolapse (hemorrhoids/uterus)?', category: 'מערכת העיכול (טחול/קיבה)' },
+      { id: 'lungs_immunity', textHe: 'האם יש נטייה להצטננויות תכופות, הזעה ספונטנית ללא מאמץ, או קול חלש?', textEn: 'Is there tendency to frequent colds, spontaneous sweating without exertion, or weak voice?', category: 'נשימה וחיסון (ריאות)' },
+      { id: 'heart_shen', textHe: 'האם יש דפיקות לב (פלפיטציות), חרדה, קושי להירדם, או ירידה בזיכרון?', textEn: 'Are there palpitations, anxiety, difficulty falling asleep, or memory decline?', category: 'לב ונפש (שן)' },
+      { id: 'liver_emotions', textHe: 'האם יש נטייה לכעס/רוגז, תחושת "תקיעות" בחזה/צלעות, או כאבי ראש בצדדים?', textEn: 'Is there tendency to anger/irritability, feeling of "stuckness" in chest/ribs, or lateral headaches?', category: 'כבד ורגשות' },
+      { id: 'kidneys_back', textHe: 'האם יש כאבי גב תחתון/ברכיים, השתנה מרובה בלילה (Nocturia), או ירידה בשמיעה?', textEn: 'Are there lower back/knee pains, frequent nighttime urination (Nocturia), or hearing decline?', category: 'כליות וגב' },
+      { id: 'dampness_phlegm', textHe: 'האם יש תחושת כבדות בראש ("קסדה"), בחילות, ליחה בגרון, או השמנה בטנית?', textEn: 'Is there feeling of heaviness in head ("helmet"), nausea, phlegm in throat, or abdominal obesity?', category: 'לחות וליחה' },
+      { id: 'menstruation', textHe: 'האם המחזור מקדים/שופע (חום/חסר צ׳י), או מאחר/דליל/כואב (קור/סטגנציה/חסר דם)?', textEn: 'Does menstruation come early/heavy (heat/Qi def), or late/scanty/painful (cold/stagnation/blood def)?', category: 'מחזור (נשים)' },
+      { id: 'sleep_patterns', textHe: 'האם הקושי הוא בהירדמות (חסר דם), יקיצות מרובות (חסר יין), או יקיצה מוקדמת בבוקר (חולשת יאנג)?', textEn: 'Is difficulty in falling asleep (blood def), frequent waking (Yin def), or early morning waking (Yang weakness)?', category: 'שינה' },
+      { id: 'tongue_body', textHe: 'האם הלשון חיוורת (חסר), אדומה (חום), סגולה (סטגנציה), או תפוחה עם סימני שיניים (לחות/חסר צ׳י)?', textEn: 'Is the tongue pale (deficiency), red (heat), purple (stagnation), or swollen with teeth marks (dampness/Qi def)?', category: 'לשון - גוף' },
+      { id: 'tongue_coating', textHe: 'האם החיפוי עבה/שמנוני (לחות), דק/לבן (תקין/קור), או חסר/מתקלף (חסר יין)?', textEn: 'Is the coating thick/greasy (dampness), thin/white (normal/cold), or absent/peeling (Yin def)?', category: 'לשון - חיפוי' },
+      { id: 'pulse_quality', textHe: 'האם הדופק חלש/ריק (חסר), מיתרי/מתוח (כבד/כאב), או מתגלגל (ליחה)?', textEn: 'Is the pulse weak/empty (deficiency), wiry/tense (Liver/pain), or slippery (phlegm)?', category: 'דופק' }
     ]
   }
 ];
