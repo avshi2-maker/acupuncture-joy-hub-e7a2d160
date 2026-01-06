@@ -1237,7 +1237,20 @@ export function ClinicalNavigatorAdvanced({
   };
 
   return (
-    <div className={`p-6 ${className}`}>
+    <div 
+      className={`relative min-h-screen ${className}`}
+      style={{
+        backgroundImage: `url(${clinicalNavigatorBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+      }}
+    >
+      {/* Dark overlay for readability */}
+      <div className="absolute inset-0 bg-background/85 backdrop-blur-sm" />
+      
+      {/* Content container */}
+      <div className="relative z-10 p-6">
       <AnimatePresence mode="wait">
         {showResults ? (
           <motion.div
@@ -1303,6 +1316,7 @@ export function ClinicalNavigatorAdvanced({
           language={language === 'he' ? 'he' : 'en'}
         />
       )}
+      </div>
     </div>
   );
 }
