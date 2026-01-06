@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -6,8 +6,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BodyFigureWithPoints } from './BodyFigureWithPoints';
 import { usePointFigureMapping } from '@/hooks/usePointFigureMapping';
-import { MapPin, Sparkles, ChevronRight, ImageIcon } from 'lucide-react';
+import { MapPin, Sparkles, ChevronRight, ImageIcon, Zap } from 'lucide-react';
 import { FigureMapping } from '@/data/point-figure-mapping';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface RAGBodyFigureDisplayProps {
   /** AI response text containing point references */
@@ -22,12 +23,15 @@ interface RAGBodyFigureDisplayProps {
   allowSelection?: boolean;
   /** Compact display mode */
   compact?: boolean;
+  /** Active point for celebration animation */
+  celebratingPoint?: string | null;
   className?: string;
 }
 
 /**
  * RAG-aware body figure display component
  * Automatically shows the correct body figures based on AI response or point codes
+ * With 3D-like celebration animations when points are highlighted
  */
 export function RAGBodyFigureDisplay({
   aiResponseText = '',
@@ -36,6 +40,7 @@ export function RAGBodyFigureDisplay({
   onGenerateProtocol,
   allowSelection = true,
   compact = false,
+  celebratingPoint = null,
   className = ''
 }: RAGBodyFigureDisplayProps) {
   const { 
@@ -46,6 +51,7 @@ export function RAGBodyFigureDisplay({
 
   const [selectedPoints, setSelectedPoints] = useState<string[]>([]);
   const [activeFigureIndex, setActiveFigureIndex] = useState(0);
+  const [celebrationQueue, setCelebrationQueue] = useState<string[]>([]);
 
   // Extract points from AI text or use provided point codes
   const extractedPoints = useMemo(() => {
@@ -64,7 +70,31 @@ export function RAGBodyFigureDisplay({
     setActiveFigureIndex(0);
   }, [matchingFigures.length]);
 
-  const handlePointSelect = (code: string) => {
+  // Handle celebration animation when a point is clicked
+  useEffect(() => {
+    if (celebratingPoint) {
+      setCelebrationQueue(prev => [...prev, celebratingPoint]);
+      
+      // Auto-switch to the figure containing this point
+      const figureWithPoint = matchingFigures.findIndex(fig => {
+        const pointsOnFig = getHighlightedPointsForFigure(fig.filename, extractedPoints);
+        return pointsOnFig.some(p => p.toUpperCase() === celebratingPoint.toUpperCase());
+      });
+      
+      if (figureWithPoint !== -1 && figureWithPoint !== activeFigureIndex) {
+        setActiveFigureIndex(figureWithPoint);
+      }
+      
+      // Clear celebration after animation
+      const timer = setTimeout(() => {
+        setCelebrationQueue(prev => prev.filter(p => p !== celebratingPoint));
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [celebratingPoint, matchingFigures, extractedPoints, getHighlightedPointsForFigure, activeFigureIndex]);
+
+  const handlePointSelect = useCallback((code: string) => {
     if (allowSelection) {
       setSelectedPoints(prev => {
         if (prev.includes(code)) {
@@ -74,13 +104,13 @@ export function RAGBodyFigureDisplay({
       });
     }
     onPointSelect?.(code);
-  };
+  }, [allowSelection, onPointSelect]);
 
-  const handleGenerateProtocol = () => {
+  const handleGenerateProtocol = useCallback(() => {
     if (selectedPoints.length > 0 && onGenerateProtocol) {
       onGenerateProtocol(selectedPoints);
     }
-  };
+  }, [selectedPoints, onGenerateProtocol]);
 
   if (extractedPoints.length === 0) {
     return (
@@ -223,27 +253,74 @@ export function RAGBodyFigureDisplay({
           </Tabs>
         )}
 
-        {/* All detected points summary */}
-        <div className="p-3 border-t bg-muted/30">
+        {/* All detected points summary with celebration animation */}
+        <div className="p-3 border-t bg-muted/30 relative overflow-hidden">
+          {/* Celebration overlay */}
+          <AnimatePresence>
+            {celebrationQueue.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 pointer-events-none"
+              >
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-jade/20 via-jade/40 to-jade/20"
+                  animate={{
+                    x: ['-100%', '100%'],
+                  }}
+                  transition={{
+                    duration: 1,
+                    ease: 'easeInOut',
+                  }}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+          
           <div className="flex items-center gap-2 mb-2">
             <span className="text-xs font-medium">All Detected Points:</span>
+            {celebrationQueue.length > 0 && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="flex items-center gap-1 text-jade"
+              >
+                <Zap className="h-3 w-3 animate-pulse" />
+                <span className="text-xs font-medium">{celebrationQueue[celebrationQueue.length - 1]}</span>
+              </motion.div>
+            )}
           </div>
           <ScrollArea className="max-h-20">
             <div className="flex flex-wrap gap-1">
-              {extractedPoints.map(code => (
-                <Badge
-                  key={code}
-                  variant={selectedPoints.includes(code) ? 'default' : 'outline'}
-                  className={`cursor-pointer text-xs transition-colors ${
-                    selectedPoints.includes(code) 
-                      ? 'bg-jade hover:bg-jade/80' 
-                      : 'hover:bg-jade/20'
-                  }`}
-                  onClick={() => handlePointSelect(code)}
-                >
-                  {code}
-                </Badge>
-              ))}
+              {extractedPoints.map(code => {
+                const isCelebrating = celebrationQueue.includes(code);
+                return (
+                  <motion.div
+                    key={code}
+                    animate={isCelebrating ? {
+                      scale: [1, 1.3, 1],
+                      rotate: [0, 5, -5, 0],
+                    } : {}}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <Badge
+                      variant={selectedPoints.includes(code) ? 'default' : 'outline'}
+                      className={`cursor-pointer text-xs transition-all ${
+                        isCelebrating
+                          ? 'bg-jade text-white shadow-lg shadow-jade/50 ring-2 ring-jade ring-offset-1'
+                          : selectedPoints.includes(code) 
+                          ? 'bg-jade hover:bg-jade/80' 
+                          : 'hover:bg-jade/20'
+                      }`}
+                      onClick={() => handlePointSelect(code)}
+                    >
+                      {isCelebrating && <Zap className="h-2 w-2 mr-1" />}
+                      {code}
+                    </Badge>
+                  </motion.div>
+                );
+              })}
             </div>
           </ScrollArea>
         </div>

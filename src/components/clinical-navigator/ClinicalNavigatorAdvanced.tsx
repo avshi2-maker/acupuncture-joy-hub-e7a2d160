@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,11 +12,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { 
   Brain, Heart, Stethoscope, Leaf, Apple, Activity,
   Users, User, Sparkles, FileText,
   MapPin, AlertTriangle, CheckCircle2,
-  Loader2, ArrowLeft
+  Loader2, ArrowLeft, ChevronsUpDown, Search, List
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -28,6 +30,7 @@ import {
 import { useClinicalDeepSearch, DeepSearchRequest } from '@/hooks/useClinicalDeepSearch';
 import { RAGBodyFigureDisplay } from '@/components/acupuncture/RAGBodyFigureDisplay';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { cn } from '@/lib/utils';
 
 // Category icons mapping
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
@@ -72,6 +75,8 @@ export function ClinicalNavigatorAdvanced({
   });
   const [showResults, setShowResults] = useState(false);
   const [celebratedPoints, setCelebratedPoints] = useState<Set<string>>(new Set());
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [activePointForCelebration, setActivePointForCelebration] = useState<string | null>(null);
 
   // Filter modules by category
   const modulesByCategory = useMemo(() => {
@@ -85,6 +90,19 @@ export function ClinicalNavigatorAdvanced({
     return grouped;
   }, []);
 
+  // Handle module selection from dropdown
+  const handleDropdownSelect = useCallback((moduleId: string) => {
+    const module = CLINICAL_QUESTIONNAIRES.find(m => m.id.toString() === moduleId);
+    if (module) {
+      setSelectedModule(module);
+      setSelectedCategory(module.category);
+      setAnswers({});
+      setShowResults(false);
+      reset();
+    }
+    setDropdownOpen(false);
+  }, [reset]);
+
   // Handle module selection
   const handleSelectModule = useCallback((module: QuestionnaireModule) => {
     setSelectedModule(module);
@@ -97,7 +115,6 @@ export function ClinicalNavigatorAdvanced({
   const handleAnswerChange = useCallback((questionId: string, value: any) => {
     setAnswers(prev => ({ ...prev, [questionId]: value }));
   }, []);
-
   // Calculate progress
   const progress = useMemo(() => {
     if (!selectedModule) return 0;
@@ -122,12 +139,22 @@ export function ClinicalNavigatorAdvanced({
     setShowResults(true);
   }, [selectedModule, answers, patientInfo, language, performDeepSearch]);
 
-  // Handle point celebration (3D integration)
+  // Handle point celebration (3D integration) with animation trigger
   const handlePointClick = useCallback((pointCode: string) => {
+    // Set active point for celebration animation
+    setActivePointForCelebration(pointCode);
+    
     if (!celebratedPoints.has(pointCode)) {
       setCelebratedPoints(prev => new Set(prev).add(pointCode));
-      onPointCelebration?.(pointCode);
     }
+    
+    // Trigger the 3D celebration callback
+    onPointCelebration?.(pointCode);
+    
+    // Clear the active point after animation
+    setTimeout(() => {
+      setActivePointForCelebration(null);
+    }, 2000);
   }, [celebratedPoints, onPointCelebration]);
 
   // Reset to category selection
@@ -142,18 +169,77 @@ export function ClinicalNavigatorAdvanced({
     }
   }, [showResults, selectedModule]);
 
+  // Render the Master Dropdown for all 36 modules
+  const renderMasterDropdown = () => (
+    <Popover open={dropdownOpen} onOpenChange={setDropdownOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={dropdownOpen}
+          className="w-full md:w-[400px] justify-between bg-background border-2 hover:border-jade transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <List className="h-4 w-4 text-jade" />
+            <span>Clinical Modules</span>
+          </div>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-full md:w-[400px] p-0 bg-background border shadow-lg z-50" align="start">
+        <Command className="bg-background">
+          <CommandInput placeholder="Search modules (e.g., Oncology, Pain, Shen)..." className="h-10" />
+          <CommandList className="max-h-[300px]">
+            <CommandEmpty>No module found.</CommandEmpty>
+            {Object.entries(MODULE_CATEGORIES).map(([categoryKey, category]) => (
+              <CommandGroup key={categoryKey} heading={category.en} className="text-xs text-muted-foreground">
+                {modulesByCategory[categoryKey]?.map((module) => (
+                  <CommandItem
+                    key={module.id}
+                    value={`${module.id}. ${module.module_name}`}
+                    onSelect={() => handleDropdownSelect(module.id.toString())}
+                    className="cursor-pointer hover:bg-jade/10"
+                  >
+                    <div className="flex items-center gap-2 w-full">
+                      <Badge variant="outline" className="text-xs px-1.5 py-0 min-w-[28px] justify-center">
+                        {module.id}
+                      </Badge>
+                      <span className="flex-1 truncate">{module.module_name}</span>
+                      <Badge className={cn("text-[10px]", CATEGORY_COLORS[module.category])}>
+                        {module.questions.length}Q
+                      </Badge>
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            ))}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+
   // Render category selection
   const renderCategorySelection = () => (
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold mb-2">
-          {language === 'he' ? 'בחר קטגוריה קלינית' : 'Select Clinical Category'}
+          {language === 'he' ? 'בחר קטגוריה קלינית' : 'Clinical Navigator'}
         </h2>
         <p className="text-muted-foreground">
           {language === 'he' 
             ? '36 שאלונים מקצועיים עם חיפוש עמוק חוצה-מודולים'
             : '36 professional questionnaires with cross-module Deep Search'}
         </p>
+      </div>
+
+      {/* Master Dropdown - Quick Access to All 36 Modules */}
+      <div className="flex justify-center mb-6">
+        {renderMasterDropdown()}
+      </div>
+
+      <div className="text-center text-sm text-muted-foreground mb-4">
+        — or browse by category —
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -702,6 +788,7 @@ export function ClinicalNavigatorAdvanced({
               pointCodes={report.extractedPoints}
               onPointSelect={handlePointClick}
               allowSelection={true}
+              celebratingPoint={activePointForCelebration}
               className="sticky top-4"
             />
           </div>
