@@ -25,6 +25,7 @@ import {
 import { EngineActivityIndicator } from '@/components/tcm-brain/APIUsageMeter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AIPerformanceTachometer } from './AIPerformanceTachometer';
+import { MiniTachometer } from './MiniTachometer';
 import { 
   CLINICAL_QUESTIONNAIRES, 
   MODULE_CATEGORIES,
@@ -723,9 +724,13 @@ export function ClinicalNavigatorAdvanced({
               </p>
             </div>
           </div>
-          <Badge className="bg-jade">
-            {progress}% {language === 'he' ? 'הושלם' : 'Complete'}
-          </Badge>
+          <div className="flex items-center gap-3">
+            {/* Mini Tachometer - shows during processing */}
+            <MiniTachometer showOnlyWhenActive={true} />
+            <Badge className="bg-jade">
+              {progress}% {language === 'he' ? 'הושלם' : 'Complete'}
+            </Badge>
+          </div>
         </div>
 
         <Progress value={progress} className="h-2" />
