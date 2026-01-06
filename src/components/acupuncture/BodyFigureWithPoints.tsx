@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { InteractivePointMarker } from './InteractivePointMarker';
-import { MapPin, ZoomIn, ZoomOut, Info, Search, X } from 'lucide-react';
+import { MapPin, ZoomIn, ZoomOut, Info, Search, X, Bug } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getPointsForFigure, normalizePointCode } from '@/data/point-figure-mapping';
 import { usePointCoordinates } from '@/hooks/usePointCoordinates';
@@ -213,16 +213,20 @@ export function BodyFigureWithPoints({
     );
   }, [acuPoints, highlightedPoints, selectedPoints, showAllPoints, searchResults]);
 
+  // Debug mode - shows visual indicator for fallback vs CSV positioning
+  const [debugMode, setDebugMode] = useState(false);
+  
   // Get point position - prefer CSV coordinates, fallback to grid
   // Clamp coordinates to ensure points stay within the visible body figure (5-95%)
   const clampCoordinate = (value: number): number => Math.max(5, Math.min(95, value));
   
-  const getPointPosition = (pointCode: string): { x: number; y: number } | null => {
+  const getPointPosition = (pointCode: string): { x: number; y: number; isFallback: boolean } | null => {
     const coord = getPointCoordinate(filename, pointCode);
     if (coord) {
       return { 
         x: clampCoordinate(coord.x_percent), 
-        y: clampCoordinate(coord.y_percent) 
+        y: clampCoordinate(coord.y_percent),
+        isFallback: false
       };
     }
     
@@ -240,9 +244,22 @@ export function BodyFigureWithPoints({
     // Ensure fallback positions stay within visible bounds (15-85%)
     return {
       x: 15 + (col / (cols - 1 || 1)) * 70,
-      y: 15 + (row / (Math.ceil(total / cols) - 1 || 1)) * 70
+      y: 15 + (row / (Math.ceil(total / cols) - 1 || 1)) * 70,
+      isFallback: true
     };
   };
+  
+  // Count fallback vs CSV points for debug info
+  const positionStats = useMemo(() => {
+    let csvCount = 0;
+    let fallbackCount = 0;
+    displayPoints.forEach(point => {
+      const pos = getPointPosition(point.code);
+      if (pos?.isFallback) fallbackCount++;
+      else if (pos) csvCount++;
+    });
+    return { csvCount, fallbackCount };
+  }, [displayPoints, getPointCoordinate, filename]);
 
   const handlePointClick = (point: AcuPoint) => {
     onPointClick?.(point);
@@ -303,6 +320,8 @@ export function BodyFigureWithPoints({
                 y={pos.y}
                 isHighlighted={isHighlighted(point.code) || isSearchMatch(point.code)}
                 isSelected={isSelected(point.code)}
+                isFallback={pos.isFallback}
+                showDebug={debugMode}
                 onClick={() => handlePointClick(point)}
                 size="sm"
               />
@@ -327,6 +346,16 @@ export function BodyFigureWithPoints({
             )}
           </CardTitle>
           <div className="flex items-center gap-1">
+            {/* Debug Toggle */}
+            <Button
+              variant={debugMode ? "default" : "ghost"}
+              size="icon"
+              className={`h-6 w-6 ${debugMode ? 'bg-orange-500 hover:bg-orange-600' : ''}`}
+              onClick={() => setDebugMode(!debugMode)}
+              title={debugMode ? 'Debug mode ON - orange = fallback positions' : 'Toggle debug mode'}
+            >
+              <Bug className="h-3 w-3" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -381,6 +410,27 @@ export function BodyFigureWithPoints({
             Found {searchResults.length} matching point{searchResults.length !== 1 ? 's' : ''}
           </div>
         )}
+        
+        {/* Debug Info */}
+        {debugMode && (
+          <div className="text-xs p-2 bg-orange-100 dark:bg-orange-950 rounded border border-orange-300 dark:border-orange-800">
+            <div className="flex items-center gap-2 text-orange-700 dark:text-orange-300">
+              <Bug className="h-3 w-3" />
+              <span className="font-medium">Debug Mode</span>
+            </div>
+            <div className="mt-1 text-orange-600 dark:text-orange-400">
+              <span className="inline-flex items-center gap-1">
+                <span className="w-2 h-2 bg-accent rounded-full"></span>
+                CSV: {positionStats.csvCount}
+              </span>
+              <span className="mx-2">|</span>
+              <span className="inline-flex items-center gap-1">
+                <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
+                Fallback: {positionStats.fallbackCount}
+              </span>
+            </div>
+          </div>
+        )}
       </CardHeader>
       
       <CardContent className="p-2">
@@ -415,6 +465,8 @@ export function BodyFigureWithPoints({
                     y={pos.y}
                     isHighlighted={isHighlighted(point.code) || isSearchMatch(point.code)}
                     isSelected={isSelected(point.code)}
+                    isFallback={pos.isFallback}
+                    showDebug={debugMode}
                     onClick={() => handlePointClick(point)}
                     size="md"
                     showLabel

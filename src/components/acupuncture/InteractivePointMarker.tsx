@@ -20,6 +20,8 @@ interface InteractivePointMarkerProps {
   y: number; // Percentage position (0-100)
   isHighlighted?: boolean;
   isSelected?: boolean;
+  isFallback?: boolean; // Debug: true if using fallback grid positioning
+  showDebug?: boolean; // Show debug indicator
   onClick?: (point: PointData) => void;
   size?: 'sm' | 'md' | 'lg';
   showLabel?: boolean;
@@ -31,6 +33,8 @@ export function InteractivePointMarker({
   y,
   isHighlighted = false,
   isSelected = false,
+  isFallback = false,
+  showDebug = false,
   onClick,
   size = 'md',
   showLabel = false
@@ -56,11 +60,14 @@ export function InteractivePointMarker({
             'hover:scale-125 hover:z-20 cursor-pointer',
             'ring-2 ring-offset-1 ring-offset-background',
             sizeClasses[size],
-            isHighlighted 
-              ? 'bg-jade text-jade-foreground ring-jade animate-pulse shadow-lg shadow-jade/40' 
-              : isSelected
-                ? 'bg-primary text-primary-foreground ring-primary'
-                : 'bg-accent text-accent-foreground ring-accent/50 hover:ring-primary'
+            // Debug mode: show fallback points differently
+            showDebug && isFallback
+              ? 'bg-orange-500 text-white ring-orange-400 border-2 border-dashed border-orange-300'
+              : isHighlighted 
+                ? 'bg-jade text-jade-foreground ring-jade animate-pulse shadow-lg shadow-jade/40' 
+                : isSelected
+                  ? 'bg-primary text-primary-foreground ring-primary'
+                  : 'bg-accent text-accent-foreground ring-accent/50 hover:ring-primary'
           )}
           style={{
             left: `${x}%`,
@@ -68,12 +75,15 @@ export function InteractivePointMarker({
             transform: 'translate(-50%, -50%)'
           }}
           onClick={handleClick}
-          title={`${point.code} - ${point.name_english || ''}`}
+          title={`${point.code} - ${point.name_english || ''}${showDebug && isFallback ? ' (FALLBACK POSITION)' : ''}`}
         >
           {showLabel && size === 'lg' && (
             <span className="truncate max-w-[20px]">
               {point.code.replace(/[A-Za-z]+/, '')}
             </span>
+          )}
+          {showDebug && isFallback && (
+            <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
           )}
         </button>
       </PopoverTrigger>

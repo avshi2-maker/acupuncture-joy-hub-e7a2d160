@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
@@ -24,13 +24,15 @@ import {
   Brain,
   RefreshCw,
   Save,
-  Loader2
+  Loader2,
+  Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { usePatients } from '@/hooks/usePatients';
 import { useCreateAssessment } from '@/hooks/usePatientAssessments';
 import { useAuth } from '@/hooks/useAuth';
+import { usePatientAgeGender, SimplifiedAgeGroup } from '@/hooks/usePatientAgeGender';
 
 type Language = 'he' | 'en' | 'ru';
 type AgeGroup = 'pediatric' | 'adult' | 'elderly';
@@ -160,6 +162,7 @@ export default function BrainHealthAssessment() {
   const navigate = useNavigate();
   const [language, setLanguage] = useState<Language>('he');
   const [ageGroup, setAgeGroup] = useState<AgeGroup | null>(null);
+  const [ageGroupAutoDetected, setAgeGroupAutoDetected] = useState(false);
   const [selectedSymptoms, setSelectedSymptoms] = useState<Set<number>>(new Set());
   const [generatedProtocol, setGeneratedProtocol] = useState<string>('');
   const [copied, setCopied] = useState(false);
@@ -168,6 +171,33 @@ export default function BrainHealthAssessment() {
   const { user } = useAuth();
   const { data: patients = [], isLoading: patientsLoading } = usePatients();
   const createAssessment = useCreateAssessment();
+
+  // Find selected patient data
+  const selectedPatient = useMemo(() => 
+    patients.find(p => p.id === selectedPatientId) || null,
+    [patients, selectedPatientId]
+  );
+
+  // Auto-detect age group and gender from patient data
+  const patientAgeGender = usePatientAgeGender(selectedPatient);
+
+  // Auto-set age group when patient is selected (only if not manually overridden)
+  useEffect(() => {
+    if (selectedPatient && patientAgeGender.isAutoDetected) {
+      setAgeGroup(patientAgeGender.ageGroup);
+      setAgeGroupAutoDetected(true);
+      setSelectedSymptoms(new Set());
+      setGeneratedProtocol('');
+      
+      // Notify user of auto-detection
+      const ageLabel = language === 'he' ? patientAgeGender.ageGroupLabelHe : patientAgeGender.ageGroupLabel;
+      toast.info(
+        language === 'he' 
+          ? `קבוצת גיל זוהתה אוטומטית: ${ageLabel}` 
+          : `Age group auto-detected: ${ageLabel}`
+      );
+    }
+  }, [selectedPatientId, patientAgeGender.isAutoDetected, patientAgeGender.ageGroup]);
 
   const t = translations[language];
   const isRTL = language === 'he';
@@ -380,15 +410,24 @@ export default function BrainHealthAssessment() {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
                     setAgeGroup(group);
+                    setAgeGroupAutoDetected(false); // Manual selection overrides auto-detection
                     setSelectedSymptoms(new Set());
                     setGeneratedProtocol('');
                   }}
                   className={`
-                    p-6 rounded-xl border-2 transition-all duration-300
+                    p-6 rounded-xl border-2 transition-all duration-300 relative
                     bg-gradient-to-br ${colors[group]}
                     ${ageGroup === group ? 'ring-2 ring-primary ring-offset-2 shadow-lg' : 'hover:shadow-md'}
                   `}
                 >
+                  {ageGroup === group && ageGroupAutoDetected && (
+                    <div className="absolute top-2 right-2">
+                      <Badge variant="secondary" className="text-[10px] gap-1">
+                        <Sparkles className="h-3 w-3" />
+                        {isRTL ? 'אוטו' : 'Auto'}
+                      </Badge>
+                    </div>
+                  )}
                   <Icon className="h-8 w-8 mx-auto mb-2" />
                   <span className="font-semibold">{t[group]}</span>
                 </motion.button>

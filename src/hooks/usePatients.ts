@@ -7,6 +7,9 @@ export interface Patient {
   full_name: string;
   phone: string | null;
   email: string | null;
+  date_of_birth: string | null;
+  age_group: string | null;
+  gender: string | null;
 }
 
 export function usePatients() {
@@ -19,7 +22,7 @@ export function usePatients() {
 
       const { data, error } = await supabase
         .from('patients')
-        .select('id, full_name, phone, email')
+        .select('id, full_name, phone, email, date_of_birth, age_group, gender')
         .eq('therapist_id', user.id)
         .order('full_name');
 
