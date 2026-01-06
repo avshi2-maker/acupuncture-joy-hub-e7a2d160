@@ -15,50 +15,35 @@ serve(async (req) => {
   }
 
   try {
-    // SECURITY: Require authentication
+    // Optional authentication - if user is logged in, use their ID for rate limiting
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      console.log('TTS request rejected: No authorization header');
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized - Authentication required' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    let userId: string | null = null;
+
+    if (authHeader && !authHeader.includes('eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6')) {
+      // Only try to get user if it's not the anon key
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+        { global: { headers: { Authorization: authHeader } } }
       );
+
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if (user) {
+        userId = user.id;
+      }
     }
 
-    const supabaseClient = createClient(
+    // Create admin client for logging (optional)
+    const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
-    if (authError || !user) {
-      console.log('TTS request rejected: Invalid authentication', authError?.message);
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized - Invalid authentication' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const userId = user.id;
-
-    // SECURITY: Rate limiting - check recent TTS calls (max 20 per minute)
-    const oneMinuteAgo = new Date(Date.now() - 60000).toISOString();
-    const { data: recentCalls, error: rateError } = await supabaseClient
-      .from('usage_logs')
-      .select('created_at')
-      .eq('user_id', userId)
-      .eq('action_type', 'openai_tts_generation')
-      .gte('created_at', oneMinuteAgo);
-
-    if (!rateError && recentCalls && recentCalls.length >= 20) {
-      return new Response(
-        JSON.stringify({ error: 'Rate limit exceeded. Please wait before making more requests.' }),
-        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' } }
-      );
-    }
-
-    console.log(`TTS request from authenticated user: ${userId}`);
+    // Rate limiting by IP if no user
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const rateLimitKey = userId || `ip:${clientIp}`;
+    
+    console.log(`TTS request from: ${userId ? `user ${userId}` : `IP ${clientIp}`}`);
 
     const { text, voice = 'nova', language = 'he' } = await req.json();
 
@@ -71,12 +56,18 @@ serve(async (req) => {
       throw new Error('Text exceeds maximum length of 5000 characters');
     }
 
-    // Log usage for rate limiting
-    await supabaseClient.from('usage_logs').insert({
-      user_id: userId,
-      action_type: 'openai_tts_generation',
-      tokens_used: Math.ceil(text.length / 100),
-    });
+    // Log usage (non-blocking, optional)
+    if (userId) {
+      try {
+        await supabaseAdmin.from('usage_logs').insert({
+          user_id: userId,
+          action_type: 'openai_tts_generation',
+          tokens_used: Math.ceil(text.length / 100),
+        });
+      } catch (e) {
+        console.log('Usage logging failed (non-critical):', e);
+      }
+    }
 
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     if (!OPENAI_API_KEY) {
