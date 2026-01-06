@@ -87,6 +87,11 @@ export function RAGBodyFigureDisplay({
   const [activeFigureIndex, setActiveFigureIndex] = useState(0);
   const [celebrationQueue, setCelebrationQueue] = useState<string[]>([]);
   const [tourActivePoint, setTourActivePoint] = useState<string | null>(null);
+  
+  // Track view rotation for animation
+  const [isRotating, setIsRotating] = useState(false);
+  const [rotationDirection, setRotationDirection] = useState<'left' | 'right'>('right');
+  const [previousCameraAngle, setPreviousCameraAngle] = useState(cameraAngle);
 
   // Extract points from AI text or use provided point codes
   const extractedPoints = useMemo(() => {
@@ -100,8 +105,32 @@ export function RAGBodyFigureDisplay({
     return getFiguresForPoints(extractedPoints);
   }, [extractedPoints, getFiguresForPoints]);
 
-  // Effect to handle camera angle changes from AI command
+  // Effect to handle camera angle changes from AI command with rotation animation
   useEffect(() => {
+    if (cameraAngle !== previousCameraAngle && cameraAngle !== 'auto') {
+      // Determine rotation direction based on angle change
+      const angleOrder = ['anterior', 'lateral_right', 'posterior', 'lateral_left'];
+      const prevIndex = angleOrder.indexOf(previousCameraAngle as string);
+      const newIndex = angleOrder.indexOf(cameraAngle);
+      
+      if (prevIndex !== -1 && newIndex !== -1) {
+        // Calculate shortest rotation direction
+        const diff = (newIndex - prevIndex + 4) % 4;
+        setRotationDirection(diff <= 2 ? 'right' : 'left');
+      } else {
+        // Default rotation for posterior = flip, anterior = normal
+        setRotationDirection(cameraAngle === 'posterior' ? 'right' : 'left');
+      }
+      
+      setIsRotating(true);
+      setPreviousCameraAngle(cameraAngle);
+      
+      // Reset rotation state after animation completes
+      setTimeout(() => {
+        setIsRotating(false);
+      }, 600);
+    }
+    
     if (cameraAngle !== 'auto' && matchingFigures.length > 0) {
       // Find figure matching the camera angle
       const angleToKeyword: Record<string, string[]> = {
@@ -122,7 +151,7 @@ export function RAGBodyFigureDisplay({
         console.log(`Camera angle ${cameraAngle} matched figure: ${matchingFigures[matchIndex].filename}`);
       }
     }
-  }, [cameraAngle, matchingFigures]);
+  }, [cameraAngle, matchingFigures, previousCameraAngle]);
 
   // Effect to handle focused point from AI command
   useEffect(() => {
@@ -310,17 +339,48 @@ export function RAGBodyFigureDisplay({
         <div className="flex items-center gap-2 mb-2">
           <Badge className="bg-jade">{extractedPoints.length} points</Badge>
           <span className="text-xs text-muted-foreground">on {matchingFigures.length} figure(s)</span>
+          {isRotating && (
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-xs text-jade flex items-center gap-1"
+            >
+              <Sparkles className="h-3 w-3 animate-pulse" />
+              Rotating...
+            </motion.span>
+          )}
         </div>
-        <BodyFigureWithPoints
-          filename={activeFigure.filename}
-          highlightedPoints={highlightedOnFigure}
-          selectedPoints={selectedPoints}
-          onPointSelect={handlePointSelect}
-          showAllPoints={false}
-          patientGender={patientGender}
-          patientAgeGroup={patientAgeGroup}
-          compact
-        />
+        <motion.div
+          className="perspective-1000 overflow-hidden"
+          initial={false}
+          animate={{ 
+            rotateY: isRotating ? (rotationDirection === 'right' ? 180 : -180) : 0,
+            scale: isRotating ? 0.95 : 1,
+          }}
+          transition={{ 
+            duration: 0.6, 
+            ease: [0.4, 0, 0.2, 1],
+          }}
+          style={{ transformStyle: 'preserve-3d' }}
+        >
+          <motion.div
+            animate={{ 
+              rotateY: isRotating ? (rotationDirection === 'right' ? -180 : 180) : 0,
+            }}
+            transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+          >
+            <BodyFigureWithPoints
+              filename={activeFigure.filename}
+              highlightedPoints={highlightedOnFigure}
+              selectedPoints={selectedPoints}
+              onPointSelect={handlePointSelect}
+              showAllPoints={false}
+              patientGender={patientGender}
+              patientAgeGroup={patientAgeGroup}
+              compact
+            />
+          </motion.div>
+        </motion.div>
         {matchingFigures.length > 1 && (
           <div className="flex gap-1 mt-2">
             {matchingFigures.map((fig, idx) => (
@@ -329,7 +389,17 @@ export function RAGBodyFigureDisplay({
                 variant={idx === activeFigureIndex ? 'default' : 'outline'}
                 size="sm"
                 className="h-6 text-xs"
-                onClick={() => setActiveFigureIndex(idx)}
+                onClick={() => {
+                  // Trigger rotation when manually switching figures
+                  if (idx !== activeFigureIndex) {
+                    setRotationDirection(idx > activeFigureIndex ? 'right' : 'left');
+                    setIsRotating(true);
+                    setTimeout(() => {
+                      setActiveFigureIndex(idx);
+                      setIsRotating(false);
+                    }, 300);
+                  }
+                }}
               >
                 {fig.bodyPart}
               </Button>
@@ -388,19 +458,40 @@ export function RAGBodyFigureDisplay({
             )}
           </div>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-hidden">
           {matchingFigures.length === 1 ? (
-            <div className="p-3">
-              <BodyFigureWithPoints
-                filename={activeFigure.filename}
-                highlightedPoints={highlightedOnFigure}
-                selectedPoints={selectedPoints}
-                onPointSelect={handlePointSelect}
-                showAllPoints={false}
-                patientGender={patientGender}
-                patientAgeGroup={patientAgeGroup}
-              />
-            </div>
+            <motion.div 
+              className="p-3 perspective-1000"
+              initial={false}
+              animate={{ 
+                rotateY: isRotating ? (rotationDirection === 'right' ? 180 : -180) : 0,
+                scale: isRotating ? 0.95 : 1,
+              }}
+              transition={{ 
+                duration: 0.6, 
+                ease: [0.4, 0, 0.2, 1],
+                rotateY: { duration: 0.6 },
+                scale: { duration: 0.3 }
+              }}
+              style={{ transformStyle: 'preserve-3d' }}
+            >
+              <motion.div
+                animate={{ 
+                  rotateY: isRotating ? (rotationDirection === 'right' ? -180 : 180) : 0,
+                }}
+                transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+              >
+                <BodyFigureWithPoints
+                  filename={activeFigure.filename}
+                  highlightedPoints={highlightedOnFigure}
+                  selectedPoints={selectedPoints}
+                  onPointSelect={handlePointSelect}
+                  showAllPoints={false}
+                  patientGender={patientGender}
+                  patientAgeGroup={patientAgeGroup}
+                />
+              </motion.div>
+            </motion.div>
           ) : (
             <Tabs 
               value={activeFigure.filename} 
@@ -428,16 +519,37 @@ export function RAGBodyFigureDisplay({
                 </TabsList>
               </div>
               {matchingFigures.map((fig) => (
-                <TabsContent key={fig.filename} value={fig.filename} className="m-0 p-3">
-                  <BodyFigureWithPoints
-                    filename={fig.filename}
-                    highlightedPoints={getHighlightedPointsForFigure(fig.filename, extractedPoints)}
-                    selectedPoints={selectedPoints}
-                    onPointSelect={handlePointSelect}
-                    showAllPoints={false}
-                    patientGender={patientGender}
-                    patientAgeGroup={patientAgeGroup}
-                  />
+                <TabsContent key={fig.filename} value={fig.filename} className="m-0 p-3 overflow-hidden">
+                  <motion.div 
+                    className="perspective-1000"
+                    initial={false}
+                    animate={{ 
+                      rotateY: isRotating && fig.filename === activeFigure.filename ? (rotationDirection === 'right' ? 180 : -180) : 0,
+                      scale: isRotating && fig.filename === activeFigure.filename ? 0.95 : 1,
+                    }}
+                    transition={{ 
+                      duration: 0.6, 
+                      ease: [0.4, 0, 0.2, 1],
+                    }}
+                    style={{ transformStyle: 'preserve-3d' }}
+                  >
+                    <motion.div
+                      animate={{ 
+                        rotateY: isRotating && fig.filename === activeFigure.filename ? (rotationDirection === 'right' ? -180 : 180) : 0,
+                      }}
+                      transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+                    >
+                      <BodyFigureWithPoints
+                        filename={fig.filename}
+                        highlightedPoints={getHighlightedPointsForFigure(fig.filename, extractedPoints)}
+                        selectedPoints={selectedPoints}
+                        onPointSelect={handlePointSelect}
+                        showAllPoints={false}
+                        patientGender={patientGender}
+                        patientAgeGroup={patientAgeGroup}
+                      />
+                    </motion.div>
+                  </motion.div>
                 </TabsContent>
               ))}
             </Tabs>

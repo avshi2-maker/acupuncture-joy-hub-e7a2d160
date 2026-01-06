@@ -481,3 +481,24 @@ body {
   0%, 100% { transform: scale(1.1); }
   50% { transform: scale(1.05); }
 }
+
+/* 3D perspective utilities for body figure rotation */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.perspective-500 {
+  perspective: 500px;
+}
+
+@keyframes rotate-y-180 {
+  0% { transform: rotateY(0deg) scale(1); }
+  50% { transform: rotateY(90deg) scale(0.95); }
+  100% { transform: rotateY(180deg) scale(1); }
+}
+
+@keyframes rotate-y-reverse-180 {
+  0% { transform: rotateY(0deg) scale(1); }
+  50% { transform: rotateY(-90deg) scale(0.95); }
+  100% { transform: rotateY(-180deg) scale(1); }
+}
