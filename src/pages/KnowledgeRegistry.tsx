@@ -534,7 +534,7 @@ const BUILTIN_ASSETS = [
   // TCM Emotional Processing Q&A
   {
     id: 'tcm-grief-qa',
-    label: '💔 TCM Grief Q&A (22 Q&A - Lung-Heart, Shen, Po, Formulas)',
+    label: '💔 TCM Grief Q&A (21 Q&A + Acupoints + Pharmacopeia)',
     path: '/knowledge-assets/tcm-grief-qa.csv',
     defaultCategory: 'anxiety_mental',
     defaultLanguage: 'en',
