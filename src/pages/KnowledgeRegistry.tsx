@@ -420,6 +420,13 @@ const BUILTIN_ASSETS = [
     defaultLanguage: 'en',
   },
   {
+    id: 'tcm-diet-nutrition-100qa',
+    label: '🥗 TCM Diet & Nutrition (100 Q&A - Meal Timing, Food Therapy, Points + Formulas)',
+    path: '/knowledge-assets/TCM_Diet_Nutrition_100_QA_Complete.csv',
+    defaultCategory: 'general_health',
+    defaultLanguage: 'en',
+  },
+  {
     id: 'tcm-teenage-mental-health-qa',
     label: 'TCM Teenage Mental Health Q&A (13-18 years)',
     path: '/knowledge-assets/tcm-teenage-mental-health-qa.csv',
