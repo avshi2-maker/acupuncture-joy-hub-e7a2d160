@@ -172,8 +172,8 @@ serve(async (req) => {
     let successCount = 0;
     let errorCount = 0;
 
-    for (let i = 0; i < chunks.length; i++) {
-      const chunk = chunks[i];
+    for (let i = 0; i < validChunks.length; i++) {
+      const chunk = validChunks[i];
       const embedding = embeddings[i];
 
       // Convert to pgvector format (array string)
