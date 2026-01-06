@@ -759,7 +759,7 @@ const MODULE_CATEGORY_MAP: Record<number, keyof typeof MODULE_CATEGORIES> = {
 
 export const MODULE_CATEGORIES = {
   diagnostic: { en: 'Diagnostic Methods', he: 'שיטות אבחון' },
-  constitutional: { en: 'Constitutional Assessment', he: 'הערכת מבנה' },
+  constitutional: { en: 'Constitutional Assessment', he: 'אבחנת מבנה גוף ונפש' },
   specialty: { en: 'Clinical Specialties', he: 'התמחויות קליניות' },
   wellness: { en: 'Herbal & Lifestyle', he: 'צמחים ואורח חיים' },
   'age-specific': { en: 'Age-Specific Care', he: 'טיפול לפי גיל' },
