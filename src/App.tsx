@@ -80,6 +80,7 @@ import VitalityLongevityQuestionnaire from "./pages/VitalityLongevityQuestionnai
 import BalanceStrengthAdultQuestionnaire from "./pages/BalanceStrengthAdultQuestionnaire";
 import GoldenAgeVitalityQuestionnaire from "./pages/GoldenAgeVitalityQuestionnaire";
 import LongevityDignityQuestionnaire from "./pages/LongevityDignityQuestionnaire";
+import NourishingLifeQuestionnaire from "./pages/NourishingLifeQuestionnaire";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -170,6 +171,7 @@ const App = () => (
                       <Route path="/balance-strength-adult" element={<BalanceStrengthAdultQuestionnaire />} />
                       <Route path="/golden-age-vitality" element={<GoldenAgeVitalityQuestionnaire />} />
                       <Route path="/longevity-dignity" element={<LongevityDignityQuestionnaire />} />
+                      <Route path="/nourishing-life" element={<NourishingLifeQuestionnaire />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                     <FloatingMusicPlayer />
