@@ -17,7 +17,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { 
   Brain, Heart, Stethoscope, Leaf, Apple, Activity,
-  Users, User, Sparkles, FileText,
+  Users, User, Sparkles, FileText, Mail,
   MapPin, AlertTriangle, CheckCircle2,
   Loader2, ArrowLeft, ChevronsUpDown, Search, List, GitCompare
 } from 'lucide-react';
@@ -40,6 +40,7 @@ import {
 import { VoiceDictationOverlay } from './VoiceDictationOverlay';
 import { ProtocolPDFExport } from './ProtocolPDFExport';
 import { SaveToPatientDialog } from './SaveToPatientDialog';
+import { EmailProtocolDialog } from './EmailProtocolDialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 
@@ -94,7 +95,9 @@ export function ClinicalNavigatorAdvanced({
   const [selectedForComparison, setSelectedForComparison] = useState<ProtocolRecord[]>([]);
   const [isComparing, setIsComparing] = useState(false);
   const [comparisonProtocols, setComparisonProtocols] = useState<{ a: ProtocolRecord; b: ProtocolRecord } | null>(null);
-
+  
+  // Email dialog state
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
   // Filter modules by category
   const modulesByCategory = useMemo(() => {
     const grouped: Record<string, QuestionnaireModule[]> = {};
@@ -708,6 +711,19 @@ export function ClinicalNavigatorAdvanced({
               />
             )}
             
+            {/* Email to Patient button */}
+            {selectedModule && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowEmailDialog(true)}
+                className="gap-1"
+              >
+                <Mail className="h-4 w-4" />
+                {language === 'he' ? 'שלח למטופל' : 'Email to Patient'}
+              </Button>
+            )}
+            
             {/* Save for Compare button */}
             <Button
               variant="outline"
@@ -992,6 +1008,23 @@ export function ClinicalNavigatorAdvanced({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Email Protocol Dialog */}
+      {result && selectedModule && (
+        <EmailProtocolDialog
+          open={showEmailDialog}
+          onOpenChange={setShowEmailDialog}
+          protocolData={{
+            diagnosis: result.report.primaryDiagnosis || '',
+            herbalFormula: result.report.herbalPrescription?.formula,
+            acupuncturePoints: result.report.acupunctureProtocol?.points || [],
+            nutritionAdvice: result.report.nutritionAdvice || [],
+            lifestyleAdvice: result.report.lifestyleMindset || [],
+            moduleName: selectedModule.module_name,
+          }}
+          language={language === 'he' ? 'he' : 'en'}
+        />
+      )}
     </div>
   );
 }

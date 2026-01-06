@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Volume2, VolumeX, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { SpeedControl, PlaybackSpeed } from './SpeedControl';
 
 interface NarrationControlsProps {
   /** Whether audio is muted */
@@ -13,8 +14,12 @@ interface NarrationControlsProps {
   isLoading: boolean;
   /** Current point being narrated */
   currentPoint: string | null;
+  /** Current playback speed */
+  playbackSpeed: PlaybackSpeed;
   /** Toggle mute callback */
   onToggleMute: () => void;
+  /** Speed change callback */
+  onSpeedChange: (speed: PlaybackSpeed) => void;
   /** Language for labels */
   language?: 'en' | 'he';
   className?: string;
@@ -28,7 +33,9 @@ export function NarrationControls({
   isPlaying,
   isLoading,
   currentPoint,
+  playbackSpeed,
   onToggleMute,
+  onSpeedChange,
   language = 'en',
   className
 }: NarrationControlsProps) {
@@ -74,6 +81,13 @@ export function NarrationControls({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Speed toggle button */}
+      <SpeedControl
+        speed={playbackSpeed}
+        onSpeedChange={onSpeedChange}
+        disabled={isMuted}
+      />
 
       {/* Mute toggle button */}
       <Button
