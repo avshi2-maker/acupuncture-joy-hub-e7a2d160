@@ -406,6 +406,13 @@ const BUILTIN_ASSETS = [
     defaultLanguage: 'en',
   },
   {
+    id: 'elderly-lifestyle-tcm-enhanced',
+    label: '👴 Elderly Lifestyle TCM Enhanced (27 Recommendations + Points + Formulas)',
+    path: '/knowledge-assets/Elderly_Lifestyle_TCM_Enhanced.csv',
+    defaultCategory: 'general_health',
+    defaultLanguage: 'en',
+  },
+  {
     id: 'tcm-teenage-mental-health-qa',
     label: 'TCM Teenage Mental Health Q&A (13-18 years)',
     path: '/knowledge-assets/tcm-teenage-mental-health-qa.csv',
