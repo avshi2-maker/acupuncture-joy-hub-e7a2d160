@@ -396,7 +396,7 @@ Please analyze this case and provide a complete treatment plan following the str
     const extractedPoints = extractPointCodes(rawResponse);
     console.log(`Extracted points: ${extractedPoints.join(', ')}`);
 
-    // Parse sections from response
+    // Parse sections from response - flexible regex without requiring emojis
     const sections = {
       primaryDiagnosis: '',
       acupunctureProtocol: { points: extractedPoints, technique: '', contraindications: [] as string[] },
@@ -406,35 +406,65 @@ Please analyze this case and provide a complete treatment plan following the str
       importantNotes: [] as string[],
     };
 
-    // Extract diagnosis section
-    const diagnosisMatch = rawResponse.match(/##\s*🏥\s*Primary Diagnosis\s*([\s\S]*?)(?=##|$)/i);
+    // Extract diagnosis section (flexible - with or without emoji)
+    const diagnosisMatch = rawResponse.match(/##\s*(?:🏥\s*)?Primary Diagnosis\s*([\s\S]*?)(?=##|$)/i);
     if (diagnosisMatch) {
       sections.primaryDiagnosis = diagnosisMatch[1].trim();
+    } else {
+      // Fallback: use the entire rawResponse as diagnosis if no sections found
+      const firstParagraph = rawResponse.split('\n\n')[0]?.trim() || rawResponse.substring(0, 500);
+      sections.primaryDiagnosis = firstParagraph;
     }
 
-    // Extract acupuncture section
-    const acuMatch = rawResponse.match(/##\s*🪡\s*Acupuncture Protocol\s*([\s\S]*?)(?=##|$)/i);
+    // Extract acupuncture section (flexible)
+    const acuMatch = rawResponse.match(/##\s*(?:🪡\s*)?Acupuncture Protocol\s*([\s\S]*?)(?=##|$)/i);
     if (acuMatch) {
       const acuText = acuMatch[1];
-      const techniqueMatch = acuText.match(/\*\*Technique:\*\*\s*(.*?)(?=\*\*|$)/is);
+      const techniqueMatch = acuText.match(/\*\*Technique[:\s]*\*\*\s*(.*?)(?=\*\*|\n\n|$)/is);
       if (techniqueMatch) sections.acupunctureProtocol.technique = techniqueMatch[1].trim();
     }
 
-    // Extract nutrition section
-    const nutritionMatch = rawResponse.match(/##\s*🥗\s*Nutrition Advice\s*([\s\S]*?)(?=##|$)/i);
-    if (nutritionMatch) {
-      sections.nutritionAdvice = nutritionMatch[1].split('\n')
+    // Extract herbal section (flexible)
+    const herbalMatch = rawResponse.match(/##\s*(?:🌿\s*)?Herbal Prescription\s*([\s\S]*?)(?=##|$)/i);
+    if (herbalMatch) {
+      const herbalText = herbalMatch[1];
+      const formulaMatch = herbalText.match(/\*\*Formula[:\s]*\*\*\s*(.*?)(?=\*\*|\n|$)/is);
+      if (formulaMatch) sections.herbalPrescription.formula = formulaMatch[1].trim();
+      
+      // Extract ingredients as lines starting with -
+      sections.herbalPrescription.ingredients = herbalText.split('\n')
         .filter((line: string) => line.trim().startsWith('-'))
         .map((line: string) => line.replace(/^-\s*/, '').trim());
     }
 
-    // Extract lifestyle section
-    const lifestyleMatch = rawResponse.match(/##\s*🧘\s*Lifestyle & Mindset\s*([\s\S]*?)(?=##|$)/i);
+    // Extract nutrition section (flexible)
+    const nutritionMatch = rawResponse.match(/##\s*(?:🥗\s*)?Nutrition(?:\s*Advice)?\s*([\s\S]*?)(?=##|$)/i);
+    if (nutritionMatch) {
+      sections.nutritionAdvice = nutritionMatch[1].split('\n')
+        .filter((line: string) => line.trim().startsWith('-') || line.trim().match(/^\d+\./))
+        .map((line: string) => line.replace(/^[-\d.]+\s*/, '').trim())
+        .filter((line: string) => line.length > 0);
+    }
+
+    // Extract lifestyle section (flexible)
+    const lifestyleMatch = rawResponse.match(/##\s*(?:🧘\s*)?Lifestyle(?:\s*(?:&|and)\s*Mindset)?\s*([\s\S]*?)(?=##|$)/i);
     if (lifestyleMatch) {
       sections.lifestyleMindset = lifestyleMatch[1].split('\n')
-        .filter((line: string) => line.trim().startsWith('-'))
-        .map((line: string) => line.replace(/^-\s*/, '').trim());
+        .filter((line: string) => line.trim().startsWith('-') || line.trim().match(/^\d+\./))
+        .map((line: string) => line.replace(/^[-\d.]+\s*/, '').trim())
+        .filter((line: string) => line.length > 0);
     }
+    
+    // Extract important notes (flexible)
+    const notesMatch = rawResponse.match(/##\s*(?:⚠️\s*)?Important Notes\s*([\s\S]*?)(?=##|$)/i);
+    if (notesMatch) {
+      sections.importantNotes = notesMatch[1].split('\n')
+        .filter((line: string) => line.trim().startsWith('-') || line.trim().match(/^\d+\./))
+        .map((line: string) => line.replace(/^[-\d.]+\s*/, '').trim())
+        .filter((line: string) => line.length > 0);
+    }
+    
+    console.log(`Parsed sections: diagnosis=${sections.primaryDiagnosis.length} chars, points=${sections.acupunctureProtocol.points.length}, nutrition=${sections.nutritionAdvice.length}, lifestyle=${sections.lifestyleMindset.length}`);
 
     // Log usage
     try {

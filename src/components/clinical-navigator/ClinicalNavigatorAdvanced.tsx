@@ -44,8 +44,17 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import clinicalNavigatorBg from '@/assets/clinical-navigator-bg.jpg';
 
-// Category icons mapping (5 categories)
+// Category icons mapping (5 categories) - larger for boxes
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
+  diagnostic: <Stethoscope className="h-8 w-8" />,
+  constitutional: <Brain className="h-8 w-8" />,
+  specialty: <Heart className="h-8 w-8" />,
+  wellness: <Leaf className="h-8 w-8" />,
+  'age-specific': <Users className="h-8 w-8" />,
+};
+
+// Small icons for tabs and badges
+const CATEGORY_ICONS_SMALL: Record<string, React.ReactNode> = {
   diagnostic: <Stethoscope className="h-4 w-4" />,
   constitutional: <Brain className="h-4 w-4" />,
   specialty: <Heart className="h-4 w-4" />,
@@ -60,6 +69,15 @@ const CATEGORY_COLORS: Record<string, string> = {
   specialty: 'bg-rose-500/10 text-rose-600 border-rose-500/20',
   wellness: 'bg-green-500/10 text-green-600 border-green-500/20',
   'age-specific': 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20',
+};
+
+// Category box gradient backgrounds for visual appeal
+const CATEGORY_BOX_STYLES: Record<string, string> = {
+  diagnostic: 'from-blue-500/20 to-blue-600/10 border-blue-500/30 hover:border-blue-500/60 text-blue-700',
+  constitutional: 'from-purple-500/20 to-purple-600/10 border-purple-500/30 hover:border-purple-500/60 text-purple-700',
+  specialty: 'from-rose-500/20 to-rose-600/10 border-rose-500/30 hover:border-rose-500/60 text-rose-700',
+  wellness: 'from-green-500/20 to-green-600/10 border-green-500/30 hover:border-green-500/60 text-green-700',
+  'age-specific': 'from-cyan-500/20 to-cyan-600/10 border-cyan-500/30 hover:border-cyan-500/60 text-cyan-700',
 };
 
 interface ClinicalNavigatorAdvancedProps {
@@ -303,134 +321,171 @@ export function ClinicalNavigatorAdvanced({
     </Popover>
   );
 
-  // Render category selection with tabs
+  // Render category selection as 5 clickable boxes
   const renderCategorySelection = () => {
-    // Get modules for current tab with search filter
-    const getFilteredModules = () => {
-      let modules = activeCategoryTab === 'all' 
-        ? CLINICAL_QUESTIONNAIRES 
-        : modulesByCategory[activeCategoryTab] || [];
-      
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase();
-        modules = modules.filter(m => 
-          m.module_name.toLowerCase().includes(query) ||
-          m.module_name_he.includes(query)
-        );
-      }
-      return modules;
-    };
-
-    const filteredModules = getFilteredModules();
-
     return (
-      <div className="space-y-6">
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold mb-2">
+      <div className="space-y-8">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold mb-3">
             {language === 'he' ? 'נווט קליני' : 'Clinical Navigator'}
           </h2>
-          <p className="text-muted-foreground font-medium">
+          <p className="text-muted-foreground font-medium text-lg">
             {language === 'he' 
               ? '36 שאלונים מקצועיים עם חיפוש עמוק חוצה-מודולים'
               : '36 professional questionnaires with cross-module Deep Search'}
           </p>
         </div>
 
-        {/* Search Filter */}
-        <div className="flex justify-center mb-4">
-          <div className="relative w-full max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        {/* 5 Category Boxes Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          {Object.entries(MODULE_CATEGORIES).map(([key, category], index) => {
+            const count = (modulesByCategory[key] || []).length;
+            return (
+              <motion.div
+                key={key}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ scale: 1.03, y: -4 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Card 
+                  className={cn(
+                    "cursor-pointer transition-all duration-300 border-2 bg-gradient-to-br backdrop-blur-sm",
+                    "hover:shadow-xl hover:shadow-primary/10",
+                    CATEGORY_BOX_STYLES[key],
+                    "min-h-[180px] flex flex-col justify-center"
+                  )}
+                  onClick={() => setSelectedCategory(key)}
+                >
+                  <CardHeader className="text-center pb-2">
+                    <div className="mx-auto mb-3 p-3 rounded-full bg-background/50 backdrop-blur-sm">
+                      {CATEGORY_ICONS[key]}
+                    </div>
+                    <CardTitle className="text-lg font-bold">
+                      {language === 'he' ? category.he : category.en}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-center pt-0">
+                    <Badge 
+                      variant="secondary" 
+                      className="text-sm px-3 py-1 font-bold bg-background/60"
+                    >
+                      {count} {language === 'he' ? 'שאלונים' : 'Modules'}
+                    </Badge>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Quick Search Bar */}
+        <div className="flex justify-center mt-8">
+          <div className="relative w-full max-w-lg">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={language === 'he' ? 'חפש שאלון...' : 'Search questionnaire...'}
-              className="pl-10 pr-10 font-medium"
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                if (e.target.value.trim()) {
+                  setSelectedCategory('all');
+                }
+              }}
+              placeholder={language === 'he' ? 'או חפש ישירות שאלון...' : 'Or search directly for a questionnaire...'}
+              className="pl-12 pr-12 py-6 text-lg font-medium bg-background/80 backdrop-blur-sm"
             />
             {searchQuery && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
                 onClick={() => setSearchQuery('')}
               >
-                <X className="h-4 w-4" />
+                <X className="h-5 w-5" />
               </Button>
             )}
           </div>
         </div>
 
-        {/* Category Tabs */}
-        <Tabs value={activeCategoryTab} onValueChange={setActiveCategoryTab} className="w-full">
-          <TabsList className="w-full flex flex-wrap h-auto gap-1 bg-muted/50 p-1">
-            <TabsTrigger 
-              value="all" 
-              className="flex items-center gap-1.5 font-bold data-[state=active]:bg-jade data-[state=active]:text-white"
-            >
-              <List className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{language === 'he' ? 'הכל' : 'All'}</span>
-              <Badge variant="secondary" className="text-[10px] px-1.5 font-bold">{CLINICAL_QUESTIONNAIRES.length}</Badge>
-            </TabsTrigger>
-            {Object.entries(MODULE_CATEGORIES).map(([key, category]) => {
-              const count = (modulesByCategory[key] || []).length;
-              return (
-                <TabsTrigger 
-                  key={key} 
-                  value={key}
-                  className={cn(
-                    "flex items-center gap-1.5 font-bold data-[state=active]:bg-jade data-[state=active]:text-white",
-                    count === 0 && "opacity-50"
-                  )}
-                  disabled={count === 0}
-                >
-                  {CATEGORY_ICONS[key]}
-                  <span className="hidden md:inline">{language === 'he' ? category.he : category.en}</span>
-                  <Badge variant="secondary" className="text-[10px] px-1.5 font-bold">{count}</Badge>
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
+        {/* Master Dropdown for Power Users */}
+        <div className="flex justify-center mt-4">
+          {renderMasterDropdown()}
+        </div>
+      </div>
+    );
+  };
 
-          <TabsContent value={activeCategoryTab} className="mt-4">
-            <ScrollArea className="h-[500px] pr-2">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {filteredModules.map((module, index) => (
-                  <motion.div
-                    key={module.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.02 }}
-                    whileHover={{ scale: 1.01 }}
-                  >
-                    <Card 
-                      className={cn(
-                        "cursor-pointer transition-all hover:shadow-md border-l-4 bg-background/80 backdrop-blur-sm",
-                        CATEGORY_COLORS[module.category],
-                        "hover:border-jade"
-                      )}
-                      onClick={() => handleSelectModule(module)}
-                    >
-                      <CardHeader className="py-3 px-4">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <Badge variant="outline" className="shrink-0 text-xs px-1.5 font-bold">
-                              {module.id}
-                            </Badge>
-                            <CardTitle className="text-sm font-bold truncate">
-                              {language === 'he' ? module.module_name_he : module.module_name}
-                            </CardTitle>
-                          </div>
-                          <Badge className={cn("shrink-0 text-[10px] font-bold", CATEGORY_COLORS[module.category])}>
-                            {module.questions.length}Q
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                    </Card>
-                  </motion.div>
-                ))}
-              </div>
-            </ScrollArea>
-          </TabsContent>
-        </Tabs>
+  // Render modules after category is selected
+  const renderModulesInCategory = () => {
+    const modules = selectedCategory === 'all' 
+      ? CLINICAL_QUESTIONNAIRES.filter(m => 
+          searchQuery.trim() 
+            ? m.module_name.toLowerCase().includes(searchQuery.toLowerCase()) || m.module_name_he.includes(searchQuery)
+            : true
+        )
+      : (modulesByCategory[selectedCategory!] || []);
+
+    const category = selectedCategory === 'all' 
+      ? { en: 'All Modules', he: 'כל השאלונים' }
+      : MODULE_CATEGORIES[selectedCategory as keyof typeof MODULE_CATEGORIES];
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="sm" onClick={() => { setSelectedCategory(null); setSearchQuery(''); }}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            {language === 'he' ? 'חזור לקטגוריות' : 'Back to Categories'}
+          </Button>
+          <div>
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              {selectedCategory !== 'all' && CATEGORY_ICONS_SMALL[selectedCategory!]}
+              {language === 'he' ? category.he : category.en}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {modules.length} {language === 'he' ? 'שאלונים זמינים' : 'questionnaires available'}
+            </p>
+          </div>
+        </div>
+
+        <ScrollArea className="h-[500px] pr-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {modules.map((module, index) => (
+              <motion.div
+                key={module.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.02 }}
+                whileHover={{ scale: 1.01 }}
+              >
+                <Card 
+                  className={cn(
+                    "cursor-pointer transition-all hover:shadow-md border-l-4 bg-background/80 backdrop-blur-sm",
+                    CATEGORY_COLORS[module.category],
+                    "hover:border-jade"
+                  )}
+                  onClick={() => handleSelectModule(module)}
+                >
+                  <CardHeader className="py-3 px-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <Badge variant="outline" className="shrink-0 text-xs px-1.5 font-bold">
+                          {module.id}
+                        </Badge>
+                        <CardTitle className="text-sm font-bold truncate">
+                          {language === 'he' ? module.module_name_he : module.module_name}
+                        </CardTitle>
+                      </div>
+                      <Badge className={cn("shrink-0 text-[10px] font-bold", CATEGORY_COLORS[module.category])}>
+                        {module.questions.length}Q
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </ScrollArea>
       </div>
     );
   };
@@ -1284,7 +1339,7 @@ export function ClinicalNavigatorAdvanced({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
           >
-            {renderModuleSelection()}
+            {renderModulesInCategory()}
           </motion.div>
         ) : (
           <motion.div
