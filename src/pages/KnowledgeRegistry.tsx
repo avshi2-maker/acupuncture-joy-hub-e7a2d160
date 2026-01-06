@@ -582,6 +582,13 @@ const BUILTIN_ASSETS = [
     defaultLanguage: 'en',
   },
   {
+    id: 'tcm-profound-crisis-qa',
+    label: '🆘 TCM Profound Crisis Q&A (100 Q&A + Acupoints + Formulas + Dosages)',
+    path: '/knowledge-assets/Profound_Crisis_QA_100_CLEANED.csv',
+    defaultCategory: 'anxiety_mental',
+    defaultLanguage: 'en',
+  },
+  {
     id: 'tcm-trauma-qa',
     label: '🛡️ TCM Trauma Q&A (22 Q&A - Kidney-Heart, Zhi, Po, Formulas)',
     path: '/knowledge-assets/tcm-trauma-qa.csv',
