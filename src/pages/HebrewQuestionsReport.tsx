@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   FileText, 
   Download, 
@@ -23,7 +24,8 @@ import {
   Utensils,
   Stethoscope,
   MapPin,
-  ArrowLeft
+  ArrowLeft,
+  Filter
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -384,20 +386,36 @@ export default function HebrewQuestionsReport() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   // Calculate totals
   const totalQuestions = questionnairesData.reduce((sum, q) => sum + q.questions.length, 0);
   const totalQuestionnaires = questionnairesData.length;
 
-  // Filter questions based on search
-  const filteredData = questionnairesData.map(questionnaire => ({
-    ...questionnaire,
-    questions: questionnaire.questions.filter(q => 
-      q.textHe.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      q.textEn?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (q as any).category?.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  })).filter(q => q.questions.length > 0);
+  // Get all unique categories (questionnaire IDs)
+  const categories = useMemo(() => {
+    return questionnairesData.map(q => ({
+      id: q.id,
+      name: q.name,
+      nameEn: q.nameEn,
+      count: q.questions.length
+    }));
+  }, []);
+
+  // Filter questions based on search and category
+  const filteredData = useMemo(() => {
+    return questionnairesData
+      .filter(questionnaire => selectedCategory === 'all' || questionnaire.id === selectedCategory)
+      .map(questionnaire => ({
+        ...questionnaire,
+        questions: questionnaire.questions.filter(q => 
+          q.textHe.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          q.textEn?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (q as any).category?.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      }))
+      .filter(q => q.questions.length > 0);
+  }, [searchQuery, selectedCategory]);
 
   const toggleSection = (id: string) => {
     setExpandedSections(prev => {
@@ -497,26 +515,59 @@ export default function HebrewQuestionsReport() {
           </Card>
         </div>
 
-        {/* Search and Controls */}
+        {/* Search, Filter and Controls */}
         <Card>
           <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="חפש שאלה..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pr-10"
-                />
+            <div className="flex flex-col gap-4">
+              {/* Category Filter */}
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex items-center gap-2 md:min-w-[280px]">
+                  <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue placeholder="בחר שאלון..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border shadow-lg z-50">
+                      <SelectItem value="all">כל השאלונים ({totalQuestions} שאלות)</SelectItem>
+                      {categories.map(cat => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.name} ({cat.count})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="relative flex-1">
+                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="חפש שאלה..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pr-10"
+                  />
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={expandAll}>
-                  הרחב הכל
-                </Button>
-                <Button variant="outline" size="sm" onClick={collapseAll}>
-                  כווץ הכל
-                </Button>
+              
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-2 justify-between items-center">
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={expandAll}>
+                    הרחב הכל
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={collapseAll}>
+                    כווץ הכל
+                  </Button>
+                </div>
+                {selectedCategory !== 'all' && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setSelectedCategory('all')}
+                    className="text-muted-foreground"
+                  >
+                    נקה סינון
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>
