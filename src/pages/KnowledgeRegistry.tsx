@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { FileText, Download, CheckCircle, Clock, AlertCircle, Shield, Database, FileCheck, Upload, Trash2, Pause, Play, RotateCcw, XCircle, ArrowLeft, ShieldAlert, Loader2, Languages, Sparkles, Heart } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { GoldenKnowledgeImport } from '@/components/admin/GoldenKnowledgeImport';
+import { BulkKnowledgeIndexer } from '@/components/admin/BulkKnowledgeIndexer';
 import { format } from 'date-fns';
 
 // Hook to check if user has admin role
@@ -1647,6 +1648,11 @@ ${report.verificationInstructions || ''}
       {/* Golden Knowledge Base Import - For pre-processed ZIP files */}
       <div className="mb-8">
         <GoldenKnowledgeImport />
+      </div>
+
+      {/* Bulk Knowledge Base Indexer - For indexing all CSV files */}
+      <div className="mb-8">
+        <BulkKnowledgeIndexer />
       </div>
 
       {/* Import Queue Section */}
