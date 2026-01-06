@@ -1940,6 +1940,9 @@ Generate your response ENTIRELY in ${responseLanguageInstruction}, including:
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
     let fullResponse = '';
+    let totalInputTokens = 0;
+    let totalOutputTokens = 0;
+    let totalTokensUsed = 0;
 
     const transformStream = new TransformStream({
       start(controller) {
@@ -1976,17 +1979,47 @@ Generate your response ENTIRELY in ${responseLanguageInstruction}, including:
                   .select('id, created_at')
                   .single();
                 console.log('Query logged for audit trail', logRow?.id);
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', auditLogId: logRow?.id, auditLoggedAt: logRow?.created_at })}\n\n`));
+                
+                // Send done event with token usage data for Turbo Dashboard
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+                  type: 'done', 
+                  auditLogId: logRow?.id, 
+                  auditLoggedAt: logRow?.created_at,
+                  tokenUsage: {
+                    inputTokens: totalInputTokens,
+                    outputTokens: totalOutputTokens,
+                    totalTokens: totalTokensUsed
+                  }
+                })}\n\n`));
               } catch (logErr) {
                 console.error('Failed to log query:', logErr);
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+                  type: 'done',
+                  tokenUsage: {
+                    inputTokens: totalInputTokens,
+                    outputTokens: totalOutputTokens,
+                    totalTokens: totalTokensUsed
+                  }
+                })}\n\n`));
               }
             } else if (jsonStr) {
               try {
                 const parsed = JSON.parse(jsonStr);
                 const content = parsed.choices?.[0]?.delta?.content;
+                
+                // Extract token usage from the response (if available)
+                if (parsed.usage) {
+                  totalInputTokens = parsed.usage.prompt_tokens || totalInputTokens;
+                  totalOutputTokens = parsed.usage.completion_tokens || totalOutputTokens;
+                  totalTokensUsed = parsed.usage.total_tokens || (totalInputTokens + totalOutputTokens);
+                }
+                
+                // Track output tokens incrementally by counting characters (approx 4 chars per token)
                 if (content) {
                   fullResponse += content;
+                  // Estimate output tokens based on content length
+                  totalOutputTokens = Math.ceil(fullResponse.length / 4);
+                  totalTokensUsed = totalInputTokens + totalOutputTokens;
                   controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'delta', content })}\n\n`));
                 }
               } catch {

@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Activity, Zap, Shield, AlertTriangle, Gauge, Database, 
-  BookCheck, ExternalLink, Eye
+  BookCheck, ExternalLink, Eye, Volume2, VolumeX
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -11,6 +11,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useTurboDashboardAudio } from '@/hooks/useTurboDashboardAudio';
 
 export interface TurboDashboardMeta {
   tokensUsed?: number;
@@ -35,6 +36,7 @@ interface TcmTurboDashboardProps {
   isProcessing?: boolean;
   variant?: 'standard' | 'video' | 'compact';
   className?: string;
+  enableAudio?: boolean;
 }
 
 export function TcmTurboDashboard({
@@ -42,12 +44,45 @@ export function TcmTurboDashboard({
   meta,
   isProcessing = false,
   variant = 'standard',
-  className
+  className,
+  enableAudio = true
 }: TcmTurboDashboardProps) {
   const [displayTokens, setDisplayTokens] = useState(0);
   const [rpmProgress, setRpmProgress] = useState(0);
+  const [audioEnabled, setAudioEnabled] = useState(enableAudio);
   const animationRef = useRef<number | null>(null);
   const tokenIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const prevStatusRef = useRef<TurboDashboardStatus>(status);
+  
+  // Audio feedback hook
+  const { 
+    playEngineRevving, 
+    playSourceLocked, 
+    playExternalWarning, 
+    playNoMatch,
+    playScanStart 
+  } = useTurboDashboardAudio({ enabled: audioEnabled });
+  
+  // Play audio based on status changes
+  useEffect(() => {
+    const prevStatus = prevStatusRef.current;
+    
+    if (prevStatus !== status) {
+      if (status === 'scanning' && prevStatus === 'standby') {
+        playScanStart();
+        // Play engine revving after a short delay
+        setTimeout(() => playEngineRevving(), 150);
+      } else if (status === 'locked') {
+        playSourceLocked();
+      } else if (status === 'external') {
+        playExternalWarning();
+      } else if (status === 'fail') {
+        playNoMatch();
+      }
+      
+      prevStatusRef.current = status;
+    }
+  }, [status, playScanStart, playEngineRevving, playSourceLocked, playExternalWarning, playNoMatch]);
 
   // Animate tokens when processing
   useEffect(() => {
@@ -361,6 +396,31 @@ export function TcmTurboDashboard({
               </TooltipContent>
             </Tooltip>
           )}
+          
+          {/* Audio Toggle */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setAudioEnabled(!audioEnabled)}
+                className={cn(
+                  "flex items-center justify-center rounded-md border transition-all duration-200",
+                  isCompact ? "w-6 h-6" : "w-7 h-7",
+                  audioEnabled 
+                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20" 
+                    : "bg-slate-500/10 border-slate-500/30 text-slate-500 hover:bg-slate-500/20"
+                )}
+              >
+                {audioEnabled ? (
+                  <Volume2 className={cn(isCompact ? "w-3 h-3" : "w-3.5 h-3.5")} />
+                ) : (
+                  <VolumeX className={cn(isCompact ? "w-3 h-3" : "w-3.5 h-3.5")} />
+                )}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="bg-slate-900 border-slate-700">
+              <p className="text-xs">{audioEnabled ? 'Mute audio feedback' : 'Enable audio feedback'}</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
     </TooltipProvider>
