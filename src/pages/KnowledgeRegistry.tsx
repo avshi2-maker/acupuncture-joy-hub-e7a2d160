@@ -575,6 +575,13 @@ const BUILTIN_ASSETS = [
     defaultLanguage: 'en',
   },
   {
+    id: 'tcm-teenage-mental-health',
+    label: '🧒 TCM Teenage Mental Health Q&A (50 Q&A + Acupoints + Pharmacopeia)',
+    path: '/knowledge-assets/TCM_Teenage_Mental_Health_Enhanced.csv',
+    defaultCategory: 'anxiety_mental',
+    defaultLanguage: 'en',
+  },
+  {
     id: 'tcm-trauma-qa',
     label: '🛡️ TCM Trauma Q&A (22 Q&A - Kidney-Heart, Zhi, Po, Formulas)',
     path: '/knowledge-assets/tcm-trauma-qa.csv',
