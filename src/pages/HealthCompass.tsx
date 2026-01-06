@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,10 +6,12 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Progress } from '@/components/ui/progress';
-import { Compass, Heart, Activity, Leaf, ChevronRight, ChevronLeft, CheckCircle2, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Compass, Heart, Activity, Leaf, ChevronRight, ChevronLeft, CheckCircle2, ArrowLeft, User, Save, Loader2 } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 interface Question {
   id: number;
   title: string;
@@ -204,13 +206,97 @@ const sectionInfo = {
   }
 };
 
+interface Patient {
+  id: string;
+  full_name: string;
+}
+
 export default function HealthCompass() {
+  const [searchParams] = useSearchParams();
+  const preselectedPatientId = searchParams.get('patient');
+  
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string | number>>({});
   const [energyMorning, setEnergyMorning] = useState(5);
   const [energyAfternoon, setEnergyAfternoon] = useState(5);
   const [isComplete, setIsComplete] = useState(false);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(preselectedPatientId);
+  const [isSaving, setIsSaving] = useState(false);
+  const [savedAssessmentId, setSavedAssessmentId] = useState<string | null>(null);
 
+  // Fetch patients on mount
+  useEffect(() => {
+    const fetchPatients = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('patients')
+        .select('id, full_name')
+        .eq('therapist_id', user.id)
+        .order('full_name');
+
+      if (!error && data) {
+        setPatients(data);
+      }
+    };
+    fetchPatients();
+  }, []);
+
+  // Save assessment to database
+  const saveAssessment = async () => {
+    if (!selectedPatientId) {
+      toast.error('יש לבחור מטופל לפני השמירה');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('יש להתחבר כדי לשמור');
+        return;
+      }
+
+      // Build structured answers with question details
+      const structuredAnswers = questions.map(q => ({
+        questionId: q.id,
+        title: q.title,
+        question: q.question,
+        section: q.section,
+        type: q.type,
+        answer: answers[q.id] || null
+      }));
+
+      const { data, error } = await supabase
+        .from('patient_assessments')
+        .insert({
+          patient_id: selectedPatientId,
+          therapist_id: user.id,
+          assessment_type: 'health_compass',
+          details: { 
+            answers: structuredAnswers,
+            version: '1.0',
+            completedAt: new Date().toISOString()
+          },
+          status: 'completed',
+          summary: `Health Compass - ${Object.keys(answers).length}/${questions.length} questions answered`
+        })
+        .select('id')
+        .single();
+
+      if (error) throw error;
+
+      setSavedAssessmentId(data.id);
+      toast.success('השאלון נשמר בהצלחה!');
+    } catch (error) {
+      console.error('Error saving assessment:', error);
+      toast.error('שגיאה בשמירת השאלון');
+    } finally {
+      setIsSaving(false);
+    }
+  };
   const question = questions[currentQuestion];
   const progress = ((currentQuestion + 1) / questions.length) * 100;
   const section = sectionInfo[question.section];
@@ -242,6 +328,8 @@ export default function HealthCompass() {
   };
 
   if (isComplete) {
+    const selectedPatient = patients.find(p => p.id === selectedPatientId);
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-4" dir="rtl">
         <div className="max-w-2xl mx-auto pt-8">
@@ -257,6 +345,66 @@ export default function HealthCompass() {
             <p className="text-muted-foreground text-lg mb-8">
               המידע שסיפקת יעזור לנו להתאים עבורך תוכנית טיפול אישית
             </p>
+
+            {/* Patient selection and save */}
+            {!savedAssessmentId && (
+              <Card className="mb-6 text-right">
+                <CardContent className="pt-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      <User className="h-5 w-5 text-muted-foreground" />
+                      <Label className="text-base font-medium">שמירת השאלון לכרטיס מטופל</Label>
+                    </div>
+                    <Select 
+                      value={selectedPatientId || ''} 
+                      onValueChange={setSelectedPatientId}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="בחר מטופל..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {patients.map((patient) => (
+                          <SelectItem key={patient.id} value={patient.id}>
+                            {patient.full_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button 
+                      onClick={saveAssessment} 
+                      disabled={!selectedPatientId || isSaving}
+                      className="w-full"
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                          שומר...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="ml-2 h-4 w-4" />
+                          שמור לכרטיס מטופל
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {savedAssessmentId && (
+              <Card className="mb-6 border-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-950/20">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 className="h-5 w-5" />
+                    <span className="font-medium">
+                      השאלון נשמר בהצלחה לכרטיס של {selectedPatient?.full_name}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <div className="flex gap-4 justify-center">
               <Button asChild variant="outline">
                 <Link to="/crm">
@@ -268,6 +416,8 @@ export default function HealthCompass() {
                 setCurrentQuestion(0);
                 setAnswers({});
                 setIsComplete(false);
+                setSavedAssessmentId(null);
+                setSelectedPatientId(preselectedPatientId);
               }}>
                 מילוי שאלון חדש
               </Button>
