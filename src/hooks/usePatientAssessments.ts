@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import type { Json } from '@/integrations/supabase/types';
 
-export type AssessmentType = 'brain' | 'body' | 'retreat' | 'health_compass' | 'patient_questionnaire' | 'internal_climate' | 'vitality_longevity' | 'balance_strength_adult' | 'golden_age_vitality' | 'longevity_dignity' | 'nourishing_life' | 'mental_clarity';
+export type AssessmentType = 'brain' | 'body' | 'retreat' | 'health_compass' | 'patient_questionnaire' | 'internal_climate' | 'vitality_longevity' | 'balance_strength_adult' | 'golden_age_vitality' | 'longevity_dignity' | 'nourishing_life' | 'mental_clarity' | 'pain_rehabilitation';
 export type AssessmentStatus = 'saved' | 'sent' | 'pending' | 'completed';
 
 export interface PatientAssessment {
@@ -57,9 +57,9 @@ export function useLatestAssessments(patientId?: string) {
   return useQuery({
     queryKey: ['latest-assessments', patientId, user?.id],
     queryFn: async () => {
-      if (!user?.id || !patientId) return { brain: null, body: null, retreat: null, health_compass: null, patient_questionnaire: null, internal_climate: null, vitality_longevity: null, balance_strength_adult: null, golden_age_vitality: null, longevity_dignity: null, nourishing_life: null, mental_clarity: null };
+      if (!user?.id || !patientId) return { brain: null, body: null, retreat: null, health_compass: null, patient_questionnaire: null, internal_climate: null, vitality_longevity: null, balance_strength_adult: null, golden_age_vitality: null, longevity_dignity: null, nourishing_life: null, mental_clarity: null, pain_rehabilitation: null };
 
-      const types: AssessmentType[] = ['brain', 'body', 'retreat', 'health_compass', 'patient_questionnaire', 'internal_climate', 'vitality_longevity', 'balance_strength_adult', 'golden_age_vitality', 'longevity_dignity', 'nourishing_life', 'mental_clarity'];
+      const types: AssessmentType[] = ['brain', 'body', 'retreat', 'health_compass', 'patient_questionnaire', 'internal_climate', 'vitality_longevity', 'balance_strength_adult', 'golden_age_vitality', 'longevity_dignity', 'nourishing_life', 'mental_clarity', 'pain_rehabilitation'];
       const results: Record<AssessmentType, PatientAssessment | null> = {
         brain: null,
         body: null,
@@ -73,6 +73,7 @@ export function useLatestAssessments(patientId?: string) {
         longevity_dignity: null,
         nourishing_life: null,
         mental_clarity: null,
+        pain_rehabilitation: null,
       };
 
       for (const type of types) {
