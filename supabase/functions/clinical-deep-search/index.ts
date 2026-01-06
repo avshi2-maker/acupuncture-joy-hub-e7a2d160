@@ -463,35 +463,24 @@ serve(async (req) => {
     // === STEP 1: Primary Retrieval ===
     console.log(`=== PRIMARY RETRIEVAL: ${moduleInfo.knowledgeBase} ===`);
     
-    const { data: primaryChunks, error: primaryError } = await supabase
-      .from('knowledge_chunks')
-      .select(`
-        id,
-        content,
-        question,
-        answer,
-        chunk_index,
-        document_id,
-        knowledge_documents!inner(file_name, original_name, category)
-      `)
-      .ilike('knowledge_documents.original_name', `%${moduleInfo.knowledgeBase.replace('.csv', '')}%`)
-      .textSearch('content', retrievalSearchQuery.split(' ').slice(0, 8).join(' | '), {
-        type: 'websearch',
-        config: 'english'
-      })
-      .limit(20);
-
-    const primaryResults = primaryChunks || [];
-    console.log(`Primary chunks found: ${primaryResults.length}`);
-
-    // === STEP 2: Secondary Sweep - Cross-reference ===
-    console.log(`=== SECONDARY SWEEP: Nutrition, Lifestyle, Mindset ===`);
+    // Clean search query for PostgreSQL full-text search (remove special chars that break websearch)
+    const cleanSearchTerms = (query: string): string => {
+      return query
+        .replace(/[:\-\/\\()[\]{}'"!@#$%^&*+=<>?,;]/g, ' ')  // Remove special chars
+        .split(/\s+/)
+        .filter(word => word.length > 2)  // Only words with 3+ chars
+        .slice(0, 8)  // Limit to 8 terms
+        .join(' | ');
+    };
     
-    const crossReferencePromises = Object.entries(CROSS_REFERENCE_MODULES).map(async ([key, module]) => {
-      // Skip if same as primary
-      if (module.moduleId === moduleId) return { key, chunks: [] };
-
-      const { data: chunks } = await supabase
+    const primarySearchTerms = cleanSearchTerms(retrievalSearchQuery);
+    console.log(`Primary search terms: ${primarySearchTerms}`);
+    
+    // Try full-text search first, fallback to ilike if no results
+    let primaryResults: any[] = [];
+    
+    if (primarySearchTerms) {
+      const { data: primaryChunks, error: primaryError } = await supabase
         .from('knowledge_chunks')
         .select(`
           id,
@@ -502,14 +491,115 @@ serve(async (req) => {
           document_id,
           knowledge_documents!inner(file_name, original_name, category)
         `)
-        .ilike('knowledge_documents.original_name', `%${module.knowledgeBase.replace('.csv', '')}%`)
-        .textSearch('content', retrievalSearchQuery.split(' ').slice(0, 6).join(' | '), {
+        .ilike('knowledge_documents.original_name', `%${moduleInfo.knowledgeBase.replace('.csv', '')}%`)
+        .textSearch('content', primarySearchTerms, {
           type: 'websearch',
           config: 'english'
         })
-        .limit(10);
+        .limit(20);
+      
+      if (primaryError) {
+        console.error('Primary search error:', primaryError);
+      }
+      primaryResults = primaryChunks || [];
+    }
+    
+    // Fallback: if no results, try simple ilike search on first few keywords
+    if (primaryResults.length === 0) {
+      console.log('Full-text search returned 0 results, trying ilike fallback...');
+      const keywords = retrievalSearchQuery
+        .replace(/[:\-\/\\()[\]{}'"!@#$%^&*+=<>?,;]/g, ' ')
+        .split(/\s+/)
+        .filter(w => w.length > 3)
+        .slice(0, 3);
+      
+      if (keywords.length > 0) {
+        const ilikePattern = `%${keywords.join('%')}%`;
+        const { data: fallbackChunks } = await supabase
+          .from('knowledge_chunks')
+          .select(`
+            id,
+            content,
+            question,
+            answer,
+            chunk_index,
+            document_id,
+            knowledge_documents!inner(file_name, original_name, category)
+          `)
+          .ilike('knowledge_documents.original_name', `%${moduleInfo.knowledgeBase.replace('.csv', '')}%`)
+          .or(keywords.map(k => `content.ilike.%${k}%`).join(','))
+          .limit(20);
+        
+        primaryResults = fallbackChunks || [];
+        console.log(`Fallback ilike found: ${primaryResults.length} chunks`);
+      }
+    }
 
-      return { key, chunks: chunks || [] };
+    console.log(`Primary chunks found: ${primaryResults.length}`);
+
+    // === STEP 2: Secondary Sweep - Cross-reference ===
+    console.log(`=== SECONDARY SWEEP: Nutrition, Lifestyle, Mindset ===`);
+    
+    const crossSearchTerms = cleanSearchTerms(retrievalSearchQuery);
+    
+    const crossReferencePromises = Object.entries(CROSS_REFERENCE_MODULES).map(async ([key, module]) => {
+      // Skip if same as primary
+      if (module.moduleId === moduleId) return { key, chunks: [] };
+
+      let chunks: any[] = [];
+      
+      // Try full-text search first
+      if (crossSearchTerms) {
+        const { data } = await supabase
+          .from('knowledge_chunks')
+          .select(`
+            id,
+            content,
+            question,
+            answer,
+            chunk_index,
+            document_id,
+            knowledge_documents!inner(file_name, original_name, category)
+          `)
+          .ilike('knowledge_documents.original_name', `%${module.knowledgeBase.replace('.csv', '')}%`)
+          .textSearch('content', crossSearchTerms, {
+            type: 'websearch',
+            config: 'english'
+          })
+          .limit(10);
+        
+        chunks = data || [];
+      }
+      
+      // Fallback to ilike if no results
+      if (chunks.length === 0) {
+        const keywords = retrievalSearchQuery
+          .replace(/[:\-\/\\()[\]{}'"!@#$%^&*+=<>?,;]/g, ' ')
+          .split(/\s+/)
+          .filter(w => w.length > 3)
+          .slice(0, 2);
+        
+        if (keywords.length > 0) {
+          const { data } = await supabase
+            .from('knowledge_chunks')
+            .select(`
+              id,
+              content,
+              question,
+              answer,
+              chunk_index,
+              document_id,
+              knowledge_documents!inner(file_name, original_name, category)
+            `)
+            .ilike('knowledge_documents.original_name', `%${module.knowledgeBase.replace('.csv', '')}%`)
+            .or(keywords.map(k => `content.ilike.%${k}%`).join(','))
+            .limit(10);
+          
+          chunks = data || [];
+        }
+      }
+
+      return { key, chunks };
     });
 
     const crossReferenceResults = await Promise.all(crossReferencePromises);
