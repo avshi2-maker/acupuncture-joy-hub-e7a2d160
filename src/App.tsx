@@ -76,6 +76,7 @@ import ClinicalNavigator from "./pages/ClinicalNavigator";
 import HealthCompass from "./pages/HealthCompass";
 import PatientQuestionnaire from "./pages/PatientQuestionnaire";
 import InternalClimateQuestionnaire from "./pages/InternalClimateQuestionnaire";
+import VitalityLongevityQuestionnaire from "./pages/VitalityLongevityQuestionnaire";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -162,7 +163,7 @@ const App = () => (
                       <Route path="/health-compass" element={<HealthCompass />} />
                       <Route path="/patient-questionnaire" element={<PatientQuestionnaire />} />
                       <Route path="/internal-climate" element={<InternalClimateQuestionnaire />} />
-
+                      <Route path="/vitality-longevity" element={<VitalityLongevityQuestionnaire />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                     <FloatingMusicPlayer />
