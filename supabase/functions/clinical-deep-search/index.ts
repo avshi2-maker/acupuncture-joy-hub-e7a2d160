@@ -126,6 +126,14 @@ interface SourcedRecommendation {
   source?: string;
 }
 
+// 3D Command for controlling body figure display
+interface BodyFigureCommand {
+  target_point: string;        // Primary point to focus on (e.g., "BL23")
+  camera_action: 'focus' | 'highlight' | 'tour';  // What to do with the camera/view
+  camera_angle: 'anterior' | 'posterior' | 'lateral_left' | 'lateral_right' | 'superior' | 'auto';
+  secondary_points?: string[]; // Additional points to show
+}
+
 interface DeepSearchResponse {
   success: boolean;
   report?: {
@@ -148,6 +156,8 @@ interface DeepSearchResponse {
     importantNotes: string[];
     rawResponse: string;
     extractedPoints: string[];
+    // NEW: 3D/Body Figure Control Command
+    body_figure_command?: BodyFigureCommand;
   };
   metadata?: {
     moduleUsed: string;
@@ -160,6 +170,7 @@ interface DeepSearchResponse {
       rawQuery: string;
       retrievalQuery: string;
     };
+    source_file?: string;  // Primary knowledge source file used
   };
   error?: string;
 }
@@ -185,6 +196,43 @@ function extractPointCodes(text: string): string[] {
   }
   
   return Array.from(points);
+}
+
+// Determine camera angle based on point meridian locations
+function determineCameraAngle(points: string[]): BodyFigureCommand['camera_angle'] {
+  if (points.length === 0) return 'auto';
+  
+  // Check for back/posterior points (BL, DU, back-related)
+  const posteriorMeridians = ['BL', 'DU'];
+  const anteriorMeridians = ['RN', 'ST', 'SP', 'KI', 'LR'];
+  const lateralMeridians = ['GB', 'TE', 'SI'];
+  
+  let posteriorCount = 0;
+  let anteriorCount = 0;
+  let lateralCount = 0;
+  
+  for (const point of points) {
+    const meridian = point.replace(/\d+/g, '').toUpperCase();
+    if (posteriorMeridians.includes(meridian)) posteriorCount++;
+    else if (anteriorMeridians.includes(meridian)) anteriorCount++;
+    else if (lateralMeridians.includes(meridian)) lateralCount++;
+  }
+  
+  if (posteriorCount > anteriorCount && posteriorCount > lateralCount) return 'posterior';
+  if (lateralCount > anteriorCount && lateralCount > posteriorCount) return 'lateral_left';
+  return 'anterior';
+}
+
+// Generate body figure command from extracted points
+function generateBodyFigureCommand(points: string[]): BodyFigureCommand | undefined {
+  if (points.length === 0) return undefined;
+  
+  return {
+    target_point: points[0], // Primary point to focus on
+    camera_action: points.length > 3 ? 'tour' : 'focus',
+    camera_angle: determineCameraAngle(points),
+    secondary_points: points.slice(1),
+  };
 }
 
 // Build search query from questionnaire data
@@ -668,12 +716,17 @@ Please analyze this case and provide a complete treatment plan following the str
       console.error('Failed to log usage:', logErr);
     }
 
+    // Generate body figure command for 3D/visualization control
+    const bodyFigureCommand = generateBodyFigureCommand(extractedPoints);
+    console.log(`Body figure command: ${JSON.stringify(bodyFigureCommand)}`);
+
     const response: DeepSearchResponse = {
       success: true,
       report: {
         ...sections,
         rawResponse,
         extractedPoints,
+        body_figure_command: bodyFigureCommand,
       },
       metadata: {
         moduleUsed: moduleInfo.name,
@@ -685,6 +738,7 @@ Please analyze this case and provide a complete treatment plan following the str
         crossReferencesFound: totalCrossRefs,
         sourcesUsed: allSources,
         translationBridge,
+        source_file: moduleInfo.knowledgeBase,
       },
     };
 

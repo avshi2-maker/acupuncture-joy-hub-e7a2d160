@@ -28,7 +28,7 @@ import {
   QuestionnaireModule,
   QuestionItem
 } from '@/data/clinical-navigator-questionnaires';
-import { useClinicalDeepSearch, DeepSearchRequest, QuestionAnswer } from '@/hooks/useClinicalDeepSearch';
+import { useClinicalDeepSearch, DeepSearchRequest, QuestionAnswer, BodyFigureCommand } from '@/hooks/useClinicalDeepSearch';
 import { RAGBodyFigureDisplay } from '@/components/acupuncture/RAGBodyFigureDisplay';
 import { ComparisonBodyDisplay } from '@/components/acupuncture/ComparisonBodyDisplay';
 import { 
@@ -90,7 +90,7 @@ export function ClinicalNavigatorAdvanced({
   onPointCelebration 
 }: ClinicalNavigatorAdvancedProps) {
   const { language } = useLanguage();
-  const { performDeepSearch, isLoading, result, reset } = useClinicalDeepSearch();
+  const { performDeepSearch, isLoading, result, bodyFigureCommand, reset } = useClinicalDeepSearch();
 
   // State
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -117,6 +117,45 @@ export function ClinicalNavigatorAdvanced({
   
   // Email dialog state
   const [showEmailDialog, setShowEmailDialog] = useState(false);
+  
+  // Body figure command state for 3D/visualization control
+  const [activeCameraAngle, setActiveCameraAngle] = useState<'anterior' | 'posterior' | 'lateral_left' | 'lateral_right' | 'superior' | 'auto'>('auto');
+  const [focusedPoint, setFocusedPoint] = useState<string | null>(null);
+  const [isTourActive, setIsTourActive] = useState(false);
+
+  // Effect to handle body figure commands from AI response
+  useEffect(() => {
+    if (bodyFigureCommand) {
+      console.log('Processing body figure command:', bodyFigureCommand);
+      
+      // Set camera angle based on command
+      if (bodyFigureCommand.camera_angle !== 'auto') {
+        setActiveCameraAngle(bodyFigureCommand.camera_angle);
+      }
+      
+      // Handle camera action
+      switch (bodyFigureCommand.camera_action) {
+        case 'focus':
+          // Focus on target point
+          setFocusedPoint(bodyFigureCommand.target_point);
+          setActivePointForCelebration(bodyFigureCommand.target_point);
+          // Clear after animation
+          setTimeout(() => {
+            setActivePointForCelebration(null);
+          }, 3000);
+          break;
+        case 'tour':
+          // Start sequential tour of points
+          setIsTourActive(true);
+          break;
+        case 'highlight':
+          // Just highlight without animation
+          setFocusedPoint(bodyFigureCommand.target_point);
+          break;
+      }
+    }
+  }, [bodyFigureCommand]);
+  
   // Filter modules by category
   const modulesByCategory = useMemo(() => {
     const grouped: Record<string, QuestionnaireModule[]> = {};
@@ -1314,11 +1353,14 @@ export function ClinicalNavigatorAdvanced({
               allowSelection={true}
               celebratingPoint={activePointForCelebration}
               enableTour={true}
-              autoStartTour={true}
+              autoStartTour={isTourActive}
               enableNarration={true}
               language={language === 'he' ? 'he' : 'en'}
               patientGender={patientInfo.gender === 'male' ? 'male' : patientInfo.gender === 'female' ? 'female' : null}
               patientAgeGroup={patientInfo.age ? (parseInt(patientInfo.age) < 12 ? 'pediatric' : parseInt(patientInfo.age) >= 65 ? 'elderly' : 'adult') : null}
+              cameraAngle={activeCameraAngle}
+              focusedPoint={focusedPoint}
+              externalTourActive={isTourActive}
               className="sticky top-4"
             />
             

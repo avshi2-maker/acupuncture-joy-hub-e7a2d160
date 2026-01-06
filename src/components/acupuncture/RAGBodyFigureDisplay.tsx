@@ -43,6 +43,12 @@ interface RAGBodyFigureDisplayProps {
   patientGender?: GenderFilter;
   /** Patient age group for age-aware figure selection */
   patientAgeGroup?: AgeGroupFilter;
+  /** Camera angle from AI command - determines which figure view to show first */
+  cameraAngle?: 'anterior' | 'posterior' | 'lateral_left' | 'lateral_right' | 'superior' | 'auto';
+  /** Primary focused point from AI command */
+  focusedPoint?: string | null;
+  /** Whether tour is externally triggered */
+  externalTourActive?: boolean;
   className?: string;
 }
 
@@ -65,6 +71,9 @@ export function RAGBodyFigureDisplay({
   language = 'en',
   patientGender = null,
   patientAgeGroup = null,
+  cameraAngle = 'auto',
+  focusedPoint = null,
+  externalTourActive = false,
   className = ''
 }: RAGBodyFigureDisplayProps) {
   const { 
@@ -90,6 +99,46 @@ export function RAGBodyFigureDisplay({
   const matchingFigures = useMemo(() => {
     return getFiguresForPoints(extractedPoints);
   }, [extractedPoints, getFiguresForPoints]);
+
+  // Effect to handle camera angle changes from AI command
+  useEffect(() => {
+    if (cameraAngle !== 'auto' && matchingFigures.length > 0) {
+      // Find figure matching the camera angle
+      const angleToKeyword: Record<string, string[]> = {
+        'anterior': ['front', 'anterior', 'abdomen', 'chest', 'face'],
+        'posterior': ['back', 'posterior', 'spine', 'lumbar'],
+        'lateral_left': ['lateral', 'left', 'side'],
+        'lateral_right': ['lateral', 'right', 'side'],
+        'superior': ['head', 'top', 'scalp'],
+      };
+      
+      const keywords = angleToKeyword[cameraAngle] || [];
+      const matchIndex = matchingFigures.findIndex(fig => 
+        keywords.some(kw => fig.filename.toLowerCase().includes(kw))
+      );
+      
+      if (matchIndex >= 0) {
+        setActiveFigureIndex(matchIndex);
+        console.log(`Camera angle ${cameraAngle} matched figure: ${matchingFigures[matchIndex].filename}`);
+      }
+    }
+  }, [cameraAngle, matchingFigures]);
+
+  // Effect to handle focused point from AI command
+  useEffect(() => {
+    if (focusedPoint && matchingFigures.length > 0) {
+      // Find figure containing the focused point and switch to it
+      const figureWithPoint = matchingFigures.findIndex(fig => {
+        const pointsOnFig = getHighlightedPointsForFigure(fig.filename, [focusedPoint]);
+        return pointsOnFig.length > 0;
+      });
+      
+      if (figureWithPoint >= 0 && figureWithPoint !== activeFigureIndex) {
+        setActiveFigureIndex(figureWithPoint);
+        console.log(`Focused point ${focusedPoint} found on figure: ${matchingFigures[figureWithPoint].filename}`);
+      }
+    }
+  }, [focusedPoint, matchingFigures, activeFigureIndex, getHighlightedPointsForFigure]);
 
   // Audio Narration hook
   const narration = useTourNarration({

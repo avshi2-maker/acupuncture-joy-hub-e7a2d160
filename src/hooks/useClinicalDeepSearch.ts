@@ -36,6 +36,14 @@ export interface SourcedRecommendation {
   source?: string;
 }
 
+// Body Figure Command for controlling visualization
+export interface BodyFigureCommand {
+  target_point: string;
+  camera_action: 'focus' | 'highlight' | 'tour';
+  camera_angle: 'anterior' | 'posterior' | 'lateral_left' | 'lateral_right' | 'superior' | 'auto';
+  secondary_points?: string[];
+}
+
 export interface DeepSearchReport {
   primaryDiagnosis: string;
   primaryDiagnosisSources: string[];
@@ -46,6 +54,7 @@ export interface DeepSearchReport {
   importantNotes: string[];
   rawResponse: string;
   extractedPoints: string[];
+  body_figure_command?: BodyFigureCommand;
 }
 
 export interface DeepSearchMetadata {
@@ -54,6 +63,7 @@ export interface DeepSearchMetadata {
   chunksFound: number;
   crossReferencesFound: number;
   sourcesUsed: string[];
+  source_file?: string;
   translationBridge?: {
     sourceLanguage: 'en' | 'he';
     rawQuery: string;
@@ -72,6 +82,7 @@ export function useClinicalDeepSearch() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<DeepSearchResult | null>(null);
   const [extractedPoints, setExtractedPoints] = useState<string[]>([]);
+  const [bodyFigureCommand, setBodyFigureCommand] = useState<BodyFigureCommand | null>(null);
 
   const performDeepSearch = useCallback(async (request: DeepSearchRequest): Promise<DeepSearchResult> => {
     setIsLoading(true);
@@ -156,6 +167,11 @@ export function useClinicalDeepSearch() {
       if (data.success && data.report) {
         setResult(data);
         setExtractedPoints(data.report.extractedPoints || []);
+        // Set body figure command for 3D/visualization control
+        if (data.report.body_figure_command) {
+          setBodyFigureCommand(data.report.body_figure_command);
+          console.log('Body figure command received:', data.report.body_figure_command);
+        }
         toast.success(request.language === 'he' ? 'הניתוח הקליני הושלם' : 'Clinical analysis complete');
       } else {
         const errorMessage = data.error || getErrorMessage(null);
@@ -185,6 +201,7 @@ export function useClinicalDeepSearch() {
   const reset = useCallback(() => {
     setResult(null);
     setExtractedPoints([]);
+    setBodyFigureCommand(null);
     setIsLoading(false);
   }, []);
 
@@ -193,6 +210,7 @@ export function useClinicalDeepSearch() {
     isLoading,
     result,
     extractedPoints,
+    bodyFigureCommand,
     reset,
   };
 }
