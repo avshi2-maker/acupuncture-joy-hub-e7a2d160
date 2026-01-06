@@ -300,6 +300,13 @@ const BUILTIN_ASSETS = [
     defaultLanguage: 'en',
   },
   {
+    id: 'extreme-weather-climate-100qa',
+    label: '🌡️ Extreme Weather/Climate TCM (100 Q&A + Climate Types + Points + Formulas)',
+    path: '/knowledge-assets/Extreme_Weather_Climate_TCM_100QA_CLEANED.csv',
+    defaultCategory: 'general_health',
+    defaultLanguage: 'en',
+  },
+  {
     id: 'nine-constitutions-qa',
     label: 'nine-constitutions-qa.csv',
     path: '/knowledge-assets/nine-constitutions-qa.csv',
