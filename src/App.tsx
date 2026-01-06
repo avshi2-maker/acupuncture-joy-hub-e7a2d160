@@ -86,6 +86,7 @@ import PainRehabilitationQuestionnaire from "./pages/PainRehabilitationQuestionn
 import ImmuneShieldQuestionnaire from "./pages/ImmuneShieldQuestionnaire";
 import ZangFuSyndromesQuestionnaire from "./pages/ZangFuSyndromesQuestionnaire";
 import PulseTongueDiagnosisQuestionnaire from "./pages/PulseTongueDiagnosisQuestionnaire";
+import AcupuncturePointsQuestionnaire from "./pages/AcupuncturePointsQuestionnaire";
 import QuestionnaireHub from "./pages/QuestionnaireHub";
 const queryClient = new QueryClient();
 
@@ -183,6 +184,7 @@ const App = () => (
                       <Route path="/immune-shield" element={<ImmuneShieldQuestionnaire />} />
                       <Route path="/zang-fu-syndromes" element={<ZangFuSyndromesQuestionnaire />} />
                       <Route path="/pulse-tongue-diagnosis" element={<PulseTongueDiagnosisQuestionnaire />} />
+                      <Route path="/acupuncture-points" element={<AcupuncturePointsQuestionnaire />} />
                       <Route path="/questionnaire-hub" element={<QuestionnaireHub />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>

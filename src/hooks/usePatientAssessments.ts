@@ -4,8 +4,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import type { Json } from '@/integrations/supabase/types';
 
-export type AssessmentType = 'brain' | 'body' | 'retreat' | 'health_compass' | 'patient_questionnaire' | 'internal_climate' | 'vitality_longevity' | 'balance_strength_adult' | 'golden_age_vitality' | 'longevity_dignity' | 'nourishing_life' | 'mental_clarity' | 'pain_rehabilitation' | 'immune_shield' | 'zang_fu_syndromes' | 'pulse_tongue_diagnosis';
-export type AssessmentStatus = 'saved' | 'sent' | 'pending' | 'completed';
+export type AssessmentType = 'brain' | 'body' | 'retreat' | 'health_compass' | 'patient_questionnaire' | 'internal_climate' | 'vitality_longevity' | 'balance_strength_adult' | 'golden_age_vitality' | 'longevity_dignity' | 'nourishing_life' | 'mental_clarity' | 'pain_rehabilitation' | 'immune_shield' | 'zang_fu_syndromes' | 'pulse_tongue_diagnosis' | 'acupuncture_points' | 'vagus_nerve' | 'anxiety' | 'retreat_quiz';
+export type AssessmentStatus = 'saved' | 'sent' | 'pending' | 'completed' | 'in_progress';
 
 export interface PatientAssessment {
   id: string;
@@ -31,8 +31,9 @@ export interface CreateAssessmentInput {
 
 export function usePatientAssessments(patientId?: string) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['patient-assessments', patientId, user?.id],
     queryFn: async () => {
       if (!user?.id || !patientId) return [];
@@ -49,6 +50,46 @@ export function usePatientAssessments(patientId?: string) {
     },
     enabled: !!user?.id && !!patientId,
   });
+
+  const createMutation = useMutation({
+    mutationFn: async (input: CreateAssessmentInput) => {
+      if (!user?.id) throw new Error('Not authenticated');
+
+      const insertData = {
+        patient_id: input.patient_id,
+        assessment_type: input.assessment_type,
+        score: input.score ?? null,
+        summary: input.summary ?? null,
+        details: input.details ?? {},
+        status: input.status ?? 'saved',
+        therapist_id: user.id,
+      };
+
+      const { data, error } = await supabase
+        .from('patient_assessments')
+        .insert([insertData])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['patient-assessments', data.patient_id] });
+      queryClient.invalidateQueries({ queryKey: ['latest-assessments', data.patient_id] });
+    },
+    onError: (error) => {
+      console.error('Failed to save assessment:', error);
+      toast.error('Failed to save assessment');
+    },
+  });
+
+  return {
+    ...query,
+    patients: query.data,
+    createAssessment: createMutation.mutateAsync,
+    isCreating: createMutation.isPending,
+  };
 }
 
 export function useLatestAssessments(patientId?: string) {
@@ -57,27 +98,14 @@ export function useLatestAssessments(patientId?: string) {
   return useQuery({
     queryKey: ['latest-assessments', patientId, user?.id],
     queryFn: async () => {
-      if (!user?.id || !patientId) return { brain: null, body: null, retreat: null, health_compass: null, patient_questionnaire: null, internal_climate: null, vitality_longevity: null, balance_strength_adult: null, golden_age_vitality: null, longevity_dignity: null, nourishing_life: null, mental_clarity: null, pain_rehabilitation: null, immune_shield: null, zang_fu_syndromes: null, pulse_tongue_diagnosis: null };
+      if (!user?.id || !patientId) return { brain: null, body: null, retreat: null, health_compass: null, patient_questionnaire: null, internal_climate: null, vitality_longevity: null, balance_strength_adult: null, golden_age_vitality: null, longevity_dignity: null, nourishing_life: null, mental_clarity: null, pain_rehabilitation: null, immune_shield: null, zang_fu_syndromes: null, pulse_tongue_diagnosis: null, acupuncture_points: null };
 
-      const types: AssessmentType[] = ['brain', 'body', 'retreat', 'health_compass', 'patient_questionnaire', 'internal_climate', 'vitality_longevity', 'balance_strength_adult', 'golden_age_vitality', 'longevity_dignity', 'nourishing_life', 'mental_clarity', 'pain_rehabilitation', 'immune_shield', 'zang_fu_syndromes', 'pulse_tongue_diagnosis'];
-      const results: Record<AssessmentType, PatientAssessment | null> = {
-        brain: null,
-        body: null,
-        retreat: null,
-        health_compass: null,
-        patient_questionnaire: null,
-        internal_climate: null,
-        vitality_longevity: null,
-        balance_strength_adult: null,
-        golden_age_vitality: null,
-        longevity_dignity: null,
-        nourishing_life: null,
-        mental_clarity: null,
-        pain_rehabilitation: null,
-        immune_shield: null,
-        zang_fu_syndromes: null,
-        pulse_tongue_diagnosis: null,
-      };
+      const types: AssessmentType[] = ['brain', 'body', 'retreat', 'health_compass', 'patient_questionnaire', 'internal_climate', 'vitality_longevity', 'balance_strength_adult', 'golden_age_vitality', 'longevity_dignity', 'nourishing_life', 'mental_clarity', 'pain_rehabilitation', 'immune_shield', 'zang_fu_syndromes', 'pulse_tongue_diagnosis', 'acupuncture_points'];
+      const results: Record<AssessmentType, PatientAssessment | null> = {} as Record<AssessmentType, PatientAssessment | null>;
+      
+      for (const type of types) {
+        results[type] = null;
+      }
 
       for (const type of types) {
         const { data } = await supabase
