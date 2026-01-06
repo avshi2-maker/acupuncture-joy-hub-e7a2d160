@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { 
   FileText, 
   Download, 
@@ -26,9 +27,11 @@ import {
   MapPin,
   ArrowLeft,
   Filter,
-  Compass
+  Compass,
+  Sparkles
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { BianZhengAnalysis } from '@/components/clinical/BianZhengAnalysis';
 
 // All questionnaire data consolidated
 const questionnairesData = [
@@ -415,6 +418,7 @@ export default function HebrewQuestionsReport() {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [showBianZhengDialog, setShowBianZhengDialog] = useState(false);
 
   // Calculate totals
   const totalQuestions = questionnairesData.reduce((sum, q) => sum + q.questions.length, 0);
@@ -643,6 +647,21 @@ export default function HebrewQuestionsReport() {
                     <CollapsibleContent>
                       <CardContent className="pt-0">
                         <div className="border-t pt-4 space-y-3">
+                          {/* AI Analysis Button for Pattern Differentiation */}
+                          {questionnaire.id === 'pattern_differentiation' && (
+                            <Dialog open={showBianZhengDialog} onOpenChange={setShowBianZhengDialog}>
+                              <DialogTrigger asChild>
+                                <Button className="w-full gap-2 mb-4" variant="default">
+                                  <Sparkles className="h-4 w-4" />
+                                  ניתוח AI - ביאן ג'ן
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" dir="rtl">
+                                <BianZhengAnalysis onClose={() => setShowBianZhengDialog(false)} />
+                              </DialogContent>
+                            </Dialog>
+                          )}
+                          
                           {questionnaire.questions.map((question, idx) => (
                             <div
                               key={question.id}
