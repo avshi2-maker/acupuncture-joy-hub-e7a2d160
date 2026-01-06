@@ -483,6 +483,13 @@ const BUILTIN_ASSETS = [
     defaultLanguage: 'en',
   },
   {
+    id: 'tcm-pattern-differentiation-enhanced',
+    label: '🔬 TCM Pattern Differentiation Enhanced (100 Q&A - Trigger + Professional Points + Formulas)',
+    path: '/knowledge-assets/tcm_pattern_differentiation_enhanced.csv',
+    defaultCategory: 'tcm_diagnosis',
+    defaultLanguage: 'en',
+  },
+  {
     id: 'tcm-skin-renewal-100qa',
     label: 'TCM Skin Renewal & Anti-Aging (100 Q&A - Dermatology/Cosmetic)',
     path: '/knowledge-assets/tcm-skin-renewal-100qa.csv',
