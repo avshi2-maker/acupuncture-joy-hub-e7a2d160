@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import type { Json } from '@/integrations/supabase/types';
 
-export type AssessmentType = 'brain' | 'body' | 'retreat' | 'health_compass' | 'patient_questionnaire' | 'internal_climate' | 'vitality_longevity';
+export type AssessmentType = 'brain' | 'body' | 'retreat' | 'health_compass' | 'patient_questionnaire' | 'internal_climate' | 'vitality_longevity' | 'balance_strength_adult';
 export type AssessmentStatus = 'saved' | 'sent' | 'pending' | 'completed';
 
 export interface PatientAssessment {
@@ -57,9 +57,9 @@ export function useLatestAssessments(patientId?: string) {
   return useQuery({
     queryKey: ['latest-assessments', patientId, user?.id],
     queryFn: async () => {
-      if (!user?.id || !patientId) return { brain: null, body: null, retreat: null, health_compass: null, patient_questionnaire: null, internal_climate: null, vitality_longevity: null };
+      if (!user?.id || !patientId) return { brain: null, body: null, retreat: null, health_compass: null, patient_questionnaire: null, internal_climate: null, vitality_longevity: null, balance_strength_adult: null };
 
-      const types: AssessmentType[] = ['brain', 'body', 'retreat', 'health_compass', 'patient_questionnaire', 'internal_climate', 'vitality_longevity'];
+      const types: AssessmentType[] = ['brain', 'body', 'retreat', 'health_compass', 'patient_questionnaire', 'internal_climate', 'vitality_longevity', 'balance_strength_adult'];
       const results: Record<AssessmentType, PatientAssessment | null> = {
         brain: null,
         body: null,
@@ -68,6 +68,7 @@ export function useLatestAssessments(patientId?: string) {
         patient_questionnaire: null,
         internal_climate: null,
         vitality_longevity: null,
+        balance_strength_adult: null,
       };
 
       for (const type of types) {
