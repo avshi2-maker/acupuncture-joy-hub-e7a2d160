@@ -1075,8 +1075,9 @@ export function ClinicalNavigatorAdvanced({
             </div>
           </div>
           
-          {/* Engine Activity Indicator - API/Token Usage */}
+          {/* Engine Activity Indicator & Mini Tachometer - API/Token Usage */}
           <div className="flex items-center gap-3">
+            <MiniTachometer showOnlyWhenActive={false} showETA={true} />
             <EngineActivityIndicator />
             
             {/* Camera Angle Controls */}

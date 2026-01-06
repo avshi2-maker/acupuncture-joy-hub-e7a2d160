@@ -1,23 +1,41 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Gauge, Zap, CheckCircle2, Activity, Loader2, Brain
+  Gauge, Zap, CheckCircle2, Activity, Brain, Clock, TrendingUp
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+interface SessionStats {
+  totalCalls: number;
+  totalTokens: number;
+  avgResponseTime: number;
+  avgTokensPerQuery: number;
+}
 
 interface MiniTachometerProps {
   className?: string;
   showOnlyWhenActive?: boolean;
+  showETA?: boolean;
 }
 
 export function MiniTachometer({ 
   className,
-  showOnlyWhenActive = true
+  showOnlyWhenActive = true,
+  showETA = true
 }: MiniTachometerProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [responseTime, setResponseTime] = useState(0);
   const [status, setStatus] = useState<'idle' | 'processing' | 'success'>('idle');
   const [tokensUsed, setTokensUsed] = useState(0);
+  const [sessionStats, setSessionStats] = useState<SessionStats>({
+    totalCalls: 0,
+    totalTokens: 0,
+    avgResponseTime: 3000, // Default estimate 3s
+    avgTokensPerQuery: 800, // Default estimate
+  });
+  const [estimatedRemaining, setEstimatedRemaining] = useState<number | null>(null);
+  
+  const startTimeRef = useRef<number>(0);
 
   // Listen for query events
   useEffect(() => {
@@ -26,22 +44,45 @@ export function MiniTachometer({
       setStatus('processing');
       setResponseTime(0);
       setTokensUsed(0);
+      startTimeRef.current = Date.now();
+      
+      // Set initial ETA based on session average
+      if (sessionStats.totalCalls > 0) {
+        setEstimatedRemaining(sessionStats.avgResponseTime);
+      } else {
+        setEstimatedRemaining(3000); // Default 3s estimate
+      }
     };
 
     const handleQueryEnd = (event: CustomEvent) => {
       const detail = event.detail || {};
-      const finalResponseTime = detail.responseTime || responseTime;
+      const finalResponseTime = Date.now() - startTimeRef.current;
       const tokens = detail.tokensUsed || Math.floor(Math.random() * 1500) + 200;
 
       setIsProcessing(false);
       setStatus('success');
       setResponseTime(finalResponseTime);
       setTokensUsed(tokens);
+      setEstimatedRemaining(null);
+
+      // Update session stats
+      setSessionStats(prev => {
+        const newTotalCalls = prev.totalCalls + 1;
+        const newTotalTokens = prev.totalTokens + tokens;
+        return {
+          totalCalls: newTotalCalls,
+          totalTokens: newTotalTokens,
+          avgResponseTime: newTotalCalls === 1 
+            ? finalResponseTime 
+            : (prev.avgResponseTime * prev.totalCalls + finalResponseTime) / newTotalCalls,
+          avgTokensPerQuery: newTotalTokens / newTotalCalls,
+        };
+      });
 
       // Reset status after delay
       setTimeout(() => {
         setStatus('idle');
-      }, 5000);
+      }, 8000);
     };
 
     window.addEventListener('tcm-query-start', handleQueryStart);
@@ -51,18 +92,28 @@ export function MiniTachometer({
       window.removeEventListener('tcm-query-start', handleQueryStart);
       window.removeEventListener('tcm-query-end', handleQueryEnd as EventListener);
     };
-  }, [responseTime]);
+  }, [sessionStats]);
 
-  // Animate response time counter during processing
+  // Animate response time counter and ETA during processing
   useEffect(() => {
-    if (isProcessing) {
-      const startTime = Date.now();
+    if (isProcessing && startTimeRef.current > 0) {
       const interval = setInterval(() => {
-        setResponseTime(Date.now() - startTime);
+        const elapsed = Date.now() - startTimeRef.current;
+        setResponseTime(elapsed);
+        
+        // Calculate remaining time based on average
+        if (showETA && sessionStats.totalCalls > 0) {
+          const remaining = Math.max(0, sessionStats.avgResponseTime - elapsed);
+          setEstimatedRemaining(remaining);
+        } else if (showETA) {
+          // Use default estimate for first query
+          const remaining = Math.max(0, 3000 - elapsed);
+          setEstimatedRemaining(remaining);
+        }
       }, 50);
       return () => clearInterval(interval);
     }
-  }, [isProcessing]);
+  }, [isProcessing, sessionStats.avgResponseTime, sessionStats.totalCalls, showETA]);
 
   const getSpeedColor = (time: number): string => {
     if (time === 0) return 'text-muted-foreground';
@@ -168,7 +219,7 @@ export function MiniTachometer({
         </div>
 
         {/* Metrics display */}
-        <div className="flex flex-col items-start min-w-[60px]">
+        <div className="flex flex-col items-start min-w-[70px]">
           <div className="flex items-center gap-1">
             {isProcessing ? (
               <motion.span
@@ -187,12 +238,23 @@ export function MiniTachometer({
             )}
           </div>
           
-          {/* Status indicator */}
+          {/* Status indicator with ETA */}
           <div className="flex items-center gap-1">
             {isProcessing ? (
               <>
-                <Activity className="h-2.5 w-2.5 text-jade animate-pulse" />
-                <span className="text-[10px] text-jade font-medium">Processing</span>
+                {showETA && estimatedRemaining !== null && estimatedRemaining > 0 ? (
+                  <>
+                    <Clock className="h-2.5 w-2.5 text-jade" />
+                    <span className="text-[10px] text-jade font-medium">
+                      ~{(estimatedRemaining / 1000).toFixed(0)}s left
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Activity className="h-2.5 w-2.5 text-jade animate-pulse" />
+                    <span className="text-[10px] text-jade font-medium">Processing</span>
+                  </>
+                )}
               </>
             ) : status === 'success' && tokensUsed > 0 ? (
               <>
@@ -202,6 +264,16 @@ export function MiniTachometer({
             ) : null}
           </div>
         </div>
+
+        {/* Session stats indicator (only when success with history) */}
+        {status === 'success' && sessionStats.totalCalls > 1 && (
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/50 border border-border/50">
+            <TrendingUp className="h-2.5 w-2.5 text-muted-foreground" />
+            <span className="text-[9px] text-muted-foreground font-medium">
+              avg {(sessionStats.avgResponseTime / 1000).toFixed(1)}s
+            </span>
+          </div>
+        )}
 
         {/* Status icon */}
         <AnimatePresence mode="wait">
