@@ -10,9 +10,10 @@ import { NarrationControls } from './NarrationControls';
 import { usePointFigureMapping } from '@/hooks/usePointFigureMapping';
 import { useSequentialPointTour } from '@/hooks/useSequentialPointTour';
 import { useTourNarration } from '@/hooks/useTourNarration';
-import { MapPin, Sparkles, ChevronRight, ImageIcon, Zap } from 'lucide-react';
+import { MapPin, Sparkles, ChevronRight, ImageIcon, Zap, RotateCw, Eye } from 'lucide-react';
 import { FigureMapping } from '@/data/point-figure-mapping';
 import { motion, AnimatePresence } from 'framer-motion';
+import { RotationIndicator } from '@/components/clinical-navigator/RotationIndicator';
 
 import { GenderFilter, AgeGroupFilter } from '@/data/point-figure-mapping';
 
@@ -458,7 +459,18 @@ export function RAGBodyFigureDisplay({
             )}
           </div>
         </CardHeader>
-        <CardContent className="p-0 overflow-hidden">
+        <CardContent className="p-0 overflow-hidden relative">
+          {/* Rotation Indicator Overlay */}
+          <AnimatePresence>
+            {isRotating && (
+              <RotationIndicator
+                isRotating={isRotating}
+                direction={rotationDirection}
+                targetView={cameraAngle === 'posterior' ? 'Back' : cameraAngle === 'anterior' ? 'Front' : cameraAngle === 'lateral_left' ? 'Left Side' : cameraAngle === 'lateral_right' ? 'Right Side' : 'New'}
+              />
+            )}
+          </AnimatePresence>
+          
           {matchingFigures.length === 1 ? (
             <motion.div 
               className="p-3 perspective-1000"

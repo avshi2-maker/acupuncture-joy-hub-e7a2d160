@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { EngineActivityIndicator } from '@/components/tcm-brain/APIUsageMeter';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AIPerformanceTachometer } from './AIPerformanceTachometer';
 import { 
   CLINICAL_QUESTIONNAIRES, 
   MODULE_CATEGORIES,
@@ -1440,6 +1441,9 @@ export function ClinicalNavigatorAdvanced({
 
           {/* 3D Body Figure - Celebration Integration with Sequential Tour & Narration */}
           <div className="lg:col-span-1 space-y-4">
+            {/* AI Performance Tachometer */}
+            <AIPerformanceTachometer />
+            
             <RAGBodyFigureDisplay
               pointCodes={report.extractedPoints}
               onPointSelect={handlePointClick}
