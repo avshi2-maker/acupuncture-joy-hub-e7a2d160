@@ -448,6 +448,13 @@ const BUILTIN_ASSETS = [
     defaultLanguage: 'en',
   },
   {
+    id: 'wellness-issue-enhanced-1000qa',
+    label: '💚 Wellness Issues Enhanced (1000 Q&A - Comprehensive Patient Concerns + Points + Formulas)',
+    path: '/knowledge-assets/wellness_issue_enhanced_fixed.csv',
+    defaultCategory: 'general_health',
+    defaultLanguage: 'en',
+  },
+  {
     id: 'tcm-teenage-mental-health-qa',
     label: 'TCM Teenage Mental Health Q&A (13-18 years)',
     path: '/knowledge-assets/tcm-teenage-mental-health-qa.csv',
