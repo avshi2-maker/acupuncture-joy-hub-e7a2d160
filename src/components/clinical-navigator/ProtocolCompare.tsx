@@ -320,19 +320,29 @@ export function ProtocolComparisonView({
 }
 
 /**
- * Get color-coded points for 3D body display
+ * Get color-coded points for 3D body display from ProtocolRecord objects
  */
 export function getComparisonColoredPoints(
   protocolA: ProtocolRecord,
   protocolB: ProtocolRecord
 ): { point: string; color: 'blue' | 'orange' | 'purple' }[] {
-  const setA = new Set(protocolA.points.map(p => p.toUpperCase()));
-  const setB = new Set(protocolB.points.map(p => p.toUpperCase()));
+  return getComparisonColoredPointsFromArrays(protocolA.points, protocolB.points);
+}
+
+/**
+ * Get color-coded points for 3D body display from point arrays
+ */
+export function getComparisonColoredPointsFromArrays(
+  pointsA: string[],
+  pointsB: string[]
+): { point: string; color: 'blue' | 'orange' | 'purple' }[] {
+  const setA = new Set(pointsA.map(p => p.toUpperCase()));
+  const setB = new Set(pointsB.map(p => p.toUpperCase()));
   
   const result: { point: string; color: 'blue' | 'orange' | 'purple' }[] = [];
   
   // Add A-only points (blue)
-  protocolA.points.forEach(p => {
+  pointsA.forEach(p => {
     const upper = p.toUpperCase();
     if (!setB.has(upper)) {
       result.push({ point: p, color: 'blue' });
@@ -340,7 +350,7 @@ export function getComparisonColoredPoints(
   });
   
   // Add B-only points (orange)
-  protocolB.points.forEach(p => {
+  pointsB.forEach(p => {
     const upper = p.toUpperCase();
     if (!setA.has(upper)) {
       result.push({ point: p, color: 'orange' });
@@ -348,7 +358,7 @@ export function getComparisonColoredPoints(
   });
   
   // Add overlapping points (purple)
-  protocolA.points.forEach(p => {
+  pointsA.forEach(p => {
     const upper = p.toUpperCase();
     if (setB.has(upper)) {
       result.push({ point: p, color: 'purple' });

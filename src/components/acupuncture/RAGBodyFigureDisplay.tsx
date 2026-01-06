@@ -291,7 +291,9 @@ export function RAGBodyFigureDisplay({
             isPlaying={narration.isPlaying}
             isLoading={narration.isLoading}
             currentPoint={narration.currentPoint}
+            playbackSpeed={narration.playbackSpeed}
             onToggleMute={narration.toggleMute}
+            onSpeedChange={narration.setPlaybackSpeed}
             language={language}
           />
         )}

@@ -93,6 +93,7 @@ import PulseGallery from "./pages/PulseGallery";
 import CombinedDiagnosis from "./pages/CombinedDiagnosis";
 import RAGHebrewReport from "./pages/RAGHebrewReport";
 import HebrewQuestionsReport from "./pages/HebrewQuestionsReport";
+import PatientTimeline from "./pages/PatientTimeline";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -146,6 +147,7 @@ const App = () => (
                       <Route path="/crm/clinics" element={<RequireTier><CRMErrorBoundary><CRMClinics /></CRMErrorBoundary></RequireTier>} />
                       <Route path="/crm/session-manager" element={<RequireTier><CRMErrorBoundary><CRMSessionManager /></CRMErrorBoundary></RequireTier>} />
                       <Route path="/crm/patients/:patientId/consent" element={<RequireTier><CRMErrorBoundary><PatientConsentForm /></CRMErrorBoundary></RequireTier>} />
+                      <Route path="/patient/:id/timeline" element={<RequireTier><CRMErrorBoundary><PatientTimeline /></CRMErrorBoundary></RequireTier>} />
 
                       <Route path="/therapist-profile" element={<RequireTier><TherapistProfile /></RequireTier>} />
                       <Route path="/therapist-profile/edit" element={<RequireTier><TherapistProfileEdit /></RequireTier>} />

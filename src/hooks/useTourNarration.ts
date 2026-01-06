@@ -10,6 +10,8 @@ interface PointNarrationData {
   actions: string[] | null;
 }
 
+export type PlaybackSpeed = 0.5 | 1.0 | 1.5 | 2.0;
+
 interface UseTourNarrationOptions {
   /** Called when narration starts for a point */
   onNarrationStart?: (point: string) => void;
@@ -19,6 +21,8 @@ interface UseTourNarrationOptions {
   onReadyForNext?: () => void;
   /** Language for narration */
   language?: 'en' | 'he';
+  /** Initial playback speed */
+  initialSpeed?: PlaybackSpeed;
 }
 
 /**
@@ -30,7 +34,8 @@ export function useTourNarration(options: UseTourNarrationOptions = {}) {
     onNarrationStart, 
     onNarrationEnd, 
     onReadyForNext,
-    language = 'en' 
+    language = 'en',
+    initialSpeed = 1.0
   } = options;
 
   const [isMuted, setIsMuted] = useState(false);
@@ -38,6 +43,7 @@ export function useTourNarration(options: UseTourNarrationOptions = {}) {
   const [isLoading, setIsLoading] = useState(false);
   const [currentPoint, setCurrentPoint] = useState<string | null>(null);
   const [pointsCache, setPointsCache] = useState<Map<string, PointNarrationData>>(new Map());
+  const [playbackSpeed, setPlaybackSpeed] = useState<PlaybackSpeed>(initialSpeed);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -152,9 +158,11 @@ export function useTourNarration(options: UseTourNarrationOptions = {}) {
         throw new Error('No audio content received');
       }
 
-      // Create and play audio
       const audioUrl = `data:audio/mpeg;base64,${data.audioContent}`;
       const audio = new Audio(audioUrl);
+      
+      // Set playback speed (preserves pitch in modern browsers)
+      audio.playbackRate = playbackSpeed;
       audioRef.current = audio;
 
       audio.onplay = () => {
@@ -206,12 +214,21 @@ export function useTourNarration(options: UseTourNarrationOptions = {}) {
     };
   }, [stopAudio]);
 
+  // Update playback speed on existing audio
+  const updateSpeed = useCallback((speed: PlaybackSpeed) => {
+    setPlaybackSpeed(speed);
+    if (audioRef.current) {
+      audioRef.current.playbackRate = speed;
+    }
+  }, []);
+
   return {
     // State
     isMuted,
     isPlaying,
     isLoading,
     currentPoint,
+    playbackSpeed,
     
     // Actions
     playNarration,
@@ -219,5 +236,6 @@ export function useTourNarration(options: UseTourNarrationOptions = {}) {
     toggleMute,
     preloadPointData,
     setMuted: setIsMuted,
+    setPlaybackSpeed: updateSpeed,
   };
 }
