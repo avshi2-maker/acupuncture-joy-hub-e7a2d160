@@ -214,10 +214,16 @@ export function BodyFigureWithPoints({
   }, [acuPoints, highlightedPoints, selectedPoints, showAllPoints, searchResults]);
 
   // Get point position - prefer CSV coordinates, fallback to grid
+  // Clamp coordinates to ensure points stay within the visible body figure (5-95%)
+  const clampCoordinate = (value: number): number => Math.max(5, Math.min(95, value));
+  
   const getPointPosition = (pointCode: string): { x: number; y: number } | null => {
     const coord = getPointCoordinate(filename, pointCode);
     if (coord) {
-      return { x: coord.x_percent, y: coord.y_percent };
+      return { 
+        x: clampCoordinate(coord.x_percent), 
+        y: clampCoordinate(coord.y_percent) 
+      };
     }
     
     // Fallback: generate a grid position for points not in CSV
@@ -231,9 +237,10 @@ export function BodyFigureWithPoints({
     const col = index % cols;
     const row = Math.floor(index / cols);
     
+    // Ensure fallback positions stay within visible bounds (15-85%)
     return {
-      x: 20 + (col / (cols - 1 || 1)) * 60,
-      y: 20 + (row / (Math.ceil(total / cols) - 1 || 1)) * 60
+      x: 15 + (col / (cols - 1 || 1)) * 70,
+      y: 15 + (row / (Math.ceil(total / cols) - 1 || 1)) * 70
     };
   };
 
