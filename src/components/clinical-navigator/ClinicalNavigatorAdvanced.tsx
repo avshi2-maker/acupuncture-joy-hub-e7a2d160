@@ -19,8 +19,10 @@ import {
   Brain, Heart, Stethoscope, Leaf, Apple, Activity,
   Users, User, Sparkles, FileText, Mail,
   MapPin, AlertTriangle, CheckCircle2,
-  Loader2, ArrowLeft, ChevronsUpDown, Search, List, GitCompare, X
+  Loader2, ArrowLeft, ChevronsUpDown, Search, List, GitCompare, X,
+  RotateCcw, Eye, MoveHorizontal
 } from 'lucide-react';
+import { EngineActivityIndicator } from '@/components/tcm-brain/APIUsageMeter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   CLINICAL_QUESTIONNAIRES, 
@@ -231,7 +233,14 @@ export function ClinicalNavigatorAdvanced({
       language: language === 'he' ? 'he' : 'en',
     };
 
+    // Dispatch event for API meter tracking
+    window.dispatchEvent(new CustomEvent('tcm-query-start', { detail: { query: 'Clinical Deep Search' } }));
+    
     await performDeepSearch(request);
+    
+    // Dispatch end event
+    window.dispatchEvent(new CustomEvent('tcm-query-end'));
+    
     setShowResults(true);
   }, [selectedModule, answers, patientInfo, language, performDeepSearch]);
 
@@ -1040,7 +1049,8 @@ export function ClinicalNavigatorAdvanced({
 
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        {/* Header with Engine Activity Indicator */}
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" onClick={handleBack}>
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -1056,7 +1066,61 @@ export function ClinicalNavigatorAdvanced({
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
+          
+          {/* Engine Activity Indicator - API/Token Usage */}
+          <div className="flex items-center gap-3">
+            <EngineActivityIndicator />
+            
+            {/* Camera Angle Controls */}
+            <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-muted/50 border">
+              <span className="text-[10px] font-medium text-muted-foreground mr-1">
+                {language === 'he' ? 'מבט:' : 'View:'}
+              </span>
+              <Button
+                variant={activeCameraAngle === 'anterior' ? 'default' : 'ghost'}
+                size="sm"
+                className="h-7 px-2 text-[10px]"
+                onClick={() => setActiveCameraAngle('anterior')}
+                title="Anterior View"
+              >
+                <Eye className="h-3 w-3 mr-1" />
+                {language === 'he' ? 'קדמי' : 'Front'}
+              </Button>
+              <Button
+                variant={activeCameraAngle === 'posterior' ? 'default' : 'ghost'}
+                size="sm"
+                className="h-7 px-2 text-[10px]"
+                onClick={() => setActiveCameraAngle('posterior')}
+                title="Posterior View"
+              >
+                <RotateCcw className="h-3 w-3 mr-1" />
+                {language === 'he' ? 'אחורי' : 'Back'}
+              </Button>
+              <Button
+                variant={activeCameraAngle === 'lateral_left' || activeCameraAngle === 'lateral_right' ? 'default' : 'ghost'}
+                size="sm"
+                className="h-7 px-2 text-[10px]"
+                onClick={() => setActiveCameraAngle(activeCameraAngle === 'lateral_left' ? 'lateral_right' : 'lateral_left')}
+                title="Lateral View"
+              >
+                <MoveHorizontal className="h-3 w-3 mr-1" />
+                {language === 'he' ? 'צד' : 'Side'}
+              </Button>
+              <Button
+                variant={activeCameraAngle === 'auto' ? 'default' : 'ghost'}
+                size="sm"
+                className="h-7 px-2 text-[10px]"
+                onClick={() => setActiveCameraAngle('auto')}
+                title="Auto View"
+              >
+                <Sparkles className="h-3 w-3 mr-1" />
+                {language === 'he' ? 'אוטו' : 'Auto'}
+              </Button>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2 flex-wrap">
             {/* Save to Patient button */}
             {selectedModule && (
               <SaveToPatientDialog
@@ -1121,7 +1185,6 @@ export function ClinicalNavigatorAdvanced({
               </>
             )}
           </div>
-        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Report */}
