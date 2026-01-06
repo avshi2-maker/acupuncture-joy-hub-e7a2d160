@@ -434,6 +434,13 @@ const BUILTIN_ASSETS = [
     defaultLanguage: 'en',
   },
   {
+    id: 'tcm-trauma-casualties-100qa',
+    label: '🚑 TCM Trauma & Casualties (100 Q&A - Emergency, Shock, Injuries + Points + Formulas)',
+    path: '/knowledge-assets/TCM_Trauma_Casualties_100_QA_Corrected.csv',
+    defaultCategory: 'pain_ortho',
+    defaultLanguage: 'en',
+  },
+  {
     id: 'tcm-teenage-mental-health-qa',
     label: 'TCM Teenage Mental Health Q&A (13-18 years)',
     path: '/knowledge-assets/tcm-teenage-mental-health-qa.csv',
