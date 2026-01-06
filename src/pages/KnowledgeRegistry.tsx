@@ -385,6 +385,13 @@ const BUILTIN_ASSETS = [
     defaultLanguage: 'en',
   },
   {
+    id: 'tcm-adults-50-70-conditions',
+    label: '🧓 TCM Adults 50-70 Conditions (50 Menopause/Andropause + Patterns + Points + Formulas)',
+    path: '/knowledge-assets/TCM_Adults_50_70_Comprehensive_CONDITIONS.csv',
+    defaultCategory: 'general_health',
+    defaultLanguage: 'en',
+  },
+  {
     id: 'elderly-lifestyle-recommendations',
     label: 'Elderly Lifestyle Recommendations',
     path: '/knowledge-assets/elderly-lifestyle-recommendations.csv',
