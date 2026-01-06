@@ -28,7 +28,7 @@ import {
   QuestionnaireModule,
   QuestionItem
 } from '@/data/clinical-navigator-questionnaires';
-import { useClinicalDeepSearch, DeepSearchRequest } from '@/hooks/useClinicalDeepSearch';
+import { useClinicalDeepSearch, DeepSearchRequest, QuestionAnswer } from '@/hooks/useClinicalDeepSearch';
 import { RAGBodyFigureDisplay } from '@/components/acupuncture/RAGBodyFigureDisplay';
 import { ComparisonBodyDisplay } from '@/components/acupuncture/ComparisonBodyDisplay';
 import { 
@@ -170,9 +170,22 @@ export function ClinicalNavigatorAdvanced({
   const handleSubmit = useCallback(async () => {
     if (!selectedModule) return;
 
+    // Build structured questionnaire data with question text for each answer
+    const structuredAnswers: Record<string, QuestionAnswer> = {};
+    for (const question of selectedModule.questions) {
+      const answer = answers[question.id];
+      if (answer !== undefined && answer !== '') {
+        structuredAnswers[question.id] = {
+          questionId: question.id,
+          questionText: language === 'he' ? question.question_he : question.question_en,
+          answer: answer,
+        };
+      }
+    }
+
     const request: DeepSearchRequest = {
       moduleId: selectedModule.id,
-      questionnaireData: answers,
+      questionnaireData: structuredAnswers,
       patientAge: patientInfo.age ? parseInt(patientInfo.age) : undefined,
       patientGender: patientInfo.gender || undefined,
       chiefComplaint: patientInfo.chiefComplaint || undefined,
@@ -1014,8 +1027,8 @@ export function ClinicalNavigatorAdvanced({
                 acupuncturePoints={report.acupunctureProtocol?.points || []}
                 herbalFormula={report.herbalPrescription?.formula}
                 herbalIngredients={report.herbalPrescription?.ingredients}
-                nutritionAdvice={report.nutritionAdvice}
-                lifestyleAdvice={report.lifestyleMindset}
+                nutritionAdvice={report.nutritionAdvice.map(a => typeof a === 'string' ? a : a.text)}
+                lifestyleAdvice={report.lifestyleMindset.map(a => typeof a === 'string' ? a : a.text)}
                 answers={answers}
                 language={language === 'he' ? 'he' : 'en'}
               />
@@ -1029,8 +1042,8 @@ export function ClinicalNavigatorAdvanced({
                 acupuncturePoints={report.acupunctureProtocol?.points || []}
                 herbalFormula={report.herbalPrescription?.formula}
                 herbalIngredients={report.herbalPrescription?.ingredients}
-                nutritionAdvice={report.nutritionAdvice}
-                lifestyleAdvice={report.lifestyleMindset}
+                nutritionAdvice={report.nutritionAdvice.map(a => typeof a === 'string' ? a : a.text)}
+                lifestyleAdvice={report.lifestyleMindset.map(a => typeof a === 'string' ? a : a.text)}
                 language={language === 'he' ? 'he' : 'en'}
               />
             )}
@@ -1103,7 +1116,14 @@ export function ClinicalNavigatorAdvanced({
                   </CardHeader>
                   <CardContent>
                     {report.primaryDiagnosis?.trim() ? (
-                      <p className="text-sm whitespace-pre-wrap">{report.primaryDiagnosis}</p>
+                      <div>
+                        <p className="text-sm whitespace-pre-wrap">{report.primaryDiagnosis}</p>
+                        {report.primaryDiagnosisSources && report.primaryDiagnosisSources.length > 0 && (
+                          <p className="mt-3 text-xs text-muted-foreground italic border-t pt-2">
+                            {language === 'he' ? 'מקורות:' : 'Sources:'} {report.primaryDiagnosisSources.join(', ')}
+                          </p>
+                        )}
+                      </div>
                     ) : (
                       <p className="text-sm text-muted-foreground">
                         {language === 'he' ? 'לא התקבלה אבחנה מהמערכת' : 'No diagnosis returned from the analysis'}
@@ -1158,6 +1178,12 @@ export function ClinicalNavigatorAdvanced({
                         <p className="text-sm mt-1">{report.acupunctureProtocol.technique}</p>
                       </div>
                     ) : null}
+
+                    {report.acupunctureProtocol.sources && report.acupunctureProtocol.sources.length > 0 && (
+                      <p className="text-xs text-muted-foreground italic border-t pt-2 mt-2">
+                        {language === 'he' ? 'מקורות:' : 'Sources:'} {report.acupunctureProtocol.sources.join(', ')}
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -1213,12 +1239,23 @@ export function ClinicalNavigatorAdvanced({
                   <CardContent>
                     {report.nutritionAdvice.length > 0 ? (
                       <ul className="text-sm space-y-2">
-                        {report.nutritionAdvice.map((advice, i) => (
-                          <li key={i} className="flex items-start gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-jade mt-0.5 flex-shrink-0" />
-                            <span>{advice}</span>
-                          </li>
-                        ))}
+                        {report.nutritionAdvice.map((advice, i) => {
+                          const text = typeof advice === 'string' ? advice : advice.text;
+                          const source = typeof advice === 'string' ? undefined : advice.source;
+                          return (
+                            <li key={i} className="flex items-start gap-2">
+                              <CheckCircle2 className="h-4 w-4 text-jade mt-0.5 flex-shrink-0" />
+                              <div className="flex-1">
+                                <span>{text}</span>
+                                {source && (
+                                  <span className="ml-2 text-xs text-muted-foreground italic">
+                                    ({language === 'he' ? 'מקור:' : 'Source:'} {source})
+                                  </span>
+                                )}
+                              </div>
+                            </li>
+                          );
+                        })}
                       </ul>
                     ) : (
                       <p className="text-sm text-muted-foreground">
@@ -1240,12 +1277,23 @@ export function ClinicalNavigatorAdvanced({
                   <CardContent>
                     {report.lifestyleMindset.length > 0 ? (
                       <ul className="text-sm space-y-2">
-                        {report.lifestyleMindset.map((advice, i) => (
-                          <li key={i} className="flex items-start gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-jade mt-0.5 flex-shrink-0" />
-                            <span>{advice}</span>
-                          </li>
-                        ))}
+                        {report.lifestyleMindset.map((advice, i) => {
+                          const text = typeof advice === 'string' ? advice : advice.text;
+                          const source = typeof advice === 'string' ? undefined : advice.source;
+                          return (
+                            <li key={i} className="flex items-start gap-2">
+                              <CheckCircle2 className="h-4 w-4 text-jade mt-0.5 flex-shrink-0" />
+                              <div className="flex-1">
+                                <span>{text}</span>
+                                {source && (
+                                  <span className="ml-2 text-xs text-muted-foreground italic">
+                                    ({language === 'he' ? 'מקור:' : 'Source:'} {source})
+                                  </span>
+                                )}
+                              </div>
+                            </li>
+                          );
+                        })}
                       </ul>
                     ) : (
                       <p className="text-sm text-muted-foreground">
@@ -1385,8 +1433,8 @@ export function ClinicalNavigatorAdvanced({
             diagnosis: result.report.primaryDiagnosis ?? '',
             herbalFormula: result.report.herbalPrescription?.formula,
             acupuncturePoints: result.report.acupunctureProtocol?.points || [],
-            nutritionAdvice: result.report.nutritionAdvice || [],
-            lifestyleAdvice: result.report.lifestyleMindset || [],
+            nutritionAdvice: (result.report.nutritionAdvice || []).map(a => typeof a === 'string' ? a : a.text),
+            lifestyleAdvice: (result.report.lifestyleMindset || []).map(a => typeof a === 'string' ? a : a.text),
             moduleName: selectedModule.module_name,
           }}
           language={language === 'he' ? 'he' : 'en'}

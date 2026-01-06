@@ -106,31 +106,45 @@ CRITICAL RULES:
 4. Provide Hebrew translations where appropriate
 5. Be specific and actionable in recommendations`;
 
+interface QuestionAnswer {
+  questionId: string;
+  questionText: string;
+  answer: string | boolean | string[];
+}
+
 interface DeepSearchRequest {
   moduleId: number;
-  questionnaireData: Record<string, any>;
+  questionnaireData: Record<string, QuestionAnswer>;
   patientAge?: number;
   patientGender?: string;
   chiefComplaint?: string;
   language?: 'en' | 'he';
 }
 
+interface SourcedRecommendation {
+  text: string;
+  source?: string;
+}
+
 interface DeepSearchResponse {
   success: boolean;
   report?: {
     primaryDiagnosis: string;
+    primaryDiagnosisSources: string[];
     acupunctureProtocol: {
       points: string[];
       technique: string;
       contraindications: string[];
+      sources: string[];
     };
     herbalPrescription: {
       formula: string;
       ingredients: string[];
       modifications: string[];
+      sources: string[];
     };
-    nutritionAdvice: string[];
-    lifestyleMindset: string[];
+    nutritionAdvice: SourcedRecommendation[];
+    lifestyleMindset: SourcedRecommendation[];
     importantNotes: string[];
     rawResponse: string;
     extractedPoints: string[];
@@ -140,6 +154,7 @@ interface DeepSearchResponse {
     knowledgeBasesQueried: string[];
     chunksFound: number;
     crossReferencesFound: number;
+    sourcesUsed: string[];
     translationBridge?: {
       sourceLanguage: 'en' | 'he';
       rawQuery: string;
@@ -173,6 +188,7 @@ function extractPointCodes(text: string): string[] {
 }
 
 // Build search query from questionnaire data
+// Now includes question text for "Yes" answers
 function buildSearchQuery(data: DeepSearchRequest): string {
   const parts: string[] = [];
 
@@ -180,33 +196,63 @@ function buildSearchQuery(data: DeepSearchRequest): string {
     parts.push(data.chiefComplaint.trim());
   }
 
-  const isNonSignalAnswer = (v: string) => {
-    const s = v.trim().toLowerCase();
-    return (
-      s === 'yes' ||
-      s === 'no' ||
-      s === 'true' ||
-      s === 'false' ||
-      s === 'y' ||
-      s === 'n' ||
-      s === 'na' ||
-      s === 'n/a' ||
-      s.length < 3
-    );
+  const isYesAnswer = (v: string | boolean): boolean => {
+    if (typeof v === 'boolean') return v === true;
+    const s = String(v).trim().toLowerCase();
+    return s === 'yes' || s === 'true' || s === 'y' || s === 'כן';
   };
 
-  // Extract only free-text answers (ignore yes/no style answers)
-  for (const value of Object.values(data.questionnaireData || {})) {
-    if (typeof value === 'string' && !isNonSignalAnswer(value)) {
+  const isNoAnswer = (v: string | boolean): boolean => {
+    if (typeof v === 'boolean') return v === false;
+    const s = String(v).trim().toLowerCase();
+    return s === 'no' || s === 'false' || s === 'n' || s === 'לא' || s === 'na' || s === 'n/a';
+  };
+
+  const isFreeTextSignificant = (v: string): boolean => {
+    const s = v.trim();
+    return s.length >= 3 && !isYesAnswer(s) && !isNoAnswer(s);
+  };
+
+  // Process each question-answer pair
+  for (const [key, qa] of Object.entries(data.questionnaireData || {})) {
+    // Handle structured QuestionAnswer objects
+    if (qa && typeof qa === 'object' && 'questionText' in qa && 'answer' in qa) {
+      const { questionText, answer } = qa as QuestionAnswer;
+      
+      // If answer is "Yes", include the question text as a positive signal
+      if (isYesAnswer(answer as string | boolean) && questionText?.trim()) {
+        parts.push(questionText.trim());
+        continue;
+      }
+      
+      // If answer is meaningful free text, include it
+      if (typeof answer === 'string' && isFreeTextSignificant(answer)) {
+        parts.push(answer.trim());
+        continue;
+      }
+      
+      // If answer is array of selections, include them
+      if (Array.isArray(answer)) {
+        const joined = answer
+          .filter((x) => typeof x === 'string' && isFreeTextSignificant(x))
+          .map((x) => (x as string).trim())
+          .join(' ');
+        if (joined) parts.push(joined);
+      }
+      continue;
+    }
+
+    // Fallback: handle legacy flat values (any type)
+    const value = qa as unknown;
+    if (typeof value === 'string' && isFreeTextSignificant(value)) {
       parts.push(value.trim());
       continue;
     }
 
     if (Array.isArray(value)) {
-      const joined = value
-        .filter((x) => typeof x === 'string')
-        .map((x) => (x as string).trim())
-        .filter((x) => x && !isNonSignalAnswer(x))
+      const joined = (value as unknown[])
+        .filter((x): x is string => typeof x === 'string' && isFreeTextSignificant(x))
+        .map((x) => x.trim())
         .join(' ');
       if (joined) parts.push(joined);
     }
@@ -511,12 +557,21 @@ Please analyze this case and provide a complete treatment plan following the str
     console.log(`Extracted points: ${extractedPoints.join(', ')}`);
 
     // Parse sections from response - flexible regex without requiring emojis
+    // Collect unique source filenames from retrieved chunks
+    const primarySources = [...new Set(primaryResults.map((c: any) => c.knowledge_documents?.original_name || c.knowledge_documents?.file_name || 'Unknown').filter(Boolean))];
+    const nutritionSources = [...new Set(crossReferenceResults.find(r => r.key === 'nutrition')?.chunks.map((c: any) => c.knowledge_documents?.original_name || 'Unknown') || [])];
+    const lifestyleSources = [...new Set(crossReferenceResults.find(r => r.key === 'lifestyle')?.chunks.map((c: any) => c.knowledge_documents?.original_name || 'Unknown') || [])];
+    const mindsetSources = [...new Set(crossReferenceResults.find(r => r.key === 'mindset')?.chunks.map((c: any) => c.knowledge_documents?.original_name || 'Unknown') || [])];
+    
+    const allSources = [...new Set([...primarySources, ...nutritionSources, ...lifestyleSources, ...mindsetSources])];
+
     const sections = {
       primaryDiagnosis: '',
-      acupunctureProtocol: { points: extractedPoints, technique: '', contraindications: [] as string[] },
-      herbalPrescription: { formula: '', ingredients: [] as string[], modifications: [] as string[] },
-      nutritionAdvice: [] as string[],
-      lifestyleMindset: [] as string[],
+      primaryDiagnosisSources: primarySources as string[],
+      acupunctureProtocol: { points: extractedPoints, technique: '', contraindications: [] as string[], sources: primarySources as string[] },
+      herbalPrescription: { formula: '', ingredients: [] as string[], modifications: [] as string[], sources: primarySources as string[] },
+      nutritionAdvice: [] as SourcedRecommendation[],
+      lifestyleMindset: [] as SourcedRecommendation[],
       importantNotes: [] as string[],
     };
 
@@ -551,22 +606,34 @@ Please analyze this case and provide a complete treatment plan following the str
         .map((line: string) => line.replace(/^-\s*/, '').trim());
     }
 
-    // Extract nutrition section (flexible)
+    // Extract nutrition section (flexible) - with source attribution
     const nutritionMatch = rawResponse.match(/##\s*(?:🥗\s*)?Nutrition(?:\s*Advice)?\s*([\s\S]*?)(?=##|$)/i);
     if (nutritionMatch) {
-      sections.nutritionAdvice = nutritionMatch[1].split('\n')
+      const nutritionLines = nutritionMatch[1].split('\n')
         .filter((line: string) => line.trim().startsWith('-') || line.trim().match(/^\d+\./))
         .map((line: string) => line.replace(/^[-\d.]+\s*/, '').trim())
         .filter((line: string) => line.length > 0);
+      
+      sections.nutritionAdvice = nutritionLines.map((text: string) => ({
+        text,
+        source: nutritionSources[0] || CROSS_REFERENCE_MODULES.nutrition.knowledgeBase
+      }));
     }
 
-    // Extract lifestyle section (flexible)
+    // Extract lifestyle section (flexible) - with source attribution
     const lifestyleMatch = rawResponse.match(/##\s*(?:🧘\s*)?Lifestyle(?:\s*(?:&|and)\s*Mindset)?\s*([\s\S]*?)(?=##|$)/i);
     if (lifestyleMatch) {
-      sections.lifestyleMindset = lifestyleMatch[1].split('\n')
+      const lifestyleLines = lifestyleMatch[1].split('\n')
         .filter((line: string) => line.trim().startsWith('-') || line.trim().match(/^\d+\./))
         .map((line: string) => line.replace(/^[-\d.]+\s*/, '').trim())
         .filter((line: string) => line.length > 0);
+      
+      // Combine lifestyle and mindset sources
+      const combinedSources = [...lifestyleSources, ...mindsetSources];
+      sections.lifestyleMindset = lifestyleLines.map((text: string) => ({
+        text,
+        source: combinedSources[0] || CROSS_REFERENCE_MODULES.lifestyle.knowledgeBase
+      }));
     }
     
     // Extract important notes (flexible)
@@ -579,6 +646,7 @@ Please analyze this case and provide a complete treatment plan following the str
     }
     
     console.log(`Parsed sections: diagnosis=${sections.primaryDiagnosis.length} chars, points=${sections.acupunctureProtocol.points.length}, nutrition=${sections.nutritionAdvice.length}, lifestyle=${sections.lifestyleMindset.length}`);
+    console.log(`Sources used: ${allSources.join(', ')}`);
 
     // Log usage
     try {
@@ -593,6 +661,7 @@ Please analyze this case and provide a complete treatment plan following the str
           crossRefsFound: totalCrossRefs,
           translationBridgeActive: !!translationBridge,
           retrievalSearchQuery,
+          sourcesUsed: allSources,
         }
       });
     } catch (logErr) {
@@ -614,6 +683,7 @@ Please analyze this case and provide a complete treatment plan following the str
         ],
         chunksFound: primaryResults.length,
         crossReferencesFound: totalCrossRefs,
+        sourcesUsed: allSources,
         translationBridge,
       },
     };

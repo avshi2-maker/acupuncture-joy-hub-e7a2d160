@@ -2,9 +2,15 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+export interface QuestionAnswer {
+  questionId: string;
+  questionText: string;
+  answer: string | boolean | string[];
+}
+
 export interface DeepSearchRequest {
   moduleId: number;
-  questionnaireData: Record<string, any>;
+  questionnaireData: Record<string, QuestionAnswer>;
   patientAge?: number;
   patientGender?: string;
   chiefComplaint?: string;
@@ -15,20 +21,28 @@ export interface AcupunctureProtocol {
   points: string[];
   technique: string;
   contraindications: string[];
+  sources: string[];
 }
 
 export interface HerbalPrescription {
   formula: string;
   ingredients: string[];
   modifications: string[];
+  sources: string[];
+}
+
+export interface SourcedRecommendation {
+  text: string;
+  source?: string;
 }
 
 export interface DeepSearchReport {
   primaryDiagnosis: string;
+  primaryDiagnosisSources: string[];
   acupunctureProtocol: AcupunctureProtocol;
   herbalPrescription: HerbalPrescription;
-  nutritionAdvice: string[];
-  lifestyleMindset: string[];
+  nutritionAdvice: SourcedRecommendation[];
+  lifestyleMindset: SourcedRecommendation[];
   importantNotes: string[];
   rawResponse: string;
   extractedPoints: string[];
@@ -39,6 +53,12 @@ export interface DeepSearchMetadata {
   knowledgeBasesQueried: string[];
   chunksFound: number;
   crossReferencesFound: number;
+  sourcesUsed: string[];
+  translationBridge?: {
+    sourceLanguage: 'en' | 'he';
+    rawQuery: string;
+    retrievalQuery: string;
+  };
 }
 
 export interface DeepSearchResult {
