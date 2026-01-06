@@ -721,4 +721,52 @@ export const clinicalModules = {
       "האם הדופק מרגיש חלש וריק, מיתרי ומתוח, או מתגלגל?"
     ]
   }
-};
+} as const;
+
+export type QuestionType = 'open' | 'yesno' | 'scale' | 'multi';
+
+export interface QuestionItem {
+  id: string;
+  type: QuestionType;
+  question_en: string;
+  question_he: string;
+  options?: string[];
+}
+
+export const MODULE_CATEGORIES = {
+  diagnostic: { en: 'Clinical Modules', he: 'מודולים קליניים' },
+} as const;
+
+export interface QuestionnaireModule {
+  id: number;
+  category: keyof typeof MODULE_CATEGORIES;
+  module_name: string;
+  module_name_he: string;
+  linked_knowledge_base: string;
+  questions: QuestionItem[];
+}
+
+export const CLINICAL_QUESTIONNAIRES: QuestionnaireModule[] = Object.entries(clinicalModules)
+  .map(([id, module]) => {
+    const numericId = Number(id);
+    const name = module?.name ?? `Module ${id}`;
+    const rawQuestions = module?.questions ?? [];
+
+    const questions: QuestionItem[] = rawQuestions.map((q: string, idx: number) => ({
+      id: `m${numericId}-q${idx + 1}`,
+      type: 'open' as const,
+      question_en: q,
+      question_he: q,
+    }));
+
+    return {
+      id: numericId,
+      category: 'diagnostic' as const,
+      module_name: name,
+      module_name_he: name,
+      linked_knowledge_base: 'clinical-navigator',
+      questions,
+    };
+  })
+  .sort((a, b) => a.id - b.id);
+
