@@ -547,6 +547,13 @@ const BUILTIN_ASSETS = [
     defaultLanguage: 'en',
   },
   {
+    id: 'tcm-western-symptom-translation',
+    label: '🔄 TCM Western-to-TCM Symptom Translation Guide (30 Translations + Chinese Terms)',
+    path: '/knowledge-assets/TCM_Western_Symptom_Translation_Guide.csv',
+    defaultCategory: 'anxiety_mental',
+    defaultLanguage: 'en',
+  },
+  {
     id: 'tcm-trauma-qa',
     label: '🛡️ TCM Trauma Q&A (22 Q&A - Kidney-Heart, Zhi, Po, Formulas)',
     path: '/knowledge-assets/tcm-trauma-qa.csv',
