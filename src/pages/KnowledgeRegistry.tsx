@@ -455,6 +455,13 @@ const BUILTIN_ASSETS = [
     defaultLanguage: 'en',
   },
   {
+    id: 'tcm-children-7-13-qa-enhanced',
+    label: '👧 TCM Children 7-13 Q&A (50 Q&A - School Stress, Digestion, Sleep, Immunity + Points + Formulas)',
+    path: '/knowledge-assets/tcm_children_7-13_qa_enhanced.csv',
+    defaultCategory: 'pediatrics',
+    defaultLanguage: 'en',
+  },
+  {
     id: 'tcm-teenage-mental-health-qa',
     label: 'TCM Teenage Mental Health Q&A (13-18 years)',
     path: '/knowledge-assets/tcm-teenage-mental-health-qa.csv',
