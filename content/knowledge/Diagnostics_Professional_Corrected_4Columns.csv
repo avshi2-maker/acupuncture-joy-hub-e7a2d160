@@ -1,0 +1,101 @@
+﻿Patient Question,Corrected Professional Acupuncture Points,Additional Professional Points (Alternative/Support),Herbal Pharmacopeia Formula
+Do you tend to feel more cold or more hot compared with other people?,"CV4, CV6, ST36, BL23 (with moxa)","GV4 (Mingmen), KI7, SP6, BL20 (with moxa)",Si Ni Tang (四逆汤) - Warm Yang; Gui Zhi Tang (桂枝汤) - Exterior Cold
+"Do you experience chills, fever, or alternating hot and cold sensations?","CV4, CV6, ST36, BL23 (with moxa)","GV4 (Mingmen), KI7, SP6, BL20 (with moxa)",Si Ni Tang (四逆汤) - Warm Yang; Gui Zhi Tang (桂枝汤) - Exterior Cold
+"Do you sweat easily during the day or at night, and in which areas?","KI3, HT6, SP6, BL23","KI7, LU7, CV4, BL15",Dang Gui Liu Huang Tang (当归六黄汤) - Stop night sweats
+"Do you often feel heaviness, dizziness, or pain in the head or body?","GB20, LV3, GV20, PC6","ST36, SP6, GB34, ST8",Tian Ma Gou Teng Yin (天麻钩藤饮) - Dizziness; Ban Xia Bai Zhu Tian Ma Tang (半夏白术天麻汤) - Dampness
+"Do you feel fullness, tightness, or discomfort in the chest or abdomen?","CV17, PC6, CV12, ST36","LV14, CV6, SP4, BL20",Xiao Yao San (逍遥散) - Qi stagnation; Bao He Wan (保和丸) - Food stagnation
+"How is your appetite—too strong, normal, low, or varying?","ST36, SP6, CV12, BL20","ST25, SP3, BL21, CV6",Si Jun Zi Tang (四君子汤) - Low appetite; Bao He Wan (保和丸) - Excess appetite
+"Do you feel very thirsty, slightly thirsty, or rarely thirsty, and what temperature drinks do you prefer?","KI3, KI6, SP6, ST36","CV12, LU5, LI11, ST44",Liu Wei Di Huang Wan (六味地黄丸) - Yin deficiency; Bai Hu Tang (白虎汤) - Heat
+"How are your bowel movements in frequency, form, and ease?","ST25, ST36, SP6, BL25","ST37, LI4, CV12, BL20",Si Jun Zi Tang (四君子汤) - Loose stools; Ma Zi Ren Wan (麻子仁丸) - Constipation
+"How often do you urinate, what color is it, and do you feel burning or urgency?","CV3, BL28, SP9, BL23","CV4, SP6, KI3, BL22",Ba Zheng San (八正散) - Damp-Heat; Jin Gui Shen Qi Wan (金匮肾气丸) - Yang deficiency
+"How easily do you fall asleep, stay asleep, and wake up in the morning?","HT7, PC6, SP6, Anmian (EX-HN22)","CV14, BL15, BL20, GV24, Yintang (EX-HN3)",Suan Zao Ren Tang (酸枣仁汤) - Insomnia; Gui Pi Tang (归脾汤) - Heart-Spleen
+"If you have pain, is it dull, sharp, fixed, wandering, or better/worse with heat or pressure?","LI4, SP6, local Ashi points, GB34","LV3, PC6, ST36, BL17",Xue Fu Zhu Yu Tang (血府逐瘀汤) - Blood stasis; Shu Jing Huo Xue Tang (舒筋活血汤) - Bi syndrome
+How is your overall energy throughout the day?,"ST36, CV6, CV12, SP6","BL20, BL23, KI3, GV20",Bu Zhong Yi Qi Tang (补中益气汤) - Qi deficiency; Gui Pi Tang (归脾汤) - Fatigue
+"Which emotions are most common for you: stress, anger, worry, sadness, fear, or others?","LV3, PC6, HT7, CV17","LV14, GB34, GV20, Yintang (EX-HN3)",Xiao Yao San (逍遥散) - Stress/anger; Gan Mai Da Zao Tang (甘麦大枣汤) - Sadness
+"If you menstruate, how are your cycle length, flow, color, and pain?","SP6, LV3, CV4, ST29","SP10, BL17, BL23, CV3",Xiao Yao San (逍遥散) - Irregular; Tao Hong Si Wu Tang (桃红四物汤) - Blood stasis
+How is your sexual desire and function compared with your usual?,"KI3, CV4, BL23, GV4 (Mingmen)","KI6, CV6, ST36, BL52",Jin Gui Shen Qi Wan (金匮肾气丸) - Yang deficiency; Liu Wei Di Huang Wan (六味地黄丸) - Yin deficiency
+"Has anyone noticed your facial color looking very pale, red, yellow, or dark?","LI4, ST36, SP6, BL17","LV3, BL20, CV12, LI11",Ba Zhen Tang (八珍汤) - Pale; Long Dan Xie Gan Tang (龙胆泻肝汤) - Red/Heat
+"Do your eyes usually look bright and clear, or dull and tired?","BL2, GB20, LV3, GB37","ST1, ST2, LI4, BL18",Qi Ju Di Huang Wan (杞菊地黄丸) - Liver-Kidney Yin; Ming Mu Di Huang Wan (明目地黄丸)
+"Is your body more thin, medium, or tendency to overweight with puffiness or heaviness?","SP9, SP6, ST36, CV12","ST40, CV9, BL20, SP3",Er Chen Tang (二陈汤) - Dampness-Phlegm; Ping Wei San (平胃散) - Spleen Damp
+"Are your movements generally quick and restless, or slow and lethargic?","CV4, BL23, KI3, CV3","BL28, SP6, ST36, GV4",Jin Gui Shen Qi Wan (金匮肾气丸) - Tonify Kidney Yang
+"Is your voice loud and forceful, soft and weak, or hoarse?","LU7, LU9, CV22, LI4","BL13, CV17, ST36, KI3",Bu Zhong Yi Qi Tang (补中益气汤) - Weak voice; Qing Fei Tang (清肺汤) - Hoarse
+"Is your breathing deep and relaxed, or shallow, sighing, or labored?","LU7, LU1, CV17, BL13","LU5, ST40, PC6, CV22",Su Zi Jiang Qi Tang (苏子降气汤) - Wheezing; Er Chen Tang (二陈汤) - Phlegm
+"Is your skin more dry, oily, itchy, or prone to rashes and acne?","LI11, SP10, BL40, LI4","GB20, LV3, SP6, ST36",Xiao Feng San (消风散) - Itching; Yu Ping Feng San (玉屏风散) - Dry skin
+"Have you ever been told that your tongue looks very pale, red, or purple?","SP6, ST36, BL20, BL17, CV4","CV12, BL23, ST25, KI3",Ba Zhen Tang (八珍汤) - Tonify Qi and Blood
+"Is your tongue coating thin, thick, greasy, or peeled in some areas?","CV12, ST40, SP9, SP6","ST36, BL20, CV9, PC6",Er Chen Tang (二陈汤) - Phlegm-Dampness
+Does your tongue feel very dry or very wet?,"KI3, KI6, SP6, ST36","CV12, LU5, BL23, KI7",Yi Wei Tang (益胃汤) - Nourish fluids
+"Is your tongue more swollen, thin, cracked, or with teeth marks on the sides?","SP9, SP6, ST36, CV12","BL20, SP3, ST40, CV6",Shen Ling Bai Zhu San (参苓白术散) - Spleen Dampness
+Do you notice your face suddenly flushing or becoming very pale in certain situations?,"LI4, ST36, SP6, BL17","LV3, BL20, CV12, LI11",Ba Zhen Tang (八珍汤) - Pale; Long Dan Xie Gan Tang (龙胆泻肝汤) - Red/Heat
+"Are your nails brittle, ridged, or very pale?","LV3, LV8, SP6, BL18","LV2, BL17, ST36, GB34",Si Wu Tang (四物汤) - Nourish Liver Blood
+"Has your hair become very dry, thinning, or prematurely gray?","KI3, BL23, GV20, LV3","KI6, BL18, GB20, ST36",Qi Bao Mei Ran Dan (七宝美髯丹) - Hair; Liu Wei Di Huang Wan (六味地黄丸)
+Have you noticed strong or unusual body odor or breath?,"ST36, SP6, LI4, CV12","PC6, LV3, BL20, GV20",Based on pattern differentiation - consult TCM practitioner
+"Has anyone ever described your pulse as weak, fast, or irregular?","HT7, PC6, CV17, BL15","ST36, SP6, KI3, CV6",Zhi Gan Cao Tang (炙甘草汤) - Irregular pulse; Bu Zhong Yi Qi Tang (补中益气汤)
+Do you have tender areas when the abdomen or back is pressed?,"local Ashi points, CV12, ST36, SP6","LI4, LV3, GB34, BL20",Based on location - Xiao Yao San (逍遥散) or Gui Pi Tang (归脾汤)
+"Does pain follow a line or pathway along an arm, leg, or torso?","LI4, SP6, local Ashi points, GB34","LV3, PC6, ST36, BL17",Xue Fu Zhu Yu Tang (血府逐瘀汤) - Blood stasis; Shu Jing Huo Xue Tang (舒筋活血汤) - Bi syndrome
+"Do your symptoms get worse with cold, damp, wind, or changes in weather?","GB20, LI4, BL12, ST36","GV14, SP9, CV12, BL23",Juan Bi Tang (蠲痹汤) - Wind-Damp; Gui Zhi Tang (桂枝汤) - Wind-Cold
+At what time of day are your symptoms worst or best?,Points for specific organ based on time,"ST36, SP6, CV6, GV20",Formula based on organ clock timing - consult practitioner
+"Do you have lumps, nodules, or varicose veins in the affected area?","SP10, ST40, CV12, local Ashi","LV3, GB34, SP6, PC6",Xiao Luo Wan (消瘰丸) - Phlegm nodules; Xue Fu Zhu Yu Tang (血府逐瘀汤)
+Do you prefer warmth or coolness on painful areas?,"ST36, SP6, LI4, CV12","PC6, LV3, BL20, GV20",Based on pattern differentiation - consult TCM practitioner
+Is your pain better or worse with pressure or massage?,"ST36, SP6, LI4, CV12","PC6, LV3, BL20, GV20",Based on pattern differentiation - consult TCM practitioner
+Is your pain worse at night or during the day?,"LI4, SP6, local Ashi points, GB34","LV3, PC6, ST36, BL17",Xue Fu Zhu Yu Tang (血府逐瘀汤) - Blood stasis; Shu Jing Huo Xue Tang (舒筋活血汤) - Bi syndrome
+Do your symptoms change significantly by season?,"ST36, SP6, LI4, CV12","PC6, LV3, BL20, GV20",Based on pattern differentiation - consult TCM practitioner
+"Do you experience numbness, tingling, or burning sensations?","ST36, SP6, LI4, CV12","PC6, LV3, BL20, GV20",Based on pattern differentiation - consult TCM practitioner
+Do your hands and feet often feel cold compared with others?,"ST36, KI3, CV4, BL23 (with moxa)","CV6, SP6, LV3, GV4",Dang Gui Si Ni Tang (当归四逆汤) - Cold limbs
+"Do you have swelling in ankles, legs, or hands that leaves a mark when pressed?","SP9, SP6, ST36, CV9","BL20, BL23, KI3, CV3",Wu Ling San (五苓散) - Edema; Zhen Wu Tang (真武汤) - Yang deficiency edema
+"Do you feel your heart racing, skipping beats, or pounding?","HT7, PC6, CV17, BL15","CV14, SP6, ST36, GV24",Zhi Gan Cao Tang (炙甘草汤) - Palpitations; Gui Pi Tang (归脾汤)
+"If you get headaches, are they located more at the temples, top, front, or back of the head?","GB20, LV3, GV20, PC6","ST36, SP6, GB34, ST8",Tian Ma Gou Teng Yin (天麻钩藤饮) - Dizziness; Ban Xia Bai Zhu Tian Ma Tang (半夏白术天麻汤) - Dampness
+Which signs suggest Qi deficiency in TCM?,"ST36, CV6, CV12, SP6","BL20, BL23, LU9, GV20",Bu Zhong Yi Qi Tang (补中益气汤) - Tonify Qi
+Which signs point to Blood deficiency?,"SP6, ST36, BL17, BL20","CV4, LV8, BL18, ST25",Si Wu Tang (四物汤) - Nourish Blood; Dang Gui Bu Xue Tang (当归补血汤)
+What are common signs of Yin deficiency?,"KI3, KI6, SP6, LU5","ST36, CV4, BL23, KI7",Liu Wei Di Huang Wan (六味地黄丸) - Nourish Yin
+How does Yang deficiency usually appear?,"CV4, CV6, ST36, BL23 (with moxa)","GV4, KI7, SP6, BL20 (with moxa)",Jin Gui Shen Qi Wan (金匮肾气丸) - Warm Yang
+What suggests Qi stagnation in TCM?,"LV3, LV14, PC6, GB34","CV17, SJ6, LV2, GB41",Xiao Yao San (逍遥散) - Move Liver Qi
+How is Blood stasis recognized?,"SP10, LV3, SP6, BL17","SP21, PC6, ST36, LI4","Xue Fu Zhu Yu Tang (血府逐瘀汤) - Move Blood, break stasis"
+What are signs of Dampness in the body?,"SP9, SP6, ST36, CV12","ST40, BL20, CV9, SP3",Ping Wei San (平胃散) - Drain Dampness; Er Chen Tang (二陈汤)
+How does Phlegm manifest beyond just mucus?,"ST40, CV12, LU5, SP9","PC6, ST36, CV22, BL13",Er Chen Tang (二陈汤) - Transform Phlegm; Wen Dan Tang (温胆汤)
+What indicates internal Heat?,"LI11, ST44, GV14, LI4","LV2, SP6, KI6, ST36",Long Dan Xie Gan Tang (龙胆泻肝汤) - Clear Heat
+What features suggest internal Cold?,"CV4, CV6, ST36, BL23 (with moxa)","GV4, KI7, SP6, BL20",Si Ni Tang (四逆汤) - Warm interior Cold
+How is internal Wind seen in TCM?,"GB20, LV3, GV20, GB34","LV2, SI3, GV16, BL10",Tian Ma Gou Teng Yin (天麻钩藤饮) - Extinguish Wind
+What signs show Dryness?,"LU5, KI3, KI6, SP6","ST36, CV12, LU7, BL23",Sha Shen Mai Men Dong Tang (沙参麦门冬汤) - Moisten Dryness
+How do the Five Elements relate to organs and emotions?,"CV4, BL23, KI3, CV3","BL28, SP6, ST36, GV4",Jin Gui Shen Qi Wan (金匮肾气丸) - Tonify Kidney Yang
+What are Zang‑Fu organs in TCM?,Organ-specific Back Shu and Front Mu points,"ST36, SP6, CV12, GV20",Formula based on Zang-Fu pattern differentiation
+What are the Eight Principles used for?,"Based on Interior/Exterior, Cold/Heat, Deficiency/Excess","ST36, LI4, SP6, CV12",Formula selected per Eight Principles diagnosis
+What does root and branch (ben‑biao) mean in diagnosis?,"ST36, SP6, LI4, CV12","PC6, LV3, BL20, GV20",Based on pattern differentiation - consult TCM practitioner
+How is a TCM pattern different from a Western disease name?,"ST36, SP6, LI4, CV12","PC6, LV3, BL20, GV20",Based on pattern differentiation - consult TCM practitioner
+Can one person have more than one pattern at the same time?,"ST36, SP6, LI4, CV12","PC6, LV3, BL20, GV20",Based on pattern differentiation - consult TCM practitioner
+Do TCM patterns change over time?,"ST36, SP6, LI4, CV12","PC6, LV3, BL20, GV20",Based on pattern differentiation - consult TCM practitioner
+How do you explain TCM patterns to other health professionals?,"ST36, SP6, LI4, CV12","PC6, LV3, BL20, GV20",Based on pattern differentiation - consult TCM practitioner
+Does TCM diagnosis change for different cultures and diets?,"ST36, SP6, LI4, CV12","PC6, LV3, BL20, GV20",Based on pattern differentiation - consult TCM practitioner
+How is the organ clock used in diagnosis?,"ST36, SP6, LI4, CV12","PC6, LV3, BL20, GV20",Based on pattern differentiation - consult TCM practitioner
+How do seasons affect diagnosis?,"CV4, BL23, KI3, CV3","BL28, SP6, ST36, GV4",Jin Gui Shen Qi Wan (金匮肾气丸) - Tonify Kidney Yang
+What is the difference between constitution and current pattern?,"ST36, SP6, LI4, CV12","PC6, LV3, BL20, GV20",Based on pattern differentiation - consult TCM practitioner
+How important are emotions in diagnosis?,"LV3, PC6, HT7, CV17","LV14, GB34, GV20, Yintang (EX-HN3)",Xiao Yao San (逍遥散) - Stress/anger; Gan Mai Da Zao Tang (甘麦大枣汤) - Sadness
+What questions explore Liver function in TCM?,"LV3, LV14, GB34, LV8","LV2, GB20, PC6, BL18",Xiao Yao San (逍遥散) - Soothe Liver; Long Dan Xie Gan Tang (龙胆泻肝汤) - Fire
+How do you assess the Heart in TCM?,"HT7, PC6, CV17, BL15","HT5, CV14, PC4, GV24",Tian Wang Bu Xin Dan (天王补心丹) - Nourish Heart; Dao Chi San (导赤散)
+Which questions relate to Spleen function?,"SP6, ST36, CV12, BL20","SP9, BL21, ST25, CV6",Si Jun Zi Tang (四君子汤) - Tonify Spleen; Bu Zhong Yi Qi Tang (补中益气汤)
+How is the Lung evaluated?,"LU7, LU9, LI4, BL13","LU5, LU1, CV17, ST40",Bu Fei Tang (补肺汤) - Tonify Lung; Yu Ping Feng San (玉屏风散)
+How do you question Kidney function?,"KI3, BL23, CV4, GV4 (Mingmen)","KI6, KI7, BL52, CV6",Liu Wei Di Huang Wan (六味地黄丸) - Yin; Jin Gui Shen Qi Wan (金匮肾气丸) - Yang
+What do you ask about Gallbladder?,"GB34, GB41, GB20, SJ6","LV14, GB43, ST36, BL19",Xiao Chai Hu Tang (小柴胡汤) - Harmonize; Long Dan Xie Gan Tang (龙胆泻肝汤)
+How is Stomach function explored?,"ST36, CV12, PC6, BL21","ST25, ST44, CV10, SP4",Bao He Wan (保和丸) - Harmonize Stomach; Ban Xia Xie Xin Tang (半夏泻心汤)
+What signs relate to Small Intestine in TCM?,"SI3, BL27, CV4, ST39","SI4, HT7, ST36, CV6",Dao Chi San (导赤散) - Clear Heat from Small Intestine
+How do you assess the Large Intestine?,"ST25, LI4, ST37, BL25","ST36, SP15, CV6, LI11",Ma Zi Ren Wan (麻子仁丸) - Constipation; Tong Xie Yao Fang (痛泻要方)
+What do you ask about the Bladder?,"BL28, CV3, SP9, BL23","BL22, SP6, CV4, KI3",Ba Zheng San (八正散) - Clear Damp-Heat in Bladder
+How is the Triple Burner considered?,"ST36, SP6, LI4, CV12","PC6, LV3, BL20, GV20",Based on pattern differentiation - consult TCM practitioner
+What special questions do you ask in women’s health?,"SP6, LV3, CV4, ST29","SP10, BL17, BL23, CV3",Xiao Yao San (逍遥散) - PMS; Si Wu Tang (四物汤) - Nourish Blood
+What questions are specific to men’s health?,"CV4, BL23, KI3, CV3","BL28, SP6, ST36, GV4",Jin Gui Shen Qi Wan (金匮肾气丸) - Tonify Kidney Yang
+How is questioning adapted for children?,"ST36, CV12, LI4, SP6","PC6, BL20, GV20, Sifeng (EX-UE10)",Xiao Er Qi Xing Cha (小儿七星茶) - Pediatric digestive
+How do you adjust questioning for older adults?,"ST36, KI3, BL23, GV20","CV4, SP6, BL20, GB34",Liu Wei Di Huang Wan (六味地黄丸) - Nourish; Ba Zhen Tang (八珍汤)
+What questions explore the state of Shen (spirit)?,"CV4, BL23, KI3, CV3","BL28, SP6, ST36, GV4",Jin Gui Shen Qi Wan (金匮肾气丸) - Tonify Kidney Yang
+How do you ask about past trauma sensitively?,"SP10, LI4, local Ashi points, GB34","SP6, BL17, LV3, ST36",Die Da Wan (跌打丸) - Trauma; Xue Fu Zhu Yu Tang (血府逐瘀汤)
+What detailed sleep questions are helpful?,"HT7, PC6, SP6, Anmian (EX-HN22)","CV14, BL15, BL20, GV24, Yintang (EX-HN3)",Suan Zao Ren Tang (酸枣仁汤) - Insomnia; Gui Pi Tang (归脾汤) - Heart-Spleen
+What detailed digestive questions are asked?,"ST36, SP6, LI4, CV12","PC6, LV3, BL20, GV20",Based on pattern differentiation - consult TCM practitioner
+Which questions clarify respiratory patterns?,"LU7, LU1, CV17, BL13","LU5, ST40, PC6, CV22",Su Zi Jiang Qi Tang (苏子降气汤) - Wheezing; Er Chen Tang (二陈汤) - Phlegm
+How is TCM questioning adapted for online consultations?,"ST36, LI4, PC6, SP6 (self-care points)","HT7, CV12, GB20, LV3",Granules or pills suitable for remote consultation
+How do you adjust diet questions for different cultures?,"ST36, SP6, LI4, CV12","PC6, LV3, BL20, GV20",Based on pattern differentiation - consult TCM practitioner
+What if patient and therapist do not share a first language?,"ST36, SP6, LI4, CV12","PC6, LV3, BL20, GV20",Based on pattern differentiation - consult TCM practitioner
+How do you respect different health beliefs during questioning?,"ST36, SP6, LI4, CV12","PC6, LV3, BL20, GV20",Based on pattern differentiation - consult TCM practitioner
+Why ask about local climate and pollution?,"LU7, LI4, BL13, ST36","LU1, GB20, SP9, CV17",Yu Ping Feng San (玉屏风散) - Protect Wei Qi
+How do patients ask about scientific evidence for TCM diagnosis?,"ST36, SP6, LI4, CV12","PC6, LV3, BL20, GV20",Based on pattern differentiation - consult TCM practitioner
+How do you diagnose when time is limited?,"ST36, SP6, LI4, CV12","PC6, LV3, BL20, GV20",Based on pattern differentiation - consult TCM practitioner
+What is asked again at follow‑up sessions?,"ST36, SP6, LI4, CV12","PC6, LV3, BL20, GV20",Based on pattern differentiation - consult TCM practitioner
+How do patient goals shape diagnostic focus?,"ST36, SP6, LI4, CV12","PC6, LV3, BL20, GV20",Based on pattern differentiation - consult TCM practitioner
+Why explain the diagnosis to the patient?,"ST36, SP6, LI4, CV12","PC6, LV3, BL20, GV20",Based on pattern differentiation - consult TCM practitioner
