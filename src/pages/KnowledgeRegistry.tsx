@@ -1607,7 +1607,7 @@ ${report.verificationInstructions || ''}
           className="gap-2"
         >
           <FileSpreadsheet className="w-4 h-4" />
-          Download Manifest
+          Export RAG Inventory
         </Button>
       </div>
 
