@@ -1023,7 +1023,7 @@ export default function KnowledgeRegistry() {
     }
   }, [authLoading, user, navigate, processQueue]);
 
-  // Download manifest CSV - MUST BE BEFORE CONDITIONAL RETURNS
+  // Download manifest CSV for Dr. Sapir priority assignment - MUST BE BEFORE CONDITIONAL RETURNS
   const downloadManifestCSV = useCallback(async () => {
     if (!documents || documents.length === 0) {
       toast.error('No documents to export');
@@ -1048,47 +1048,84 @@ export default function KnowledgeRegistry() {
 
     const totalChunks = chunkCounts?.length || 0;
 
-    const headers = ['#', 'Original Name', 'File Name', 'Category', 'Language', 'Status', 'Row Count', 'Chunks Indexed', 'File Size (KB)', 'File Hash', 'Created At', 'Indexed At'];
-    const rows = indexedDocs.map((doc, idx) => [
-      String(idx + 1),
-      `"${(doc.original_name || '').replace(/"/g, '""')}"`,
-      `"${(doc.file_name || '').replace(/"/g, '""')}"`,
-      `"${doc.category || 'uncategorized'}"`,
-      `"${doc.language || 'en'}"`,
-      `"${doc.status}"`,
-      String(doc.row_count || 0),
-      String(chunkCountMap[doc.id] || 0),
-      String(doc.file_size ? Math.round(doc.file_size / 1024) : 0),
-      `"${doc.file_hash || ''}"`,
-      `"${doc.created_at ? format(new Date(doc.created_at), 'yyyy-MM-dd HH:mm') : ''}"`,
-      `"${doc.indexed_at ? format(new Date(doc.indexed_at), 'yyyy-MM-dd HH:mm') : ''}"`
-    ]);
-
-    // Add summary row
-    const summaryRow = [
-      'TOTAL',
-      `"${indexedDocs.length} documents"`,
-      '""',
-      `"${new Set(indexedDocs.map(d => d.category)).size} categories"`,
-      `"${new Set(indexedDocs.map(d => d.language)).size} languages"`,
-      '"indexed"',
-      String(indexedDocs.reduce((sum, d) => sum + (d.row_count || 0), 0)),
-      String(totalChunks),
-      String(Math.round(indexedDocs.reduce((sum, d) => sum + (d.file_size || 0), 0) / 1024)),
-      '""',
-      `"Report: ${format(new Date(), 'yyyy-MM-dd HH:mm')}"`,
-      '""'
+    // CSV headers with Priority Tier column for Dr. Sapir to fill in
+    const headers = [
+      'Line #',
+      'File Name',
+      'Category',
+      'Language',
+      'Chunks',
+      'Row Count',
+      'Indexed Date',
+      'PRIORITY_TIER (1=Top, 2=High, 3=Standard)',
+      'Notes for Dr. Sapir'
     ];
 
-    const csvContent = [headers.join(','), ...rows.map(r => r.join(',')), summaryRow.join(',')].join('\n');
+    // Sort by category then by file name for easier review
+    const sortedDocs = [...indexedDocs].sort((a, b) => {
+      const catCompare = (a.category || '').localeCompare(b.category || '');
+      if (catCompare !== 0) return catCompare;
+      return (a.original_name || '').localeCompare(b.original_name || '');
+    });
+
+    const rows = sortedDocs.map((doc, idx) => [
+      String(idx + 1),
+      `"${(doc.original_name || doc.file_name || '').replace(/"/g, '""')}"`,
+      `"${doc.category || 'uncategorized'}"`,
+      `"${doc.language || 'en'}"`,
+      String(chunkCountMap[doc.id] || 0),
+      String(doc.row_count || 0),
+      `"${doc.indexed_at ? format(new Date(doc.indexed_at), 'yyyy-MM-dd') : 'N/A'}"`,
+      '""', // Empty PRIORITY_TIER for Dr. Sapir to fill
+      '""'  // Empty Notes column
+    ]);
+
+    // Add instruction header rows
+    const instructionRows = [
+      ['# RAG KNOWLEDGE BASE MANIFEST FOR CLINICAL PRIORITY ASSIGNMENT', '', '', '', '', '', '', '', ''],
+      ['# Generated:', format(new Date(), 'yyyy-MM-dd HH:mm'), '', '', '', '', '', '', ''],
+      ['# Total Files:', String(indexedDocs.length), 'Total Chunks:', String(totalChunks), '', '', '', '', ''],
+      ['# Instructions: Fill PRIORITY_TIER column with 1, 2, or 3', '', '', '', '', '', '', '', ''],
+      ['# TIER 1 = Top Priority (2.5x boost) - Core clinical assets', '', '', '', '', '', '', '', ''],
+      ['# TIER 2 = High Priority (1.8x boost) - Important specialty modules', '', '', '', '', '', '', '', ''],
+      ['# TIER 3 = Standard Priority (1.4x boost) - Supporting content', '', '', '', '', '', '', '', ''],
+      ['# Leave blank = Default (1.0x, no boost)', '', '', '', '', '', '', '', ''],
+      ['', '', '', '', '', '', '', '', '']
+    ];
+
+    // Add summary by category
+    const categorySummary: Record<string, { count: number; chunks: number }> = {};
+    sortedDocs.forEach(doc => {
+      const cat = doc.category || 'uncategorized';
+      if (!categorySummary[cat]) categorySummary[cat] = { count: 0, chunks: 0 };
+      categorySummary[cat].count++;
+      categorySummary[cat].chunks += chunkCountMap[doc.id] || 0;
+    });
+
+    const summaryRows = [
+      ['', '', '', '', '', '', '', '', ''],
+      ['# CATEGORY SUMMARY', '', '', '', '', '', '', '', ''],
+      ['Category', 'File Count', 'Chunk Count', '', '', '', '', '', ''],
+      ...Object.entries(categorySummary)
+        .sort((a, b) => b[1].chunks - a[1].chunks)
+        .map(([cat, stats]) => [cat, String(stats.count), String(stats.chunks), '', '', '', '', '', ''])
+    ];
+
+    const csvContent = [
+      ...instructionRows.map(r => r.join(',')),
+      headers.join(','),
+      ...rows.map(r => r.join(',')),
+      ...summaryRows.map(r => r.join(','))
+    ].join('\n');
+
     const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' }); // BOM for Excel
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `RAG_Knowledge_Manifest_${format(new Date(), 'yyyy-MM-dd_HHmm')}.csv`;
+    a.download = `RAG_Priority_Manifest_DrSapir_${format(new Date(), 'yyyy-MM-dd')}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(`Downloaded full manifest: ${indexedDocs.length} docs, ${totalChunks} chunks`);
+    toast.success(`📋 Manifest exported for Dr. Sapir: ${indexedDocs.length} files ready for priority assignment`);
   }, [documents]);
 
   // Download manifest as PDF - MUST BE BEFORE CONDITIONAL RETURNS
