@@ -1871,14 +1871,97 @@ ${report.verificationInstructions || ''}
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Database className="w-5 h-5 text-amber-600" />
-            Knowledge Assets Table Export
+            Knowledge Assets & RAG Inventory Export
           </CardTitle>
           <CardDescription>
-            Export complete list of all {BUILTIN_ASSETS.length} knowledge assets for documentation
+            Export complete list of all {BUILTIN_ASSETS.length} knowledge assets OR the full indexed RAG inventory
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
+            {/* Export RAG Inventory Button - NEW */}
+            <Button
+              onClick={async () => {
+                try {
+                  toast.info('Fetching RAG inventory...');
+                  
+                  // Fetch all indexed documents with chunk counts
+                  const { data: docs, error } = await supabase
+                    .from('knowledge_documents')
+                    .select('id, original_name, file_name, status, category, language, row_count, indexed_at, created_at')
+                    .order('original_name', { ascending: true });
+                  
+                  if (error) throw error;
+                  
+                  if (!docs || docs.length === 0) {
+                    toast.error('No documents found in RAG database');
+                    return;
+                  }
+                  
+                  // Fetch chunk counts for each document
+                  const { data: chunkCounts, error: chunkError } = await supabase
+                    .from('knowledge_chunks')
+                    .select('document_id')
+                    .then(result => {
+                      if (result.error) throw result.error;
+                      // Count chunks per document
+                      const counts: Record<string, number> = {};
+                      result.data?.forEach(chunk => {
+                        counts[chunk.document_id] = (counts[chunk.document_id] || 0) + 1;
+                      });
+                      return { data: counts, error: null };
+                    });
+                  
+                  if (chunkError) throw chunkError;
+                  
+                  // Build CSV rows
+                  const csvRows = [
+                    ['#', 'Original Name', 'File Name', 'Status', 'Category', 'Language', 'Row Count', 'Chunk Count', 'Indexed At', 'Created At'].join(',')
+                  ];
+                  
+                  docs.forEach((doc, idx) => {
+                    const escapeField = (field: string | null | undefined) => {
+                      const str = field || '';
+                      return str.includes(',') || str.includes('"') ? `"${str.replace(/"/g, '""')}"` : str;
+                    };
+                    
+                    csvRows.push([
+                      String(idx + 1),
+                      escapeField(doc.original_name),
+                      escapeField(doc.file_name),
+                      doc.status || 'unknown',
+                      escapeField(doc.category),
+                      doc.language || 'en',
+                      String(doc.row_count || 0),
+                      String(chunkCounts?.[doc.id] || 0),
+                      doc.indexed_at ? format(new Date(doc.indexed_at), 'yyyy-MM-dd HH:mm') : 'N/A',
+                      format(new Date(doc.created_at), 'yyyy-MM-dd HH:mm')
+                    ].join(','));
+                  });
+                  
+                  const csvContent = csvRows.join('\n');
+                  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                  const url = URL.createObjectURL(blob);
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.download = `rag-inventory-${format(new Date(), 'yyyy-MM-dd-HHmm')}.csv`;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                  URL.revokeObjectURL(url);
+                  
+                  toast.success(`RAG inventory exported: ${docs.length} documents`);
+                } catch (err: any) {
+                  console.error('RAG inventory export error:', err);
+                  toast.error(err?.message || 'Failed to export RAG inventory');
+                }
+              }}
+              className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              <Download className="w-4 h-4" />
+              Export RAG Inventory (CSV)
+            </Button>
+            
             <Button
               onClick={() => {
                 // Define which CSVs have trigger points (based on point-figure-mapping.ts analysis)
@@ -1946,7 +2029,7 @@ ${report.verificationInstructions || ''}
             </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-3">
-            Includes: Category, Label, Filename, Trigger Points status, RAG Priority
+            <strong>RAG Inventory:</strong> All indexed documents from database with chunk counts • <strong>Assets Table:</strong> Built-in asset definitions with trigger points status
           </p>
         </CardContent>
       </Card>
