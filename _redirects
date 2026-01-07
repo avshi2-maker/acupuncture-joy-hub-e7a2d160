@@ -1,0 +1,6 @@
+
+# Test Redirect
+/google  https://www.google.com  302
+
+# Force Function path
+/api/* /.netlify/functions/:splat  200
