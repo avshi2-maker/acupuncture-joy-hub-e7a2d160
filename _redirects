@@ -1,6 +1,1 @@
-
-# Test Redirect
-/google  https://www.google.com  302
-
-# Force Function path
-/api/* /.netlify/functions/:splat  200
+/joy  /.netlify/functions/tcm_brain  200
