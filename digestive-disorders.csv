@@ -1,0 +1,105 @@
+id,tcm_pattern,short_description
+1,Liver Qi stagnation,Liver Qi stagnation
+2,Liver Qi stagnation transforming into Fire,Liver Qi stagnation transforming into Fire
+3,Liver Blood deficiency,Liver Blood deficiency
+4,Liver Yin deficiency,Liver Yin deficiency
+5,Liver Yang rising,Liver Yang rising
+6,Liver Wind agitating internally,Liver Wind agitating internally
+7,Cold in the Liver channel,Cold in the Liver channel
+8,Damp-Heat in the Liver and Gallbladder,Damp-Heat in the Liver and Gallbladder
+9,Gallbladder Damp-Heat,Gallbladder Damp-Heat
+10,Liver invading Spleen,Liver invading Spleen
+11,Liver invading Stomach,Liver invading Stomach
+12,Heart Qi deficiency,Heart Qi deficiency
+13,Heart Blood deficiency,Heart Blood deficiency
+14,Heart Yin deficiency,Heart Yin deficiency
+15,Heart Yang deficiency,Heart Yang deficiency
+16,Heart Yang collapse,Heart Yang collapse
+17,Heart Fire blazing,Heart Fire blazing
+18,Phlegm-Fire harassing the Heart,Phlegm-Fire harassing the Heart
+19,Phlegm misting the Mind (Heart),Phlegm misting the Mind (Heart)
+20,Heart Blood stasis,Heart Blood stasis
+21,Pericardium Blood stasis,Pericardium Blood stasis
+22,Lung Qi deficiency,Lung Qi deficiency
+23,Lung Yin deficiency,Lung Yin deficiency
+24,Lung Dryness,Lung Dryness
+25,Invasion of Lung by Wind-Cold,Invasion of Lung by Wind-Cold
+26,Invasion of Lung by Wind-Heat,Invasion of Lung by Wind-Heat
+27,Damp-Phlegm in the Lungs,Damp-Phlegm in the Lungs
+28,Phlegm-Heat in the Lungs,Phlegm-Heat in the Lungs
+29,Cold-Phlegm in the Lungs,Cold-Phlegm in the Lungs
+30,Phlegm-Fluids obstructing the Lungs,Phlegm-Fluids obstructing the Lungs
+31,Spleen Qi deficiency,Spleen Qi deficiency
+32,Spleen Yang deficiency,Spleen Yang deficiency
+33,Spleen Qi sinking,Spleen Qi sinking
+34,Spleen not controlling Blood,Spleen not controlling Blood
+35,Cold-Damp invading Spleen,Cold-Damp invading Spleen
+36,Damp-Heat invading Spleen,Damp-Heat invading Spleen
+37,Stomach Qi deficiency,Stomach Qi deficiency
+38,Stomach Yin deficiency,Stomach Yin deficiency
+39,Stomach Fire,Stomach Fire
+40,Cold in the Stomach,Cold in the Stomach
+41,Food stagnation in the Stomach,Food stagnation in the Stomach
+42,Stomach and Spleen Qi deficiency,Stomach and Spleen Qi deficiency
+43,Kidney Yang deficiency,Kidney Yang deficiency
+44,Kidney Yin deficiency,Kidney Yin deficiency
+45,Kidney Qi not firm,Kidney Qi not firm
+46,Kidney Essence deficiency,Kidney Essence deficiency
+47,Kidney failing to receive Qi,Kidney failing to receive Qi
+48,Kidney and Liver Yin deficiency,Kidney and Liver Yin deficiency
+49,Kidney and Heart not harmonized,Kidney and Heart not harmonized
+50,Kidney and Spleen Yang deficiency,Kidney and Spleen Yang deficiency
+51,Urinary Bladder Damp-Heat,Urinary Bladder Damp-Heat
+52,Urinary Bladder Damp-Cold,Urinary Bladder Damp-Cold
+53,Small Intestine Qi pain,Small Intestine Qi pain
+54,Small Intestine Qi tied,Small Intestine Qi tied
+55,Small Intestine Damp-Heat,Small Intestine Damp-Heat
+56,Large Intestine Damp-Heat,Large Intestine Damp-Heat
+57,Heat in the Large Intestine,Heat in the Large Intestine
+58,Cold in the Large Intestine,Cold in the Large Intestine
+59,Large Intestine Dryness,Large Intestine Dryness
+60,Qi stagnation in the Large Intestine,Qi stagnation in the Large Intestine
+61,Collapse of Large Intestine,Collapse of Large Intestine
+62,Gallbladder deficiency (timidity),Gallbladder deficiency (timidity)
+63,Stagnation of Cold in the Liver channel,Stagnation of Cold in the Liver channel
+64,Liver Blood stasis,Liver Blood stasis
+65,Blood stasis in the Uterus,Blood stasis in the Uterus
+66,Cold in the Uterus,Cold in the Uterus
+67,Damp-Heat in the Lower Burner,Damp-Heat in the Lower Burner
+68,Damp-Heat in the Intestines,Damp-Heat in the Intestines
+69,Phlegm in the channels and collaterals,Phlegm in the channels and collaterals
+70,Phlegm obstructing the orifices,Phlegm obstructing the orifices
+71,Lung and Spleen Qi deficiency,Lung and Spleen Qi deficiency
+72,Spleen and Kidney Yang deficiency,Spleen and Kidney Yang deficiency
+73,Spleen and Lung Qi deficiency,Spleen and Lung Qi deficiency
+74,Heart and Spleen Blood deficiency,Heart and Spleen Blood deficiency
+75,Heart and Kidney Yin deficiency,Heart and Kidney Yin deficiency
+76,Heart and Gallbladder Qi deficiency,Heart and Gallbladder Qi deficiency
+77,Liver and Kidney Yin deficiency,Liver and Kidney Yin deficiency
+78,Liver Blood and Kidney Yin deficiency,Liver Blood and Kidney Yin deficiency
+79,Qi and Blood deficiency,Qi and Blood deficiency
+80,Qi and Yin deficiency,Qi and Yin deficiency
+81,Yang deficiency with Cold,Yang deficiency with Cold
+82,Yin deficiency with Heat,Yin deficiency with Heat
+83,Qi stagnation with Blood stasis,Qi stagnation with Blood stasis
+84,Qi deficiency with Dampness,Qi deficiency with Dampness
+85,Damp-Heat in the Middle Burner,Damp-Heat in the Middle Burner
+86,Damp-Cold in the Middle Burner,Damp-Cold in the Middle Burner
+87,Exterior Wind-Cold,Exterior Wind-Cold
+88,Exterior Wind-Heat,Exterior Wind-Heat
+89,Exterior Wind-Damp,Exterior Wind-Damp
+90,Interior Cold (full Cold),Interior Cold (full Cold)
+91,Interior Heat (full Heat),Interior Heat (full Heat)
+92,Empty Heat (Yin deficiency Heat),Empty Heat (Yin deficiency Heat)
+93,True Cold false Heat,True Cold false Heat
+94,True Heat false Cold,True Heat false Cold
+95,Blood Heat,Blood Heat
+96,Blood Dryness,Blood Dryness
+97,Blood stasis (general),Blood stasis (general)
+98,Interior Dampness,Interior Dampness
+99,Interior Phlegm,Interior Phlegm
+100,Phlegm-Heat (general),Phlegm-Heat (general)
+101,Phlegm-Cold (general),Phlegm-Cold (general)
+102,Collapse of Qi,Collapse of Qi
+103,Collapse of Yin,Collapse of Yin
+104,Collapse of Yang,Collapse of Yang
