@@ -1,0 +1,15 @@
+Category,Question_to_Parent,Clinical_Significance,Acupuncture_Points_Professional
+Appetite,Is the child a 'picky eater' or craving sweets?,Spleen Qi Deficiency. Limit raw/cold/sugar.,"ST36, SP6, CV12, PC6, Sifeng (M-UE-9)"
+Stool,Constipation (dry pebbles) or Diarrhea (loose/food particles)?,Stomach Heat vs Spleen Cold.,"ST25, CV6, ST36, SP6, ST44 (Heat) / CV8-moxa (Cold)"
+Abdominal Pain,Pain around the navel?,Often Parasites or Cold in Intestines.,"ST25, CV12, LI11, PC6, ST36"
+Cough,Dry cough or phlegmy?,Lung Yin Def vs Phlegm-Damp.,"LU7, LU9, KI6 (Dry) / ST40, SP6, LU5 (Phlegm)"
+Asthma/Wheeze,Triggered by activity or night?,Kidney failing to grasp Qi vs Lung Qi Def.,"CV17, BL13, BL23, KI3, LU7, Dingchuan (M-BW-1)"
+Immunity,Recurrent ear infections or strep?,Lingering Pathogenic Factor (LPF).,"ST36, LI4, LI11, GV14, BL13, LU7"
+Growth,Is growth percentile consistent?,Kidney Jing status.,"KI3, BL23, CV4, ST36, GV4, Bailao (M-HN-30)"
+Walking/Talking,Delayed milestones?,Kidney Essence Deficiency (Five Delays).,"KI3, BL23, CV4, GV20, SI3, GB39"
+Bedwetting,Enuresis past age 5?,Kidney Qi Deficiency or Lung Qi not regulating water channels.,"CV3, CV4, SP6, BL23, BL28, KI3, ST36"
+ADHD/Focus,Hyperactive or Dreamy?,Liver Yang Rising vs Heart/Spleen Def.,"GV20, Sishencong (M-HN-1), HT7, PC6, LR3, Yintang (M-HN-3)"
+Night Terrors,Waking up screaming?,Liver Heat or Heart Heat.,"HT7, PC6, LR2, LR3, GB20, Anmian (M-HN-54)"
+Meningitis,Stiff neck + Fever + Photophobia?,RED FLAG: Immediate ER.,EMERGENCY - No acupuncture / Immediate hospitalization
+Appendicitis,Pain moved to RLQ? Jumping causes pain?,RED FLAG: Immediate ER.,EMERGENCY - No acupuncture / Immediate hospitalization
+Testicular Pain,Sudden onset severe pain?,RED FLAG: Torsion (Time sensitive).,EMERGENCY - Immediate evaluation required
