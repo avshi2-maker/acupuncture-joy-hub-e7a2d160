@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { FileText, Download, CheckCircle, Clock, AlertCircle, Shield, Database, FileCheck, Upload, Trash2, Pause, Play, RotateCcw, XCircle, ArrowLeft, ShieldAlert, Loader2, Languages, Sparkles, Heart } from 'lucide-react';
+import { FileText, Download, CheckCircle, Clock, AlertCircle, Shield, Database, FileCheck, Upload, Trash2, Pause, Play, RotateCcw, XCircle, ArrowLeft, ShieldAlert, Loader2, Languages, Sparkles, Heart, FileSpreadsheet } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { GoldenKnowledgeImport } from '@/components/admin/GoldenKnowledgeImport';
 import { BulkKnowledgeIndexer } from '@/components/admin/BulkKnowledgeIndexer';
@@ -1248,6 +1248,42 @@ ${report.verificationInstructions || ''}
     URL.revokeObjectURL(url);
   };
 
+  // Download manifest CSV
+  const downloadManifestCSV = useCallback(() => {
+    if (!documents || documents.length === 0) {
+      toast.error('No documents to export');
+      return;
+    }
+
+    const indexedDocs = documents.filter(d => d.status === 'indexed');
+    if (indexedDocs.length === 0) {
+      toast.error('No indexed documents to export');
+      return;
+    }
+
+    const headers = ['Line', 'Original Name', 'File Name', 'Category', 'Language', 'Status', 'Chunks', 'Created At'];
+    const rows = indexedDocs.map((doc, idx) => [
+      String(idx + 1),
+      `"${(doc.original_name || '').replace(/"/g, '""')}"`,
+      `"${(doc.file_name || '').replace(/"/g, '""')}"`,
+      `"${doc.category || ''}"`,
+      `"${doc.language || ''}"`,
+      `"${doc.status}"`,
+      String(doc.row_count || 0),
+      `"${doc.created_at ? format(new Date(doc.created_at), 'yyyy-MM-dd') : ''}"`
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `knowledge_manifest_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Downloaded manifest with ${indexedDocs.length} documents`);
+  }, [documents]);
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
@@ -1554,14 +1590,24 @@ ${report.verificationInstructions || ''}
         <LanguageSwitcher variant="ghost" isScrolled={true} />
       </div>
       
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
-          <Database className="w-8 h-8" />
-          Knowledge Document Registry
-        </h1>
-        <p className="text-muted-foreground">
-          Track and verify all proprietary materials in Dr. Sapir's TCM Knowledge Base
-        </p>
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
+            <Database className="w-8 h-8" />
+            Knowledge Document Registry
+          </h1>
+          <p className="text-muted-foreground">
+            Track and verify all proprietary materials in Dr. Sapir's TCM Knowledge Base
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={downloadManifestCSV}
+          className="gap-2"
+        >
+          <FileSpreadsheet className="w-4 h-4" />
+          Download Manifest
+        </Button>
       </div>
 
       {/* Stats Cards */}
