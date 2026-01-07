@@ -49,7 +49,6 @@ import {
   MapPin,
   BookOpen,
   Accessibility,
-  Music,
   HelpCircle,
   Mic,
   MicOff,
@@ -107,7 +106,7 @@ import {
 } from '@/components/video/VideoSessionEnhancements';
 import { TcmTurboDashboard, TurboDashboardStatus } from '@/components/tcm/TcmTurboDashboard';
 import { VideoSessionHeaderBoxes } from '@/components/video/VideoSessionHeaderBoxes';
-import { InlineMusicPlayer } from '@/components/video/InlineMusicPlayer';
+
 import { TcmBrainPanel } from '@/components/video/TcmBrainPanel';
 import { SessionBriefPanel } from '@/components/video/SessionBriefPanel';
 import { PregnancySafetyDialog, ElderlyLifestyleDialog } from '@/components/clinical';
@@ -169,7 +168,7 @@ export default function VideoSession() {
   const [showSessionGuide, setShowSessionGuide] = useState(false);
   const [sessionGuideExpanded, setSessionGuideExpanded] = useState(false);
   const [showAISuggestions, setShowAISuggestions] = useState(false);
-  const [showMusicPlayer, setShowMusicPlayer] = useState(false);
+  
   const [showHelpGuide, setShowHelpGuide] = useState(false);
   const [showTcmBrainPanel, setShowTcmBrainPanel] = useState(false);
   const [showSessionBrief, setShowSessionBrief] = useState(false);
@@ -583,7 +582,7 @@ export default function VideoSession() {
     { patterns: ['elderly', 'קשישים', 'seniors', 'lifestyle', 'aging', 'healthy aging'], action: () => setShowElderlyGuide(true), description: 'Elderly lifestyle guide', category: 'ai' },
     { patterns: ['anxiety', 'חרדה', 'qa', 'questions'], action: () => setShowAnxietyQA(true), description: 'Anxiety Q&A', category: 'ai' },
     { patterns: ['guide', 'מדריך', 'teleprompter'], action: () => setShowSessionGuide(true), description: 'Session guide', category: 'navigation' },
-    { patterns: ['music', 'מוזיקה'], action: () => setShowMusicPlayer(!showMusicPlayer), description: 'Toggle music', category: 'utility' },
+    
     { patterns: COMMON_COMMAND_PATTERNS.help, action: () => setShowHelpGuide(true), description: 'Open help', category: 'utility' },
     { patterns: COMMON_COMMAND_PATTERNS.print, action: () => window.print(), description: 'Print', category: 'utility' },
     
@@ -720,7 +719,7 @@ export default function VideoSession() {
       setNotes(sessionNotes + `\n👅 [${ts}] Tongue: Thick/Greasy coating (Dampness)`);
       haptic.success();
     }, description: 'Add thick coating', category: 'ai' },
-  ], [handleVoiceCommand, showMusicPlayer, sessionDuration, sessionNotes, setNotes, haptic]);
+  ], [handleVoiceCommand, sessionDuration, sessionNotes, setNotes, haptic]);
 
   // Voice command recognition callback with audio feedback
   const handleVoiceRecognized = useCallback((transcript: string, matched: VoiceCommand | null) => {
@@ -1860,17 +1859,6 @@ export default function VideoSession() {
                 id: 'utilities',
                 boxes: [
                   {
-                    id: 'music',
-                    name: 'Music',
-                    nameHe: 'מוזיקה',
-                    icon: Music,
-                    color: showMusicPlayer ? 'text-white' : 'text-amber-600',
-                    borderColor: showMusicPlayer ? 'border-amber-500 bg-amber-500' : 'border-amber-300',
-                    isActive: showMusicPlayer,
-                    tooltip: 'Background music player',
-                    onClick: () => setShowMusicPlayer(!showMusicPlayer),
-                  },
-                  {
                     id: 'accessibility',
                     name: 'Access',
                     nameHe: 'נגישות',
@@ -1909,12 +1897,6 @@ export default function VideoSession() {
           </div>
         </div>
 
-        {/* Inline Music Player */}
-        {showMusicPlayer && (
-          <div className="px-3 md:px-4 pb-2">
-            <InlineMusicPlayer onClose={() => setShowMusicPlayer(false)} />
-          </div>
-        )}
 
         {/* AI Query Panel with Voice Input */}
         {activeAiQuery && (
