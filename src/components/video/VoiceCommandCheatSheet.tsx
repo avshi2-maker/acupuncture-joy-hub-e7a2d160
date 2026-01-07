@@ -17,7 +17,7 @@ import {
   FileText, 
   Settings, 
   Brain, 
-  Music, 
+   
   HelpCircle,
   Printer,
   Heart,
@@ -74,7 +74,7 @@ const COMMAND_CATEGORIES: CommandCategory[] = [
       { command: 'Follow up', hebrewCommand: 'מעקב', description: 'Follow-up plan', icon: Calendar },
       { command: 'Settings', hebrewCommand: 'הגדרות', description: 'Open settings', icon: Settings },
       { command: 'Brain', hebrewCommand: 'מוח', description: 'TCM Brain AI', icon: Brain },
-      { command: 'Music', hebrewCommand: 'מוזיקה', description: 'Toggle player', icon: Music },
+      
       { command: 'Help', hebrewCommand: 'עזרה', description: 'Open help', icon: HelpCircle },
       { command: 'Print', hebrewCommand: 'הדפס', description: 'Print report', icon: Printer },
     ],

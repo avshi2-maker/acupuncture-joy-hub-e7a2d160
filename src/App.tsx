@@ -11,7 +11,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { SessionLockProvider } from "@/contexts/SessionLockContext";
 import RequireTier from "@/components/auth/RequireTier";
-import { FloatingMusicPlayer } from "@/components/ui/FloatingMusicPlayer";
+
 import { OfflineBanner } from "@/components/ui/OfflineBanner";
 import { AccessibilityPanel } from "@/components/ui/AccessibilityPanel";
 import { CRMErrorBoundary } from "@/components/crm/CRMErrorBoundary";
@@ -200,7 +200,7 @@ const App = () => (
                       <Route path="/hebrew-questions-report" element={<RequireTier><HebrewQuestionsReport /></RequireTier>} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
-                    <FloatingMusicPlayer />
+                    
                     <AccessibilityPanel />
                   </BrowserRouter>
                   </TooltipProvider>
