@@ -1,0 +1,91 @@
+Point_Number,Warning_Level,Explanation
+CV8 (Shenque),🔴 RED - TOTAL STOP,"Absolute contraindication - NO NEEDLING EVER. Umbilicus point. Risk of infection, bowel perforation, and severe adverse events. Moxa only may be used externally."
+LV12 (Jimai),🔴 RED - TOTAL STOP,"Absolute contraindication - NO NEEDLING. Located near femoral artery and vein. High risk of vascular damage, severe bleeding, and hematoma formation."
+ST17 (Ruzhong),🔴 RED - TOTAL STOP,"NO NEEDLING - nipple center point. Risk of breast tissue damage, infection, and scarring. No therapeutic value. Oblique insertion near area only if needed."
+LI4 (Hegu),🔴 RED - PREGNANCY FORBIDDEN,Strongly moves Qi and induces uterine contractions. Can cause miscarriage or premature labor. CONTRAINDICATED until labor induction at full term (37+ weeks). Safe postpartum.
+SP6 (Sanyinjiao),🔴 RED - PREGNANCY FORBIDDEN,Stimulates uterus and moves Blood strongly in lower abdomen. Risk of miscarriage and premature labor. CONTRAINDICATED before 37 weeks. Used for labor induction.
+BL60 (Kunlun),🔴 RED - PREGNANCY FORBIDDEN,Strongly descends Qi and moves Blood. Can induce uterine contractions and premature labor. FORBIDDEN during pregnancy. Safe for labor induction.
+GB21 (Jianjing),🔴 RED - PREGNANCY FORBIDDEN + HEART DISEASE,Strongly descends Qi and can induce labor. CONTRAINDICATED in pregnancy before 37 weeks. Also FORBIDDEN in patients with heart disease history - can trigger cardiac events.
+BL67 (Zhiyin),🔴 RED - PREGNANCY FORBIDDEN (except breech),Stimulates strong uterine activity. CONTRAINDICATED in pregnancy except for turning breech presentation with moxa at 34-36 weeks. Can induce premature labor.
+CV3 (Zhongji),🔴 RED - PREGNANCY DEEP NEEDLING FORBIDDEN,"Lower abdomen point above pubic bone. No deep or perpendicular needling in pregnancy - risk of uterine puncture, placental damage, fetal harm. Shallow oblique only if absolutely necessary."
+CV4 (Guanyuan),🔴 RED - PREGNANCY DEEP NEEDLING FORBIDDEN,Strongly tonifies original Qi and affects uterus. No deep needling in pregnancy - risk of uterine damage and labor induction. Contraindicated perpendicular insertion in advanced pregnancy.
+CV5 (Shimen),🔴 RED - PREGNANCY DEEP NEEDLING FORBIDDEN,Located near bladder and reproductive organs. No deep needling in pregnancy. Traditional texts warn against use in women desiring future pregnancy - modern practice more nuanced.
+CV6 (Qihai),🔴 RED - PREGNANCY DEEP NEEDLING FORBIDDEN,Sea of Qi point - strongly moves Qi in lower abdomen. No deep or perpendicular needling during pregnancy. Risk of uterine stimulation and premature contractions.
+CV7 (Yinjiao),🔴 RED - PREGNANCY DEEP NEEDLING FORBIDDEN,Intersection of Yin meridians in lower abdomen. No deep needling in pregnancy - affects uterus and reproductive system. Can induce contractions.
+"BL31-34 (Shangliao, Ciliao, Zhongliao, Xialiao)",🔴 RED - PREGNANCY FORBIDDEN,Sacral foramen points - directly affect uterus and pelvic organs. CONTRAINDICATED during pregnancy - strong labor induction effect. Used only at term for delivery.
+LU7 (Lieque),🔴 RED - PREGNANCY CAUTION (some sources),"Historically forbidden in pregnancy in some traditions due to descending Qi action. Modern research shows relative safety, but use cautiously before 37 weeks. Strongly moves Qi."
+LU1 (Zhongfu),🔴 RED - PNEUMOTHORAX RISK,"Lung alarm point on chest. Lung surface 10-20mm beneath skin. NO DEEP NEEDLING - risk of pneumothorax. Maximum depth 0.5-0.8 cun perpendicular, oblique safer. Requires expert anatomy knowledge."
+LU2 (Yunmen),🔴 RED - PNEUMOTHORAX RISK,"Upper chest near clavicle. Lung directly beneath. NO DEEP NEEDLING - high pneumothorax risk. Oblique insertion only, maximum 0.3-0.5 cun. Avoid in patients with lung disease."
+GB22 (Yuanye),🔴 RED - PNEUMOTHORAX RISK,"Mid-axillary line on ribcage. Lung very close to surface. NO DEEP NEEDLING - extreme pneumothorax risk. Oblique only, maximum 0.3-0.5 cun. Common site of acupuncture-induced pneumothorax."
+ST12 (Quepen),🔴 RED - PNEUMOTHORAX + VESSEL RISK,"Supraclavicular fossa. Lung apex and subclavian vessels beneath. NO DEEP/PERPENDICULAR needling - risk of pneumothorax, vessel puncture. Oblique only 0.3-0.5 cun. Extreme caution required."
+"ST13-16 (Qihu, Kufang, Wuyi, Yingchuang)",🔴 RED - PNEUMOTHORAX RISK,Upper chest points. Lung beneath intercostal spaces. OBLIQUE INSERTION ONLY - no perpendicular needling. Maximum 0.3-0.5 cun oblique. High pneumothorax risk with deep/perpendicular needling.
+ST18 (Rugen),🔴 RED - PNEUMOTHORAX RISK,"Breast root point on lower ribs. Lung beneath. OBLIQUE INSERTION ONLY, maximum 0.3-0.5 cun. No deep needling - pneumothorax risk. Requires careful technique."
+CV17 (Shanzhong),🔴 RED - PNEUMOTHORAX + HEART RISK,Sternum midline - heart and lungs beneath. NO PERPENDICULAR NEEDLING. Transverse oblique along sternum only 0.3-0.5 cun. Risk of cardiac tamponade and pneumothorax with deep needling.
+KD22-27 (Chest Kidney points),🔴 RED - PNEUMOTHORAX + HEART RISK,Chest Kidney meridian points. Lungs and heart beneath. OBLIQUE NEEDLING ONLY. KD22 specifically avoid heart. Pneumothorax and cardiac injury risk with perpendicular/deep needling.
+PC1 (Tianchi),🔴 RED - PNEUMOTHORAX RISK,Lateral chest near axilla. Lung close to surface. NO DEEP NEEDLING. Oblique insertion only 0.3-0.5 cun. High risk location for pneumothorax.
+LV14 (Qimen),🔴 RED - PNEUMOTHORAX + LIVER RISK,"Liver alarm point. Lung above, liver below on right side. NO DEEP NEEDLING - pneumothorax and liver puncture risk. Oblique 0.3-0.5 cun only. Extra caution on right side."
+GB24 (Riyue),🔴 RED - LIVER/GALLBLADDER PUNCTURE,Gallbladder alarm point below nipple. Liver and gallbladder beneath. NO DEEP NEEDLING - organ puncture risk. Oblique only 0.3-0.5 cun. Peritonitis risk.
+ST9 (Renying),🔴 RED - CAROTID ARTERY DANGER,"Carotid pulse point. EXTREME CAUTION - avoid carotid artery. Perpendicular 0.3-0.8 cun ONLY if pulse avoided. Risk of stroke, hematoma, arterial damage. Contraindicated in atherosclerosis, anticoagulation."
+HT1 (Jiquan),🔴 RED - AXILLARY ARTERY RISK,"Axillary artery center. AVOID ARTERY - palpate and needle beside vessel. Risk of severe bleeding, hematoma, nerve damage. Contraindicated in anticoagulation therapy."
+SP12 (Chongmen),🔴 RED - FEMORAL ARTERY RISK,"Femoral pulse point. AVOID ARTERY - palpate and needle lateral to vessel. Risk of severe bleeding, hematoma, vascular damage. Contraindicated in anticoagulation."
+ST42 (Chongyang),🔴 RED - DORSALIS PEDIS ARTERY,"Dorsal foot pulse point. AVOID ARTERY - needle beside vessel only. Risk of bleeding, hematoma. Contraindicated in anticoagulation and peripheral vascular disease."
+LU9 (Taiyuan),🔴 RED - RADIAL ARTERY CAUTION,"Radial pulse point. AVOID ARTERY - palpate and needle avoiding vessel. Risk of bleeding, hematoma, especially with anticoagulation. Generally safer than other arterial points."
+ST5 (Daying),🔴 RED - FACIAL ARTERY CAUTION,"Facial artery pulse point. AVOID ARTERY. Risk of hematoma and bleeding, especially in anticoagulated patients or bleeding disorders."
+GV15 (Yamen),🔴 RED - SPINAL CORD DANGER,"Atlanto-occipital junction. Medulla oblongata and spinal cord beneath. NO DEEP NEEDLING - risk of CNS damage, paralysis, death. Maximum 0.5 cun perpendicular. Absolute expert technique required."
+GV16 (Fengfu),🔴 RED - BRAINSTEM DANGER,"Base of skull. Brainstem and cerebellum beneath. NO DEEP NEEDLING - risk of CNS injury, subarachnoid hemorrhage, death. Maximum 0.5-1.0 cun perpendicular. Life-threatening if improper."
+BL10 (Tianzhu),🔴 RED - SPINAL CORD CAUTION,Upper cervical spine region. Spinal cord relatively close. Caution with depth - maximum 0.5-0.8 cun. Risk of spinal cord injury with deep or improper needling.
+GV14 (Dazhui),🔴 RED - SPINAL CORD CAUTION,C7-T1 vertebral level. Spinal cord beneath. Oblique angle safer than perpendicular. Maximum 0.5-1.0 cun. Risk of spinal cord injury and epidural hematoma with deep needling.
+BL1 (Jingming),🔴 RED - ORBITAL/EYE DANGER,"Inner canthus near lacrimal system and orbit. SLOW INSERTION, NO MANIPULATION. Risk of orbital hemorrhage, eye damage, infection. Patient must keep eyes closed. Requires expert technique. Maximum 0.5-1.0 cun."
+ST1 (Chengqi),🔴 RED - ORBITAL/EYE DANGER,"Infraorbital point directly below pupil. SLOW INSERTION, NO MANIPULATION. Risk of orbital hemorrhage, globe perforation, blindness. Maximum 0.3-0.5 cun. Contraindicated in glaucoma."
+ST2 (Sibai),🔴 RED - INFRAORBITAL CAUTION,Infraorbital foramen area. Risk of nerve damage and orbital injury with deep needling. NO DEEP NEEDLING. Maximum 0.3 cun perpendicular.
+CV2 (Qugu),🟡 YELLOW - PREGNANCY CAUTION,Above pubic bone. No deep needling in pregnancy - risk of bladder puncture and uterine stimulation. No perpendicular needling in advanced pregnancy. Safe shallow oblique.
+CV9-15 (Shuifen to Jiuwei),🟡 YELLOW - PREGNANCY PERPENDICULAR CAUTION,Abdomen midline points. No perpendicular needling in pregnancy due to enlarged uterus and organs. Oblique or transverse safer. Risk of organ puncture with deep needling.
+GV4 (Mingmen),🟡 YELLOW - AGE CAUTION,Life gate fire point. NO MOXA in males under 20 years - can over-stimulate Yang and affect development. Needling generally safe. Also caution with excessive moxa in hypertension.
+"GV22-23 (Xinhui, Shangxing)",🟡 YELLOW - INFANT FONTANEL,Fontanel area. NO NEEDLING in infants with open fontanel (metopism) - risk of brain injury. Safe after fontanel closure. Transverse needling safer than perpendicular.
+KD21 (Youmen),🟡 YELLOW - LIVER AVOIDANCE,Upper abdomen point. AVOID LIVER on right side - needle on left or very superficial on right. Risk of liver puncture with deep right-sided needling.
+GB3 (Shangguan),🟡 YELLOW - TEMPORAL ARTERY,Temporal region. Avoid temporal artery. Superficial needling only. Risk of temporal arteritis symptoms if improper technique.
+TH19 (Luxi),🟡 YELLOW - NO BLOODLETTING,Behind ear near mastoid. NO BLOODLETTING technique. Risk of excessive bleeding and infection. Shallow insertion only.
+"TH22-23 (Erheliao, Sizhukong)",🟡 YELLOW - TEMPORAL CAUTION,Temporal/periorbital region. Avoid temporal artery and branches. Superficial needling only. Risk of headache and bleeding.
+BL2 (Zanzhu),🟡 YELLOW - SUPRAORBITAL NOTCH,Medial eyebrow near supraorbital notch. Risk of bleeding and nerve irritation. Oblique along bone safer. No deep or perpendicular needling.
+GB1 (Tongziliao),🟡 YELLOW - LATERAL ORBIT,Lateral canthus/orbit. Superficial needling only. NO MOXA due to proximity to eye. Risk of orbital injury with deep needling.
+UB3-8 (Eyebrow and vertex points),🟡 YELLOW - NO MOXA,Forehead and vertex points. NO MOXA - risk of burns and scarring on exposed areas. Needling safe with proper technique.
+LI13 (Shouwuli),🟡 YELLOW - BRACHIAL VESSELS,Upper arm near brachial artery. AVOID ARTERY and nerves. Risk of hematoma and nerve damage. Palpate pulse and avoid.
+BL40 (Weizhong),🟡 YELLOW - POPLITEAL CAUTION,Popliteal crease center. Avoid popliteal artery/vein. NO MOXA (even pole/stick moxa). Risk of deep vein thrombosis mobilization in some patients. Caution in anticoagulation.
+BL30 (Baihuanshu),🟡 YELLOW - SACRAL CAUTION,Sacral region. NO MOXA. Risk of burns and discomfort. Needling requires awareness of sacral anatomy to avoid foramen.
+GV6 (Jizhong),🟡 YELLOW - NO MOXA,T11 level spine. NO MOXA - traditional contraindication due to spleen/digestive effects. Needling safe with proper technique and depth.
+LU3 (Tianfu),🟡 YELLOW - NO MOXA,Upper arm medial. NO MOXA. Needling safe. Avoid brachial vessels nearby.
+LU5 (Chize),🟡 YELLOW - ELBOW CAUTION,Cubital crease. NO MOXA. Avoid brachial artery and median nerve. Risk of nerve damage and hematoma.
+LU11 (Shaoshang),🟡 YELLOW - BLOODLETTING POINT,Thumb Jing-Well point. NO MOXA. Used for bloodletting (pricking). Caution in anticoagulation and bleeding disorders.
+SI18 (Quanliao),🟡 YELLOW - FACIAL NERVE,Zygomatic region. NO MOXA. Risk of facial nerve irritation and cosmetic bruising. Superficial perpendicular or oblique.
+ST8 (Touwei),🟡 YELLOW - TEMPORAL VESSELS,Hairline corner. NO MOXA. Avoid superficial temporal vessels. Transverse needling safer than perpendicular.
+"LI19-20 (Heliao, Yingxiang)",🟡 YELLOW - FACIAL CAUTION,Nose area. NO MOXA. Risk of cosmetic bruising and facial swelling. Perpendicular or oblique toward nose.
+GV25-28 (Suliao to Yinjiao),🟡 YELLOW - FACIAL/ORAL CAUTION,Nose and mouth area. NO MOXA. GV28 in upper gum requires careful technique. Risk of bleeding and discomfort.
+GB33 (Xiyangguan),🟡 YELLOW - NO MOXA,Lateral knee. NO MOXA. Needling safe. Avoid excessive depth near joint space.
+GB42 (Diwuhui),🟡 YELLOW - NO MOXA,Dorsal foot. NO MOXA. Needling safe. Avoid extensor tendons.
+GB9 (Tianchong),🟡 YELLOW - NO MOXA,Temporal head region. NO MOXA. Transverse needling safe along scalp.
+LI4 (Hegu),🟡 YELLOW - NO MOXA (traditionally),Web of thumb. NO MOXA traditionally (modern practice varies). Safe needling except pregnancy. Contraindicated pregnancy before 37 weeks.
+UB67 (Zhiyin),🟡 YELLOW - MOXA FOR BREECH ONLY,Toe Jing-Well point. Moxa specifically used to turn breech presentation at 34-36 weeks. Otherwise caution in early pregnancy. Can induce contractions.
+ALL POINTS,🟡 YELLOW - ANTICOAGULATION CAUTION,"Patients on warfarin, heparin, DOACs, antiplatelets: increased bleeding/hematoma risk. Avoid deep needling, arterial points, and bloodletting. Apply pressure after needle removal."
+ALL POINTS,🟡 YELLOW - BLEEDING DISORDERS,"Hemophilia, thrombocytopenia, liver disease with coagulopathy: high bleeding risk. Avoid acupuncture or use minimal needling with expert supervision. No bloodletting techniques."
+ALL POINTS,🟡 YELLOW - SKIN INFECTIONS/INFLAMMATION,"Avoid needling through infected, inflamed, or broken skin - risk of spreading infection and cellulitis. Avoid active psoriasis, eczema, wounds, burns, and abscesses."
+ALL POINTS,🟡 YELLOW - LYMPHEDEMA AREAS,"Avoid needling in limbs with lymphedema - risk of infection, worsening edema, and poor healing. Particularly post-mastectomy lymphedema."
+ALL POINTS,🟡 YELLOW - TUMOR/CANCER SITES,Avoid needling directly into known tumor masses - theoretical risk of tumor cell mobilization. Needling elsewhere generally safe with oncologist coordination.
+ALL POINTS,🟡 YELLOW - PACEMAKER/ICD,NO ELECTROACUPUNCTURE near pacemaker or implantable cardioverter-defibrillator - risk of device malfunction. Manual acupuncture generally safe away from device.
+CHEST POINTS,🟡 YELLOW - COPD/EMPHYSEMA CAUTION,Patients with chronic lung disease at higher risk of pneumothorax. Extreme caution with chest needling - consider avoiding or use very superficial oblique technique only.
+LOWER BACK POINTS,🟡 YELLOW - ABDOMINAL AORTIC ANEURYSM,Avoid deep needling in lower back/abdomen with known AAA - risk of rupture. Superficial needling only with extreme caution.
+ALL POINTS,🟡 YELLOW - SEVERE OSTEOPOROSIS,Caution with spinal points in severe osteoporosis - risk of vertebral fracture with manipulation. Gentle technique essential.
+BACK/BUTTOCK POINTS,🟡 YELLOW - PREVIOUS PNEUMOTHORAX,Patients with history of spontaneous pneumothorax at increased risk of recurrence. Avoid or extreme caution with chest and back needling.
+ALL POINTS,🟡 YELLOW - DIABETES NEUROPATHY,"Diabetic patients with neuropathy may not feel pain - risk of over-needling and poor wound healing. Gentle technique, excellent sterility essential."
+ALL POINTS,🟡 YELLOW - IMMUNOSUPPRESSION,"Immunocompromised patients (HIV, chemotherapy, immunosuppressants) at higher infection risk. Impeccable sterile technique essential. Consider avoiding in severe immunosuppression."
+HEAD/NECK POINTS,🟡 YELLOW - SEVERE HYPERTENSION,Uncontrolled severe hypertension increases risk of bleeding and stroke with head/neck needling. Control blood pressure first. Specific points like LR3 may help reduce BP.
+ALL POINTS,🟡 YELLOW - SEIZURE DISORDERS,Strong stimulation in epilepsy patients may trigger seizures. Gentle technique. Avoid if seizures uncontrolled. Some points may help seizure control when stable.
+ALL POINTS,🟡 YELLOW - SEVERE HYPOTENSION,"Patients with severe low blood pressure risk vasovagal syncope. Have patient lie down, monitor during treatment. Use gentle stimulation. Have emergency protocols ready."
+ABDOMINAL POINTS,🟡 YELLOW - RECENT ABDOMINAL SURGERY,Avoid needling surgical sites and abdomen for 4-6 weeks post-surgery - risk of wound dehiscence and infection. Gentle distal points safer.
+ALL POINTS,🟡 YELLOW - PREGNANCY FIRST TRIMESTER,Extra caution in first 12 weeks - critical fetal development period. Avoid forbidden points absolutely. Use gentle technique for other points. Many practitioners avoid strong stimulation.
+LIMB POINTS,🟡 YELLOW - PERIPHERAL VASCULAR DISEASE,"Poor circulation increases infection and poor healing risk. Gentle technique, impeccable sterility. Avoid in areas with severe ischemia or gangrene."
+ALL POINTS,🟡 YELLOW - NEEDLE PHOBIA/ANXIETY,"Severe needle phobia increases vasovagal syncope risk. Patient education, lying position, minimal needles, calm environment essential. Consider alternative therapies."
+GB21 (Jianjing),🟡 YELLOW - HISTORY HEART DISEASE,Contraindicated in patients with heart disease history - can affect cardiac function and trigger events. Also forbidden in pregnancy.
+SCALP POINTS,🟡 YELLOW - INFECTION RISK,Hair makes sterile technique challenging. Risk of folliculitis and scalp infection. Careful skin preparation essential. Part hair to visualize skin.
+FINGER/TOE JING-WELL POINTS,🟡 YELLOW - BLOODLETTING TECHNIQUE,Often used for pricking/bloodletting. Contraindicated in anticoagulation and bleeding disorders. Risk of infection with improper technique. Single-use lancets essential.
+JOINT POINTS,🟡 YELLOW - JOINT CAPSULE CAUTION,"Risk of joint capsule puncture with deep needling at joint lines. Can cause joint pain, effusion, and rarely septic arthritis. Proper angle and depth essential."
+PERIOSTEAL POINTS,🟡 YELLOW - PERIOSTEAL PAIN,Needling to periosteum (bone surface) causes sharp pain. May be therapeutic but requires patient consent and tolerance. Reduce depth if too painful.
