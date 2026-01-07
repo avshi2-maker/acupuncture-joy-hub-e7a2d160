@@ -410,6 +410,62 @@ function getModuleConfig(moduleId: number): MasterModuleConfig {
 // Default fallback for unknown modules
 const DEFAULT_KNOWLEDGE_BASE = 'QA_Professional_Corrected_4Columns';
 
+// ============================================================================
+// PRIORITY CATEGORY BOOSTING - Premium categories get ranked higher in search
+// ============================================================================
+// Priority Tier 1 (highest): Latest "Big 4" heavy indexed files (Jan 7, 2026)
+const PRIORITY_TIER_1_CATEGORIES = new Set([
+  'tcm-education',      // Zang Fu Syndromes Full Hebrew Course (25 chunks)
+  'tcm-syndromes',      // Dr Zang Fu Syndromes Q&A (26 chunks)
+]);
+
+// Priority Tier 2: High-value specialty modules
+const PRIORITY_TIER_2_CATEGORIES = new Set([
+  'wellness_sport',     // Sport Performance 100 Q&A (100 chunks)
+  'tcm_theory',         // Pattern Differentiation, Diet, Trauma (multiple files)
+  'anxiety_mental',     // Mental health & mindset (100+ chunks)
+]);
+
+// Priority Tier 3: Elite & specialized content
+const PRIORITY_TIER_3_CATEGORIES = new Set([
+  'other',              // Elite Lifestyle Longevity (97 chunks)
+  'pharmacopeia',
+  'clinical',
+]);
+
+// Boost multipliers for priority search
+const CATEGORY_BOOST_MULTIPLIERS = {
+  tier1: 2.5,  // 150% bonus for top priority
+  tier2: 1.8,  // 80% bonus for high-value
+  tier3: 1.4,  // 40% bonus for specialized
+  default: 1.0
+};
+
+function getCategoryBoostMultiplier(category: string | null): number {
+  if (!category) return CATEGORY_BOOST_MULTIPLIERS.default;
+  const cat = category.toLowerCase();
+  
+  if (PRIORITY_TIER_1_CATEGORIES.has(cat)) return CATEGORY_BOOST_MULTIPLIERS.tier1;
+  if (PRIORITY_TIER_2_CATEGORIES.has(cat)) return CATEGORY_BOOST_MULTIPLIERS.tier2;
+  if (PRIORITY_TIER_3_CATEGORIES.has(cat)) return CATEGORY_BOOST_MULTIPLIERS.tier3;
+  return CATEGORY_BOOST_MULTIPLIERS.default;
+}
+
+// Sort and boost results by category priority
+function applyPriorityBoost(chunks: any[]): any[] {
+  return chunks
+    .map(chunk => {
+      const category = chunk.knowledge_documents?.category || chunk.category || null;
+      const boost = getCategoryBoostMultiplier(category);
+      return {
+        ...chunk,
+        _categoryBoost: boost,
+        _priorityScore: (chunk._relevanceScore || 1) * boost
+      };
+    })
+    .sort((a, b) => (b._priorityScore || 0) - (a._priorityScore || 0));
+}
+
 // Cross-reference databases for secondary sweep
 const CROSS_REFERENCE_MODULES = {
   nutrition: { moduleId: 30, name: 'Diet & Nutrition', knowledgeBase: 'NUTRITION', fallbackKB: 'tcm_clinic_diet_nutrition' },
@@ -868,7 +924,20 @@ serve(async (req) => {
       }
     }
 
-    console.log(`Primary chunks found: ${primaryResults.length}`);
+    // ★ APPLY PRIORITY CATEGORY BOOSTING ★
+    primaryResults = applyPriorityBoost(primaryResults);
+    
+    // Log boosting stats
+    const boostedCount = primaryResults.filter(r => (r._categoryBoost || 1) > 1).length;
+    console.log(`Primary chunks found: ${primaryResults.length} (${boostedCount} boosted by category priority)`);
+    
+    // Log top categories
+    const categoryDistribution = primaryResults.reduce((acc, r) => {
+      const cat = r.knowledge_documents?.category || 'unknown';
+      acc[cat] = (acc[cat] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    console.log(`Category distribution:`, JSON.stringify(categoryDistribution));
 
     // === EXTERNAL AI FALLBACK CHECK ===
     // Track if we're using external AI (no RAG results)

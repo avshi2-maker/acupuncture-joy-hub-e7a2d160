@@ -950,15 +950,33 @@ async function performHybridSearch(
     }));
   }
   
-  const chunks = results;
+  // ★ APPLY PRIORITY CATEGORY BOOSTING TO HYBRID RESULTS ★
+  // Re-score and re-sort chunks with category multipliers
+  const boostedResults = results.map(chunk => {
+    const categoryBoost = getCategoryBoostMultiplier(chunk.category);
+    const originalScore = chunk.combined_score || chunk.keyword_score || 0;
+    const boostedScore = originalScore * categoryBoost;
+    return {
+      ...chunk,
+      original_score: originalScore,
+      boosted_score: boostedScore,
+      category_boost: categoryBoost,
+      combined_score: boostedScore // Override for ranking
+    };
+  });
   
-  // Calculate overall confidence based on combined score (or keyword score for fallback)
+  // Re-sort by boosted score
+  boostedResults.sort((a, b) => (b.boosted_score || 0) - (a.boosted_score || 0));
+  
+  const chunks = boostedResults;
+  
+  // Calculate overall confidence based on BOOSTED combined score
   const topScore = chunks.length > 0 
-    ? (chunks[0]?.combined_score || chunks[0]?.keyword_score || 0)
+    ? (chunks[0]?.boosted_score || chunks[0]?.combined_score || chunks[0]?.keyword_score || 0)
     : 0;
   
   const avgScore = chunks.length > 0 
-    ? chunks.reduce((sum, c) => sum + (c.combined_score || c.keyword_score || 0), 0) / chunks.length 
+    ? chunks.reduce((sum, c) => sum + (c.boosted_score || c.combined_score || c.keyword_score || 0), 0) / chunks.length 
     : 0;
   
   // Determine overall confidence based on combined scores
@@ -988,13 +1006,24 @@ async function performHybridSearch(
   const allContent = confidentChunks.map(c => c.content + ' ' + (c.answer || '')).join(' ');
   const extractedPoints = extractPointCodes(allContent);
   
-  console.log('=== HYBRID SEARCH RESULTS ===');
+  // Log priority boosting stats
+  const categoryStats = confidentChunks.reduce((acc, c) => {
+    const cat = c.category || 'unknown';
+    acc[cat] = (acc[cat] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  const boostedCategories = confidentChunks.filter(c => (c.category_boost || 1) > 1);
+  
+  console.log('=== HYBRID SEARCH RESULTS (PRIORITY BOOSTED) ===');
   console.log('Search type:', searchType);
   console.log('Total results:', chunks.length);
   console.log('Confident chunks (medium+):', confidentChunks.length);
-  console.log('Top score:', topScore.toFixed(3));
-  console.log('Average score:', avgScore.toFixed(3));
+  console.log('Top score (boosted):', topScore.toFixed(3));
+  console.log('Average score (boosted):', avgScore.toFixed(3));
   console.log('Overall confidence:', overallConfidence);
+  console.log('Category distribution:', JSON.stringify(categoryStats));
+  console.log('Boosted chunks count:', boostedCategories.length);
   console.log('Extracted points:', extractedPoints.allPoints.slice(0, 10).join(', '));
   
   return {
@@ -1005,6 +1034,47 @@ async function performHybridSearch(
     extractedPoints,
     searchType
   };
+}
+
+// ============================================================================
+// PRIORITY CATEGORY BOOSTING - Premium categories get ranked higher
+// ============================================================================
+// Priority Tier 1 (highest): Latest "Big 4" heavy indexed files (Jan 7, 2026)
+const PRIORITY_TIER_1_CATEGORIES = new Set([
+  'tcm-education',      // Zang Fu Syndromes Full Hebrew Course (25 chunks)
+  'tcm-syndromes',      // Dr Zang Fu Syndromes Q&A (26 chunks)
+]);
+
+// Priority Tier 2: High-value specialty modules
+const PRIORITY_TIER_2_CATEGORIES = new Set([
+  'wellness_sport',     // Sport Performance 100 Q&A (100 chunks)
+  'tcm_theory',         // Pattern Differentiation, Diet, Trauma (multiple files)
+  'anxiety_mental',     // Mental health & mindset (100+ chunks)
+]);
+
+// Priority Tier 3: Elite & specialized content
+const PRIORITY_TIER_3_CATEGORIES = new Set([
+  'other',              // Elite Lifestyle Longevity (97 chunks)
+  'pharmacopeia',
+  'clinical',
+]);
+
+// Boost multipliers for priority search
+const CATEGORY_BOOST_MULTIPLIERS = {
+  tier1: 2.5,  // 150% bonus for top priority
+  tier2: 1.8,  // 80% bonus for high-value
+  tier3: 1.4,  // 40% bonus for specialized
+  default: 1.0
+};
+
+function getCategoryBoostMultiplier(category: string | null): number {
+  if (!category) return CATEGORY_BOOST_MULTIPLIERS.default;
+  const cat = category.toLowerCase();
+  
+  if (PRIORITY_TIER_1_CATEGORIES.has(cat)) return CATEGORY_BOOST_MULTIPLIERS.tier1;
+  if (PRIORITY_TIER_2_CATEGORIES.has(cat)) return CATEGORY_BOOST_MULTIPLIERS.tier2;
+  if (PRIORITY_TIER_3_CATEGORIES.has(cat)) return CATEGORY_BOOST_MULTIPLIERS.tier3;
+  return CATEGORY_BOOST_MULTIPLIERS.default;
 }
 
 // ============================================================================
@@ -1043,6 +1113,11 @@ function calculateRelevanceScore(chunk: any, queryKeywords: string[], pillarKeyw
   if (content.length > 500) {
     score += 3;
   }
+  
+  // ★ PRIORITY CATEGORY BOOST ★
+  // Apply category multiplier to boost premium sources
+  const categoryBoost = getCategoryBoostMultiplier(chunk.category);
+  score = Math.round(score * categoryBoost);
   
   return score;
 }
