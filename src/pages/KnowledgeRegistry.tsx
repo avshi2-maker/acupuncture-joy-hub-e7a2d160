@@ -1023,6 +1023,42 @@ export default function KnowledgeRegistry() {
     }
   }, [authLoading, user, navigate, processQueue]);
 
+  // Download manifest CSV - MUST BE BEFORE CONDITIONAL RETURNS
+  const downloadManifestCSV = useCallback(() => {
+    if (!documents || documents.length === 0) {
+      toast.error('No documents to export');
+      return;
+    }
+
+    const indexedDocs = documents.filter(d => d.status === 'indexed');
+    if (indexedDocs.length === 0) {
+      toast.error('No indexed documents to export');
+      return;
+    }
+
+    const headers = ['Line', 'Original Name', 'File Name', 'Category', 'Language', 'Status', 'Chunks', 'Created At'];
+    const rows = indexedDocs.map((doc, idx) => [
+      String(idx + 1),
+      `"${(doc.original_name || '').replace(/"/g, '""')}"`,
+      `"${(doc.file_name || '').replace(/"/g, '""')}"`,
+      `"${doc.category || ''}"`,
+      `"${doc.language || ''}"`,
+      `"${doc.status}"`,
+      String(doc.row_count || 0),
+      `"${doc.created_at ? format(new Date(doc.created_at), 'yyyy-MM-dd') : ''}"`
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `knowledge_manifest_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Downloaded manifest with ${indexedDocs.length} documents`);
+  }, [documents]);
+
   // Effect to keep processing when queue changes and not paused
   useEffect(() => {
     if (!isProcessing && !isPaused && queue.some(item => item.status === 'pending')) {
@@ -1248,41 +1284,6 @@ ${report.verificationInstructions || ''}
     URL.revokeObjectURL(url);
   };
 
-  // Download manifest CSV
-  const downloadManifestCSV = useCallback(() => {
-    if (!documents || documents.length === 0) {
-      toast.error('No documents to export');
-      return;
-    }
-
-    const indexedDocs = documents.filter(d => d.status === 'indexed');
-    if (indexedDocs.length === 0) {
-      toast.error('No indexed documents to export');
-      return;
-    }
-
-    const headers = ['Line', 'Original Name', 'File Name', 'Category', 'Language', 'Status', 'Chunks', 'Created At'];
-    const rows = indexedDocs.map((doc, idx) => [
-      String(idx + 1),
-      `"${(doc.original_name || '').replace(/"/g, '""')}"`,
-      `"${(doc.file_name || '').replace(/"/g, '""')}"`,
-      `"${doc.category || ''}"`,
-      `"${doc.language || ''}"`,
-      `"${doc.status}"`,
-      String(doc.row_count || 0),
-      `"${doc.created_at ? format(new Date(doc.created_at), 'yyyy-MM-dd') : ''}"`
-    ]);
-
-    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `knowledge_manifest_${format(new Date(), 'yyyy-MM-dd')}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success(`Downloaded manifest with ${indexedDocs.length} documents`);
-  }, [documents]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
