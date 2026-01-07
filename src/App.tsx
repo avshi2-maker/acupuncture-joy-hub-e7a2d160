@@ -70,6 +70,7 @@ import ProfessionalInvite from "./pages/ProfessionalInvite";
 import ClinicalTrialsBrowser from "./pages/ClinicalTrialsBrowser";
 import ROISimulator from "./pages/ROISimulator";
 import UISmokeTest from "./pages/UISmokeTest";
+import MusicPlayerTest from "./pages/MusicPlayerTest";
 import TherapistROICalculator from "./pages/TherapistROICalculator";
 import SimulationCalculators from "./pages/SimulationCalculators";
 import ClinicalNavigator from "./pages/ClinicalNavigator";
@@ -198,6 +199,7 @@ const App = () => (
                       <Route path="/combined-diagnosis" element={<RequireTier><CombinedDiagnosis /></RequireTier>} />
                       <Route path="/rag-hebrew-report" element={<RequireTier><RAGHebrewReport /></RequireTier>} />
                       <Route path="/hebrew-questions-report" element={<RequireTier><HebrewQuestionsReport /></RequireTier>} />
+                      <Route path="/music-test" element={<MusicPlayerTest />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                     
