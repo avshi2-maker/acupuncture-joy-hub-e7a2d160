@@ -1024,7 +1024,7 @@ export default function KnowledgeRegistry() {
   }, [authLoading, user, navigate, processQueue]);
 
   // Download manifest CSV - MUST BE BEFORE CONDITIONAL RETURNS
-  const downloadManifestCSV = useCallback(() => {
+  const downloadManifestCSV = useCallback(async () => {
     if (!documents || documents.length === 0) {
       toast.error('No documents to export');
       return;
@@ -1036,27 +1036,148 @@ export default function KnowledgeRegistry() {
       return;
     }
 
-    const headers = ['Line', 'Original Name', 'File Name', 'Category', 'Language', 'Status', 'Chunks', 'Created At'];
+    // Fetch chunk counts per document
+    const { data: chunkCounts } = await supabase
+      .from('knowledge_chunks')
+      .select('document_id');
+    
+    const chunkCountMap: Record<string, number> = {};
+    chunkCounts?.forEach(c => {
+      chunkCountMap[c.document_id] = (chunkCountMap[c.document_id] || 0) + 1;
+    });
+
+    const totalChunks = chunkCounts?.length || 0;
+
+    const headers = ['#', 'Original Name', 'File Name', 'Category', 'Language', 'Status', 'Row Count', 'Chunks Indexed', 'File Size (KB)', 'File Hash', 'Created At', 'Indexed At'];
     const rows = indexedDocs.map((doc, idx) => [
       String(idx + 1),
       `"${(doc.original_name || '').replace(/"/g, '""')}"`,
       `"${(doc.file_name || '').replace(/"/g, '""')}"`,
-      `"${doc.category || ''}"`,
-      `"${doc.language || ''}"`,
+      `"${doc.category || 'uncategorized'}"`,
+      `"${doc.language || 'en'}"`,
       `"${doc.status}"`,
       String(doc.row_count || 0),
-      `"${doc.created_at ? format(new Date(doc.created_at), 'yyyy-MM-dd') : ''}"`
+      String(chunkCountMap[doc.id] || 0),
+      String(doc.file_size ? Math.round(doc.file_size / 1024) : 0),
+      `"${doc.file_hash || ''}"`,
+      `"${doc.created_at ? format(new Date(doc.created_at), 'yyyy-MM-dd HH:mm') : ''}"`,
+      `"${doc.indexed_at ? format(new Date(doc.indexed_at), 'yyyy-MM-dd HH:mm') : ''}"`
     ]);
 
-    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    // Add summary row
+    const summaryRow = [
+      'TOTAL',
+      `"${indexedDocs.length} documents"`,
+      '""',
+      `"${new Set(indexedDocs.map(d => d.category)).size} categories"`,
+      `"${new Set(indexedDocs.map(d => d.language)).size} languages"`,
+      '"indexed"',
+      String(indexedDocs.reduce((sum, d) => sum + (d.row_count || 0), 0)),
+      String(totalChunks),
+      String(Math.round(indexedDocs.reduce((sum, d) => sum + (d.file_size || 0), 0) / 1024)),
+      '""',
+      `"Report: ${format(new Date(), 'yyyy-MM-dd HH:mm')}"`,
+      '""'
+    ];
+
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(',')), summaryRow.join(',')].join('\n');
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' }); // BOM for Excel
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `knowledge_manifest_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.download = `RAG_Knowledge_Manifest_${format(new Date(), 'yyyy-MM-dd_HHmm')}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(`Downloaded manifest with ${indexedDocs.length} documents`);
+    toast.success(`Downloaded full manifest: ${indexedDocs.length} docs, ${totalChunks} chunks`);
+  }, [documents]);
+
+  // Download manifest as PDF - MUST BE BEFORE CONDITIONAL RETURNS
+  const downloadManifestPDF = useCallback(async () => {
+    if (!documents || documents.length === 0) {
+      toast.error('No documents to export');
+      return;
+    }
+
+    const indexedDocs = documents.filter(d => d.status === 'indexed');
+    if (indexedDocs.length === 0) {
+      toast.error('No indexed documents to export');
+      return;
+    }
+
+    toast.loading('Generating PDF manifest...', { id: 'pdf-gen' });
+
+    try {
+      const { jsPDF } = await import('jspdf');
+      const { default: autoTable } = await import('jspdf-autotable');
+
+      // Fetch chunk counts
+      const { data: chunkCounts } = await supabase
+        .from('knowledge_chunks')
+        .select('document_id');
+      
+      const chunkCountMap: Record<string, number> = {};
+      chunkCounts?.forEach(c => {
+        chunkCountMap[c.document_id] = (chunkCountMap[c.document_id] || 0) + 1;
+      });
+
+      const totalChunks = chunkCounts?.length || 0;
+      const doc = new jsPDF({ orientation: 'landscape' });
+
+      // Header
+      doc.setFontSize(18);
+      doc.setTextColor(0, 100, 80);
+      doc.text('RAG Knowledge Base - Full Manifest', 14, 20);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`Generated: ${format(new Date(), 'MMMM d, yyyy HH:mm')}`, 14, 28);
+      doc.text(`Total Documents: ${indexedDocs.length} | Total Chunks: ${totalChunks}`, 14, 34);
+
+      // Table
+      const tableData = indexedDocs.map((d, idx) => [
+        idx + 1,
+        (d.original_name || '').substring(0, 45) + ((d.original_name || '').length > 45 ? '...' : ''),
+        d.category || 'N/A',
+        d.language || 'en',
+        d.row_count || 0,
+        chunkCountMap[d.id] || 0,
+        d.file_size ? `${Math.round(d.file_size / 1024)} KB` : 'N/A',
+        d.indexed_at ? format(new Date(d.indexed_at), 'MM/dd/yy') : 'N/A'
+      ]);
+
+      autoTable(doc, {
+        startY: 40,
+        head: [['#', 'Document Name', 'Category', 'Lang', 'Rows', 'Chunks', 'Size', 'Indexed']],
+        body: tableData,
+        theme: 'striped',
+        headStyles: { fillColor: [0, 100, 80], fontSize: 8 },
+        bodyStyles: { fontSize: 7 },
+        columnStyles: {
+          0: { cellWidth: 10 },
+          1: { cellWidth: 80 },
+          2: { cellWidth: 35 },
+          3: { cellWidth: 15 },
+          4: { cellWidth: 20 },
+          5: { cellWidth: 20 },
+          6: { cellWidth: 25 },
+          7: { cellWidth: 25 }
+        },
+        margin: { left: 14, right: 14 }
+      });
+
+      // Footer with summary
+      const finalY = (doc as any).lastAutoTable.finalY || 200;
+      doc.setFontSize(9);
+      doc.setTextColor(60);
+      doc.text(`Summary: ${indexedDocs.length} indexed documents | ${totalChunks} knowledge chunks | ${new Set(indexedDocs.map(d => d.category)).size} categories`, 14, finalY + 10);
+      doc.text('This manifest certifies all proprietary materials in Dr. Sapir\'s TCM Knowledge Base.', 14, finalY + 16);
+
+      doc.save(`RAG_Knowledge_Manifest_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      toast.success(`PDF manifest downloaded: ${indexedDocs.length} docs, ${totalChunks} chunks`, { id: 'pdf-gen' });
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast.error('Failed to generate PDF', { id: 'pdf-gen' });
+    }
   }, [documents]);
 
   // Effect to keep processing when queue changes and not paused
@@ -1601,14 +1722,24 @@ ${report.verificationInstructions || ''}
             Track and verify all proprietary materials in Dr. Sapir's TCM Knowledge Base
           </p>
         </div>
-        <Button
-          variant="outline"
-          onClick={downloadManifestCSV}
-          className="gap-2"
-        >
-          <FileSpreadsheet className="w-4 h-4" />
-          Export RAG Inventory
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={downloadManifestCSV}
+            className="gap-2"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            Export CSV
+          </Button>
+          <Button
+            variant="default"
+            onClick={downloadManifestPDF}
+            className="gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Export PDF
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
