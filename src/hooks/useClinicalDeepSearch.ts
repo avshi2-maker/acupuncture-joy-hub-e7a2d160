@@ -69,6 +69,7 @@ export interface DeepSearchMetadata {
     rawQuery: string;
     retrievalQuery: string;
   };
+  isExternalAIFallback?: boolean;  // Flag when RAG returned 0 results - show amber warning
 }
 
 export interface DeepSearchResult {
@@ -83,11 +84,13 @@ export function useClinicalDeepSearch() {
   const [result, setResult] = useState<DeepSearchResult | null>(null);
   const [extractedPoints, setExtractedPoints] = useState<string[]>([]);
   const [bodyFigureCommand, setBodyFigureCommand] = useState<BodyFigureCommand | null>(null);
+  const [isExternalAIFallback, setIsExternalAIFallback] = useState(false);
 
   const performDeepSearch = useCallback(async (request: DeepSearchRequest): Promise<DeepSearchResult> => {
     setIsLoading(true);
     setResult(null);
     setExtractedPoints([]);
+    setIsExternalAIFallback(false);
 
     // Helper to get user-friendly error messages
     const getErrorMessage = (error: unknown, statusCode?: number): string => {
@@ -172,6 +175,11 @@ export function useClinicalDeepSearch() {
           setBodyFigureCommand(data.report.body_figure_command);
           console.log('Body figure command received:', data.report.body_figure_command);
         }
+        // Check for External AI Fallback flag
+        if (data.metadata?.isExternalAIFallback) {
+          setIsExternalAIFallback(true);
+          console.log('⚠️ External AI Fallback activated - no RAG results found');
+        }
         toast.success(request.language === 'he' ? 'הניתוח הקליני הושלם' : 'Clinical analysis complete');
       } else {
         const errorMessage = data.error || getErrorMessage(null);
@@ -202,6 +210,7 @@ export function useClinicalDeepSearch() {
     setResult(null);
     setExtractedPoints([]);
     setBodyFigureCommand(null);
+    setIsExternalAIFallback(false);
     setIsLoading(false);
   }, []);
 
@@ -211,6 +220,7 @@ export function useClinicalDeepSearch() {
     result,
     extractedPoints,
     bodyFigureCommand,
+    isExternalAIFallback,  // NEW: Expose flag for UI amber warning
     reset,
   };
 }
