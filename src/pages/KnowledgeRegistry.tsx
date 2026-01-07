@@ -701,6 +701,22 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'anxiety_mental',
     defaultLanguage: 'en',
   },
+  // Module #37 - Sport Performance
+  {
+    id: 'sport-performance-100-qa',
+    label: '🏃 Sport Performance Q&A (100 Q&A - Athletes, Injury Prevention, Recovery + Points + Formulas)',
+    path: '/knowledge-assets/sport_performance_100_qa.csv',
+    defaultCategory: 'wellness_sport',
+    defaultLanguage: 'en',
+  },
+  // Module #38 - Elite Lifestyle & Longevity
+  {
+    id: 'elite-lifestyle-longevity',
+    label: '🌟 Elite Lifestyle & Longevity (97 Q&A - High Performers, Anti-Aging, Vitality + Points + Formulas)',
+    path: '/knowledge-assets/elite_lifestyle_longevity.csv',
+    defaultCategory: 'wellness_sport',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 // Emotional wellness assets for bulk import
