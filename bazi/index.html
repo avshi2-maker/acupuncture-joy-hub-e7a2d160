@@ -13,71 +13,54 @@
             background-size: cover; background-position: center; background-attachment: fixed;
             min-height: 100vh; color: #333;
         }
-        @media (hover: none) { body { background-attachment: scroll; } }
         
         #dashboard { max-width: 900px; margin: 0 auto; padding: 20px; }
         
         .box {
-            background: rgba(255, 255, 255, 0.95); padding: 25px; border-radius: 15px; 
-            margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            border: 1px solid rgba(255,255,255,0.8); backdrop-filter: blur(5px);
+            background: rgba(255, 255, 255, 0.96); padding: 25px; border-radius: 15px; 
+            margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid #fff;
         }
         
-        h1 { color: #2c5f2d; font-size: 2em; margin-bottom: 5px; text-align: center; }
-        h2 { color: #1a5f7a; font-size: 1.4em; border-bottom: 2px solid #b7e4c7; padding-bottom: 10px; margin-bottom: 15px; }
-        .bio-text { font-size: 0.95em; color: #666; font-style: italic; margin-bottom: 10px; text-align: center; }
+        h1 { color: #2c5f2d; font-size: 2em; margin: 0; text-align: center; }
+        h2 { color: #1a5f7a; font-size: 1.3em; margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid #b7e4c7; padding-bottom: 5px; }
 
-        /* 1. QA SECTION (Visible at Top) */
+        /* QA GRID (Always Visible) */
         .sample-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 20px; }
         .sample {
-            background: #f1f8e9; padding: 12px; border-radius: 10px; cursor: pointer;
-            border-right: 4px solid #40916c; transition: 0.2s; font-size: 0.95em;
+            background: #e8f5e9; padding: 10px; border-radius: 8px; cursor: pointer;
+            border-right: 4px solid #40916c; font-size: 0.9em; font-weight: bold;
+            transition: 0.2s;
         }
-        .sample:hover { background: #dcedc8; transform: translateY(-2px); }
+        .sample:hover { background: #c8e6c9; transform: translateY(-2px); }
 
-        /* 2. MULTI-QUESTION INPUTS (Always Visible) */
-        .input-group { margin-bottom: 15px; }
-        .input-label { font-weight: bold; color: #2c5f2d; font-size: 0.9em; margin-bottom: 5px; display: block; }
-        
-        textarea, input[type="text"] {
-            width: 100%; padding: 15px; border: 2px solid #b7e4c7; border-radius: 10px;
-            font-size: 1.1em; font-family: inherit; background: #faffff;
+        /* INPUTS (Always Visible) */
+        .input-group { margin-bottom: 10px; }
+        .label { font-size: 0.9em; font-weight: bold; color: #2c5f2d; margin-bottom: 3px; display: block; }
+        textarea, input {
+            width: 100%; padding: 12px; border: 2px solid #b7e4c7; border-radius: 10px;
+            font-size: 1em; background: #faffff;
         }
-        textarea { min-height: 100px; resize: vertical; }
-        input[type="text"] { height: 50px; }
-        textarea:focus, input:focus { outline: none; border-color: #2c5f2d; }
+        textarea { min-height: 80px; resize: vertical; }
 
-        /* ACTION BUTTONS */
-        .action-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+        /* BUTTONS */
+        .btn-row { display: flex; gap: 10px; margin-top: 20px; }
         .btn {
             flex: 1; padding: 15px; border: none; border-radius: 50px; font-weight: bold; 
             cursor: pointer; color: white; font-size: 1em; text-align: center; 
             display: flex; align-items: center; justify-content: center; gap: 8px;
-            transition: transform 0.2s;
         }
-        .btn:hover { transform: translateY(-2px); }
-        
         .btn-analyze { background: #2c5f2d; } 
         .btn-perplexity { background: linear-gradient(135deg, #20b2aa 0%, #008080 100%); }
 
         /* RESULTS AREA */
-        .results { display: none; animation: fadeIn 0.5s; }
+        .results { display: none; margin-top: 20px; padding: 20px; background: white; border-radius: 15px; border: 2px solid #2c5f2d; }
         .results.show { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .bazi-box { background: #fffde7; padding: 15px; border-radius: 10px; margin: 20px 0; border: 1px solid #fbc02d; }
         
-        .fallback-box {
-            display: none; background: #ffebee; border: 2px solid #ef9a9a; color: #c62828;
-            padding: 20px; border-radius: 10px; text-align: center; margin: 20px 0;
-        }
-        .fallback-box.show { display: block; }
-
-        .contact-info { text-align: center; font-size: 0.9em; color: #444; border-top: 1px solid #eee; padding-top: 20px; margin-top: 20px; }
-        .contact-info a { color: #2c5f2d; text-decoration: none; font-weight: bold; }
+        .bazi-box { background: #fffde7; padding: 15px; border-radius: 10px; margin: 15px 0; border: 1px solid #fbc02d; }
+        .fallback-box { display: none; background: #ffebee; border: 2px solid #ef9a9a; color: #c62828; padding: 15px; border-radius: 10px; text-align: center; }
         
-        .loader { text-align: center; padding: 40px; display: none; }
-        .loader.show { display: block; }
+        .contact { text-align: center; margin-top: 30px; font-size: 0.9em; color: #666; }
     </style>
 </head>
 <body>
@@ -85,161 +68,111 @@
 <div id="dashboard">
     <div class="box">
         <h1>🌿 Dr. Roni Sapir</h1>
-        <h3 style="text-align:center; color:#555;">רפואה משלימה</h3>
-        <p class="bio-text">a/m data allow you every time to use</p>
+        <p style="text-align:center; color:#666; font-style:italic; margin-top:5px;">a/m data allow you every time to use</p>
     </div>
-    
-    <div class="box" id="input-section">
-        
-        <h2>💡 שאלות נפוצות (לחץ לבחירה)</h2>
+
+    <div class="box">
+        <h2>💡 שאלות נפוצות (לחץ למילוי אוטומטי)</h2>
         <div class="sample-grid">
-            <div class="sample" onclick="use(0)">🤕 כאבי ראש תכופים בבוקר</div>
-            <div class="sample" onclick="use(1)">🔋 עייפות כרונית ובעיות ריכוז</div>
-            <div class="sample" onclick="use(2)">😴 קשיי שינה וחרדה בלילות</div>
-            <div class="sample" onclick="use(3)">🤢 בעיות עיכול וגזים</div>
+            <div class="sample" onclick="fill('כאבי ראש', 'בבוקר', 'הקלה')">🤕 כאבי ראש בבוקר</div>
+            <div class="sample" onclick="fill('עייפות כרונית', 'אחרי אוכל', 'אנרגיה')">🔋 עייפות כרונית</div>
+            <div class="sample" onclick="fill('נדודי שינה', 'מחשבות טורדניות', 'רוגע')">😴 נדודי שינה</div>
+            <div class="sample" onclick="fill('כאבי גב', 'בישיבה ממושכת', 'תנועה')">🦴 כאבי גב</div>
         </div>
 
-        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
 
-        <h2>🔮 אבחון קליני חדש (3 שלבים)</h2>
+        <h2>🔮 אבחון קליני (הזן פרטים)</h2>
         
         <div class="input-group">
-            <span class="input-label">1. תלונה עיקרית (Main Complaint):</span>
-            <textarea id="q" placeholder="לדוגמה: כאבי גב תחתון..."></textarea>
+            <span class="label">1. תלונה עיקרית:</span>
+            <textarea id="q1" placeholder="מה הבעיה?"></textarea>
         </div>
-
         <div class="input-group">
-            <span class="input-label">2. נסיבות (מתי/איפה/מה מחמיר?):</span>
-            <input type="text" id="q2" placeholder="לדוגמה: מחמיר בקור, בבוקר...">
+            <span class="label">2. נסיבות (מתי/איפה?):</span>
+            <input id="q2" placeholder="מתי זה קורה?">
         </div>
-
         <div class="input-group">
-            <span class="input-label">3. מטרת הטיפול (Goal):</span>
-            <input type="text" id="q3" placeholder="לדוגמה: הפחתת כאב, שיפור תנועה...">
-        </div>
-        
-        <div class="action-row">
-            <button class="btn btn-analyze" onclick="analyzeInternal()">🔍 אבחון פנימי (Ba Zi)</button>
-            <button class="btn btn-perplexity" onclick="askPerplexity()">🔮 שאל את Perplexity AI</button>
-        </div>
-    </div>
-    
-    <div class="box loader" id="loader">
-        <div style="font-size: 3em;">⚙️</div>
-        <h3>מנתח נתונים...</h3>
-    </div>
-    
-    <div class="box results" id="results">
-        
-        <div id="bazi-result" style="display:none;">
-            <h2>📋 תוצאות האבחון</h2>
-            <div class="bazi-box">
-                <h3>🔮 אבחון Ba Zi (אנרגטי)</h3>
-                <div style="padding:10px;">
-                    <strong>תלונה שנבדקה:</strong> <span id="query-display">...</span><br><br>
-                    📅 <strong>עונה:</strong> סתיו (מתכת)<br>
-                    🌊 <strong>אלמנט:</strong> מים יאנג (Water Yang)<br>
-                    📍 <strong>נקודות מומלצות:</strong> KI6, TH1, GB38<br>
-                    ✅ <strong>סטטוס:</strong> מאוזן ושורשי
-                </div>
-            </div>
+            <span class="label">3. מטרה:</span>
+            <input id="q3" placeholder="מה רוצים להשיג?">
         </div>
 
-        <div id="fallback-result" class="fallback-box">
-            <h3>⚠️ לא נמצאה התאמה קלינית</h3>
-            <p>המונח שהוזן ("<span id="bad-query"></span>") לא זוהה במאגר הרפואי הפנימי.</p>
-            <button class="btn btn-perplexity" onclick="askPerplexity()" style="margin-top:10px;">
-                🚀 חפש תשובה ב-Perplexity
-            </button>
-        </div>
-        
-        <h3 style="margin-top:20px; font-size:1.1em;">פעולות:</h3>
-        <div class="action-row">
-            <a href="#" id="whatsapp-link" target="_blank" class="btn" style="background:#25D366;">
-                👩‍⚕️ שלח לד"ר רוני (WhatsApp)
-            </a>
-            <button class="btn" style="background:#777;" onclick="reset()">🔄 מקרה חדש</button>
+        <div class="btn-row">
+            <button class="btn btn-analyze" onclick="analyzeInternal()">🔍 אבחון פנימי</button>
+            <button class="btn btn-perplexity" onclick="askPerplexity()">🔮 שאל את Perplexity</button>
         </div>
     </div>
-    
-    <div class="box contact-info">
-        <strong>Dr. Roni Sapir | רפואה משלימה</strong><br>
-        WhatsApp: <a href="https://wa.me/972544634923">054-4634923</a>
+
+    <div id="results" class="results">
+        <h2 style="margin:0;">📋 תוצאות</h2>
+        
+        <div id="bazi-data" class="bazi-box" style="display:none;">
+            <h3>🔮 אבחון אנרגטי (Ba Zi)</h3>
+            <p><strong>אלמנט:</strong> מים יאנג (Water Yang)<br>
+            <strong>עונה:</strong> סתיו (מתכת)<br>
+            <strong>נקודות:</strong> KI6, TH1, GB38<br>
+            <strong>סטטוס:</strong> מאוזן ושורשי</p>
+        </div>
+
+        <div id="fallback-msg" class="fallback-box">
+            <h3⚠️ לא נמצאה התאמה פנימית</h3>
+            <p>המונח שהוזן לא זוהה במאגר הרפואי הפנימי.<br>
+            אנא השתמש בכפתור <strong>Perplexity</strong> לקבלת תשובה.</p>
+        </div>
+
+        <div class="btn-row">
+            <a id="wa-link" href="#" target="_blank" class="btn" style="background:#25D366;">👩‍⚕️ שלח ל-WhatsApp</a>
+            <button class="btn" style="background:#777;" onclick="document.getElementById('results').classList.remove('show')">🔄 סגור</button>
+        </div>
+    </div>
+
+    <div class="contact">
+        <strong>Dr. Roni Sapir</strong> | <a href="https://wa.me/972544634923" style="color:#2c5f2d; text-decoration:none; font-weight:bold;">054-4634923</a>
     </div>
 </div>
 
 <script>
-    const DR_PHONE = "972544634923";
-    const keywords = ["כאב", "ראש", "בטן", "עייפות", "חרדה", "שינה", "דם", "qi", "yin", "yang", "liver", "heart", "kidney", "spleen", "lung", "מחלה", "תסמין", "סינדרום", "דיקור", "tcm", "בחילות", "סחרחורת", "גב"];
-    
-    const samples = [
-        "כאבי ראש תכופים בבוקר (Frontal)",
-        "עייפות כרונית ובעיות ריכוז (Spleen Qi Def)",
-        "קשיי שינה וחרדה בלילות (Heart Blood Def)",
-        "בעיות עיכול וגזים (Liver invading Spleen)"
-    ];
+    // KEYWORDS FILTER (For Internal Fallback)
+    const keywords = ["כאב", "ראש", "בטן", "עייפות", "חרדה", "שינה", "גב", "tcm", "דיקור", "דם", "qi", "yin", "yang", "liver", "heart"];
 
-    function use(i) {
-        document.getElementById('q').value = samples[i];
-        document.getElementById('q2').value = "מופיע בעיקר בבוקר";
-        document.getElementById('q3').value = "הקלה ואיזון";
+    function fill(a, b, c) {
+        document.getElementById('q1').value = a;
+        document.getElementById('q2').value = b;
+        document.getElementById('q3').value = c;
     }
 
     function analyzeInternal() {
-        const q1 = document.getElementById('q').value.trim();
-        const q2 = document.getElementById('q2').value.trim();
-        const q3 = document.getElementById('q3').value.trim();
-        const fullQuery = `${q1} ${q2} ${q3}`.trim();
+        const q1 = document.getElementById('q1').value;
+        const q2 = document.getElementById('q2').value;
+        const fullText = (q1 + " " + q2).toLowerCase();
 
-        if (!q1) { alert("נא להזין תלונה עיקרית."); return; }
-        
-        document.getElementById('input-section').style.display = 'none';
-        document.getElementById('loader').classList.add('show');
-        
-        setTimeout(() => {
-            document.getElementById('loader').classList.remove('show');
-            showResults(fullQuery);
-        }, 1000);
-    }
+        if(!q1) { alert("נא להזין תלונה."); return; }
 
-    function showResults(query) {
         document.getElementById('results').classList.add('show');
-        
-        // Smart Filter
-        const isMedical = keywords.some(keyword => query.toLowerCase().includes(keyword));
-        
-        if (isMedical) {
-            document.getElementById('bazi-result').style.display = 'block';
-            document.getElementById('fallback-result').classList.remove('show');
-            document.getElementById('query-display').textContent = query;
+
+        // Check against keywords
+        const isMedical = keywords.some(k => fullText.includes(k));
+
+        if(isMedical) {
+            // Show Ba Zi
+            document.getElementById('bazi-data').style.display = 'block';
+            document.getElementById('fallback-msg').style.display = 'none';
         } else {
-            document.getElementById('bazi-result').style.display = 'none';
-            document.getElementById('fallback-result').classList.add('show');
-            document.getElementById('bad-query').textContent = query;
+            // Show Fallback (Pizza)
+            document.getElementById('bazi-data').style.display = 'none';
+            document.getElementById('fallback-msg').style.display = 'block';
         }
-        
-        const msg = `*מקרה קליני חדש:*
-${query}`;
-        document.getElementById('whatsapp-link').href = `https://wa.me/${DR_PHONE}?text=${encodeURIComponent(msg)}`;
+
+        // Update WhatsApp
+        const msg = `*פנייה חדשה:*
+${q1} ${q2}`;
+        document.getElementById('wa-link').href = `https://wa.me/972544634923?text=${encodeURIComponent(msg)}`;
     }
 
     function askPerplexity() {
-        const q = [
-            document.getElementById('q').value,
-            document.getElementById('q2').value,
-            document.getElementById('q3').value
-        ].join(" ").trim();
-        
-        if (!q) { alert("נא להזין נתונים."); return; }
+        const q = document.getElementById('q1').value + " " + document.getElementById('q2').value + " " + document.getElementById('q3').value;
+        if(!q.trim()) { alert("נא להזין נתונים."); return; }
         window.open(`https://www.perplexity.ai/search?q=${encodeURIComponent(q)}`, '_blank');
-    }
-
-    function reset() {
-        document.getElementById('results').classList.remove('show');
-        document.getElementById('input-section').style.display = 'block';
-        document.getElementById('q').value = '';
-        document.getElementById('q2').value = '';
-        document.getElementById('q3').value = '';
     }
 </script>
 </body>
