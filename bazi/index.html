@@ -243,7 +243,12 @@
 </div>
 
 <script>
+    // Configuration - Update this URL to your Supabase project
+    const SUPABASE_URL = 'https://hwwwioyrsbewptuwvrix.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3d3dpb3lyc2Jld3B0dXd2cml4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1OTIyNDEsImV4cCI6MjA4MjE2ODI0MX0.IRMAj221P124oRNP0tibo7kZ_2qULFn4A6YhB9NssH0';
+    
     let currentQuery = '';
+    let lastAnalysis = null;
     
     function useQuestion(el) {
         document.getElementById('question').value = el.textContent;
@@ -274,18 +279,22 @@
             alert('אנא הזן שאלה או תסמינים');
             return;
         }
-        runAnalysis(currentQuery);
+        runAnalysis(currentQuery, 'simple');
     }
     
     function startMultiAnalysis() {
         const m1 = document.getElementById('multi1').value;
         const m2 = document.getElementById('multi2').value;
         const m3 = document.getElementById('multi3').value;
+        if (!m1.trim()) {
+            alert('אנא הזן לפחות את התסמינים העיקריים');
+            return;
+        }
         currentQuery = `תסמינים: ${m1}. נסיבות: ${m2}. מטרה: ${m3}`;
-        runAnalysis(currentQuery);
+        runAnalysis(currentQuery, 'multi');
     }
     
-    function runAnalysis(query) {
+    async function runAnalysis(query, analysisType) {
         // Show thinking
         document.getElementById('thinking').classList.add('show');
         document.getElementById('results').classList.remove('show');
@@ -301,52 +310,116 @@
         const stagesDiv = document.getElementById('stages');
         stagesDiv.innerHTML = '';
         
-        let i = 0;
-        const interval = setInterval(() => {
-            if (i < stages.length) {
+        // Start stage animation
+        let stageIndex = 0;
+        const stageInterval = setInterval(() => {
+            if (stageIndex < stages.length) {
                 const stageEl = document.createElement('div');
                 stageEl.className = 'stage';
-                stageEl.textContent = stages[i];
+                stageEl.textContent = stages[stageIndex];
                 stagesDiv.appendChild(stageEl);
                 
-                // Mark previous as done
-                if (i > 0) {
-                    stagesDiv.children[i-1].classList.add('done');
+                if (stageIndex > 0) {
+                    stagesDiv.children[stageIndex - 1].classList.add('done');
                 }
-                i++;
-            } else {
-                clearInterval(interval);
-                // Mark last as done
-                if (stagesDiv.children.length > 0) {
-                    stagesDiv.children[stagesDiv.children.length - 1].classList.add('done');
-                }
-                setTimeout(showResults, 500);
+                stageIndex++;
             }
-        }, 800);
+        }, 600);
+
+        try {
+            const response = await fetch(`${SUPABASE_URL}/functions/v1/bazi-analysis`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                },
+                body: JSON.stringify({ query, analysisType })
+            });
+
+            clearInterval(stageInterval);
+            
+            // Mark all stages as done
+            Array.from(stagesDiv.children).forEach(el => el.classList.add('done'));
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'שגיאה בקבלת תשובה מהשרת');
+            }
+
+            const data = await response.json();
+            lastAnalysis = data.analysis;
+            
+            setTimeout(() => showResults(data.analysis), 500);
+            
+        } catch (error) {
+            clearInterval(stageInterval);
+            document.getElementById('thinking').classList.remove('show');
+            alert('שגיאה: ' + error.message);
+            console.error('Analysis error:', error);
+        }
     }
     
-    function showResults() {
+    function showResults(analysis) {
         document.getElementById('thinking').classList.remove('show');
         document.getElementById('results').classList.add('show');
         
-        // Simulated results (in production, this would call your AI API)
-        const resultHTML = `
-            <div class="bazi-box">
-                <h3>☯️ ניתוח Ba Zi קליני</h3>
-                <div class="bazi-item"><span class="bazi-label">שאילתא:</span> ${currentQuery}</div>
-                <div class="bazi-item"><span class="bazi-label">יסוד דומיננטי:</span> עץ (木) - נטייה לסטגנציה בכבד</div>
-                <div class="bazi-item"><span class="bazi-label">עונת רגישות:</span> אביב - עלייה בסימפטומים</div>
-                <div class="bazi-item"><span class="bazi-label">שעות אופטימליות לטיפול:</span> 11:00-13:00 (שעת הלב)</div>
-            </div>
+        let resultHTML = '';
+        
+        if (analysis.rawResponse) {
+            // Fallback for raw text response
+            resultHTML = `
+                <div class="interpretation">
+                    <h3>🎯 ניתוח קליני</h3>
+                    <p style="white-space: pre-wrap;">${analysis.rawResponse}</p>
+                </div>
+            `;
+        } else {
+            // Structured JSON response
+            const ba = analysis.baziAnalysis || {};
+            const tcm = analysis.tcmPattern || {};
+            const tx = analysis.treatment || {};
+            const life = analysis.lifestyle || {};
             
-            <div class="interpretation">
-                <h3>🎯 המלצות טיפוליות</h3>
-                <p><strong>נקודות מומלצות:</strong> LR3 (Taichong), GB34 (Yanglingquan), SP6 (Sanyinjiao)</p>
-                <p><strong>עקרון טיפולי:</strong> הפגת סטגנציית Qi בכבד, הרגעת רוח</p>
-                <p><strong>פורמולה מוצעת:</strong> Xiao Yao San (שינוי חופשי)</p>
-                <p><strong>המלצות אורח חיים:</strong> הפחתת לחץ, תנועה עדינה, מניעת מאכלים שמנים</p>
-            </div>
-        `;
+            resultHTML = `
+                <div class="bazi-box">
+                    <h3>☯️ ניתוח Ba Zi קליני</h3>
+                    <div class="bazi-item"><span class="bazi-label">שאילתא:</span> ${currentQuery}</div>
+                    <div class="bazi-item"><span class="bazi-label">יסוד דומיננטי:</span> ${ba.dominantElement || 'לא זוהה'}</div>
+                    <div class="bazi-item"><span class="bazi-label">חוסר איזון:</span> ${ba.elementImbalance || 'לא זוהה'}</div>
+                    <div class="bazi-item"><span class="bazi-label">עונת רגישות:</span> ${ba.sensitiveSeasons || 'לא זוהה'}</div>
+                    <div class="bazi-item"><span class="bazi-label">שעות אופטימליות לטיפול:</span> ${ba.optimalTreatmentHours || 'לא זוהה'}</div>
+                </div>
+                
+                <div class="interpretation">
+                    <h3>🔍 דפוס TCM</h3>
+                    <p><strong>דפוס:</strong> ${tcm.pattern || 'לא זוהה'}</p>
+                    <p>${tcm.explanation || ''}</p>
+                </div>
+                
+                <div class="interpretation">
+                    <h3>🎯 המלצות טיפוליות</h3>
+                    <p><strong>נקודות ראשיות:</strong> ${(tx.primaryPoints || []).join(', ') || 'לא זוהה'}</p>
+                    <p><strong>נקודות משניות:</strong> ${(tx.secondaryPoints || []).join(', ') || 'לא זוהה'}</p>
+                    <p><strong>עקרון טיפולי:</strong> ${tx.treatmentPrinciple || 'לא זוהה'}</p>
+                    <p><strong>פורמולה מוצעת:</strong> ${tx.herbalFormula || 'לא זוהה'}</p>
+                    <p>${tx.formulaExplanation || ''}</p>
+                </div>
+                
+                <div class="interpretation">
+                    <h3>🌱 המלצות אורח חיים</h3>
+                    <p><strong>תזונה:</strong> ${life.dietaryAdvice || 'לא זוהה'}</p>
+                    <p><strong>פעילות גופנית:</strong> ${life.exerciseRecommendations || 'לא זוהה'}</p>
+                    <p><strong>הנחיות רגשיות:</strong> ${life.emotionalGuidance || 'לא זוהה'}</p>
+                </div>
+                
+                ${analysis.summary ? `
+                <div class="bazi-box" style="background: #e8f5e9; border-color: #4caf50;">
+                    <h3>📋 סיכום קליני</h3>
+                    <p>${analysis.summary}</p>
+                </div>
+                ` : ''}
+            `;
+        }
         
         document.getElementById('resultContent').innerHTML = resultHTML;
     }
@@ -363,8 +436,18 @@
     }
     
     function shareWhatsApp() {
-        const text = `🌿 ניתוח Ba Zi מ-Dr. Roni AI\n\nשאילתא: ${currentQuery}\n\nלתוצאות מלאות בקרו ב: ${window.location.href}`;
-        window.open(`https://wa.me/972500000000?text=${encodeURIComponent(text)}`, '_blank');
+        let shareText = `🌿 ניתוח Ba Zi מ-Dr. Roni AI\n\nשאילתא: ${currentQuery}`;
+        
+        if (lastAnalysis && !lastAnalysis.rawResponse) {
+            const ba = lastAnalysis.baziAnalysis || {};
+            const tx = lastAnalysis.treatment || {};
+            shareText += `\n\n☯️ יסוד: ${ba.dominantElement || 'לא זוהה'}`;
+            shareText += `\n🎯 נקודות: ${(tx.primaryPoints || []).join(', ') || 'לא זוהה'}`;
+            shareText += `\n💊 פורמולה: ${tx.herbalFormula || 'לא זוהה'}`;
+        }
+        
+        shareText += `\n\nלתוצאות מלאות בקרו ב: ${window.location.href}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
     }
     
     function reset() {
@@ -374,6 +457,7 @@
         document.getElementById('multi3').value = '';
         document.getElementById('multiPanel').classList.remove('show');
         document.getElementById('results').classList.remove('show');
+        lastAnalysis = null;
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 </script>
