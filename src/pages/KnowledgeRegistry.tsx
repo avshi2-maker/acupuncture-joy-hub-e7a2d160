@@ -734,6 +734,14 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'tcm_theory',
     defaultLanguage: 'en',
   },
+  // Module #41 - Five Elements Theory Complete
+  {
+    id: 'five-elements-100qa',
+    label: '🔥 Five Elements Theory Complete (100 Q&A - Wood, Fire, Earth, Metal, Water)',
+    path: '/knowledge-assets/five_elements_100qa_acupoints_herbs.csv',
+    defaultCategory: 'tcm_theory',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 // Emotional wellness assets for bulk import
