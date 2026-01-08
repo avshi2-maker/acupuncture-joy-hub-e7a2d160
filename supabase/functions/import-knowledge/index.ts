@@ -150,7 +150,15 @@ serve(async (req) => {
           else if (row.Question && row.Answer) {
             question = row.Question;
             answer = row.Answer;
-            content = `Q: ${row.Question}\nA: ${row.Answer}`;
+            // Check for Yin-Yang or TCM format with acupoints and herbs
+            const acupoints = row['Acupuncture Points'] || row.Acupuncture_Points || row.TCM_Trigger_Acupuncture_Points || '';
+            const herbalFormula = row['Herbal Formula'] || row.Herbal_Formula || row.Pharmacopeia || '';
+            if (acupoints || herbalFormula) {
+              content = `Q: ${row.Question}\nA: ${row.Answer}${acupoints ? `\nAcupuncture Points: ${acupoints}` : ''}${herbalFormula ? `\nHerbal Formula: ${herbalFormula}` : ''}`;
+              answer = `${row.Answer}${acupoints ? `\n\n**Acupuncture Points:** ${acupoints}` : ''}${herbalFormula ? `\n\n**Herbal Formula:** ${herbalFormula}` : ''}`;
+            } else {
+              content = `Q: ${row.Question}\nA: ${row.Answer}`;
+            }
             contentType = 'qa';
           } else if (row.patient_question && row.clinic_answer) {
             question = row.patient_question;
