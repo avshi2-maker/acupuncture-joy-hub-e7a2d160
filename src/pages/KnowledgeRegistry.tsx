@@ -718,6 +718,14 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'wellness_sport',
     defaultLanguage: 'en',
   },
+  // Module #39 - TCM Professional Training Syllabus
+  {
+    id: 'tcm-professional-syllabus',
+    label: '📚 TCM Professional Training Syllabus (50 Q&A - Yin-Yang, Five Elements, Diagnosis, Herbs, Formulas)',
+    path: '/knowledge-assets/TCM_Professional_Syllabus_QA.csv',
+    defaultCategory: 'tcm_education',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 // Emotional wellness assets for bulk import
