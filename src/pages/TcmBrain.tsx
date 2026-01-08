@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -40,9 +40,19 @@ import { SessionBriefPanel } from '@/components/video/SessionBriefPanel';
 import { EmotionalProcessingPanel } from '@/components/session/EmotionalProcessingPanel';
 import { PediatricTCMAssistant } from '@/components/tcm-brain/PediatricTCMAssistant';
 import { HerbalMasterWidget } from '@/components/herbal/HerbalMasterWidget';
+import { CustomizableToolbar, ToolbarItemId } from '@/components/video/CustomizableToolbar';
+import { AnxietyQADialog } from '@/components/video/AnxietyQADialog';
+import { QuickAppointmentDialog } from '@/components/video/QuickAppointmentDialog';
+import { FollowUpPlanDialog } from '@/components/video/FollowUpPlanDialog';
+import { ZoomInviteDialog } from '@/components/video/ZoomInviteDialog';
+import { CalendarInviteDialog } from '@/components/video/CalendarInviteDialog';
+import { SessionReportDialog } from '@/components/video/SessionReportDialog';
+import { SessionGuideTeleprompter } from '@/components/video/SessionGuideTeleprompter';
+import { useSessionHeaderBoxes } from '@/hooks/useSessionHeaderBoxes';
 import { toast } from 'sonner';
 
 export default function TcmBrain() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('diagnostics');
   const [activeAssets, setActiveAssets] = useState<string[]>([]);
   const [showKnowledgeAssets, setShowKnowledgeAssets] = useState(true);
@@ -62,6 +72,18 @@ export default function TcmBrain() {
   const [qaFavoritesCount, setQaFavoritesCount] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
   const quickActionsRef = useRef<QuickActionsRef>(null);
+  
+  // New states for shared asset boxes
+  const [showTcmBrainPanel, setShowTcmBrainPanel] = useState(false);
+  const [showAnxietyQA, setShowAnxietyQA] = useState(false);
+  const [showSessionGuide, setShowSessionGuide] = useState(false);
+  const [showQuickAppointment, setShowQuickAppointment] = useState(false);
+  const [showFollowUpPlan, setShowFollowUpPlan] = useState(false);
+  const [showZoomInvite, setShowZoomInvite] = useState(false);
+  const [showCalendarInvite, setShowCalendarInvite] = useState(false);
+  const [showSessionReport, setShowSessionReport] = useState(false);
+  const [highContrast, setHighContrast] = useState(false);
+  const [activeAiQuery, setActiveAiQuery] = useState<ToolbarItemId | null>(null);
 
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -137,6 +159,49 @@ export default function TcmBrain() {
     if (selectedPatient?.id) { setShowSessionBrief(true); toast.info('🧠 Generating session brief...', { duration: 2000 }); }
     else { setShowSessionBrief(false); }
   }, [selectedPatient?.id]);
+
+  // Shared header boxes from centralized config
+  const headerBoxGroups = useSessionHeaderBoxes({
+    sessionStatus,
+    onStart: startSession,
+    onPause: pauseSession,
+    onResume: continueSession,
+    onEnd: endSession,
+    onReset: clearChat,
+    showTcmBrainPanel,
+    onToggleTcmBrain: () => setShowTcmBrainPanel(!showTcmBrainPanel),
+    showAnxietyQA,
+    onToggleQA: () => setShowAnxietyQA(!showAnxietyQA),
+    showSessionGuide,
+    onToggleGuide: () => setShowSessionGuide(!showSessionGuide),
+    showPregnancyCalc,
+    onOpenPregnancy: () => setShowPregnancyCalc(true),
+    showElderlyGuide,
+    onOpenElderly: () => setShowElderlyGuide(true),
+    showSessionBrief,
+    onToggleSessionBrief: () => setShowSessionBrief(!showSessionBrief),
+    onOpenPediatric: () => setShowPediatricAssistant(true),
+    onOpenHerbs: () => toast.info('Herbal Master in side panel'),
+    showEmotionalPanel,
+    emotionalPanelEmotion,
+    onOpenStress: () => { setShowTcmBrainPanel(true); },
+    onOpenGrief: () => { setEmotionalPanelEmotion('grief'); setShowEmotionalPanel(true); },
+    onOpenTrauma: () => { setEmotionalPanelEmotion('trauma'); setShowEmotionalPanel(true); },
+    onOpenFear: () => { setEmotionalPanelEmotion('fear'); setShowEmotionalPanel(true); },
+    onOpenAnger: () => { setEmotionalPanelEmotion('anger'); setShowEmotionalPanel(true); },
+    onOpenNutrition: () => toast.info('Nutrition guidance - use TCM Brain'),
+    onOpenCalendar: () => navigate('/crm/calendar'),
+    onOpenAppointment: () => setShowQuickAppointment(true),
+    onOpenFollowUp: () => setShowFollowUpPlan(true),
+    onOpenCalendarInvite: () => setShowCalendarInvite(true),
+    onOpenZoom: () => setShowZoomInvite(true),
+    onOpenReport: () => setShowSessionReport(true),
+    highContrast,
+    onToggleAccessibility: () => {
+      setHighContrast(!highContrast);
+      toast.success(highContrast ? 'Normal contrast' : 'High contrast enabled');
+    },
+  });
 
   const tabItems = [
     { id: 'diagnostics', label: 'Diagnostics', icon: Stethoscope, description: 'P1-P2' },
@@ -270,43 +335,20 @@ export default function TcmBrain() {
                 />
               </div>
 
-              {/* Action Boxes (Horizontal Scroll) */}
+              {/* Action Boxes (Horizontal Scroll) - Using shared config */}
               <div className="px-4 py-2 border-b bg-background/50 shrink-0 overflow-x-auto">
                  <SessionHeaderBoxes
-                    groups={[
-                      {
-                        id: 'session-controls',
-                        boxes: [
-                          {
-                            id: 'start-session',
-                            name: sessionStatus === 'idle' ? 'Start' : sessionStatus === 'running' ? 'Pause' : 'Resume',
-                            nameHe: sessionStatus === 'idle' ? 'התחל' : sessionStatus === 'running' ? 'השהה' : 'המשך',
-                            icon: sessionStatus === 'running' ? Pause : Play,
-                            color: 'text-jade',
-                            borderColor: 'border-jade',
-                            isActive: sessionStatus === 'running',
-                            onClick: () => { if (sessionStatus === 'idle') startSession(); else if (sessionStatus === 'running') pauseSession(); else continueSession(); },
-                          },
-                          {
-                            id: 'end-session',
-                            name: 'End', nameHe: 'סיום', icon: Square, color: 'text-rose-600', borderColor: 'border-rose-300', onClick: endSession,
-                          },
-                          {
-                            id: 'reset',
-                            name: 'Reset', nameHe: 'איפוס', icon: RotateCcw, color: 'text-amber-600', borderColor: 'border-amber-300', onClick: clearChat,
-                          },
-                        ],
-                      },
-                      {
-                         id: 'clinical-tools',
-                         boxes: [
-                           { id: 'pediatric', name: 'Peds', nameHe: 'ילדים', icon: Baby, color: 'text-cyan-500', borderColor: 'border-cyan-300', onClick: () => setShowPediatricAssistant(true) },
-                           { id: 'herbs', name: 'Herbs', nameHe: 'צמחים', icon: Leaf, color: 'text-emerald-500', borderColor: 'border-emerald-300', onClick: () => { toast.info('Opened in Side Panel'); } },
-                         ]
-                      }
-                    ]}
+                    groups={headerBoxGroups}
                     size="sm"
                   />
+              </div>
+
+              {/* Customizable Toolbar - Same as Video Session */}
+              <div className="px-4 py-2 border-b bg-gradient-to-r from-jade/5 to-transparent hidden md:block">
+                <CustomizableToolbar
+                  activeQuery={activeAiQuery}
+                  onQueryChange={setActiveAiQuery}
+                />
               </div>
 
               {/* MAIN TABS AREA - Fills remaining height */}
@@ -425,6 +467,14 @@ export default function TcmBrain() {
         <VagusNerveDialog open={showVagusAssessment} onOpenChange={setShowVagusAssessment} />
         <VagusStimulationDialog open={showVagusStimulation} onOpenChange={setShowVagusStimulation} />
         <HRVTrackerDialog open={showHRVTracker} onOpenChange={setShowHRVTracker} patientId={selectedPatient?.id} />
+        
+        {/* New shared dialogs */}
+        <AnxietyQADialog open={showAnxietyQA} onOpenChange={setShowAnxietyQA} onConversationSave={() => toast.success('Q&A saved')} />
+        <QuickAppointmentDialog open={showQuickAppointment} onOpenChange={setShowQuickAppointment} />
+        <FollowUpPlanDialog open={showFollowUpPlan} onOpenChange={setShowFollowUpPlan} patientId={selectedPatient?.id} patientName={selectedPatient?.name} />
+        <ZoomInviteDialog open={showZoomInvite} onOpenChange={setShowZoomInvite} patientName={selectedPatient?.name} />
+        <CalendarInviteDialog open={showCalendarInvite} onOpenChange={setShowCalendarInvite} patientName={selectedPatient?.name} />
+        <SessionReportDialog open={showSessionReport} onOpenChange={setShowSessionReport} patientName={selectedPatient?.name} patientPhone={selectedPatient?.phone} sessionNotes="" />
         
         <SessionBriefPanel patientId={selectedPatient?.id || null} patientName={selectedPatient?.name || null} isOpen={showSessionBrief} onClose={() => setShowSessionBrief(false)} onQuestionUsed={(q) => { streamChat(q); setActiveTab('diagnostics'); }} onQuestionPinned={() => toast.success('Pinned')} autoTrigger={true} />
         
