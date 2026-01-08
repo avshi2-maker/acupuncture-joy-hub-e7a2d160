@@ -830,6 +830,11 @@ interface HybridSearchResult {
   keyword_score: number;
   combined_score: number;
   confidence: string;
+  // Ferrari algorithm fields
+  priority_score?: number;
+  nano_prompt?: string;
+  ferrari_score?: number;
+  is_clinical_standard?: boolean;
 }
 
 interface SearchConfidenceResult {
@@ -839,6 +844,7 @@ interface SearchConfidenceResult {
   meetsThreshold: boolean;
   extractedPoints: ExtractedPoints;
   searchType: 'hybrid' | 'keyword_fallback';
+  clinicalStandardCount?: number; // Ferrari algorithm: count of high-authority sources
 }
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
@@ -950,9 +956,29 @@ async function performHybridSearch(
     }));
   }
   
-  // ★ APPLY PRIORITY CATEGORY BOOSTING TO HYBRID RESULTS ★
-  // Re-score and re-sort chunks with category multipliers
+  // ★ FERRARI ALGORITHM - Use database ferrari_score (70% relevance + 30% priority) ★
+  // The hybrid_search RPC now returns ferrari_score and is_clinical_standard
   const boostedResults = results.map(chunk => {
+    // Use Ferrari score from database if available, otherwise fall back to category boost
+    const ferrariScore = (chunk as any).ferrari_score;
+    const priorityScore = (chunk as any).priority_score || 50;
+    const isClinicalStandard = (chunk as any).is_clinical_standard || priorityScore >= 85;
+    
+    // If Ferrari score is available from DB, use it directly
+    if (ferrariScore !== undefined && ferrariScore !== null) {
+      return {
+        ...chunk,
+        original_score: chunk.combined_score || chunk.keyword_score || 0,
+        boosted_score: ferrariScore,
+        ferrari_score: ferrariScore,
+        priority_score: priorityScore,
+        is_clinical_standard: isClinicalStandard,
+        category_boost: 1.0, // DB handles boosting now
+        combined_score: ferrariScore // Use Ferrari score for ranking
+      };
+    }
+    
+    // Fallback: Apply old category-based boosting
     const categoryBoost = getCategoryBoostMultiplier(chunk.category);
     const originalScore = chunk.combined_score || chunk.keyword_score || 0;
     const boostedScore = originalScore * categoryBoost;
@@ -960,36 +986,40 @@ async function performHybridSearch(
       ...chunk,
       original_score: originalScore,
       boosted_score: boostedScore,
+      ferrari_score: boostedScore,
+      priority_score: priorityScore,
+      is_clinical_standard: false,
       category_boost: categoryBoost,
-      combined_score: boostedScore // Override for ranking
+      combined_score: boostedScore
     };
   });
   
-  // Re-sort by boosted score
-  boostedResults.sort((a, b) => (b.boosted_score || 0) - (a.boosted_score || 0));
+  // Re-sort by Ferrari/boosted score
+  boostedResults.sort((a, b) => (b.ferrari_score || b.boosted_score || 0) - (a.ferrari_score || a.boosted_score || 0));
   
   const chunks = boostedResults;
   
-  // Calculate overall confidence based on BOOSTED combined score
+  // Calculate overall confidence based on Ferrari score
   const topScore = chunks.length > 0 
-    ? (chunks[0]?.boosted_score || chunks[0]?.combined_score || chunks[0]?.keyword_score || 0)
+    ? (chunks[0]?.ferrari_score || chunks[0]?.boosted_score || chunks[0]?.combined_score || 0)
     : 0;
   
   const avgScore = chunks.length > 0 
-    ? chunks.reduce((sum, c) => sum + (c.boosted_score || c.combined_score || c.keyword_score || 0), 0) / chunks.length 
+    ? chunks.reduce((sum, c) => sum + (c.ferrari_score || c.boosted_score || c.combined_score || 0), 0) / chunks.length 
     : 0;
   
-  // Determine overall confidence based on combined scores
+  // Count Clinical Standard sources
+  const clinicalStandardCount = chunks.filter(c => c.is_clinical_standard).length;
+  
+  // Determine overall confidence based on Ferrari scores
   let overallConfidence: 'very_high' | 'high' | 'medium' | 'low' | 'none';
   if (searchType === 'hybrid') {
-    // Hybrid search uses higher thresholds (combined score 0-1)
     if (topScore >= 0.90) overallConfidence = 'very_high';
     else if (topScore >= 0.80) overallConfidence = 'high';
     else if (topScore >= 0.60) overallConfidence = 'medium';
     else if (topScore >= 0.40) overallConfidence = 'low';
     else overallConfidence = 'none';
   } else {
-    // Keyword fallback uses lower thresholds
     if (topScore >= 0.70) overallConfidence = 'very_high';
     else if (topScore >= 0.50) overallConfidence = 'high';
     else if (topScore >= 0.30) overallConfidence = 'medium';
@@ -1006,24 +1036,22 @@ async function performHybridSearch(
   const allContent = confidentChunks.map(c => c.content + ' ' + (c.answer || '')).join(' ');
   const extractedPoints = extractPointCodes(allContent);
   
-  // Log priority boosting stats
+  // Log Ferrari algorithm stats
   const categoryStats = confidentChunks.reduce((acc, c) => {
     const cat = c.category || 'unknown';
     acc[cat] = (acc[cat] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
   
-  const boostedCategories = confidentChunks.filter(c => (c.category_boost || 1) > 1);
-  
-  console.log('=== HYBRID SEARCH RESULTS (PRIORITY BOOSTED) ===');
+  console.log('=== FERRARI ALGORITHM SEARCH RESULTS ===');
   console.log('Search type:', searchType);
   console.log('Total results:', chunks.length);
   console.log('Confident chunks (medium+):', confidentChunks.length);
-  console.log('Top score (boosted):', topScore.toFixed(3));
-  console.log('Average score (boosted):', avgScore.toFixed(3));
+  console.log('Top Ferrari score:', topScore.toFixed(3));
+  console.log('Average Ferrari score:', avgScore.toFixed(3));
   console.log('Overall confidence:', overallConfidence);
+  console.log('Clinical Standard sources:', clinicalStandardCount);
   console.log('Category distribution:', JSON.stringify(categoryStats));
-  console.log('Boosted chunks count:', boostedCategories.length);
   console.log('Extracted points:', extractedPoints.allPoints.slice(0, 10).join(', '));
   
   return {
@@ -1032,7 +1060,8 @@ async function performHybridSearch(
     averageScore: avgScore,
     meetsThreshold: overallConfidence !== 'none' && overallConfidence !== 'low',
     extractedPoints,
-    searchType
+    searchType,
+    clinicalStandardCount
   };
 }
 
@@ -1731,10 +1760,10 @@ serve(async (req) => {
     // PHASE 3: BUILD STRUCTURED CONTEXT FOR AI
     // ========================================================================
     
-    const sources: Array<{ fileName: string; chunkIndex: number; preview: string; category: string; documentId: string; pillar: string; imageRef?: string; imageUrl?: string; imageCaption?: string }> = [];
+    const sources: Array<{ fileName: string; chunkIndex: number; preview: string; category: string; documentId: string; pillar: string; imageRef?: string; imageUrl?: string; imageCaption?: string; priorityScore?: number; isClinicalStandard?: boolean; ferrariScore?: number }> = [];
     const chunksMatched: Array<any> = [];
 
-    // Helper to build context from chunks
+    // Helper to build context from chunks with Clinical Standard citation
     const buildPillarContext = (chunks: any[], pillarName: string) => {
       if (!chunks || chunks.length === 0) return '';
       
@@ -1743,6 +1772,12 @@ serve(async (req) => {
         const fileName = doc?.original_name || doc?.file_name || 'Unknown';
         const category = doc?.category || 'general';
         const documentId = doc?.id || '';
+        
+        // ★ FERRARI ALGORITHM: Mark Clinical Standard sources ★
+        const priorityScore = chunk.priority_score || 50;
+        const isClinicalStandard = priorityScore >= 85;
+        const clinicalStandardTag = isClinicalStandard ? ' 🏅 CLINICAL STANDARD SOURCE' : '';
+        const ferrariScore = chunk.ferrari_score || chunk.boosted_score || 0;
         
         sources.push({
           fileName,
@@ -1754,6 +1789,9 @@ serve(async (req) => {
           imageRef: chunk.image_ref || undefined,
           imageUrl: chunk.image_url || undefined,
           imageCaption: chunk.image_caption || undefined,
+          priorityScore,
+          isClinicalStandard,
+          ferrariScore,
         });
         
         chunksMatched.push({
@@ -1769,14 +1807,17 @@ serve(async (req) => {
           imageRef: chunk.image_ref || undefined,
           imageUrl: chunk.image_url || undefined,
           imageCaption: chunk.image_caption || undefined,
+          priorityScore,
+          isClinicalStandard,
+          ferrariScore,
         });
         
         if (chunk.question && chunk.answer) {
-          return `[Source: ${fileName}, Entry #${chunk.chunk_index}]
+          return `[Source: ${fileName}, Entry #${chunk.chunk_index}]${clinicalStandardTag}
 Q: ${chunk.question}
 A: ${chunk.answer}`;
         }
-        return `[Source: ${fileName}, Entry #${chunk.chunk_index}]
+        return `[Source: ${fileName}, Entry #${chunk.chunk_index}]${clinicalStandardTag}
 ${chunk.content}`;
       }).join('\n\n');
     };
@@ -1924,7 +1965,11 @@ Generate your response ENTIRELY in ${responseLanguageInstruction}, including:
         // Include top chunk scores for display
         topVectorScore: hybridSearchResult.chunks[0]?.vector_score || 0,
         topKeywordScore: hybridSearchResult.chunks[0]?.keyword_score || 0,
-        topCombinedScore: hybridSearchResult.chunks[0]?.combined_score || 0
+        topCombinedScore: hybridSearchResult.chunks[0]?.combined_score || 0,
+        // ★ FERRARI ALGORITHM METADATA ★
+        topFerrariScore: hybridSearchResult.chunks[0]?.ferrari_score || hybridSearchResult.chunks[0]?.combined_score || 0,
+        clinicalStandardSourcesUsed: hybridSearchResult.clinicalStandardCount || 0,
+        ferrariAlgorithmActive: true
       },
       // EXTRACTED POINTS METADATA
       extractedPoints: {
