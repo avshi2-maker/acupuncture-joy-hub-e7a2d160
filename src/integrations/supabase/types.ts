@@ -917,6 +917,8 @@ export type Database = {
           image_url: string | null
           language: string | null
           metadata: Json | null
+          nano_prompt: string | null
+          priority_score: number | null
           question: string | null
         }
         Insert: {
@@ -933,6 +935,8 @@ export type Database = {
           image_url?: string | null
           language?: string | null
           metadata?: Json | null
+          nano_prompt?: string | null
+          priority_score?: number | null
           question?: string | null
         }
         Update: {
@@ -949,6 +953,8 @@ export type Database = {
           image_url?: string | null
           language?: string | null
           metadata?: Json | null
+          nano_prompt?: string | null
+          priority_score?: number | null
           question?: string | null
         }
         Relationships: [
