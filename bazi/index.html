@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dr. Roni Sapir - Ba Zi Clinical Compass</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* IMAGE REFERENCE - Ensure 'bazi_background.png' is in the same folder */
+            background: linear-gradient(rgba(20, 30, 40, 0.4), rgba(20, 30, 40, 0.4)), url('bazi_background.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* Mobile Scrolling Fix */
+        @media (hover: none) {
+            body { background-attachment: scroll; }
+        }
+        
+        #dashboard {
+            display: block;
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .box {
+            background: rgba(255, 255, 255, 0.92); /* Glass effect */
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .badge-display {
+            background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            border: 1px solid #d8f3dc;
+        }
+        
+        h1 { color: #1b4332; font-size: 1.8em; margin-bottom: 5px; text-shadow: 1px 1px 0px rgba(255,255,255,0.5); }
+        h2 { color: #2d6a4f; font-size: 1.4em; border-bottom: 2px solid #b7e4c7; padding-bottom: 10px; display: inline-block; margin-bottom: 15px; }
+        
+        .sample {
+            background: #fff;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            border-right: 4px solid #40916c;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .sample:hover {
+            background: #e8f5e9;
+            transform: translateX(-5px);
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #b7e4c7;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-family: inherit;
+            min-height: 100px;
+            resize: vertical;
+            background: #f8fff9;
+        }
+        
+        textarea:focus { outline: none; border-color: #2d6a4f; }
+        
+        .btns { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .btn-primary { background: #2d6a4f; color: white; }
+        .btn-voice { background: #40916c; color: white; }
+        .btn-multi { background: #d97757; color: white; }
+        .btn-whatsapp { background: #25D366; color: white; }
+        
+        button:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
+        
+        .multi-panel {
+            background: #f1f8e9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border: 2px solid #a8dadc;
+            display: none;
+        }
+        .multi-panel.show { display: block; }
+        .multi-panel input { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; }
+        
+        .thinking { text-align: center; display: none; padding: 40px; }
+        .thinking.show { display: block; }
+        
+        .avatar {
+            width: 120px; height: 120px; border-radius: 50%; background: #fff;
+            margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;
+            font-size: 60px; border: 4px solid #40916c; animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(64, 145, 108, 0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(64, 145, 108, 0); }
+        }
+        
+        .stage {
+            background: #e8f5e9; padding: 12px; margin: 10px 0; border-radius: 8px;
+            border-right: 4px solid #81c784; text-align: right;
+        }
+        .stage.done { background: #c8e6c9; border-right-color: #2e7d32; color: #1b5e20; }
+        
+        .results { display: none; }
+        .results.show { display: block; }
+        
+        .bazi-box {
+            background: #fffde7; padding: 20px; border-radius: 10px; margin: 20px 0; border: 1px solid #fbc02d;
+        }
+        .bazi-item { padding: 8px; margin: 5px 0; background: rgba(255,255,255,0.7); border-radius: 5px; }
+        .bazi-label { font-weight: bold; color: #f57f17; }
+        
+        .ai-section { background: #e0f2f1; padding: 20px; border-radius: 10px; margin: 20px 0; }
+        .ai-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 15px; }
+        .ai-btn { padding: 12px; border-radius: 10px; font-weight: bold; color: white; text-align: center; cursor: pointer; border: none; }
+        
+        .interpretation { background: #dcedc8; padding: 20px; border-radius: 10px; margin: 20px 0; line-height: 1.8; }
+        
+        @media (max-width: 600px) {
+            .header { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .btns { flex-direction: column; }
+            button { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="dashboard">
+    <!-- Header -->
+    <div class="box">
+        <div class="header">
+            <div>
+                <h1>🌿 Dr. Roni Sapir</h1>
+                <p>מצפן קליני: Ba Zi & Acupuncture</p>
+            </div>
+            <span class="badge-display">VIP ACCESS</span>
+        </div>
+    </div>
+    
+    <!-- Sample Questions -->
+    <div class="box">
+        <h2>💡 שאלות לדוגמה</h2>
+        <div class="sample" onclick="useQuestion(this)">כאבי ראש תכופים בבוקר</div>
+        <div class="sample" onclick="useQuestion(this)">עייפות כרונית ובעיות ריכוז</div>
+        <div class="sample" onclick="useQuestion(this)">קשיי שינה וחרדה בלילות</div>
+        <div class="sample" onclick="useQuestion(this)">כאבי גב תחתון בישיבה</div>
+        <div class="sample" onclick="useQuestion(this)">בעיות עיכול וגזים</div>
+    </div>
+    
+    <!-- Query Input -->
+    <div class="box">
+        <h2>🔮 שאל את המערכת</h2>
+        <textarea id="question" placeholder="תאר את התסמינים שלך או שאל שאלה קלינית..."></textarea>
+        <div class="btns">
+            <button class="btn-primary" onclick="startAnalysis()">🔍 קבל תשובה</button>
+            <button class="btn-voice" onclick="startVoice()">🎤 הקלטה קולית</button>
+            <button class="btn-multi" onclick="toggleMulti()">🧩 אבחון רב-זוויתי</button>
+        </div>
+        
+        <!-- Multi-angle panel -->
+        <div id="multiPanel" class="multi-panel">
+            <h3>🧩 אבחון מורכב (3 זוויות)</h3>
+            <label>1. תסמינים עיקריים:</label>
+            <input type="text" id="multi1" placeholder="כאבי ראש, עייפות...">
+            <label>2. נסיבות (זמן/מקום/החמרה):</label>
+            <input type="text" id="multi2" placeholder="בבוקר, אחרי אכילה...">
+            <label>3. מטרת הטיפול:</label>
+            <input type="text" id="multi3" placeholder="הפחתת כאב, שיפור שינה...">
+            <button class="btn-primary" onclick="startMultiAnalysis()" style="margin-top: 15px;">🚀 התחל ניתוח</button>
+        </div>
+    </div>
+    
+    <!-- Thinking Animation -->
+    <div id="thinking" class="box thinking">
+        <div class="avatar">👨‍⚕️</div>
+        <p><strong>Dr. Roni AI מנתח...</strong></p>
+        <div id="stages"></div>
+    </div>
+    
+    <!-- Results -->
+    <div id="results" class="box results">
+        <h2>📋 תוצאות האבחון</h2>
+        <div id="resultContent"></div>
+        
+        <!-- AI Second Opinion -->
+        <div class="ai-section">
+            <h3>🤖 דעה שנייה (AI):</h3>
+            <div class="ai-grid">
+                <button class="ai-btn" style="background: #10a37f;" onclick="openAI('chatgpt')">ChatGPT</button>
+                <button class="ai-btn" style="background: #8b5cf6;" onclick="openAI('claude')">Claude</button>
+                <button class="ai-btn" style="background: #4285f4;" onclick="openAI('gemini')">Gemini</button>
+                <button class="ai-btn" style="background: #1e90ff;" onclick="openAI('perplexity')">Perplexity</button>
+            </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="btns">
+            <button class="btn-whatsapp" onclick="shareWhatsApp()">📱 שתף בוואטסאפ (Dr. Roni)</button>
+            <button class="btn-primary" onclick="reset()">🔄 אבחון חדש</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentQuery = '';
+    
+    function useQuestion(el) {
+        document.getElementById('question').value = el.textContent;
+    }
+    
+    function toggleMulti() {
+        document.getElementById('multiPanel').classList.toggle('show');
+    }
+    
+    function startVoice() {
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'he-IL';
+            recognition.onresult = function(event) {
+                document.getElementById('question').value = event.results[0][0].transcript;
+            };
+            recognition.start();
+            alert('מקליט... דבר עכשיו');
+        } else {
+            alert('הדפדפן שלך לא תומך בזיהוי קולי');
+        }
+    }
+    
+    function startAnalysis() {
+        currentQuery = document.getElementById('question').value;
+        if (!currentQuery.trim()) {
+            alert('אנא הזן שאלה או תסמינים');
+            return;
+        }
+        runAnalysis(currentQuery);
+    }
+    
+    function startMultiAnalysis() {
+        const m1 = document.getElementById('multi1').value;
+        const m2 = document.getElementById('multi2').value;
+        const m3 = document.getElementById('multi3').value;
+        currentQuery = `תסמינים: ${m1}. נסיבות: ${m2}. מטרה: ${m3}`;
+        runAnalysis(currentQuery);
+    }
+    
+    function runAnalysis(query) {
+        // Show thinking
+        document.getElementById('thinking').classList.add('show');
+        document.getElementById('results').classList.remove('show');
+        
+        const stages = [
+            'מנתח תסמינים...',
+            'בודק דפוסי TCM...',
+            'מחשב נקודות דיקור...',
+            'יוצר פרשנות Ba Zi...',
+            'מסכם המלצות...'
+        ];
+        
+        const stagesDiv = document.getElementById('stages');
+        stagesDiv.innerHTML = '';
+        
+        let i = 0;
+        const interval = setInterval(() => {
+            if (i < stages.length) {
+                const stageEl = document.createElement('div');
+                stageEl.className = 'stage';
+                stageEl.textContent = stages[i];
+                stagesDiv.appendChild(stageEl);
+                
+                // Mark previous as done
+                if (i > 0) {
+                    stagesDiv.children[i-1].classList.add('done');
+                }
+                i++;
+            } else {
+                clearInterval(interval);
+                // Mark last as done
+                if (stagesDiv.children.length > 0) {
+                    stagesDiv.children[stagesDiv.children.length - 1].classList.add('done');
+                }
+                setTimeout(showResults, 500);
+            }
+        }, 800);
+    }
+    
+    function showResults() {
+        document.getElementById('thinking').classList.remove('show');
+        document.getElementById('results').classList.add('show');
+        
+        // Simulated results (in production, this would call your AI API)
+        const resultHTML = `
+            <div class="bazi-box">
+                <h3>☯️ ניתוח Ba Zi קליני</h3>
+                <div class="bazi-item"><span class="bazi-label">שאילתא:</span> ${currentQuery}</div>
+                <div class="bazi-item"><span class="bazi-label">יסוד דומיננטי:</span> עץ (木) - נטייה לסטגנציה בכבד</div>
+                <div class="bazi-item"><span class="bazi-label">עונת רגישות:</span> אביב - עלייה בסימפטומים</div>
+                <div class="bazi-item"><span class="bazi-label">שעות אופטימליות לטיפול:</span> 11:00-13:00 (שעת הלב)</div>
+            </div>
+            
+            <div class="interpretation">
+                <h3>🎯 המלצות טיפוליות</h3>
+                <p><strong>נקודות מומלצות:</strong> LR3 (Taichong), GB34 (Yanglingquan), SP6 (Sanyinjiao)</p>
+                <p><strong>עקרון טיפולי:</strong> הפגת סטגנציית Qi בכבד, הרגעת רוח</p>
+                <p><strong>פורמולה מוצעת:</strong> Xiao Yao San (שינוי חופשי)</p>
+                <p><strong>המלצות אורח חיים:</strong> הפחתת לחץ, תנועה עדינה, מניעת מאכלים שמנים</p>
+            </div>
+        `;
+        
+        document.getElementById('resultContent').innerHTML = resultHTML;
+    }
+    
+    function openAI(platform) {
+        const encodedQuery = encodeURIComponent(`As a TCM practitioner, analyze this: ${currentQuery}. Provide acupuncture points, herbal formulas, and Ba Zi insights.`);
+        const urls = {
+            chatgpt: `https://chat.openai.com/?q=${encodedQuery}`,
+            claude: `https://claude.ai/new?q=${encodedQuery}`,
+            gemini: `https://gemini.google.com/app?q=${encodedQuery}`,
+            perplexity: `https://www.perplexity.ai/?q=${encodedQuery}`
+        };
+        window.open(urls[platform], '_blank');
+    }
+    
+    function shareWhatsApp() {
+        const text = `🌿 ניתוח Ba Zi מ-Dr. Roni AI\n\nשאילתא: ${currentQuery}\n\nלתוצאות מלאות בקרו ב: ${window.location.href}`;
+        window.open(`https://wa.me/972500000000?text=${encodeURIComponent(text)}`, '_blank');
+    }
+    
+    function reset() {
+        document.getElementById('question').value = '';
+        document.getElementById('multi1').value = '';
+        document.getElementById('multi2').value = '';
+        document.getElementById('multi3').value = '';
+        document.getElementById('multiPanel').classList.remove('show');
+        document.getElementById('results').classList.remove('show');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+</script>
+
+</body>
+</html>
