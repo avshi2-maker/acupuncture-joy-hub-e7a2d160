@@ -70,6 +70,7 @@ import { TongueGalleryCard } from '@/components/dashboard/TongueGalleryCard';
 import { PulseGalleryCard } from '@/components/dashboard/PulseGalleryCard';
 import { CombinedDiagnosisCard } from '@/components/dashboard/CombinedDiagnosisCard';
 import { HebrewQuestionsCard } from '@/components/dashboard/HebrewQuestionsCard';
+import { AssetInventoryCard } from '@/components/dashboard/AssetInventoryCard';
 
 
 // Phosphor-style glowing clock component (mobile - small version)
@@ -1206,6 +1207,7 @@ export default function Dashboard() {
           <PulseGalleryCard animationDelay={750} />
           <CombinedDiagnosisCard animationDelay={800} />
           <HebrewQuestionsCard animationDelay={850} />
+          <AssetInventoryCard animationDelay={900} />
         </div>
 
         {/* Herbal Master Widget - Encyclopedia, Safety & Quiz */}

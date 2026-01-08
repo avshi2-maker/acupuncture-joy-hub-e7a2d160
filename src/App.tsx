@@ -95,6 +95,7 @@ import CombinedDiagnosis from "./pages/CombinedDiagnosis";
 import RAGHebrewReport from "./pages/RAGHebrewReport";
 import HebrewQuestionsReport from "./pages/HebrewQuestionsReport";
 import PatientTimeline from "./pages/PatientTimeline";
+import AssetInventory from "./pages/AssetInventory";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -199,6 +200,7 @@ const App = () => (
                       <Route path="/combined-diagnosis" element={<RequireTier><CombinedDiagnosis /></RequireTier>} />
                       <Route path="/rag-hebrew-report" element={<RequireTier><RAGHebrewReport /></RequireTier>} />
                       <Route path="/hebrew-questions-report" element={<RequireTier><HebrewQuestionsReport /></RequireTier>} />
+                      <Route path="/asset-inventory" element={<RequireTier><AssetInventory /></RequireTier>} />
                       <Route path="/music-test" element={<MusicPlayerTest />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
