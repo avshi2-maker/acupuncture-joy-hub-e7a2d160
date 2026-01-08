@@ -4,94 +4,243 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>איזון יין-יאנג - Dr. Roni</title>
+    <title>איזון יין-יאנג - מערכת מורחבת</title>
     <style>
-        :root { --color-primary: #1a5f7a; --color-accent: #d4af37; --color-light: #f5f3f0; --color-dark: #2c3e50; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f3f0; overflow-x: hidden; text-align: right; direction: rtl;
+            background: linear-gradient(rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.92)), url('bazi_background.png?v=1767885400');
+            background-size: cover; background-position: center; background-attachment: fixed;
+            min-height: 100vh; color: #333; padding: 20px;
         }
-        .slide {
-            max-width: 960px; margin: 20px auto; background: white;
-            padding: 40px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); border-radius: 15px;
-            overflow: hidden;
-        }
-        .slide-title {
-            background: linear-gradient(135deg, #1a5f7a 0%, #2c7a96 100%); color: #f5f3f0;
-            text-align: center; padding: 60px 20px;
-        }
-        h1 { font-size: 2.5rem; margin-bottom: 1rem; }
-        h2 { color: #1a5f7a; border-bottom: 3px solid #d4af37; padding-bottom: 10px; margin-bottom: 20px; }
         
-        /* Video Container */
-        .video-container {
-            width: 100%; max-width: 800px; margin: 30px auto;
-            border-radius: 15px; overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 4px solid #d4af37;
+        #container { max-width: 950px; margin: 0 auto; }
+        
+        .card {
+            background: white; padding: 25px; border-radius: 15px; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08); margin-bottom: 25px;
+            border-top: 5px solid #1a5f7a;
+        }
+        
+        h1 { color: #1a5f7a; text-align: center; margin-bottom: 5px; }
+        h2 { color: #d4af37; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; font-size: 1.4em; }
+        h3 { font-size: 1.1em; color: #555; margin-bottom: 10px; }
+
+        /* VIDEO */
+        .video-wrapper {
+            width: 100%; border-radius: 12px; overflow: hidden; 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2); margin-top: 20px;
+            background: #000;
         }
         video { width: 100%; display: block; }
 
-        .characteristics { display: flex; gap: 20px; flex-wrap: wrap; }
-        .char-column { flex: 1; padding: 20px; border-radius: 10px; min-width: 250px; }
-        .yin { background: #1a5f7a; color: white; }
-        .yang { background: #d4af37; color: #2c3e50; }
-        
-        .back-btn {
-            display: block; width: 200px; margin: 40px auto; padding: 15px;
-            background: #2c3e50; color: white; text-align: center; text-decoration: none;
-            border-radius: 50px; font-weight: bold; transition: 0.3s;
+        /* GRIDS */
+        .qa-grid {
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+            gap: 10px; margin-bottom: 30px;
         }
-        .back-btn:hover { transform: scale(1.05); background: #1a252f; }
+        
+        /* Clinical Buttons (Section 1) */
+        .qa-btn {
+            background: #f0f7fa; padding: 12px; border: 1px solid #1a5f7a; border-radius: 8px;
+            cursor: pointer; text-align: right; font-weight: 600; color: #1a5f7a;
+            transition: 0.2s; font-size: 0.9em;
+        }
+        .qa-btn:hover { background: #1a5f7a; color: white; transform: translateY(-2px); }
+
+        /* Question Buttons (Section 2) */
+        .q-only-btn {
+            background: #fff8e1; padding: 12px; border: 1px solid #ffc107; border-radius: 8px;
+            cursor: pointer; text-align: right; font-weight: 500; color: #f57f17;
+            transition: 0.2s; font-size: 0.9em;
+        }
+        .q-only-btn:hover { background: #ffc107; color: #333; transform: translateY(-2px); }
+
+        /* INPUTS */
+        .input-block { margin-bottom: 15px; }
+        .label { display: block; font-weight: bold; margin-bottom: 5px; color: #333; }
+        textarea {
+            width: 100%; padding: 12px; border: 2px solid #bdc3c7; border-radius: 8px; 
+            font-size: 16px; font-family: inherit; resize: vertical; background: #fdfdfd;
+        }
+        #q1 { height: 100px; }
+        #q2, #q3 { height: 60px; }
+        textarea:focus { outline: none; border-color: #1a5f7a; background: #fff; }
+
+        /* ACTIONS */
+        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .btn {
+            padding: 15px; border: none; border-radius: 50px; color: white;
+            font-weight: bold; font-size: 1.1em; cursor: pointer; text-align: center;
+        }
+        .btn-internal { background: #1a5f7a; }
+        .btn-external { background: linear-gradient(135deg, #d4af37 0%, #b4932a 100%); }
+
+        /* RESULTS */
+        #results-area { display: none; margin-top: 20px; }
+        .result-box { background: #eef7fb; padding: 15px; border-radius: 10px; border: 1px solid #1a5f7a; }
     </style>
 </head>
 <body>
 
-    <section class="slide slide-title">
-        <h1>איזון יין-יאנג בטיפול סיני</h1>
-        <p>שפת הטבע ליצירת איזון בגוף והנפש</p>
-    </section>
-
-    <section class="slide" style="text-align:center;">
-        <h2>🎥 צפו: הריקוד הנצחי של היין והיאנג</h2>
-        <div class="video-container">
-            <video controls autoplay loop muted playsinline>
-                <source src="yinyang_video.mp4" type="video/mp4">
-                הדפדפן שלך לא תומך בווידאו.
+<div id="container">
+    
+    <div class="card" style="text-align:center;">
+        <img src="tcm_clinic_slide.png" style="max-width:180px;" alt="Logo">
+        <h1>קליניקת יין-יאנג</h1>
+        <p>מערכת אבחון ומחקר</p>
+        
+        <div class="video-wrapper">
+            <video controls autoplay loop muted playsinline poster="tcm_clinic_slide.png">
+                <source src="yin-yang.mp4" type="video/mp4">
             </video>
         </div>
-        <p style="margin-top:15px; color:#666;">הניגודים המשלימים שיוצרים את השלם.</p>
-    </section>
+    </div>
 
-    <section class="slide">
-        <h2>האיכויות (Characteristics)</h2>
-        <div class="characteristics">
-            <div class="char-column yin">
-                <h3>🌑 יין (Yin)</h3>
-                <ul>
-                    <li>פנימי, עמוק</li>
-                    <li>קריר, לח</li>
-                    <li>שלווה, מנוחה</li>
-                    <li>נשי, מכיל</li>
-                </ul>
-            </div>
-            <div class="char-column yang">
-                <h3>☀️ יאנג (Yang)</h3>
-                <ul>
-                    <li>חיצוני, עליון</li>
-                    <li>חם, יבש</li>
-                    <li>פעילות, תנועה</li>
-                    <li>גברי, יוזם</li>
-                </ul>
-            </div>
+    <div class="card">
+        <h2>1. תרחישים קליניים (Clinical QA)</h2>
+        <h3>לחץ למילוי אוטומטי של המקרה:</h3>
+        <div class="qa-grid">
+            <button class="qa-btn" onclick="addText('כאבי ראש', 'בבוקר/לחץ', 'הקלה בעוצמה')">🤕 כאבי ראש</button>
+            <button class="qa-btn" onclick="addText('מיגרנה', 'רגישות לאור', 'מניעה')">⚡ מיגרנה</button>
+            <button class="qa-btn" onclick="addText('כאב גב תחתון', 'בהרמה/תנועה', 'שיפור טווח')">🦴 גב תחתון</button>
+            <button class="qa-btn" onclick="addText('כאבי ברכיים', 'בקור', 'חימום')">🦵 כאבי ברכיים</button>
+            <button class="qa-btn" onclick="addText('צוואר תפוס', 'מתח שרירים', 'שחרור')">💆‍♂️ צוואר</button>
+            
+            <button class="qa-btn" onclick="addText('נדודי שינה', 'מחשבות רצות', 'שינה עמוקה')">😴 נדודי שינה</button>
+            <button class="qa-btn" onclick="addText('חרדה ומתח', 'דפיקות לב', 'רוגע')">😰 חרדה</button>
+            <button class="qa-btn" onclick="addText('עייפות כרונית', 'חולשה', 'אנרגיה')">🔋 עייפות</button>
+            <button class="qa-btn" onclick="addText('דיכאון קל', 'חוסר חשק', 'שמחה')">😔 דיכאון קל</button>
+            <button class="qa-btn" onclick="addText('סחרחורות', 'בקימה', 'יציבות')">💫 סחרחורות</button>
+
+            <button class="qa-btn" onclick="addText('נפיחות בבטן', 'אחרי אוכל', 'עיכול קל')">🎈 נפיחות</button>
+            <button class="qa-btn" onclick="addText('עצירות', 'יובש', 'יציאות סדירות')">🧻 עצירות</button>
+            <button class="qa-btn" onclick="addText('מעי רגיז', 'מתח', 'הרגעה')">🌀 מעי רגיז</button>
+            <button class="qa-btn" onclick="addText('צרבות', 'חום בקיבה', 'קירור')">🔥 צרבות</button>
+            <button class="qa-btn" onclick="addText('קושי במשקל', 'חילוף חומרים', 'איזון')">⚖️ משקל</button>
+
+            <button class="qa-btn" onclick="addText('כאבי מחזור', 'התכווצויות', 'זרימה חלקה')">🌸 כאבי מחזור</button>
+            <button class="qa-btn" onclick="addText('גלי חום', 'גיל מעבר', 'איזון')">🌡️ גלי חום</button>
+            <button class="qa-btn" onclick="addText('אלרגיות', 'עונתי', 'חיזוק')">🤧 אלרגיות</button>
+            <button class="qa-btn" onclick="addText('בעיות עור', 'יובש', 'עור בריא')">✨ עור</button>
+            <button class="qa-btn" onclick="addText('קור בגפיים', 'חוסר זרימה', 'חימום')">❄️ קור בגפיים</button>
         </div>
-    </section>
+    </div>
 
-    <section class="slide" style="text-align:center; background: #eefcf1;">
-        <h2>❓ יש לכם שאלות על האיזון שלכם?</h2>
-        <p>המערכת הקלינית שלנו זמינה עבורכם.</p>
-        <a href="../bazi/" class="back-btn">חזרה למערכת האבחון 🚀</a>
-    </section>
+    <div class="card" style="border-top-color: #f39c12;">
+        <h2>2. שאלות עומק (Theory Questions)</h2>
+        <h3>לחץ לשאלה (מומלץ לבדוק ב-Perplexity):</h3>
+        <div class="qa-grid">
+            <button class="q-only-btn" onclick="setQuestion('איך משפיעה לחץ נפשי על איזון היין-יאנג בגוף?')">❓ איך משפיעה לחץ נפשי על איזון היין-יאנג בגוף?</button>
+<button class="q-only-btn" onclick="setQuestion('מהו הקשר בין הלשון לאיזון יין-יאנג באבחון?')">❓ מהו הקשר בין הלשון לאיזון יין-יאנג באבחון?</button>
+<button class="q-only-btn" onclick="setQuestion('איך ניתן לזהות חוסר איזון יין-יאנג דרך הדופק?')">❓ איך ניתן לזהות חוסר איזון יין-יאנג דרך הדופק?</button>
+<button class="q-only-btn" onclick="setQuestion('מדוע חשוב להתחשב בזמן היום בטיפול יין-יאנג?')">❓ מדוע חשוב להתחשב בזמן היום בטיפול יין-יאנג?</button>
+<button class="q-only-btn" onclick="setQuestion('איך האקלים והסביבה משפיעים על יין-יאנג האישי?')">❓ איך האקלים והסביבה משפיעים על יין-יאנג האישי?</button>
+<button class="q-only-btn" onclick="setQuestion('מהו היחס בין צ'י (אנרגיה) ליין-יאנג?')">❓ מהו היחס בין צ'י (אנרגיה) ליין-יאנג?</button>
+<button class="q-only-btn" onclick="setQuestion('איך ניתן לחזק את היין בגוף באמצעים טבעיים?')">❓ איך ניתן לחזק את היין בגוף באמצעים טבעיים?</button>
+<button class="q-only-btn" onclick="setQuestion('איך ניתן לחזק את היאנג בגוף באמצעים טבעיים?')">❓ איך ניתן לחזק את היאנג בגוף באמצעים טבעיים?</button>
+<button class="q-only-btn" onclick="setQuestion('מהו הקשר בין צבעים לעקרון היין-יאנג?')">❓ מהו הקשר בין צבעים לעקרון היין-יאנג?</button>
+<button class="q-only-btn" onclick="setQuestion('איך משפיעה התנהגות מינית על איזון יין-יאנג?')">❓ איך משפיעה התנהגות מינית על איזון יין-יאנג?</button>
+<button class="q-only-btn" onclick="setQuestion('מהן הסכנות של חוסר איזון כרוני בין יין ליאנג?')">❓ מהן הסכנות של חוסר איזון כרוני בין יין ליאנג?</button>
+<button class="q-only-btn" onclick="setQuestion('איך יכולה מדיטציה לסייע באיזון יין-יאנג?')">❓ איך יכולה מדיטציה לסייע באיזון יין-יאנג?</button>
+<button class="q-only-btn" onclick="setQuestion('מהו הקשר בין המרידיאנים לזרימת יין-יאנג?')">❓ מהו הקשר בין המרידיאנים לזרימת יין-יאנג?</button>
+<button class="q-only-btn" onclick="setQuestion('איך ניתן למנוע מחלות על ידי שמירה על איזון יין-יאנג?')">❓ איך ניתן למנוע מחלות על ידי שמירה על איזון יין-יאנג?</button>
+<button class="q-only-btn" onclick="setQuestion('מדוע נשים נחשבות ליותר יין וגברים ליותר יאנג?')">❓ מדוע נשים נחשבות ליותר יין וגברים ליותר יאנג?</button>
+<button class="q-only-btn" onclick="setQuestion('איך משפיעה הריון ולידה על איזון יין-יאנג באישה?')">❓ איך משפיעה הריון ולידה על איזון יין-יאנג באישה?</button>
+<button class="q-only-btn" onclick="setQuestion('מהו הקשר בין טמפרטורת הגוף לאיזון יין-יאנג?')">❓ מהו הקשר בין טמפרטורת הגוף לאיזון יין-יאנג?</button>
+<button class="q-only-btn" onclick="setQuestion('איך ניתן לזהות חוסר איזון יין-יאנג דרך ביטויים רגשיים?')">❓ איך ניתן לזהות חוסר איזון יין-יאנג דרך ביטויים רגשיים?</button>
+<button class="q-only-btn" onclick="setQuestion('מהו התפקיד של הכליות כשורש היין והיאנג בגוף?')">❓ מהו התפקיד של הכליות כשורש היין והיאנג בגוף?</button>
+<button class="q-only-btn" onclick="setQuestion('איך ניתן לשלב בין רפואה מערבית לעקרון היין-יאנג?')">❓ איך ניתן לשלב בין רפואה מערבית לעקרון היין-יאנג?</button>
+
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>3. לוח העבודה (Workspace)</h2>
+        
+        <div class="input-block">
+            <span class="label">1. שאלה / תלונה עיקרית:</span>
+            <textarea id="q1" placeholder="הטקסט יופיע כאן..."></textarea>
+        </div>
+
+        <div class="input-block">
+            <span class="label">2. נסיבות / הקשר:</span>
+            <textarea id="q2" placeholder="..."></textarea>
+        </div>
+
+        <div class="input-block">
+            <span class="label">3. מטרה:</span>
+            <textarea id="q3" placeholder="..."></textarea>
+        </div>
+
+        <div class="btn-row">
+            <button class="btn btn-internal" onclick="analyze()">☯️ ניתוח פנימי</button>
+            <button class="btn btn-external" onclick="askPerplexity()">🔮 שאל את Perplexity</button>
+        </div>
+    </div>
+
+    <div id="results-area" class="card">
+        <h2>תוצאות</h2>
+        <div class="result-box">
+            <p><strong>סטטוס:</strong> <span id="status-text">ממתין...</span></p>
+        </div>
+        <div style="margin-top:15px; text-align:center;">
+             <a id="wa-link" href="#" target="_blank" style="background:#25D366; color:white; padding:10px 20px; border-radius:20px; text-decoration:none; font-weight:bold;">
+                👩‍⚕️ שלח ל-WhatsApp
+            </a>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- 1. CLINICAL BTN LOGIC (APPEND) ---
+    function addText(t1, t2, t3) {
+        appendField('q1', t1);
+        appendField('q2', t2);
+        appendField('q3', t3);
+    }
+
+    function appendField(id, text) {
+        const field = document.getElementById(id);
+        if (field.value.trim() === "") {
+            field.value = text;
+        } else {
+            field.value += "\n" + text;
+        }
+    }
+
+    // --- 2. QUESTION BTN LOGIC (REPLACE) ---
+    function setQuestion(q) {
+        // For theoretical questions, we usually want to focus on just that question
+        document.getElementById('q1').value = q;
+        document.getElementById('q2').value = "שאלה תיאורטית / Theoretical Question";
+        document.getElementById('q3').value = "הסבר מעמיק";
+        
+        // Scroll to inputs
+        document.getElementById('q1').scrollIntoView({behavior: "smooth"});
+    }
+
+    // --- 3. ACTIONS ---
+    function analyze() {
+        const q1 = document.getElementById('q1').value;
+        if(!q1) { alert("נא להזין תוכן."); return; }
+        
+        document.getElementById('results-area').style.display = 'block';
+        document.getElementById('status-text').innerText = "השאלה נקלטה במערכת. לחץ למטה לשליחה.";
+        
+        const msg = `*שאלה/מקרה חדש:*\n${q1}\n${document.getElementById('q2').value}\n${document.getElementById('q3').value}`;
+        document.getElementById('wa-link').href = `https://wa.me/972544634923?text=${encodeURIComponent(msg)}`;
+    }
+
+    function askPerplexity() {
+        const combined = document.getElementById('q1').value + " " + document.getElementById('q2').value + " " + document.getElementById('q3').value;
+        const clean = combined.replace(/\n/g, " ");
+        if(!clean.trim()) { alert("נא להזין תוכן."); return; }
+        window.open(`https://www.perplexity.ai/search?q=${encodeURIComponent(clean)}`, '_blank');
+    }
+</script>
 
 </body>
 </html>
