@@ -122,3 +122,6 @@ verify_jwt = false
 
 [functions.audit-knowledge-storage]
 verify_jwt = false
+
+[functions.apply-priority-scores]
+verify_jwt = false
