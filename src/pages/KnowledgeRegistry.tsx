@@ -726,6 +726,14 @@ const BUILTIN_ASSETS = [
     defaultCategory: 'tcm_education',
     defaultLanguage: 'en',
   },
+  // Module #40 - Yin-Yang Theory Complete
+  {
+    id: 'yin-yang-100qa',
+    label: '☯️ Yin-Yang Theory Complete (100 Q&A - Balance, Disharmony, Points + Formulas)',
+    path: '/knowledge-assets/yin_yang_100qa_acupoints_herbs.csv',
+    defaultCategory: 'tcm_theory',
+    defaultLanguage: 'en',
+  },
 ] as const;
 
 // Emotional wellness assets for bulk import
