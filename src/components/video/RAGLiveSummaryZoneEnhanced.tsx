@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, memo } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Sparkles, Brain, Loader2, ChevronDown, ChevronUp, Mic, Wifi, WifiOff } from 'lucide-react';
@@ -117,8 +117,7 @@ function HighlightedText({ text, keywords }: { text: string; keywords: string[] 
   );
 }
 
-// Level 3: Wrapped in React.memo to prevent re-renders from transcription updates
-function RAGLiveSummaryZoneEnhancedInner({
+export function RAGLiveSummaryZoneEnhanced({
   currentPhase,
   liveTranscription = '',
   aiSummary = '',
@@ -326,6 +325,3 @@ function RAGLiveSummaryZoneEnhancedInner({
     </motion.div>
   );
 }
-
-// Export memoized version
-export const RAGLiveSummaryZoneEnhanced = memo(RAGLiveSummaryZoneEnhancedInner);
