@@ -42,21 +42,15 @@ export function DiagnosticsTab({
   const [voiceLanguage, setVoiceLanguage] = useState<'en-US' | 'he-IL'>('en-US');
 
   // Handle external input (from Q&A suggestions)
+  // Always fill the input immediately. Sending the message is handled by the parent,
+  // so we never "double send".
   useEffect(() => {
-    if (externalInput && !isLoading) {
-      // Put the selected question into the Auto-Chain input
-      setInput(externalInput);
+    if (!externalInput) return;
 
-      // Trigger the same API flow as "Run Workflow" (but keep the text visible)
-      window.dispatchEvent(new CustomEvent('tcm-query-start', {
-        detail: { query: externalInput }
-      }));
-      onSendMessage(externalInput);
+    setInput(externalInput);
+    onExternalInputHandled?.();
+  }, [externalInput, onExternalInputHandled]);
 
-      // Clear the one-time external trigger, but keep the input text
-      onExternalInputHandled?.();
-    }
-  }, [externalInput, isLoading, onSendMessage, onExternalInputHandled]);
 
   // Trigger engine activity when sending message
   const handleRunWorkflow = () => {

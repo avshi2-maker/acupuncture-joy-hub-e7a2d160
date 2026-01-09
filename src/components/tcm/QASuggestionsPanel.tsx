@@ -316,6 +316,7 @@ export function QASuggestionsPanel({
                       <Star className={cn("w-3 h-3", isFavorite && "fill-current")} />
                     </Button>
                     <button
+                      type="button"
                       onClick={() => onSelectQuestion(qa.question)}
                       className="flex-1 text-left"
                     >

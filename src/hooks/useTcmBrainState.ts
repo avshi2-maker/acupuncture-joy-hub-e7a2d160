@@ -293,14 +293,19 @@ export function useTcmBrainState() {
     setCurrentQuery(userMessage);
 
     if (!disclaimerStatus.signed) {
-      toast.error(disclaimerStatus.expired ? 'Disclaimer expired — please sign again' : 'Please sign disclaimer before using AI');
+      const msg = disclaimerStatus.expired
+        ? 'Disclaimer expired — please sign again to use AI.'
+        : 'Please sign the disclaimer to use AI.';
+
+      // No popups: show the reason inline as an assistant message
+      setMessages(prev => [...prev, { role: 'assistant', content: msg }]);
       setIsLoading(false);
       setLoadingStartTime(null);
       return;
     }
 
     if (!session?.access_token) {
-      toast.error('Please log in to use TCM Brain');
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Please log in to use AI.' }]);
       setIsLoading(false);
       setLoadingStartTime(null);
       return;
@@ -329,10 +334,17 @@ export function useTcmBrainState() {
       });
 
       if (!response.ok) {
-        if (response.status === 401) toast.error('Session expired. Please log in again.');
-        else if (response.status === 429) toast.error('Too many requests. Try again in a minute.');
-        else if (response.status === 402) toast.error('Credits exhausted. Please add credits.');
-        else toast.error('AI service error');
+        const msg =
+          response.status === 401
+            ? 'Session expired. Please log in again.'
+            : response.status === 429
+              ? 'Too many requests. Please try again in a minute.'
+              : response.status === 402
+                ? 'Credits exhausted. Please add credits.'
+                : 'AI service error. Please try again.';
+
+        // No popups: show the error inline as an assistant message
+        setMessages(prev => [...prev, { role: 'assistant', content: msg }]);
         setIsLoading(false);
         setLoadingStartTime(null);
         return;
@@ -475,7 +487,7 @@ export function useTcmBrainState() {
 
     } catch (error) {
       console.error('Chat error:', error);
-      toast.error('Chat error');
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Chat error. Please try again.' }]);
     } finally {
       setIsLoading(false);
       setIsStreaming(false);
