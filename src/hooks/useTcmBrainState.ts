@@ -74,6 +74,8 @@ export interface DisclaimerStatus {
 const DISCLAIMER_STORAGE_KEY = 'tcm_therapist_disclaimer_signed';
 const RAG_CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tcm-rag-chat`;
 
+export type SearchDepthMode = 'quick' | 'deep';
+
 export function useTcmBrainState() {
   const { session } = useAuth();
   
@@ -85,6 +87,7 @@ export function useTcmBrainState() {
   const [loadingStartTime, setLoadingStartTime] = useState<number | null>(null);
   const [currentQuery, setCurrentQuery] = useState<string>('');
   const [highlightedPoints, setHighlightedPoints] = useState<string[]>([]);
+  const [searchDepth, setSearchDepth] = useState<SearchDepthMode>('deep');
   
   // Session state
   const [sessionSeconds, setSessionSeconds] = useState(0);
@@ -331,7 +334,8 @@ export function useTcmBrainState() {
           messages: [...messages, userMsg],
           includeChunkDetails: true,
           ageGroup: ageGroupInfo?.group,
-          patientContext: selectedPatient ? `Patient: ${selectedPatient.name}${ageGroupInfo ? `, Age Group: ${ageGroupInfo.label}` : ''}` : undefined
+          patientContext: selectedPatient ? `Patient: ${selectedPatient.name}${ageGroupInfo ? `, Age Group: ${ageGroupInfo.label}` : ''}` : undefined,
+          searchDepth: searchDepth, // Pass depth mode to backend
         }),
       });
 
@@ -989,5 +993,9 @@ Provide a complete treatment protocol:
     handleDeleteVoiceNote,
     handleApplyTemplate,
     clearChat,
+    
+    // Search depth mode
+    searchDepth,
+    setSearchDepth,
   };
 }

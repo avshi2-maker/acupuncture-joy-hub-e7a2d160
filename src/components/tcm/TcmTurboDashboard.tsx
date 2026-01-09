@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/tooltip";
 import { useTurboDashboardAudio } from '@/hooks/useTurboDashboardAudio';
 
+export type SearchDepthMode = 'quick' | 'deep';
+
 export interface TurboDashboardMeta {
   tokensUsed?: number;
   verified?: boolean;
@@ -36,6 +38,8 @@ interface TcmTurboDashboardProps {
   variant?: 'standard' | 'video' | 'compact';
   className?: string;
   enableAudio?: boolean;
+  searchDepth?: SearchDepthMode;
+  onSearchDepthChange?: (mode: SearchDepthMode) => void;
 }
 
 export function TcmTurboDashboard({
@@ -44,7 +48,9 @@ export function TcmTurboDashboard({
   isProcessing = false,
   variant = 'standard',
   className,
-  enableAudio = false
+  enableAudio = false,
+  searchDepth = 'deep',
+  onSearchDepthChange
 }: TcmTurboDashboardProps) {
   const [displayTokens, setDisplayTokens] = useState(0);
   const [rpmProgress, setRpmProgress] = useState(0);
@@ -358,6 +364,42 @@ export function TcmTurboDashboard({
               </div>
             </TooltipContent>
           </Tooltip>
+
+          
+          {/* Search Depth Toggle */}
+          {onSearchDepthChange && !isCompact && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => onSearchDepthChange(searchDepth === 'quick' ? 'deep' : 'quick')}
+                  disabled={isProcessing}
+                  className={cn(
+                    "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all duration-200",
+                    searchDepth === 'deep'
+                      ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25"
+                      : "bg-amber-500/15 border-amber-500/40 text-amber-400 hover:bg-amber-500/25",
+                    isProcessing && "opacity-50 cursor-not-allowed"
+                  )}
+                >
+                  <Database className="w-3 h-3" />
+                  <span className="text-[9px] font-bold uppercase tracking-wide">
+                    {searchDepth === 'deep' ? 'DEEP' : 'QUICK'}
+                  </span>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="bg-slate-900 border-slate-700 max-w-[220px]">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium">Search Depth Mode</p>
+                  <p className="text-[10px] text-slate-400">
+                    {searchDepth === 'deep' 
+                      ? "🔬 Deep: 5 chunks/pillar, comprehensive multi-condition answers (~15-20K tokens)"
+                      : "⚡ Quick: 2 chunks/pillar, faster responses for simple queries (~5K tokens)"}
+                  </p>
+                  <p className="text-[9px] text-slate-500 mt-1">Click to switch</p>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          )}
 
           {/* Audit Badge (if logged) */}
           {meta?.auditLogId && !isCompact && (

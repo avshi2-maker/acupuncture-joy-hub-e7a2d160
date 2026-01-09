@@ -1487,13 +1487,14 @@ serve(async (req) => {
       });
     }
 
-    const { query, messages, useExternalAI, includeChunkDetails, ageGroup, patientContext, language, liteMode } = await req.json();
+    const { query, messages, useExternalAI, includeChunkDetails, ageGroup, patientContext, language, liteMode, searchDepth } = await req.json();
     const searchQuery = query || messages?.[messages.length - 1]?.content || '';
     
     // ========================================================================
     // TOKEN OPTIMIZATION: Balanced approach for cost vs quality
     // ========================================================================
-    const isLiteMode = liteMode === true;
+    // searchDepth: 'quick' = lite mode, 'deep' = full mode (default)
+    const isLiteMode = liteMode === true || searchDepth === 'quick';
     
     // CHUNK TRUNCATION: Limit content length to reduce tokens while keeping key info
     const CHUNK_MAX_CHARS = 400; // Truncate chunks to 400 chars (key info first)

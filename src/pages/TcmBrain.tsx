@@ -102,6 +102,7 @@ export default function TcmBrain() {
     questionsAsked, highlightedPoints, patientSessions, setChainedWorkflow,
     openGmailWithSession, openWhatsAppWithSession, externalFallbackQuery,
     dismissExternalFallback, runExternalAIFallback, lastRagStats, isStreaming,
+    searchDepth, setSearchDepth,
   } = useTcmBrainState();
 
   // Turbo Dashboard status derived from RAG stats
@@ -311,6 +312,8 @@ export default function TcmBrain() {
             }}
             variant="standard"
             enableAudio={false}
+            searchDepth={searchDepth}
+            onSearchDepthChange={setSearchDepth}
           />
         </div>
 
