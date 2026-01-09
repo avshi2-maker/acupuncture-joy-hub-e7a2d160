@@ -215,7 +215,166 @@ Combined Diagnosis | Primary Points | Herbal Formula | Clinical Notes
 
 ---
 
-## D. ASSET MANIFEST
+## D. Z-INDEX & DOM HIERARCHY MAPPING
+
+### 1. Complete Stacking Context Table
+
+| Element ID/Class | Z-Index | Position | Parent Context | Purpose | Shaking Risk |
+|-----------------|---------|----------|----------------|---------|--------------|
+| `header.sticky.top-0` | `z-50` | `sticky` | Root | Main header with branding | ❌ No - Static |
+| `#economy-monitor` | `z-[9999]` | `fixed` | **ROOT** | Token/Time Counter | ❌ No - Fixed Layer |
+| `.TcmBrainVoiceCommands` | `z-40` | `fixed` | **ROOT** | Voice control buttons | ❌ No - Fixed Layer |
+| `.QuickActionBoxes` (drag) | `z-50` (whileDrag) | `relative` | Right Column | Draggable action boxes | ⚠️ Potential - Drag animation |
+| `.PediatricBlockedOverlay` | `z-10` | `absolute` | Card Content | Disclaimer overlay | ❌ No - Local context |
+| `.AITrustHeader` | `auto` | `relative` | Flow | AI status dashboard | ⚠️ Potential - Timer animations |
+| `.TabsTrigger Badge` | Default | `absolute` | Tab Button | Point count indicator | ❌ No - Static |
+| `.DropdownMenuContent` | `z-50+` (Radix) | `absolute` | **PORTAL** | All dropdown menus | ❌ No - Portal |
+| `.TooltipContent` | `z-50+` (Radix) | `absolute` | **PORTAL** | All tooltips | ❌ No - Portal |
+| `.Dialog` | `z-50` (Radix) | `fixed` | **PORTAL** | All modal dialogs | ❌ No - Portal |
+
+### 2. DOM Flow Structure (Visual Hierarchy)
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ ROOT (min-h-screen, flex flex-col, overflow-hidden)                │
+├─────────────────────────────────────────────────────────────────────┤
+│ [STICKY z-50] <header> - Main Header                               │
+│   └─ Branding, Clock, Patient Selector, Language, Tier             │
+├─────────────────────────────────────────────────────────────────────┤
+│ [FLOW] <AITrustHeader> - AI Status Dashboard (h-[60px] fixed)      │
+│   └─ Assets Scanned, Processing Time, Accuracy Score               │
+│   └─ ⚠️ Timer updates @ 500ms (throttled to prevent shaking)       │
+│   └─ ⚠️ Asset counter @ 800ms (throttled)                          │
+│   └─ Uses `overflowAnchor: 'none'` to prevent scroll-anchoring     │
+├─────────────────────────────────────────────────────────────────────┤
+│ [FLOW] <TcmTurboDashboard> - Turbo Status (px-4 py-2)              │
+├─────────────────────────────────────────────────────────────────────┤
+│ [FLOW] <main> - Split-Screen Layout (flex-1, overflow-hidden)      │
+│   ├─ LEFT COLUMN (lg:col-span-8, overflow-hidden)                  │
+│   │   ├─ [FLOW] SessionPhaseIndicator                              │
+│   │   ├─ [FLOW] SessionHeaderBoxes (overflow-x-auto)               │
+│   │   ├─ [FLOW] CustomizableToolbar (hidden md:block)              │
+│   │   └─ [FLOW] Tabs Container (flex-1, overflow-hidden)           │
+│   │       └─ [SCROLL] Tab Content (overflow-y-auto)                │
+│   │           ├─ DiagnosticsTab                                    │
+│   │           ├─ SymptomsTab                                       │
+│   │           ├─ TreatmentTab                                      │
+│   │           ├─ BodyMapTab                                        │
+│   │           ├─ SessionNotesTab                                   │
+│   │           └─ PatientHistoryTab                                 │
+│   └─ RIGHT COLUMN (lg:col-span-4, overflow-y-auto)                 │
+│       ├─ Clinical Stacking Button                                  │
+│       ├─ Hebrew Topic Questions Button                             │
+│       ├─ Quick Actions                                             │
+│       ├─ Pediatric Assistant (Collapsible)                         │
+│       ├─ Herb Encyclopedia (Collapsible)                           │
+│       ├─ Hebrew Q&A Dropdowns (Collapsible)                        │
+│       └─ Q&A Suggestions (Collapsible)                             │
+├─────────────────────────────────────────────────────────────────────┤
+│ [FIXED z-9999] <EconomyMonitor> - Token/Time Counter               │
+│   └─ Position: bottom-5 right-5                                    │
+│   └─ pointerEvents: 'none' (non-interactive overlay)               │
+│   └─ ✅ ALREADY ISOLATED - No shaking impact                       │
+├─────────────────────────────────────────────────────────────────────┤
+│ [FIXED z-40] <TcmBrainVoiceCommands>                               │
+│   └─ Position: bottom-24 left-4                                    │
+├─────────────────────────────────────────────────────────────────────┤
+│ [PORTAL z-50+] Dialog Stack (rendered outside DOM tree)            │
+│   ├─ IntakeReviewDialog                                            │
+│   ├─ FloatingHelpGuide                                             │
+│   ├─ PregnancySafetyDialog                                         │
+│   ├─ ElderlyLifestyleDialog                                        │
+│   ├─ PediatricAcupunctureDialog                                    │
+│   ├─ VagusNerveDialog / VagusStimulationDialog                     │
+│   ├─ HRVTrackerDialog                                              │
+│   ├─ AnxietyQADialog                                               │
+│   ├─ QuickAppointmentDialog                                        │
+│   ├─ FollowUpPlanDialog                                            │
+│   ├─ ZoomInviteDialog / CalendarInviteDialog                       │
+│   ├─ SessionReportDialog                                           │
+│   ├─ HebrewTopicQuestionsDialog                                    │
+│   ├─ ClinicalStackingDialog                                        │
+│   ├─ SessionBriefPanel                                             │
+│   ├─ EmotionalProcessingPanel                                      │
+│   └─ ExternalAIFallbackCard                                        │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### 3. Counter Logic Isolation Analysis
+
+#### Economy Monitor (Token/Time Counter)
+
+**Location:** `src/components/tcm-brain/EconomyMonitor.tsx` Lines 23-27
+
+```typescript
+// ALREADY FIXED POSITION - No shaking impact
+<div 
+  id="economy-monitor"
+  className="fixed bottom-5 right-5 ... z-[9999]"
+  style={{ pointerEvents: 'none' }}
+>
+```
+
+**Status:** ✅ **ALREADY ISOLATED**
+- `position: fixed` (outside document flow)
+- `z-index: 9999` (highest layer)
+- `pointer-events: none` (non-interactive)
+- **NO LAYOUT RECALCULATIONS** - DOM size changes don't affect parent
+
+#### AITrustHeader Timer Logic
+
+**Location:** `src/components/tcm-brain/AITrustHeader.tsx` Lines 74-105
+
+```typescript
+// Processing Timer (throttled to 500ms to prevent shaking)
+timerRef.current = setInterval(() => {
+  setProcessingTime(prev => prev + 0.5);
+}, 500); // Update every 500ms instead of 100ms
+
+// Asset Counter (throttled to 800ms)
+assetTimerRef.current = setInterval(() => {
+  count += Math.floor(Math.random() * 5) + 3;
+  setAssetsScanned(count);
+}, 800); // Update every 800ms instead of 250ms
+```
+
+**Mitigation already in place:**
+- Fixed height shell: `h-[60px]` prevents layout shift
+- `overflowAnchor: 'none'` prevents browser scroll-anchoring
+- Throttled updates (500ms/800ms vs 100ms/250ms original)
+
+### 4. Shaking Risk Assessment Table
+
+| Element | Risk Level | Current Mitigation | Recommendation |
+|---------|------------|-------------------|----------------|
+| Economy Monitor | ✅ None | `fixed` + `z-[9999]` | Already optimal |
+| AITrustHeader counters | ⚠️ Medium | Throttled + fixed height | Add `will-change: contents` if needed |
+| QuickActionBoxes drag | ⚠️ Low | `whileDrag: z-50` | OK - only during interaction |
+| TcmTurboDashboard | ✅ None | Static display | OK |
+| Tab content resize | ✅ None | `overflow-hidden` container | OK |
+
+### 5. Current 3-Column Grid Status
+
+**Finding:** The layout **ALREADY** follows a proper grid structure:
+
+```tsx
+// TcmBrain.tsx Line 391
+<div className="h-full grid grid-cols-1 lg:grid-cols-12 gap-0">
+  <div className="lg:col-span-8 ...">  {/* LEFT: 66% */}
+  <div className="lg:col-span-4 ...">  {/* RIGHT: 33% */}
+</div>
+```
+
+**Fixed Layer Status:**
+- ✅ Economy Monitor: `fixed bottom-5 right-5 z-[9999]` - Already isolated
+- ✅ Voice Commands: `fixed bottom-24 left-4 z-40` - Already isolated
+- ✅ All Dialogs: Rendered in Radix Portal at body level
+
+**Conclusion:** No additional restructuring required. The architecture is correctly layered.
+
+---
+
+## E. ASSET MANIFEST
 
 ### 1. Body Figures & SVG Assets
 
@@ -230,15 +389,18 @@ Combined Diagnosis | Primary Points | Herbal Formula | Clinical Notes
 - Auricular (ear) charts
 - Hand/foot reflexology maps
 
-### 2. Tab Z-Index Stack (Resolved Order)
+### 2. Complete Z-Index Stack (Resolved Order)
 
-| Element | Z-Index | Notes |
-|---------|---------|-------|
-| Economy Monitor | 9999 | Always on top |
-| Dialogs (Radix) | ~50-100 | Modal overlays |
-| Header | 50 | Sticky navigation |
-| Main Content | Auto | Normal flow |
-| Body Map Canvas | Auto | Within tab content |
+| Layer | Element | Z-Index | Position Type |
+|-------|---------|---------|---------------|
+| 1 (Top) | Economy Monitor | `9999` | `fixed` |
+| 2 | Dialogs/Modals (Radix) | `~50-100` | `fixed` (portal) |
+| 3 | Dropdowns (Radix) | `~50` | `absolute` (portal) |
+| 4 | Header | `50` | `sticky` |
+| 5 | Voice Commands | `40` | `fixed` |
+| 6 | Drag Overlays | `50` | `relative` (temp) |
+| 7 | Main Content | `auto` | `static` |
+| 8 | Body Map Canvas | `auto` | `static` |
 
 ### 3. Main Tabs Structure
 
