@@ -12,7 +12,7 @@ import ReactMarkdown from 'react-markdown';
 import { RAGBodyFigureDisplay } from '@/components/acupuncture/RAGBodyFigureDisplay';
 import { parsePointReferences } from '@/components/acupuncture/BodyFigureSelector';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-
+import { HebrewQADropdowns } from '@/components/tcm-brain/HebrewQADropdowns';
 interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -131,6 +131,16 @@ export function TcmBrainPanel({
               {qp.label}
             </Button>
           ))}
+        </div>
+
+        {/* Hebrew Q&A Dropdowns */}
+        <div className="px-4 py-2 border-b">
+          <HebrewQADropdowns
+            onSelectQuestion={(question) => {
+              setInput(question);
+            }}
+            disabled={isLoading}
+          />
         </div>
 
         {/* Body Map Section - Auto-updates when AI mentions points */}
