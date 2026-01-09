@@ -2,7 +2,7 @@
 // Uses O(1) Map lookups instead of linear array scans
 // These replace short Hebrew text with rich clinical context for direct AI injection
 
-export type PromptRole = 'Clinical Differential' | 'Treatment Strategy' | 'Point Selection' | 'Pathology Analysis' | 'Physiology' | 'Preventive' | 'Diagnosis';
+export type PromptRole = 'Clinical Differential' | 'Treatment Strategy' | 'Point Selection' | 'Pathology Analysis' | 'Physiology' | 'Preventive' | 'Diagnosis' | 'Five Elements';
 
 export interface PromptMapping {
   id: string;
@@ -10,171 +10,252 @@ export interface PromptMapping {
   ragPriorityContext: string;
   role: PromptRole;
   icon: string;
-  // Direct context injection - no RAG search needed
   fullAiPrompt: string;
 }
 
 export const PROMPT_MAPPINGS: PromptMapping[] = [
+  // === SECTION 1: CORE CLINICAL DIFFERENTIALS (15 items) ===
   {
-    id: 'kidney-yin-yang',
+    id: 'yy_kidney',
     hebrewLabel: 'סימנים יין/יאנג כליות',
     ragPriorityContext: 'RAG PRIORITY: Kidney Pathology. Compare Yin/Yang deficiency signs (Heat vs Cold). Use embedded point table.',
     role: 'Clinical Differential',
     icon: '🫘',
-    fullAiPrompt: 'CONTEXT: Kidney Yin Deficiency shows night sweats, malar flush, 5-palm heat, thin-rapid pulse. Kidney Yang Deficiency shows cold limbs, pale face, deep-weak pulse, clear urine. KEY POINTS: KI3 (tonify both), KI6 (Yin), KI7 (Yang), GV4 (Yang), CV4 (both). HERBS: Liu Wei Di Huang Wan (Yin), Jin Gui Shen Qi Wan (Yang).'
+    fullAiPrompt: 'RAG PRIORITY: Kidney Pathology. Compare Yin and Yang deficiency signs (Deficiency Heat vs Internal Cold). Retrieve specific point combinations for Kidney Yin vs Kidney Yang tonification from internal CSV. KEY POINTS: KI3 (tonify both), KI6 (Yin), KI7 (Yang), GV4 (Yang), CV4 (both). HERBS: Liu Wei Di Huang Wan (Yin), Jin Gui Shen Qi Wan (Yang).'
   },
   {
-    id: 'liver-stagnation-rising',
+    id: 'yy_liver',
     hebrewLabel: 'סטגנציה מול עליית יאנג',
     ragPriorityContext: 'RAG PRIORITY: Liver Dynamics. Differentiate Qi Stagnation vs Yang Rising. Focus on pulse/tongue.',
     role: 'Clinical Differential',
     icon: '🌿',
-    fullAiPrompt: 'CONTEXT: Liver Qi Stagnation shows distension, sighing, wiry pulse, mood swings. Liver Yang Rising shows headache, dizziness, tinnitus, irritability, red face. KEY POINTS: LV3 (both), LV2 (Yang Rising), GB20 (Yang Rising), PC6 (Stagnation), GB34 (Stagnation). HERBS: Xiao Yao San (Stagnation), Tian Ma Gou Teng Yin (Yang Rising).'
+    fullAiPrompt: 'RAG PRIORITY: Liver Dynamics. Differentiate Liver Qi Stagnation vs Liver Yang Rising. Analyze pulse/tongue indicators. Provide sedation points for Yang rising and moving points for stagnation. KEY POINTS: LV3 (both), LV2 (Yang Rising), GB20 (Yang Rising), PC6 (Stagnation), GB34 (Stagnation). HERBS: Xiao Yao San (Stagnation), Tian Ma Gou Teng Yin (Yang Rising).'
   },
   {
-    id: 'spleen-damp-heat',
+    id: 'yy_spleen_damp',
     hebrewLabel: 'לחות חמה בטחול',
     ragPriorityContext: 'RAG PRIORITY: Spleen/Damp-Heat. Search herbs for draining dampness. Prioritize clinical strategy.',
     role: 'Treatment Strategy',
     icon: '💧',
-    fullAiPrompt: 'CONTEXT: Spleen Damp-Heat shows heavy limbs, loose stools with odor, yellow greasy tongue coating, slippery-rapid pulse. KEY POINTS: SP9 (drain damp), SP6, ST36, CV12, LI11 (clear heat). HERBS: Yin Chen Hao Tang, Long Dan Xie Gan Tang. STRATEGY: Clear heat first, then resolve dampness.'
+    fullAiPrompt: 'RAG PRIORITY: Spleen/Damp-Heat. Retrieve herbal strategies for draining dampness and clearing heat. Focus on Spleen 9 and ST 44. Prioritize clinical results from internal RAG index. KEY POINTS: SP9 (drain damp), SP6, ST36, CV12, LI11 (clear heat). HERBS: Yin Chen Hao Tang, Long Dan Xie Gan Tang.'
   },
   {
-    id: 'auricular-shen',
+    id: 'yy_shen_ear',
     hebrewLabel: 'נקודות Shen באוזן',
     ragPriorityContext: 'RAG PRIORITY: Auricular Medicine. Retrieve specific Shen-calming ear points. Output concise list.',
     role: 'Point Selection',
     icon: '👂',
-    fullAiPrompt: 'CONTEXT: Auricular Shen-calming protocol. EAR POINTS: Shenmen (primary), Heart, Sympathetic, Subcortex, Zero Point, Brain Stem, Tranquilizer Point. TECHNIQUE: Retain seeds 3-5 days, bilateral. INDICATIONS: Anxiety, insomnia, stress, emotional disturbance.'
+    fullAiPrompt: 'RAG PRIORITY: Auricular Medicine. Retrieve specific Shen-calming ear points (Shen Men, Zero Point, Heart). Provide a concise clinical list for psychological stabilization. EAR POINTS: Shenmen (primary), Heart, Sympathetic, Subcortex, Zero Point, Brain Stem, Tranquilizer Point. TECHNIQUE: Retain seeds 3-5 days, bilateral.'
   },
   {
-    id: 'liver-spleen-ke',
+    id: 'yy_ke_cycle',
     hebrewLabel: 'מעגל הבקרה כבד/טחול',
     ragPriorityContext: 'RAG PRIORITY: Ke Cycle. Analyze Wood overacting on Earth. Retrieve internal case studies.',
     role: 'Pathology Analysis',
     icon: '🔄',
-    fullAiPrompt: 'CONTEXT: Wood overacting on Earth (Liver invading Spleen). Signs: Stress causes digestive issues, IBS pattern, alternating constipation/diarrhea. KEY POINTS: LV3+ST36 (harmonize), LV13 (Spleen Mu), SP6, CV12. HERBS: Xiao Yao San, Tong Xie Yao Fang. PRINCIPLE: Soothe Liver, strengthen Spleen.'
+    fullAiPrompt: 'RAG PRIORITY: Ke Cycle Analysis. Analyze "Wood overacting on Earth" (Liver attacking Spleen). Retrieve internal case studies for digestive protocols triggered by stress. KEY POINTS: LV3+ST36 (harmonize), LV13 (Spleen Mu), SP6, CV12. HERBS: Xiao Yao San, Tong Xie Yao Fang.'
   },
   {
-    id: 'lung-kidney-respiration',
+    id: 'yy_lung_kidney',
     hebrewLabel: 'ריאות וכליות - נשימה',
     ragPriorityContext: "RAG PRIORITY: Respiratory/Kidney. Search 'Grasping the Qi'. Focus on LU7 and KI6 relationship.",
     role: 'Physiology',
     icon: '🫁',
-    fullAiPrompt: 'CONTEXT: Kidney fails to grasp Lung Qi. Signs: Dyspnea on exertion, weak inhalation, asthma worse with activity, cold limbs. MASTER PAIR: LU7+KI6 (Ren Mai opening). KEY POINTS: KI3, KI7, CV4, CV6, BL23, LU9. HERBS: Jin Gui Shen Qi Wan + Bu Fei Tang. MOXA: CV4, GV4, BL23.'
+    fullAiPrompt: 'RAG PRIORITY: Respiratory/Kidney connection. Search for "Kidney failing to grasp Qi". Focus on the LU7 and KI6 relationship for chronic asthma or shortness of breath. MASTER PAIR: LU7+KI6 (Ren Mai opening). KEY POINTS: KI3, KI7, CV4, CV6, BL23, LU9. MOXA: CV4, GV4, BL23.'
   },
   {
-    id: 'wei-qi-strengthen',
+    id: 'yy_wei_qi',
     hebrewLabel: 'חיזוק Wei Qi',
     ragPriorityContext: 'RAG PRIORITY: Immune Defense. Retrieve points for strengthening external shield (Wei Qi).',
     role: 'Preventive',
     icon: '🛡️',
-    fullAiPrompt: 'CONTEXT: Strengthen Wei Qi (Defensive Qi). Signs of deficiency: Frequent colds, spontaneous sweating, aversion to wind. KEY POINTS: ST36, LI4, LU7, GV14, BL12, BL13. HERBS: Yu Ping Feng San, Huang Qi. LIFESTYLE: Regular sleep, avoid drafts, moderate exercise. MOXA: ST36, GV14 preventively.'
+    fullAiPrompt: 'RAG PRIORITY: Immune Defense. Retrieve top 5 points for strengthening Wei Qi (Immune Shield). Focus on ST36 and LU7. Keep response concise to save tokens. KEY POINTS: ST36, LI4, LU7, GV14, BL12, BL13. HERBS: Yu Ping Feng San, Huang Qi.'
   },
   {
-    id: 'pulse-deficiency-stagnation',
+    id: 'yy_pulse_blood',
     hebrewLabel: 'דופק חוסר מול סטגנציה',
     ragPriorityContext: 'RAG PRIORITY: Pulse Diagnosis. Compare Choppy vs Thready/Weak pulses. Use reference table.',
     role: 'Diagnosis',
     icon: '💓',
-    fullAiPrompt: 'CONTEXT: Pulse differential. CHOPPY: Uneven, hesitant - Blood Stasis or Blood/Yin deficiency with stagnation. THREADY: Thin, weak - Blood/Qi/Yin deficiency. WEAK: Soft, forceless - Qi/Yang deficiency. KEY: Choppy=movement blocked, Thready=substance lacking. CLINICAL: Choppy needs movement, Thready needs nourishing.'
+    fullAiPrompt: 'RAG PRIORITY: Pulse Diagnosis metadata. Compare "Choppy" (Stagnation) vs "Thready/Weak" (Deficiency) pulses. Match with Blood Stasis vs Blood Deficiency treatment protocols. KEY: Choppy=movement blocked, Thready=substance lacking. CLINICAL: Choppy needs movement, Thready needs nourishing.'
   },
   {
-    id: 'tongue-spleen-qi',
+    id: 'yy_tongue_spleen',
     hebrewLabel: 'חולשת צ׳י בטחול',
     ragPriorityContext: "RAG PRIORITY: Tongue Diagnosis. Search 'Scalloped edges' and 'Teeth marks'. Match Spleen Qi Def.",
     role: 'Diagnosis',
     icon: '👅',
-    fullAiPrompt: 'CONTEXT: Tongue diagnosis for Spleen Qi Deficiency. SIGNS: Swollen tongue with scalloped edges (teeth marks), pale color, thin white coating. RELATED: Fatigue, loose stools, poor appetite, weak limbs. KEY POINTS: ST36, SP3, SP6, CV12, BL20. HERBS: Si Jun Zi Tang, Bu Zhong Yi Qi Tang.'
+    fullAiPrompt: 'RAG PRIORITY: Tongue Diagnosis. Search RAG for "Scalloped edges" and "Teeth marks". Match with Spleen Qi Deficiency. Suggest dietary changes and tonification points. KEY POINTS: ST36, SP3, SP6, CV12, BL20. HERBS: Si Jun Zi Tang, Bu Zhong Yi Qi Tang.'
   },
   {
-    id: 'san-jiao-functions',
+    id: 'yy_sanjiao',
     hebrewLabel: 'San Jiao תפקודים',
     ragPriorityContext: 'RAG PRIORITY: Triple Burner. Retrieve functions of the 3 chambers. Focus on fluid metabolism.',
     role: 'Physiology',
     icon: '🔥',
-    fullAiPrompt: 'CONTEXT: San Jiao (Triple Burner) functions. UPPER JIAO: Mist - Heart/Lung, distributes fluids. MIDDLE JIAO: Foam - Spleen/Stomach, transformation. LOWER JIAO: Swamp - Kidney/Bladder, excretion. KEY POINTS: SJ5 (exterior), SJ6 (constipation), SJ4 (source), CV5 (front Mu). PATHOLOGY: Edema, urinary issues, water metabolism disorders.'
-  },
-  // Additional clinical contexts
-  {
-    id: 'blood-stasis',
-    hebrewLabel: 'סטגנציית דם',
-    ragPriorityContext: 'RAG PRIORITY: Blood Stasis Patterns. Identify fixed pain, dark complexion, purple tongue signs. Focus on SP10, LV3, BL17.',
-    role: 'Clinical Differential',
-    icon: '🩸',
-    fullAiPrompt: 'CONTEXT: Blood Stasis pattern. SIGNS: Fixed stabbing pain, dark/purple complexion, purple tongue with spots, choppy pulse. KEY POINTS: SP10 (Sea of Blood), LV3, BL17 (Blood Hui), SP6, LI4+SP6 (move blood). HERBS: Xue Fu Zhu Yu Tang, Tao Hong Si Wu Tang. CAUTION: Check for bleeding disorders.'
+    fullAiPrompt: 'RAG PRIORITY: Triple Burner Physiology. Retrieve functions of the 3 chambers (Upper, Middle, Lower). Focus on fluid metabolism and "Mist, Mud, and Drainage" analogies. UPPER JIAO: Mist - Heart/Lung. MIDDLE JIAO: Foam - Spleen/Stomach. LOWER JIAO: Swamp - Kidney/Bladder.'
   },
   {
-    id: 'phlegm-patterns',
-    hebrewLabel: 'דפוסי ליחה',
-    ragPriorityContext: 'RAG PRIORITY: Phlegm Pathology. Differentiate substantial vs insubstantial phlegm. ST40, CV12, SP9 protocols.',
-    role: 'Treatment Strategy',
-    icon: '☁️',
-    fullAiPrompt: 'CONTEXT: Phlegm differentiation. SUBSTANTIAL: Visible - cough, nodules, obesity. INSUBSTANTIAL: Mental fog, dizziness, numbness. KEY POINTS: ST40 (primary), CV12, SP9, PC5 (phlegm-fire), GV20 (clear head). HERBS: Er Chen Tang (base), Wen Dan Tang (phlegm-heat). PRINCIPLE: Transform phlegm, strengthen Spleen.'
-  },
-  {
-    id: 'heart-kidney-axis',
-    hebrewLabel: 'ציר לב-כליות',
-    ragPriorityContext: 'RAG PRIORITY: Heart-Kidney Communication. Water-Fire balance, insomnia patterns. HT7, KI6, SP6 combinations.',
+    id: 'yy_zong_yuan',
+    hebrewLabel: 'Zong Qi vs Yuan Qi',
+    ragPriorityContext: 'RAG PRIORITY: Qi Types differentiation. Compare Pectoral Qi vs Source Qi.',
     role: 'Physiology',
-    icon: '❤️',
-    fullAiPrompt: 'CONTEXT: Heart-Kidney disharmony. SIGNS: Insomnia, palpitations, anxiety, night sweats, dream-disturbed sleep, hot flashes. KEY POINTS: HT7+KI6 (primary), KI3, HT6, PC6, SP6. HERBS: Tian Wang Bu Xin Dan, Huang Lian E Jiao Tang. PRINCIPLE: Nourish Kidney Yin, calm Heart Fire, restore Water-Fire communication.'
+    icon: '⚡',
+    fullAiPrompt: 'RAG PRIORITY: Qi Types differentiation. Compare Pectoral Qi (Chest) vs Source Qi (Kidneys). Retrieve source locations, functions, and relevant tonification points. ZONG QI: CV17, LU1, ST36. YUAN QI: CV4, GV4, KI3.'
   },
   {
-    id: 'wind-patterns',
-    hebrewLabel: 'דפוסי רוח',
-    ragPriorityContext: 'RAG PRIORITY: Wind Pathology. Internal vs External wind differentiation. GB20, LV3, GV16 for wind elimination.',
-    role: 'Pathology Analysis',
+    id: 'yy_ext_wind',
+    hebrewLabel: 'סילוק רוח חיצונית',
+    ragPriorityContext: 'RAG PRIORITY: Exterior Wind pathology. Wind-Heat vs Wind-Cold differentiation.',
+    role: 'Clinical Differential',
     icon: '🌬️',
-    fullAiPrompt: 'CONTEXT: Wind differentiation. EXTERNAL: Sudden onset, wandering symptoms, aversion to wind, floating pulse. INTERNAL: Tremors, spasms, tics, stroke, vertigo. KEY POINTS: GB20 (both), LV3 (internal), GV16, LI4 (external), GB34 (spasm). HERBS: Tian Ma Gou Teng Yin (internal), Gui Zhi Tang (external).'
+    fullAiPrompt: 'RAG PRIORITY: Exterior Wind pathology. Search for Wind-Heat vs Wind-Cold differentiation. Retrieve immediate acupuncture relief points. KEY POINTS: LI4, LU7, BL12, GV14 (Wind-Heat), GB20. HERBS: Gui Zhi Tang (Cold), Yin Qiao San (Heat).'
   },
   {
-    id: 'jing-essence',
-    hebrewLabel: 'ג׳ינג - מהות',
-    ragPriorityContext: 'RAG PRIORITY: Essence/Jing Deficiency. Developmental issues, premature aging. KI3, GV4, CV4 tonification.',
+    id: 'yy_heart_sweat',
+    hebrewLabel: 'לב והזעה',
+    ragPriorityContext: 'RAG PRIORITY: Heart/Fluid relationship. Connection between sweat and Heart blood.',
     role: 'Physiology',
-    icon: '✨',
-    fullAiPrompt: 'CONTEXT: Jing (Essence) deficiency. SIGNS: Developmental delays, premature aging, weak bones/teeth, poor memory, infertility, early greying. KEY POINTS: KI3, GV4 (Ming Men), CV4 (Gate of Origin), BL23, GB39 (Marrow Hui). HERBS: Liu Wei Di Huang Wan, Gui Lu Er Xian Jiao. MOXA: GV4, CV4, BL23.'
+    icon: '💦',
+    fullAiPrompt: 'RAG PRIORITY: Heart/Fluid relationship. Explain clinical connection between sweat and Heart blood. Retrieve pathology for night sweats vs spontaneous daytime sweating. NIGHT SWEATS: Yin Deficiency - HT6, KI6. SPONTANEOUS: Qi Deficiency - ST36, LU9.'
   },
   {
-    id: 'zang-fu-relationships',
-    hebrewLabel: 'יחסי זאנג-פו',
-    ragPriorityContext: 'RAG PRIORITY: Organ Relationships. Mother-Child, Ke cycle interactions. Holistic pattern analysis.',
-    role: 'Pathology Analysis',
-    icon: '🏛️',
-    fullAiPrompt: 'CONTEXT: Zang-Fu relationships. SHENG (Mother-Child): Water→Wood→Fire→Earth→Metal→Water. KE (Control): Wood→Earth→Water→Fire→Metal→Wood. CLINICAL: Tonify mother for deficiency, sedate child for excess. KEY PAIRS: LV-SP (Wood/Earth), HT-KI (Fire/Water), LU-KI (Metal/Water), SP-LU (Earth/Metal).'
-  },
-  {
-    id: 'qi-flow-disorders',
-    hebrewLabel: 'הפרעות זרימת צ׳י',
-    ragPriorityContext: 'RAG PRIORITY: Qi Flow Patterns. Rebellious Qi, Sinking Qi, Qi Stagnation differentiation and treatment.',
-    role: 'Clinical Differential',
-    icon: '🌊',
-    fullAiPrompt: 'CONTEXT: Qi flow disorders. REBELLIOUS: Qi goes wrong direction - nausea, hiccup, cough, headache. SINKING: Qi fails to hold - prolapse, fatigue, bearing down. STAGNATION: Qi stuck - distension, pain, emotional. KEY POINTS: CV6 (all), ST36 (sinking), LV3 (stagnation), PC6 (rebellious). HERBS: Bu Zhong Yi Qi Tang (sinking), Xiao Yao San (stagnation).'
-  },
-  {
-    id: 'yin-deficiency-heat',
-    hebrewLabel: 'חום מחוסר יין',
-    ragPriorityContext: 'RAG PRIORITY: Empty Heat. Night sweats, five-palm heat, malar flush. Nourish Yin, clear deficiency heat protocols.',
+    id: 'yy_stomach_cold',
+    hebrewLabel: 'קור בקיבה - כאב בטן',
+    ragPriorityContext: 'RAG PRIORITY: Stomach Cold. Warming protocols for abdominal pain.',
     role: 'Treatment Strategy',
-    icon: '🌙',
-    fullAiPrompt: 'CONTEXT: Yin Deficiency with Empty Heat. SIGNS: Night sweats, 5-palm heat, malar flush, dry mouth at night, thin-rapid pulse, red tongue no coat. KEY POINTS: KI6, KI3, SP6, HT6, LU10 (Ying point). HERBS: Liu Wei Di Huang Wan, Zhi Bai Di Huang Wan, Da Bu Yin Wan. PRINCIPLE: Nourish Yin, clear deficiency heat - NO cold herbs.'
+    icon: '🥶',
+    fullAiPrompt: 'RAG PRIORITY: Stomach Cold. Search RAG for warming protocols. Focus on pain quality that is relieved by warmth. KEY POINTS: ST36, CV12, Moxa essential. HERBS: Li Zhong Wan, Xiao Jian Zhong Tang.'
   },
   {
-    id: 'yang-deficiency-cold',
-    hebrewLabel: 'קור מחוסר יאנג',
-    ragPriorityContext: 'RAG PRIORITY: Yang Deficiency Cold. Cold limbs, loose stools, pale complexion. Moxa protocols, warming herbs.',
-    role: 'Treatment Strategy',
-    icon: '❄️',
-    fullAiPrompt: 'CONTEXT: Yang Deficiency Cold pattern. SIGNS: Cold limbs, pale face, loose stools, clear urine, deep-weak pulse, pale wet tongue. KEY POINTS: GV4, CV4, ST36, KI7, BL23. MOXA: Essential - GV4, CV4, CV8 (salt moxa), ST36. HERBS: Jin Gui Shen Qi Wan, Fu Zi Li Zhong Wan. LIFESTYLE: Avoid cold foods, keep warm.'
+    id: 'yy_treasures',
+    hebrewLabel: 'שלושת האוצרות',
+    ragPriorityContext: 'RAG PRIORITY: Three Treasures (Jing, Qi, Shen). Definitions and diagnostic weights.',
+    role: 'Physiology',
+    icon: '💎',
+    fullAiPrompt: 'RAG PRIORITY: Three Treasures (Jing, Qi, Shen). Retrieve definitions and diagnostic weights. Explain how depletion of one affects the others in a clinical context. JING: KI3, GV4. QI: ST36, CV6. SHEN: HT7, GV20.'
+  },
+
+  // === SECTION 2: FIVE ELEMENTS (15 items) ===
+  {
+    id: 'fe_wood',
+    hebrewLabel: 'יסוד העץ - כבד/מרה',
+    ragPriorityContext: 'RAG PRIORITY: Wood Element. Liver/Gallbladder pair. Spring, growth, planning functions.',
+    role: 'Five Elements',
+    icon: '🌳',
+    fullAiPrompt: 'RAG PRIORITY: Wood Element. ORGANS: Liver/Gallbladder. SEASON: Spring. EMOTION: Anger. COLOR: Green. TASTE: Sour. KEY POINTS: LV3, LV14, GB34, GB40. FUNCTIONS: Planning, decision-making, smooth flow of Qi. PATHOLOGY: Stagnation, rising Yang, Wind.'
   },
   {
-    id: 'shen-disturbance',
-    hebrewLabel: 'הפרעות שן',
-    ragPriorityContext: 'RAG PRIORITY: Shen Disorders. Anxiety, insomnia, palpitations. HT7, PC6, GV20 for calming Shen.',
-    role: 'Point Selection',
-    icon: '🧠',
-    fullAiPrompt: 'CONTEXT: Shen disturbance patterns. SIGNS: Anxiety, insomnia, palpitations, poor concentration, restlessness, dream-disturbed sleep. KEY POINTS: HT7 (anchor Shen), PC6 (calm mind), GV20 (lift spirit), Yintang (frontal calm), Anmian (sleep). HERBS: Suan Zao Ren Tang, Gui Pi Tang, An Shen Ding Zhi Wan. AURICULAR: Shenmen, Heart, Subcortex.'
+    id: 'fe_fire',
+    hebrewLabel: 'יסוד האש - לב/מעי דק',
+    ragPriorityContext: 'RAG PRIORITY: Fire Element. Heart/Small Intestine pair. Summer, joy, Shen residence.',
+    role: 'Five Elements',
+    icon: '🔥',
+    fullAiPrompt: 'RAG PRIORITY: Fire Element. ORGANS: Heart/Small Intestine (+Pericardium/San Jiao). SEASON: Summer. EMOTION: Joy. COLOR: Red. TASTE: Bitter. KEY POINTS: HT7, HT5, SI3, PC6. FUNCTIONS: Shen residence, blood circulation, consciousness. PATHOLOGY: Shen disturbance, heat, insomnia.'
+  },
+  {
+    id: 'fe_earth',
+    hebrewLabel: 'יסוד האדמה - טחול/קיבה',
+    ragPriorityContext: 'RAG PRIORITY: Earth Element. Spleen/Stomach pair. Late summer, transformation, nourishment.',
+    role: 'Five Elements',
+    icon: '🏔️',
+    fullAiPrompt: 'RAG PRIORITY: Earth Element. ORGANS: Spleen/Stomach. SEASON: Late Summer. EMOTION: Worry/Pensiveness. COLOR: Yellow. TASTE: Sweet. KEY POINTS: ST36, SP6, SP3, CV12. FUNCTIONS: Transformation, transportation, holding blood. PATHOLOGY: Dampness, prolapse, bleeding.'
+  },
+  {
+    id: 'fe_metal',
+    hebrewLabel: 'יסוד המתכת - ריאות/מעי גס',
+    ragPriorityContext: 'RAG PRIORITY: Metal Element. Lung/Large Intestine pair. Autumn, letting go, Wei Qi.',
+    role: 'Five Elements',
+    icon: '⚙️',
+    fullAiPrompt: 'RAG PRIORITY: Metal Element. ORGANS: Lung/Large Intestine. SEASON: Autumn. EMOTION: Grief/Sadness. COLOR: White. TASTE: Pungent. KEY POINTS: LU7, LU9, LI4, LI11. FUNCTIONS: Wei Qi, respiration, elimination, boundaries. PATHOLOGY: Dryness, weak defense, constipation.'
+  },
+  {
+    id: 'fe_water',
+    hebrewLabel: 'יסוד המים - כליות/שלפוחית',
+    ragPriorityContext: 'RAG PRIORITY: Water Element. Kidney/Bladder pair. Winter, storage, willpower.',
+    role: 'Five Elements',
+    icon: '💧',
+    fullAiPrompt: 'RAG PRIORITY: Water Element. ORGANS: Kidney/Bladder. SEASON: Winter. EMOTION: Fear. COLOR: Black/Blue. TASTE: Salty. KEY POINTS: KI3, KI6, KI7, BL23, BL52. FUNCTIONS: Jing storage, bones, willpower, reproduction. PATHOLOGY: Deficiency (Yin/Yang), fear, deafness.'
+  },
+  {
+    id: 'fe_sheng_cycle',
+    hebrewLabel: 'מעגל השנג - יצירה',
+    ragPriorityContext: 'RAG PRIORITY: Sheng Cycle. Mother-Child generating sequence. Tonification strategies.',
+    role: 'Five Elements',
+    icon: '🔄',
+    fullAiPrompt: 'RAG PRIORITY: Sheng (Generating) Cycle. SEQUENCE: Wood→Fire→Earth→Metal→Water→Wood. CLINICAL: Tonify mother to strengthen child. EXAMPLES: KI weak → tonify LU (Metal generates Water). SP weak → tonify HT (Fire generates Earth). POINTS: Use mother point on affected meridian.'
+  },
+  {
+    id: 'fe_ke_cycle',
+    hebrewLabel: 'מעגל הקה - שליטה',
+    ragPriorityContext: 'RAG PRIORITY: Ke Cycle. Control/restraint sequence. Sedation strategies.',
+    role: 'Five Elements',
+    icon: '⚖️',
+    fullAiPrompt: 'RAG PRIORITY: Ke (Control) Cycle. SEQUENCE: Wood→Earth→Water→Fire→Metal→Wood. CLINICAL: Control excess by strengthening controller. OVERACTING: Wood invades Earth (stress→digestion). INSULTING: Reverse control (Water insults Fire). STRATEGY: Sedate excess, support controlled organ.'
+  },
+  {
+    id: 'fe_wood_fire',
+    hebrewLabel: 'עץ מזין אש',
+    ragPriorityContext: 'RAG PRIORITY: Wood-Fire relationship. Liver blood nourishes Heart. Clinical applications.',
+    role: 'Five Elements',
+    icon: '🔥',
+    fullAiPrompt: 'RAG PRIORITY: Wood-Fire Sheng. Liver blood nourishes Heart blood. DEFICIENCY: Liver Blood Def → Heart Blood Def (palpitations, insomnia, pale). KEY POINTS: LV8 (nourish LV blood), HT7, SP6, BL17. HERBS: Si Wu Tang + Gui Pi Tang.'
+  },
+  {
+    id: 'fe_fire_earth',
+    hebrewLabel: 'אש מזינה אדמה',
+    ragPriorityContext: 'RAG PRIORITY: Fire-Earth relationship. Heart Yang warms Spleen. Digestive support.',
+    role: 'Five Elements',
+    icon: '🏔️',
+    fullAiPrompt: 'RAG PRIORITY: Fire-Earth Sheng. Heart Yang/Ming Men Fire warms Middle Jiao for digestion. DEFICIENCY: Poor transformation, cold abdomen, loose stools. KEY POINTS: CV8 (moxa), CV12, ST36, GV4. HERBS: Li Zhong Wan, Fu Zi Li Zhong Wan.'
+  },
+  {
+    id: 'fe_earth_metal',
+    hebrewLabel: 'אדמה מזינה מתכת',
+    ragPriorityContext: 'RAG PRIORITY: Earth-Metal relationship. Spleen Qi supports Lung Qi. Immune connection.',
+    role: 'Five Elements',
+    icon: '⚙️',
+    fullAiPrompt: 'RAG PRIORITY: Earth-Metal Sheng. Spleen produces post-heaven Qi for Lung. DEFICIENCY: Weak SP → weak LU → frequent colds. KEY POINTS: ST36, SP3, LU9, BL13, BL20. HERBS: Bu Zhong Yi Qi Tang, Yu Ping Feng San.'
+  },
+  {
+    id: 'fe_metal_water',
+    hebrewLabel: 'מתכת מזינה מים',
+    ragPriorityContext: 'RAG PRIORITY: Metal-Water relationship. Lung descends fluids to Kidney.',
+    role: 'Five Elements',
+    icon: '💧',
+    fullAiPrompt: 'RAG PRIORITY: Metal-Water Sheng. Lung descends Qi and fluids to Kidney. PATHOLOGY: Lung fails to descend → edema, urinary issues. KEY POINTS: LU7+KI6 (Ren Mai), LU5 (descend), KI3. HERBS: Ma Xing Shi Gan Tang (acute), Liu Wei Di Huang Wan (chronic).'
+  },
+  {
+    id: 'fe_water_wood',
+    hebrewLabel: 'מים מזינים עץ',
+    ragPriorityContext: 'RAG PRIORITY: Water-Wood relationship. Kidney Yin nourishes Liver blood.',
+    role: 'Five Elements',
+    icon: '🌳',
+    fullAiPrompt: 'RAG PRIORITY: Water-Wood Sheng. Kidney Yin nourishes Liver Blood. DEFICIENCY: KI Yin Def → LV Blood Def → Yang Rising. KEY POINTS: KI3, KI6, LV8, SP6. HERBS: Liu Wei Di Huang Wan + Qi Ju Di Huang Wan. SIGNS: Dizziness, tinnitus, blurred vision, irritability.'
+  },
+  {
+    id: 'fe_constitutional',
+    hebrewLabel: 'אבחון חוקתי חמישה יסודות',
+    ragPriorityContext: 'RAG PRIORITY: Constitutional Five Element diagnosis. Facial features, body type, preferences.',
+    role: 'Five Elements',
+    icon: '👤',
+    fullAiPrompt: 'RAG PRIORITY: Constitutional Diagnosis. WOOD: Tall, tense, green tinge, anger-prone. FIRE: Pointed features, ruddy, excitable. EARTH: Round, yellow tinge, worrier. METAL: Pale, defined features, melancholic. WATER: Dark circles, fearful, rounded back. Use for treatment prioritization.'
+  },
+  {
+    id: 'fe_emotion_organs',
+    hebrewLabel: 'רגשות ואיברים',
+    ragPriorityContext: 'RAG PRIORITY: Emotion-Organ correspondences. Psychosomatic connections in TCM.',
+    role: 'Five Elements',
+    icon: '💭',
+    fullAiPrompt: 'RAG PRIORITY: Emotion-Organ Map. ANGER→Liver (LV3, GB34). JOY→Heart (HT7, PC6). WORRY→Spleen (SP3, ST36). GRIEF→Lung (LU7, LU3). FEAR→Kidney (KI3, BL52). CLINICAL: Treat organ to calm emotion; treat emotion to heal organ. HERBS by emotion provided.'
+  },
+  {
+    id: 'fe_seasonal_treatment',
+    hebrewLabel: 'טיפול עונתי',
+    ragPriorityContext: 'RAG PRIORITY: Seasonal treatment according to Five Elements. Prevention and optimization.',
+    role: 'Five Elements',
+    icon: '📅',
+    fullAiPrompt: 'RAG PRIORITY: Seasonal Treatment. SPRING: Soothe LV, avoid wind. SUMMER: Clear HT heat, stay cool. LATE SUMMER: Strengthen SP, avoid damp. AUTUMN: Moisten LU, avoid dryness. WINTER: Tonify KI, conserve energy. POINTS: Seasonal point selection for prevention.'
   }
 ];
 
