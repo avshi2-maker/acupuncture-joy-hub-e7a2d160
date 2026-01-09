@@ -219,35 +219,47 @@ export function IntelligenceHub({
         </p>
       </div>
 
-      {/* SECTION 3: RAG Output Container (Bottom) - FIXED HEIGHT */}
+      {/* SECTION 3: RAG Output Container (Bottom) - GLASSMORPHISM */}
       <div 
-        className="flex-1 overflow-hidden"
+        className="flex-1 overflow-hidden m-4"
         style={{
           // CRITICAL: Fixed min/max height to prevent shaking
           minHeight: '300px',
           maxHeight: 'calc(100vh - 400px)',
         }}
       >
-        <ScrollArea className="h-full">
-          <div className="p-4">
-            {(isLoading || messages.length > 0) ? (
-              <AIResponseDisplay
-                isLoading={isLoading}
-                content={lastAssistantMessage?.content || ''}
-                query={lastUserMessage?.content || ''}
-                onViewBodyMap={onViewBodyMap || (() => {})}
-              />
-            ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                <Sparkles className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                <p className="text-sm font-medium mb-2">מוכן לניתוח קליני</p>
-                <p className="text-xs">
-                  בחר דפוסים מהעמודה הימנית או הקלד שאלה בתיבת הקלט
-                </p>
-              </div>
-            )}
-          </div>
-        </ScrollArea>
+        <div 
+          className="rag-output-container h-full"
+          style={{
+            background: 'rgba(255, 255, 255, 0.4)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '16px',
+            padding: '25px',
+            boxShadow: '0 8px 32px 0 rgba(26, 95, 122, 0.15)',
+            overflowY: 'auto',
+            fontSize: '1.05rem',
+            lineHeight: '1.8',
+          }}
+        >
+          {(isLoading || messages.length > 0) ? (
+            <AIResponseDisplay
+              isLoading={isLoading}
+              content={lastAssistantMessage?.content || ''}
+              query={lastUserMessage?.content || ''}
+              onViewBodyMap={onViewBodyMap || (() => {})}
+            />
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              <Sparkles className="h-12 w-12 mx-auto mb-4 opacity-30" />
+              <p className="text-sm font-medium mb-2">מוכן לניתוח קליני</p>
+              <p className="text-xs">
+                בחר דפוסים מהעמודה הימנית או הקלד שאלה בתיבת הקלט
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
