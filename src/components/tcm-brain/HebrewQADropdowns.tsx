@@ -182,7 +182,6 @@ export function HebrewQADropdowns({
 }: HebrewQADropdownsProps) {
   const [openFiveElements, setOpenFiveElements] = useState(false);
   const [openYinYang, setOpenYinYang] = useState(false);
-  const [openHerbal, setOpenHerbal] = useState(false);
 
   const handleSelect = (question: string) => {
     onSelectQuestion(question);
@@ -190,24 +189,7 @@ export function HebrewQADropdowns({
 
   return (
     <div className={cn('flex flex-col gap-2', className)} dir="rtl">
-      {/* Herbal Encyclopedia - Green Header Box with Collapsible */}
-      <Collapsible open={openHerbal} onOpenChange={setOpenHerbal}>
-        <CollapsibleTrigger asChild>
-          <Button
-            variant="ghost"
-            className="w-full h-10 justify-between px-4 bg-white border border-jade/30 rounded-lg hover:bg-jade/5"
-            disabled={disabled}
-          >
-            <ChevronDown className={cn("h-4 w-4 text-jade transition-transform", openHerbal && "rotate-180")} />
-            <div className="flex items-center gap-2">
-              <span className="text-jade font-medium">אנציקלופדיית צמחים</span>
-              <Leaf className="h-4 w-4 text-jade" />
-            </div>
-          </Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="mt-1">
-          <div className="bg-background border rounded-lg shadow-md p-2 space-y-1">
-            {/* Five Elements Dropdown */}
+      {/* Five Elements Dropdown */}
             <DropdownMenu open={openFiveElements} onOpenChange={setOpenFiveElements}>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -288,9 +270,6 @@ export function HebrewQADropdowns({
                 </ScrollArea>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
     </div>
   );
 }
