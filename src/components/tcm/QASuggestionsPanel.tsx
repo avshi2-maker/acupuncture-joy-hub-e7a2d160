@@ -5,7 +5,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, ChevronUp, Lightbulb, MessageSquare, Shuffle, Search, Star, Clock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 // Q&A data from patient-qa-knowledge.csv format
@@ -125,10 +124,6 @@ export function QASuggestionsPanel({
         localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(newFavorites));
       } catch (e) {
         console.error('Failed to save favorites:', e);
-      }
-      
-      if (!prev.includes(id)) {
-        toast.success('Added to favorites');
       }
       
       return newFavorites;

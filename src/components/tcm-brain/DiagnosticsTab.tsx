@@ -21,6 +21,8 @@ interface DiagnosticsTabProps {
   questionsAsked?: string[];
   formatSessionTime?: (seconds: number) => string;
   quickActionsRef?: RefObject<QuickActionsRef>;
+  externalInput?: string;
+  onExternalInputHandled?: () => void;
 }
 
 export function DiagnosticsTab({
@@ -33,9 +35,25 @@ export function DiagnosticsTab({
   questionsAsked = [],
   formatSessionTime = (s) => `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`,
   quickActionsRef,
+  externalInput,
+  onExternalInputHandled,
 }: DiagnosticsTabProps) {
   const [input, setInput] = useState('');
   const [voiceLanguage, setVoiceLanguage] = useState<'en-US' | 'he-IL'>('en-US');
+
+  // Handle external input (from Q&A suggestions)
+  useEffect(() => {
+    if (externalInput && !isLoading) {
+      setInput(externalInput);
+      // Auto-trigger the workflow
+      window.dispatchEvent(new CustomEvent('tcm-query-start', { 
+        detail: { query: externalInput } 
+      }));
+      onSendMessage(externalInput);
+      setInput('');
+      onExternalInputHandled?.();
+    }
+  }, [externalInput, isLoading, onSendMessage, onExternalInputHandled]);
 
   // Trigger engine activity when sending message
   const handleRunWorkflow = () => {
