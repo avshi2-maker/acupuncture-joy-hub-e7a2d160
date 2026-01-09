@@ -74,6 +74,7 @@ import { AssetInventoryCard } from '@/components/dashboard/AssetInventoryCard';
 import { BaZiDashboardCard } from '@/components/dashboard/BaZiDashboardCard';
 import { HerbEncyclopediaCard } from '@/components/dashboard/HerbEncyclopediaCard';
 import { PediatricAssistantCard } from '@/components/dashboard/PediatricAssistantCard';
+import { KnowledgeBaseCard } from '@/components/dashboard/KnowledgeBaseCard';
 
 
 // Phosphor-style glowing clock component (mobile - small version)
@@ -1214,6 +1215,7 @@ export default function Dashboard() {
           <BaZiDashboardCard animationDelay={950} />
           <HerbEncyclopediaCard animationDelay={1000} />
           <PediatricAssistantCard animationDelay={1050} />
+          <KnowledgeBaseCard animationDelay={1100} />
         </div>
 
         {/* Herbal Master Widget - Encyclopedia, Safety & Quiz */}
