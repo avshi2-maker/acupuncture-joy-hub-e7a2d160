@@ -403,7 +403,7 @@ export default function TcmBrain() {
                       <TreatmentTab messages={messages} isLoading={isLoading} onSendMessage={streamChat} onClear={clearChat} selectedPatient={selectedPatient} sessionSeconds={sessionSeconds} questionsAsked={questionsAsked} formatSessionTime={formatSessionTime} quickActionsRef={quickActionsRef} />
                     </TabsContent>
                     <TabsContent value="bodymap" className="m-0 h-full p-0">
-                      <BodyMapTab highlightedPoints={highlightedPoints} aiResponseText={messages.filter(m => m.role === 'assistant').slice(-1)[0]?.content || ''} streamChat={streamChat} onTabChange={setActiveTab} onClearPoints={() => setHighlightedPoints([])} />
+                      <BodyMapTab highlightedPoints={highlightedPoints} aiResponseText={messages.filter(m => m.role === 'assistant').slice(-1)[0]?.content || ''} streamChat={streamChat} onTabChange={setActiveTab} onClearPoints={() => setHighlightedPoints([])} onSetPoints={setHighlightedPoints} />
                     </TabsContent>
                     <TabsContent value="session" className="m-0 h-full p-0">
                       <SessionNotesTab sessionStatus={sessionStatus} sessionSeconds={sessionSeconds} formatSessionTime={formatSessionTime} questionsAsked={questionsAsked} messages={messages} voiceNotes={voiceNotes} activeTemplate={activeTemplate} startSession={startSession} pauseSession={pauseSession} continueSession={continueSession} endSession={endSession} handleAddVoiceNote={handleAddVoiceNote} handleDeleteVoiceNote={handleDeleteVoiceNote} handleApplyTemplate={handleApplyTemplate} openGmailWithSession={openGmailWithSession} openWhatsAppWithSession={openWhatsAppWithSession} />
