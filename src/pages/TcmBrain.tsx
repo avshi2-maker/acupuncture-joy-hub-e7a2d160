@@ -39,7 +39,6 @@ import { PregnancySafetyDialog, ElderlyLifestyleDialog, PediatricAcupunctureDial
 import { SessionBriefPanel } from '@/components/video/SessionBriefPanel';
 import { EmotionalProcessingPanel } from '@/components/session/EmotionalProcessingPanel';
 import { PediatricTCMAssistant } from '@/components/tcm-brain/PediatricTCMAssistant';
-import { HerbalMasterWidget } from '@/components/herbal/HerbalMasterWidget';
 import { HebrewQADropdowns } from '@/components/tcm-brain/HebrewQADropdowns';
 import { CustomizableToolbar, ToolbarItemId } from '@/components/video/CustomizableToolbar';
 import { AnxietyQADialog } from '@/components/video/AnxietyQADialog';
@@ -403,10 +402,6 @@ export default function TcmBrain() {
                   />
                 </div>
 
-                {/* 2. Herbal Master Widget */}
-                <div className="rounded-xl overflow-hidden shadow-sm border">
-                  <HerbalMasterWidget className="w-full" />
-                </div>
 
                 {/* 3. Pediatric Assistant (Collapsible) */}
                 <div className="bg-card rounded-lg border shadow-sm">
