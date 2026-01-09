@@ -1492,11 +1492,18 @@ serve(async (req) => {
     
     // LITE MODE: Drastically reduce token consumption for quick queries
     const isLiteMode = liteMode === true;
-    const LITE_HYBRID_CHUNKS = 5;      // vs 15 in normal mode
-    const LITE_PILLAR_CHUNKS = 3;      // vs 8 in normal mode
-    const LITE_FALLBACK_LIMIT = 8;     // vs 20 in normal mode
-    const LITE_CAF_LIMIT = 1;          // vs 3 in normal mode
-    const LITE_TRIALS_LIMIT = 1;       // vs 3 in normal mode
+    const LITE_HYBRID_CHUNKS = 3;      // vs 8 in normal mode (reduced from 15)
+    const LITE_PILLAR_CHUNKS = 2;      // vs 4 in normal mode (reduced from 8)
+    const LITE_FALLBACK_LIMIT = 5;     // vs 10 in normal mode (reduced from 20)
+    const LITE_CAF_LIMIT = 1;          // vs 2 in normal mode (reduced from 3)
+    const LITE_TRIALS_LIMIT = 1;       // vs 2 in normal mode (reduced from 3)
+    
+    // NORMAL MODE: Also reduced for better token efficiency
+    const NORMAL_HYBRID_CHUNKS = 8;    // reduced from 15
+    const NORMAL_PILLAR_CHUNKS = 4;    // reduced from 8
+    const NORMAL_FALLBACK_LIMIT = 10;  // reduced from 20
+    const NORMAL_CAF_LIMIT = 2;        // reduced from 3
+    const NORMAL_TRIALS_LIMIT = 2;     // reduced from 3
     
     console.log('=== LITE MODE:', isLiteMode ? 'ENABLED (reduced tokens)' : 'DISABLED (full search)', '===');
 
@@ -1587,8 +1594,8 @@ serve(async (req) => {
     const searchLanguage = 'en'; // Force English search for cross-lingual RAG
     
     // First, perform hybrid search for overall confidence assessment
-    // LITE MODE: Use 5 chunks, NORMAL: Use 15 chunks
-    const hybridChunkLimit = isLiteMode ? LITE_HYBRID_CHUNKS : 15;
+    // LITE MODE: Use reduced chunks, NORMAL: Use updated normal limits
+    const hybridChunkLimit = isLiteMode ? LITE_HYBRID_CHUNKS : NORMAL_HYBRID_CHUNKS;
     const hybridSearchResult = await performHybridSearch(
       supabaseClient,
       searchQueryForDB, // Use the English-translated query
@@ -1746,7 +1753,7 @@ serve(async (req) => {
         .or(searchQuery.toLowerCase().split(/\s+/).filter((w: string) => w.length > 2).map((w: string) => 
           `western_label.ilike.%${w}%,tcm_pattern.ilike.%${w}%,key_symptoms.ilike.%${w}%,acupoints_display.ilike.%${w}%`
         ).join(','))
-        .limit(isLiteMode ? LITE_CAF_LIMIT : 3),  // LITE: 1, NORMAL: 3
+        .limit(isLiteMode ? LITE_CAF_LIMIT : NORMAL_CAF_LIMIT),  // LITE: 1, NORMAL: 2
 
       // Clinical Trials
       supabaseClient
@@ -1756,7 +1763,7 @@ serve(async (req) => {
           `condition.ilike.%${w}%,title.ilike.%${w}%,intervention.ilike.%${w}%`
         ).join(','))
         .order('sapir_verified', { ascending: false })
-        .limit(isLiteMode ? LITE_TRIALS_LIMIT : 3)  // LITE: 1, NORMAL: 3
+        .limit(isLiteMode ? LITE_TRIALS_LIMIT : NORMAL_TRIALS_LIMIT)  // LITE: 1, NORMAL: 2
     ]);
 
     // ========================================================================
@@ -1766,8 +1773,8 @@ serve(async (req) => {
     const queryKeywords = expandedKeywords.slice(0, 12); // Use expanded keywords instead of just keywordTerms
     
     // Rank each pillar by relevance to the user's query (with bilingual term matching)
-    // LITE MODE: 3 chunks per pillar, NORMAL: 8 chunks per pillar
-    const pillarLimit = isLiteMode ? LITE_PILLAR_CHUNKS : 8;
+    // LITE MODE: 2 chunks per pillar, NORMAL: 4 chunks per pillar
+    const pillarLimit = isLiteMode ? LITE_PILLAR_CHUNKS : NORMAL_PILLAR_CHUNKS;
     const clinicalChunks = rankChunksByRelevance(
       clinicalResult.data || [], 
       queryKeywords, 
@@ -1840,15 +1847,14 @@ serve(async (req) => {
         `)
         .eq('language', searchLanguage)
         .or(ilikeConditions)
-        .limit(isLiteMode ? LITE_FALLBACK_LIMIT : 20);  // LITE: 8, NORMAL: 20
+        .limit(isLiteMode ? LITE_FALLBACK_LIMIT : NORMAL_FALLBACK_LIMIT);  // Use constants
       
       if (fallbackData) {
         // Rank fallback chunks by relevance before distributing
-        const rankedFallback = rankChunksByRelevance(fallbackData, expandedKeywords, [], isLiteMode ? 10 : 25);
+        const rankedFallback = rankChunksByRelevance(fallbackData, expandedKeywords, [], isLiteMode ? 8 : 15);
         
         // Categorize fallback chunks into pillars
-        // LITE MODE: Max 2 per pillar, NORMAL: Max 5 per pillar
-        const fallbackPillarLimit = isLiteMode ? 2 : 5;
+        const fallbackPillarLimit = isLiteMode ? 2 : 3;
         rankedFallback.forEach(chunk => {
           const pillars = detectPillar(chunk.content);
           if (pillars.includes('clinical') && clinicalChunks.length < fallbackPillarLimit) {

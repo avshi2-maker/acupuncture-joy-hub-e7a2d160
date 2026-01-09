@@ -32,8 +32,7 @@ import {
 } from 'lucide-react';
 import { parsePointReferences } from '@/components/acupuncture/BodyFigureSelector';
 import { supabase } from '@/integrations/supabase/client';
-import { TTSButton } from '@/components/audio/TTSButton';
-import { GenerateMP3Button } from '@/components/audio/GenerateMP3Button';
+// Audio buttons removed from this module
 import { usePrintContent } from '@/hooks/usePrintContent';
 
 interface AIResponseDisplayProps {
@@ -764,28 +763,7 @@ export function AIResponseDisplay({
               </Button>
             )}
 
-            {/* Hebrew TTS Button */}
-            {content && !isLoading && (
-              <TTSButton
-                text={content}
-                title="AI Response"
-                size="sm"
-                variant="outline"
-                className="gap-1.5 text-xs"
-                showLabel
-                label="Listen"
-              />
-            )}
-
-            {/* Generate MP3 & Share */}
-            {content && !isLoading && (
-              <GenerateMP3Button
-                text={content}
-                title="TCM Report"
-                size="sm"
-                variant="outline"
-              />
-            )}
+            {/* Audio buttons removed - no TTS/MP3 generation in this module */}
 
             {/* Print Button */}
             {content && !isLoading && (

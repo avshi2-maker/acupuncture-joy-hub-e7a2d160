@@ -68,7 +68,7 @@ export function RAGBodyFigureDisplay({
   celebratingPoint = null,
   enableTour = true,
   autoStartTour = false,
-  enableNarration = true,
+  enableNarration = false, // Audio narration disabled by default
   language = 'en',
   patientGender = null,
   patientAgeGroup = null,

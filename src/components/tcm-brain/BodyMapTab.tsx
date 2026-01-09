@@ -55,6 +55,7 @@ Include:
               aiResponseText={aiResponseText}
               onGenerateProtocol={handleGenerateProtocol}
               allowSelection={true}
+              enableNarration={false}
             />
           ) : (
             <div className="text-center py-12 text-muted-foreground">

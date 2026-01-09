@@ -38,10 +38,8 @@ const SESSION_START = new Date().toISOString();
 
 export function APIUsageMeter() {
   const [stats, setStats] = useState<APIUsageStats | null>(null);
-  const [pulseAnimation, setPulseAnimation] = useState(false);
+  // Removed pulse/shake animations for cleaner UI
   const [isQueryRunning, setIsQueryRunning] = useState(false);
-  const [queryCountdown, setQueryCountdown] = useState(0);
-  const countdownRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     fetchStats();
@@ -49,19 +47,13 @@ export function APIUsageMeter() {
     return () => clearInterval(interval);
   }, []);
 
-  // Query countdown timer
+  // Simple auto-reset for query running state (no countdown animation)
   useEffect(() => {
-    if (isQueryRunning && queryCountdown > 0) {
-      countdownRef.current = setTimeout(() => {
-        setQueryCountdown(prev => Math.max(0, prev - 100));
-      }, 100);
-    } else if (queryCountdown <= 0 && isQueryRunning) {
-      setIsQueryRunning(false);
+    if (isQueryRunning) {
+      const timeout = setTimeout(() => setIsQueryRunning(false), 3000);
+      return () => clearTimeout(timeout);
     }
-    return () => {
-      if (countdownRef.current) clearTimeout(countdownRef.current);
-    };
-  }, [isQueryRunning, queryCountdown]);
+  }, [isQueryRunning]);
 
   const fetchStats = async () => {
     try {
@@ -112,12 +104,9 @@ export function APIUsageMeter() {
           peakHour,
         };
 
-        // Trigger pulse animation and running state when new calls detected
+        // Set running state when new calls detected (no pulse animations)
         if (stats && newStats.todayCalls > stats.todayCalls) {
-          setPulseAnimation(true);
           setIsQueryRunning(true);
-          setQueryCountdown(3000); // 3 second countdown
-          setTimeout(() => setPulseAnimation(false), 1000);
         }
 
         setStats(newStats);
@@ -127,13 +116,10 @@ export function APIUsageMeter() {
     }
   };
 
-  // Expose method for external components to trigger activity
+  // Expose method for external components to trigger activity (no pulse animations)
   useEffect(() => {
     const handleQueryStart = () => {
       setIsQueryRunning(true);
-      setQueryCountdown(5000); // 5 second countdown for queries
-      setPulseAnimation(true);
-      setTimeout(() => setPulseAnimation(false), 1000);
     };
 
     window.addEventListener('tcm-query-start', handleQueryStart);
@@ -149,10 +135,6 @@ export function APIUsageMeter() {
     );
   }
 
-  const formatCountdown = (ms: number) => {
-    const seconds = Math.ceil(ms / 1000);
-    return `${seconds}s`;
-  };
 
   return (
     <motion.div 
@@ -160,47 +142,29 @@ export function APIUsageMeter() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
-      {/* Live/Running Indicator - Now properly shows LIVE when active */}
-      <motion.div 
-        className={`flex items-center gap-1.5 px-2 py-1 rounded-full border ${
-          isQueryRunning 
-            ? 'bg-green-500/20 border-green-500/50 shadow-lg shadow-green-500/20' 
-            : stats.isLive 
-              ? 'bg-green-500/10 border-green-500/30' 
-              : 'bg-muted/50 border-border'
-        }`}
-        animate={isQueryRunning ? { scale: [1, 1.05, 1] } : {}}
-        transition={{ repeat: isQueryRunning ? Infinity : 0, duration: 0.5 }}
-      >
+      {/* Live/Running Indicator - static, no shake animations */}
+      <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full border ${
+        isQueryRunning 
+          ? 'bg-green-500/20 border-green-500/50' 
+          : stats.isLive 
+            ? 'bg-green-500/10 border-green-500/30' 
+            : 'bg-muted/50 border-border'
+      }`}>
         <div className={`w-2 h-2 rounded-full ${
-          isQueryRunning 
-            ? 'bg-green-500 animate-ping' 
-            : stats.isLive 
-              ? 'bg-green-500 animate-pulse' 
-              : 'bg-muted-foreground'
+          isQueryRunning || stats.isLive ? 'bg-green-500' : 'bg-muted-foreground'
         }`} />
         <span className={`text-[10px] font-bold ${
-          isQueryRunning ? 'text-green-600' : stats.isLive ? 'text-green-600' : ''
+          isQueryRunning || stats.isLive ? 'text-green-600' : ''
         }`}>
           {isQueryRunning ? 'RUNNING' : stats.isLive ? 'LIVE' : 'IDLE'}
         </span>
-        {isQueryRunning && (
-          <span className="text-[10px] font-mono text-green-600">
-            {formatCountdown(queryCountdown)}
-          </span>
-        )}
-      </motion.div>
+      </div>
 
-      {/* Per Minute Rate */}
-      <motion.div 
-        className={`flex items-center gap-1.5 px-2 py-1 rounded-full border ${
-          pulseAnimation ? 'bg-blue-500/20 border-blue-500/50' : 'bg-blue-500/10 border-blue-500/30'
-        }`}
-        animate={pulseAnimation ? { scale: [1, 1.1, 1] } : {}}
-      >
+      {/* Per Minute Rate - static, no animations */}
+      <div className="flex items-center gap-1.5 px-2 py-1 rounded-full border bg-blue-500/10 border-blue-500/30">
         <Activity className="h-3 w-3 text-blue-600" />
         <span className="text-[10px] font-bold text-blue-600">{stats.perMinuteRate}/min</span>
-      </motion.div>
+      </div>
 
       {/* Session Calls */}
       <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-jade/10 border border-jade/30">
