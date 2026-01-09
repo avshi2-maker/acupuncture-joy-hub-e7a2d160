@@ -107,12 +107,14 @@ import {
 import { TcmTurboDashboard, TurboDashboardStatus } from '@/components/tcm/TcmTurboDashboard';
 import { VideoSessionHeaderBoxes } from '@/components/video/VideoSessionHeaderBoxes';
 import { VideoSessionThreeColumnLayout, VideoSessionRightColumn, VideoSessionCenterColumn, VideoSessionLeftColumn } from '@/components/video/VideoSessionThreeColumnLayout';
-import { RAGLiveSummaryZone } from '@/components/video/RAGLiveSummaryZone';
-import { VideoContainer } from '@/components/video/VideoContainer';
+import { RAGLiveSummaryZoneEnhanced } from '@/components/video/RAGLiveSummaryZoneEnhanced';
+import { VideoContainerZoom } from '@/components/video/VideoContainerZoom';
 import { PatientBriefCompact, SessionTimerCompact } from '@/components/video/PatientBriefCompact';
 import { SpecialtyIconsGrid } from '@/components/video/SpecialtyIconsGrid';
 import { useSmartSuggest } from '@/hooks/useSmartSuggest';
 import { usePhaseVoiceTeleprompter } from '@/hooks/usePhaseVoiceTeleprompter';
+import { useSessionTranscription } from '@/hooks/useSessionTranscription';
+import { useAIContextEngine } from '@/hooks/useAIContextEngine';
 
 import { TcmBrainPanel } from '@/components/video/TcmBrainPanel';
 import { SessionBriefPanel } from '@/components/video/SessionBriefPanel';
@@ -2062,7 +2064,7 @@ export default function VideoSession() {
                   </div>
                 }
                 videoContainer={
-                  <VideoContainer
+                  <VideoContainerZoom
                     sessionStatus={sessionStatus}
                     sessionDuration={sessionDuration}
                     patientName={selectedPatientName}
@@ -2071,7 +2073,7 @@ export default function VideoSession() {
                   />
                 }
                 ragSummaryZone={
-                  <RAGLiveSummaryZone
+                  <RAGLiveSummaryZoneEnhanced
                     currentPhase={currentPhase}
                     liveTranscription={liveTranscription}
                     aiSummary={aiQueryResult || ''}
