@@ -1577,11 +1577,12 @@ serve(async (req) => {
     const searchLanguage = 'en'; // Force English search for cross-lingual RAG
     
     // First, perform hybrid search for overall confidence assessment
+    // OPTIMIZED: Reduced from 30 to 15 chunks to lower token consumption (~50% reduction)
     const hybridSearchResult = await performHybridSearch(
       supabaseClient,
       searchQueryForDB, // Use the English-translated query
       searchLanguage,   // Always search English knowledge base
-      30
+      15  // Reduced from 30 - most relevant chunks only
     );
     
     console.log('=== HYBRID SEARCH CONFIDENCE CHECK ===');
@@ -1734,7 +1735,7 @@ serve(async (req) => {
         .or(searchQuery.toLowerCase().split(/\s+/).filter((w: string) => w.length > 2).map((w: string) => 
           `western_label.ilike.%${w}%,tcm_pattern.ilike.%${w}%,key_symptoms.ilike.%${w}%,acupoints_display.ilike.%${w}%`
         ).join(','))
-        .limit(5),
+        .limit(3),  // Reduced from 5 to optimize token consumption
 
       // Clinical Trials
       supabaseClient
@@ -1744,7 +1745,7 @@ serve(async (req) => {
           `condition.ilike.%${w}%,title.ilike.%${w}%,intervention.ilike.%${w}%`
         ).join(','))
         .order('sapir_verified', { ascending: false })
-        .limit(5)
+        .limit(3)  // Reduced from 5 to optimize token consumption
     ]);
 
     // ========================================================================
@@ -1754,29 +1755,30 @@ serve(async (req) => {
     const queryKeywords = expandedKeywords.slice(0, 12); // Use expanded keywords instead of just keywordTerms
     
     // Rank each pillar by relevance to the user's query (with bilingual term matching)
+    // OPTIMIZED: Reduced per-pillar ranking from 15 to 8 chunks max
     const clinicalChunks = rankChunksByRelevance(
       clinicalResult.data || [], 
       queryKeywords, 
       CLINICAL_KEYWORDS, 
-      15
+      8  // Reduced from 15
     );
     const pharmacopeiaChunks = rankChunksByRelevance(
       pharmacopeiaResult.data || [], 
       queryKeywords, 
       PHARMACOPEIA_KEYWORDS, 
-      15
+      8  // Reduced from 15
     );
     const nutritionChunks = rankChunksByRelevance(
       nutritionResult.data || [], 
       queryKeywords, 
       NUTRITION_KEYWORDS, 
-      15
+      8  // Reduced from 15
     );
     const lifestyleChunks = rankChunksByRelevance(
       lifestyleResult.data || [], 
       queryKeywords, 
       LIFESTYLE_KEYWORDS, 
-      15
+      8  // Reduced from 15
     );
     const ageSpecificChunks = ageSpecificResult.data || [];
     const cafStudies = cafStudiesResult.data || [];
@@ -1826,7 +1828,7 @@ serve(async (req) => {
         `)
         .eq('language', searchLanguage)
         .or(ilikeConditions)
-        .limit(50);
+        .limit(20);  // Reduced from 50 to optimize token consumption
       
       if (fallbackData) {
         // Rank fallback chunks by relevance before distributing
@@ -1835,16 +1837,17 @@ serve(async (req) => {
         // Categorize fallback chunks into pillars
         rankedFallback.forEach(chunk => {
           const pillars = detectPillar(chunk.content);
-          if (pillars.includes('clinical') && clinicalChunks.length < 10) {
+          // OPTIMIZED: Reduced per-pillar limits from 10 to 5 to cut tokens
+          if (pillars.includes('clinical') && clinicalChunks.length < 5) {
             clinicalChunks.push(chunk);
           }
-          if (pillars.includes('pharmacopeia') && pharmacopeiaChunks.length < 10) {
+          if (pillars.includes('pharmacopeia') && pharmacopeiaChunks.length < 5) {
             pharmacopeiaChunks.push(chunk);
           }
-          if (pillars.includes('nutrition') && nutritionChunks.length < 10) {
+          if (pillars.includes('nutrition') && nutritionChunks.length < 5) {
             nutritionChunks.push(chunk);
           }
-          if (pillars.includes('lifestyle') && lifestyleChunks.length < 10) {
+          if (pillars.includes('lifestyle') && lifestyleChunks.length < 5) {
             lifestyleChunks.push(chunk);
           }
         });
