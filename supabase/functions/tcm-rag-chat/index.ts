@@ -1490,20 +1490,38 @@ serve(async (req) => {
     const { query, messages, useExternalAI, includeChunkDetails, ageGroup, patientContext, language, liteMode } = await req.json();
     const searchQuery = query || messages?.[messages.length - 1]?.content || '';
     
-    // LITE MODE: Drastically reduce token consumption for quick queries
+    // ========================================================================
+    // TOKEN OPTIMIZATION: Balanced approach for cost vs quality
+    // ========================================================================
     const isLiteMode = liteMode === true;
-    const LITE_HYBRID_CHUNKS = 3;      // vs 8 in normal mode (reduced from 15)
-    const LITE_PILLAR_CHUNKS = 2;      // vs 4 in normal mode (reduced from 8)
-    const LITE_FALLBACK_LIMIT = 5;     // vs 10 in normal mode (reduced from 20)
-    const LITE_CAF_LIMIT = 1;          // vs 2 in normal mode (reduced from 3)
-    const LITE_TRIALS_LIMIT = 1;       // vs 2 in normal mode (reduced from 3)
     
-    // NORMAL MODE: Also reduced for better token efficiency
-    const NORMAL_HYBRID_CHUNKS = 8;    // reduced from 15
-    const NORMAL_PILLAR_CHUNKS = 4;    // reduced from 8
-    const NORMAL_FALLBACK_LIMIT = 10;  // reduced from 20
-    const NORMAL_CAF_LIMIT = 2;        // reduced from 3
-    const NORMAL_TRIALS_LIMIT = 2;     // reduced from 3
+    // CHUNK TRUNCATION: Limit content length to reduce tokens while keeping key info
+    const CHUNK_MAX_CHARS = 400; // Truncate chunks to 400 chars (key info first)
+    
+    // LITE MODE: For quick queries with minimal token usage
+    const LITE_HYBRID_CHUNKS = 2;      // Reduced for speed
+    const LITE_PILLAR_CHUNKS = 2;      // 2 per pillar = 8 total
+    const LITE_FALLBACK_LIMIT = 4;     // Minimal fallback
+    const LITE_CAF_LIMIT = 1;          // Single CAF match
+    const LITE_TRIALS_LIMIT = 1;       // Single trial
+    
+    // BALANCED MODE (default): Optimized for quality + cost
+    const NORMAL_HYBRID_CHUNKS = 5;    // Confidence check (reduced from 8)
+    const NORMAL_PILLAR_CHUNKS = 3;    // 3 per pillar = 12 total (reduced from 4)
+    const NORMAL_FALLBACK_LIMIT = 6;   // Reduced from 10
+    const NORMAL_CAF_LIMIT = 2;        // Keep clinical framework
+    const NORMAL_TRIALS_LIMIT = 1;     // Single best trial
+    
+    // Helper: Truncate chunk content while preserving key info
+    const truncateChunk = (content: string, maxLength: number = CHUNK_MAX_CHARS): string => {
+      if (!content || content.length <= maxLength) return content;
+      // Find last complete sentence within limit
+      const truncated = content.substring(0, maxLength);
+      const lastPeriod = truncated.lastIndexOf('.');
+      const lastNewline = truncated.lastIndexOf('\n');
+      const cutPoint = Math.max(lastPeriod, lastNewline);
+      return cutPoint > maxLength * 0.5 ? content.substring(0, cutPoint + 1) : truncated + '...';
+    };
     
     console.log('=== LITE MODE:', isLiteMode ? 'ENABLED (reduced tokens)' : 'DISABLED (full search)', '===');
 
@@ -1931,13 +1949,16 @@ serve(async (req) => {
           ferrariScore,
         });
         
+        // Apply truncation to reduce token count while keeping key info
         if (chunk.question && chunk.answer) {
+          const truncatedAnswer = truncateChunk(chunk.answer);
           return `[Source: ${fileName}, Entry #${chunk.chunk_index}]${clinicalStandardTag}
 Q: ${chunk.question}
-A: ${chunk.answer}`;
+A: ${truncatedAnswer}`;
         }
+        const truncatedContent = truncateChunk(chunk.content);
         return `[Source: ${fileName}, Entry #${chunk.chunk_index}]${clinicalStandardTag}
-${chunk.content}`;
+${truncatedContent}`;
       }).join('\n\n');
     };
 
