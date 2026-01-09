@@ -19,7 +19,7 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 
-export type ExternalAIProvider = 'lovable-gemini' | 'chatgpt' | 'claude' | 'perplexity' | 'gemini';
+export type ExternalAIProvider = 'lovable-gemini' | 'perplexity';
 
 const PREFERRED_PROVIDER_KEY = 'tcm-preferred-ai-provider';
 const AUDIO_ENABLED_KEY = 'tcm-audio-feedback-enabled';
@@ -48,31 +48,10 @@ const AI_PROVIDERS: AIProviderOption[] = [
     isInternal: true 
   },
   { 
-    id: 'chatgpt', 
-    name: 'ChatGPT', 
-    description: 'Opens OpenAI ChatGPT',
-    baseUrl: 'https://chatgpt.com',
-    isInternal: false 
-  },
-  { 
-    id: 'claude', 
-    name: 'Claude', 
-    description: 'Opens Anthropic Claude',
-    baseUrl: 'https://claude.ai/new',
-    isInternal: false 
-  },
-  { 
     id: 'perplexity', 
     name: 'Perplexity', 
-    description: 'Opens Perplexity AI',
+    description: 'Opens in new tab - you stay here',
     baseUrl: 'https://www.perplexity.ai',
-    isInternal: false 
-  },
-  { 
-    id: 'gemini', 
-    name: 'Google Gemini', 
-    description: 'Opens Google Gemini',
-    baseUrl: 'https://gemini.google.com/app',
     isInternal: false 
   },
 ];
@@ -265,24 +244,11 @@ export function ExternalAIFallbackCard({
 
   const openExternalUrl = useCallback((provider: AIProviderOption) => {
     const encodedQuery = encodeURIComponent(query);
-    let targetUrl = provider.baseUrl;
     
     console.log('[ExternalAI] Opening provider:', provider.id, 'Query:', query);
     
-    switch (provider.id) {
-      case 'chatgpt':
-        targetUrl = 'https://chatgpt.com';
-        break;
-      case 'perplexity':
-        targetUrl = `https://www.perplexity.ai/search?q=${encodedQuery}`;
-        break;
-      case 'gemini':
-        targetUrl = 'https://gemini.google.com/app';
-        break;
-      case 'claude':
-        targetUrl = 'https://claude.ai/new';
-        break;
-    }
+    // Only Perplexity is supported as external fallback
+    const targetUrl = `https://www.perplexity.ai/search?q=${encodedQuery}`;
     
     console.log('[ExternalAI] Opening URL:', targetUrl);
     
