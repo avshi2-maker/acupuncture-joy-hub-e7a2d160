@@ -118,7 +118,7 @@ function HighlightedText({ text, keywords }: { text: string; keywords: string[] 
 }
 
 // Level 3: Wrapped in React.memo to prevent re-renders from transcription updates
-export const RAGLiveSummaryZoneEnhanced = memo(function RAGLiveSummaryZoneEnhanced({
+function RAGLiveSummaryZoneEnhancedInner({
   currentPhase,
   liveTranscription = '',
   aiSummary = '',
@@ -325,4 +325,7 @@ export const RAGLiveSummaryZoneEnhanced = memo(function RAGLiveSummaryZoneEnhanc
       <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-white/80 dark:from-card/80 to-transparent pointer-events-none" />
     </motion.div>
   );
-});
+}
+
+// Export memoized version
+export const RAGLiveSummaryZoneEnhanced = memo(RAGLiveSummaryZoneEnhancedInner);
