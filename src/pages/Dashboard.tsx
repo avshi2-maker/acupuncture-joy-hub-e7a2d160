@@ -72,6 +72,8 @@ import { CombinedDiagnosisCard } from '@/components/dashboard/CombinedDiagnosisC
 import { HebrewQuestionsCard } from '@/components/dashboard/HebrewQuestionsCard';
 import { AssetInventoryCard } from '@/components/dashboard/AssetInventoryCard';
 import { BaZiDashboardCard } from '@/components/dashboard/BaZiDashboardCard';
+import { HerbEncyclopediaCard } from '@/components/dashboard/HerbEncyclopediaCard';
+import { PediatricAssistantCard } from '@/components/dashboard/PediatricAssistantCard';
 
 
 // Phosphor-style glowing clock component (mobile - small version)
@@ -1210,6 +1212,8 @@ export default function Dashboard() {
           <HebrewQuestionsCard animationDelay={850} />
           <AssetInventoryCard animationDelay={900} />
           <BaZiDashboardCard animationDelay={950} />
+          <HerbEncyclopediaCard animationDelay={1000} />
+          <PediatricAssistantCard animationDelay={1050} />
         </div>
 
         {/* Herbal Master Widget - Encyclopedia, Safety & Quiz */}
