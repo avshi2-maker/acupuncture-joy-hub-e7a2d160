@@ -2,7 +2,7 @@
 // Uses O(1) Map lookups instead of linear array scans
 // These replace short Hebrew text with rich clinical context for direct AI injection
 
-export type PromptRole = 'Clinical Differential' | 'Treatment Strategy' | 'Point Selection' | 'Pathology Analysis' | 'Physiology' | 'Preventive' | 'Diagnosis' | 'Five Elements';
+export type PromptRole = 'Clinical Differential' | 'Treatment Strategy' | 'Point Selection' | 'Pathology Analysis' | 'Physiology' | 'Preventive' | 'Diagnosis' | 'Five Elements' | 'Orthopedic' | 'Gynecology' | 'System';
 
 export interface PromptMapping {
   id: string;
@@ -11,251 +11,556 @@ export interface PromptMapping {
   role: PromptRole;
   icon: string;
   fullAiPrompt: string;
+  voiceText: string; // Hebrew text for speech synthesis on hover
 }
 
 export const PROMPT_MAPPINGS: PromptMapping[] = [
-  // === SECTION 1: CORE CLINICAL DIFFERENTIALS (15 items) ===
+  // === SECTION 1: YIN-YANG CATEGORY (15 items) ===
   {
-    id: 'yy_kidney',
-    hebrewLabel: 'סימנים יין/יאנג כליות',
-    ragPriorityContext: 'RAG PRIORITY: Kidney Pathology. Compare Yin/Yang deficiency signs (Heat vs Cold). Use embedded point table.',
+    id: 'yy_balance',
+    hebrewLabel: 'יין ויאנג',
+    ragPriorityContext: 'RAG PRIORITY: Yin-Yang Balance. Fundamental opposing forces analysis.',
     role: 'Clinical Differential',
-    icon: '🫘',
-    fullAiPrompt: 'RAG PRIORITY: Kidney Pathology. Compare Yin and Yang deficiency signs (Deficiency Heat vs Internal Cold). Retrieve specific point combinations for Kidney Yin vs Kidney Yang tonification from internal CSV. KEY POINTS: KI3 (tonify both), KI6 (Yin), KI7 (Yang), GV4 (Yang), CV4 (both). HERBS: Liu Wei Di Huang Wan (Yin), Jin Gui Shen Qi Wan (Yang).'
+    icon: '☯️',
+    fullAiPrompt: 'RAG PRIORITY: Yin-Yang Balance. Analyze fundamental opposing forces in the body. Compare internal manifestations and treatment strategies.',
+    voiceText: 'זהו הבסיס. כאן נבדוק את האיזון הכללי בין כוחות מנוגדים בגוף.'
   },
   {
-    id: 'yy_liver',
-    hebrewLabel: 'סטגנציה מול עליית יאנג',
-    ragPriorityContext: 'RAG PRIORITY: Liver Dynamics. Differentiate Qi Stagnation vs Yang Rising. Focus on pulse/tongue.',
+    id: 'yy_yin_organs',
+    hebrewLabel: 'איברי יין',
+    ragPriorityContext: 'RAG PRIORITY: Yin Organs (Zang). Solid organs storing vital substances.',
+    role: 'Physiology',
+    icon: '🫀',
+    fullAiPrompt: 'RAG PRIORITY: Yin Organs. Focus on solid organs (Heart, Liver, Spleen, Lung, Kidney) storing vital substances like blood and Qi.',
+    voiceText: 'התמקדות באיברים המוצקים האוגרים חומרים חיוניים כמו דם וצ׳י.'
+  },
+  {
+    id: 'yy_yin_def_face',
+    hebrewLabel: 'חוסר יין בפנים',
+    ragPriorityContext: 'RAG PRIORITY: Yin Deficiency facial signs. Visual diagnosis of malar flush and dryness.',
+    role: 'Diagnosis',
+    icon: '😶',
+    fullAiPrompt: 'RAG PRIORITY: Yin Deficiency facial diagnosis. Search for malar flush, dry skin, red lips indicators.',
+    voiceText: 'חיפוש אחר סימנים ויזואליים כמו סומק בלחיים ויובש בעור.'
+  },
+  {
+    id: 'yy_yin_def_treat',
+    hebrewLabel: 'טיפול בחוסר יין',
+    ragPriorityContext: 'RAG PRIORITY: Yin Deficiency treatment. Nourishing fluids, cooling empty heat.',
+    role: 'Treatment Strategy',
+    icon: '💧',
+    fullAiPrompt: 'RAG PRIORITY: Yin Deficiency treatment protocols. Nourish fluids, cool empty heat, calm Shen. KEY POINTS: KI6, SP6, LU7. HERBS: Liu Wei Di Huang Wan.',
+    voiceText: 'אסטרטגיה להזנת נוזלים, קירור חום ריק והרגעת הנפש.'
+  },
+  {
+    id: 'yy_yang_strengthen',
+    hebrewLabel: 'חיזוק יאנג',
+    ragPriorityContext: 'RAG PRIORITY: Yang tonification. Treating cold, chronic fatigue, warming energy.',
+    role: 'Treatment Strategy',
+    icon: '🔥',
+    fullAiPrompt: 'RAG PRIORITY: Yang tonification. Treat cold conditions, chronic fatigue, weak warming energy. KEY POINTS: GV4, CV4, ST36 with moxa. HERBS: Jin Gui Shen Qi Wan.',
+    voiceText: 'טיפול במצבי קור, עייפות כרונית וחולשה של האנרגיה המחממת.'
+  },
+  {
+    id: 'yy_exercise',
+    hebrewLabel: 'פעילות גופנית',
+    ragPriorityContext: 'RAG PRIORITY: Exercise recommendations. Grounding movement preventing fluid loss.',
+    role: 'Preventive',
+    icon: '🏃',
+    fullAiPrompt: 'RAG PRIORITY: Exercise for Yin-Yang balance. Recommend grounding movements preventing fluid and Yin loss.',
+    voiceText: 'המלצות לתנועה מקרקעת המונעת איבוד נוזלים ויין.'
+  },
+  {
+    id: 'yy_insomnia',
+    hebrewLabel: 'נדודי שינה',
+    ragPriorityContext: 'RAG PRIORITY: Insomnia. Heart-Kidney connection and sleep quality.',
+    role: 'Clinical Differential',
+    icon: '😴',
+    fullAiPrompt: 'RAG PRIORITY: Insomnia diagnosis. Analyze Heart-Kidney disconnection. KEY POINTS: HT7, KI6, SP6, Yintang. HERBS: Tian Wang Bu Xin Dan.',
+    voiceText: 'ניתוח הקשר בין הלב לכליות והשפעתו על איכות השינה.'
+  },
+  {
+    id: 'yy_depression',
+    hebrewLabel: 'דיכאון',
+    ragPriorityContext: 'RAG PRIORITY: Depression. Emotional diagnosis by Yin excess or Yang deficiency.',
+    role: 'Clinical Differential',
+    icon: '😔',
+    fullAiPrompt: 'RAG PRIORITY: Depression differential. Diagnose emotional source by Yin excess or Yang deficiency patterns.',
+    voiceText: 'אבחון המקור הרגשי לפי עודף יין או חוסר יאנג.'
+  },
+  {
+    id: 'yy_five_elements',
+    hebrewLabel: 'חמשת האלמנטים',
+    ragPriorityContext: 'RAG PRIORITY: Five Elements overview. Connection to Yin-Yang division.',
+    role: 'Five Elements',
+    icon: '🌟',
+    fullAiPrompt: 'RAG PRIORITY: Five Elements introduction. Understand connection between Yin-Yang and Five Element division of nature.',
+    voiceText: 'הבנת הקשר בין יין ויאנג לחלוקה המחומשת של הטבע.'
+  },
+  {
+    id: 'yy_kidney_balance',
+    hebrewLabel: 'איזון הכליות',
+    ragPriorityContext: 'RAG PRIORITY: Kidney balance. Root of body energy, source of Yin and Yang.',
+    role: 'Treatment Strategy',
+    icon: '🫘',
+    fullAiPrompt: 'RAG PRIORITY: Kidney balance treatment. Treat root of body energy, source of Yin and Yang. KEY POINTS: KI3, KI6, KI7, BL23, GV4.',
+    voiceText: 'טיפול בשורש האנרגיה של הגוף ובמקור היין והיאנג.'
+  },
+  {
+    id: 'yy_liver_yang',
+    hebrewLabel: 'יאנג הכבד',
+    ragPriorityContext: 'RAG PRIORITY: Liver Yang Rising. Hot energy rising to head causing anger and headaches.',
     role: 'Clinical Differential',
     icon: '🌿',
-    fullAiPrompt: 'RAG PRIORITY: Liver Dynamics. Differentiate Liver Qi Stagnation vs Liver Yang Rising. Analyze pulse/tongue indicators. Provide sedation points for Yang rising and moving points for stagnation. KEY POINTS: LV3 (both), LV2 (Yang Rising), GB20 (Yang Rising), PC6 (Stagnation), GB34 (Stagnation). HERBS: Xiao Yao San (Stagnation), Tian Ma Gou Teng Yin (Yang Rising).'
+    fullAiPrompt: 'RAG PRIORITY: Liver Yang Rising. Identify hot energy ascending to head causing anger, headaches. KEY POINTS: LV3, GB20, LV2, KI3.',
+    voiceText: 'זיהוי עלייה של אנרגיה חמה לראש הגורמת לכעס וכאבי ראש.'
   },
   {
-    id: 'yy_spleen_damp',
-    hebrewLabel: 'לחות חמה בטחול',
-    ragPriorityContext: 'RAG PRIORITY: Spleen/Damp-Heat. Search herbs for draining dampness. Prioritize clinical strategy.',
-    role: 'Treatment Strategy',
-    icon: '💧',
-    fullAiPrompt: 'RAG PRIORITY: Spleen/Damp-Heat. Retrieve herbal strategies for draining dampness and clearing heat. Focus on Spleen 9 and ST 44. Prioritize clinical results from internal RAG index. KEY POINTS: SP9 (drain damp), SP6, ST36, CV12, LI11 (clear heat). HERBS: Yin Chen Hao Tang, Long Dan Xie Gan Tang.'
-  },
-  {
-    id: 'yy_shen_ear',
-    hebrewLabel: 'נקודות Shen באוזן',
-    ragPriorityContext: 'RAG PRIORITY: Auricular Medicine. Retrieve specific Shen-calming ear points. Output concise list.',
-    role: 'Point Selection',
-    icon: '👂',
-    fullAiPrompt: 'RAG PRIORITY: Auricular Medicine. Retrieve specific Shen-calming ear points (Shen Men, Zero Point, Heart). Provide a concise clinical list for psychological stabilization. EAR POINTS: Shenmen (primary), Heart, Sympathetic, Subcortex, Zero Point, Brain Stem, Tranquilizer Point. TECHNIQUE: Retain seeds 3-5 days, bilateral.'
-  },
-  {
-    id: 'yy_ke_cycle',
-    hebrewLabel: 'מעגל הבקרה כבד/טחול',
-    ragPriorityContext: 'RAG PRIORITY: Ke Cycle. Analyze Wood overacting on Earth. Retrieve internal case studies.',
-    role: 'Pathology Analysis',
-    icon: '🔄',
-    fullAiPrompt: 'RAG PRIORITY: Ke Cycle Analysis. Analyze "Wood overacting on Earth" (Liver attacking Spleen). Retrieve internal case studies for digestive protocols triggered by stress. KEY POINTS: LV3+ST36 (harmonize), LV13 (Spleen Mu), SP6, CV12. HERBS: Xiao Yao San, Tong Xie Yao Fang.'
-  },
-  {
-    id: 'yy_lung_kidney',
-    hebrewLabel: 'ריאות וכליות - נשימה',
-    ragPriorityContext: "RAG PRIORITY: Respiratory/Kidney. Search 'Grasping the Qi'. Focus on LU7 and KI6 relationship.",
-    role: 'Physiology',
-    icon: '🫁',
-    fullAiPrompt: 'RAG PRIORITY: Respiratory/Kidney connection. Search for "Kidney failing to grasp Qi". Focus on the LU7 and KI6 relationship for chronic asthma or shortness of breath. MASTER PAIR: LU7+KI6 (Ren Mai opening). KEY POINTS: KI3, KI7, CV4, CV6, BL23, LU9. MOXA: CV4, GV4, BL23.'
-  },
-  {
-    id: 'yy_wei_qi',
-    hebrewLabel: 'חיזוק Wei Qi',
-    ragPriorityContext: 'RAG PRIORITY: Immune Defense. Retrieve points for strengthening external shield (Wei Qi).',
+    id: 'yy_yang_type',
+    hebrewLabel: 'טיפוס יאנג',
+    ragPriorityContext: 'RAG PRIORITY: Yang constitution type. Lifestyle management for heat-prone individuals.',
     role: 'Preventive',
-    icon: '🛡️',
-    fullAiPrompt: 'RAG PRIORITY: Immune Defense. Retrieve top 5 points for strengthening Wei Qi (Immune Shield). Focus on ST36 and LU7. Keep response concise to save tokens. KEY POINTS: ST36, LI4, LU7, GV14, BL12, BL13. HERBS: Yu Ping Feng San, Huang Qi.'
+    icon: '☀️',
+    fullAiPrompt: 'RAG PRIORITY: Yang constitution lifestyle. Preventive management for individuals prone to excess heat and activity.',
+    voiceText: 'ניהול אורח חיים מונע לאנשים עם נטייה לעודף חום ופעילות.'
   },
   {
-    id: 'yy_pulse_blood',
-    hebrewLabel: 'דופק חוסר מול סטגנציה',
-    ragPriorityContext: 'RAG PRIORITY: Pulse Diagnosis. Compare Choppy vs Thready/Weak pulses. Use reference table.',
+    id: 'yy_symptom_sort',
+    hebrewLabel: 'אבחון סימפטומים',
+    ragPriorityContext: 'RAG PRIORITY: Symptom sorting. Quick categorization by heat and cold.',
     role: 'Diagnosis',
-    icon: '💓',
-    fullAiPrompt: 'RAG PRIORITY: Pulse Diagnosis metadata. Compare "Choppy" (Stagnation) vs "Thready/Weak" (Deficiency) pulses. Match with Blood Stasis vs Blood Deficiency treatment protocols. KEY: Choppy=movement blocked, Thready=substance lacking. CLINICAL: Choppy needs movement, Thready needs nourishing.'
+    icon: '🔍',
+    fullAiPrompt: 'RAG PRIORITY: Symptom differentiation. Quick sorting of patient complaints by heat vs cold categories.',
+    voiceText: 'מיון מהיר של תלונות המטופל לפי קטגוריות של חום וקור.'
   },
   {
-    id: 'yy_tongue_spleen',
-    hebrewLabel: 'חולשת צ׳י בטחול',
-    ragPriorityContext: "RAG PRIORITY: Tongue Diagnosis. Search 'Scalloped edges' and 'Teeth marks'. Match Spleen Qi Def.",
-    role: 'Diagnosis',
-    icon: '👅',
-    fullAiPrompt: 'RAG PRIORITY: Tongue Diagnosis. Search RAG for "Scalloped edges" and "Teeth marks". Match with Spleen Qi Deficiency. Suggest dietary changes and tonification points. KEY POINTS: ST36, SP3, SP6, CV12, BL20. HERBS: Si Jun Zi Tang, Bu Zhong Yi Qi Tang.'
-  },
-  {
-    id: 'yy_sanjiao',
-    hebrewLabel: 'San Jiao תפקודים',
-    ragPriorityContext: 'RAG PRIORITY: Triple Burner. Retrieve functions of the 3 chambers. Focus on fluid metabolism.',
-    role: 'Physiology',
-    icon: '🔥',
-    fullAiPrompt: 'RAG PRIORITY: Triple Burner Physiology. Retrieve functions of the 3 chambers (Upper, Middle, Lower). Focus on fluid metabolism and "Mist, Mud, and Drainage" analogies. UPPER JIAO: Mist - Heart/Lung. MIDDLE JIAO: Foam - Spleen/Stomach. LOWER JIAO: Swamp - Kidney/Bladder.'
-  },
-  {
-    id: 'yy_zong_yuan',
-    hebrewLabel: 'Zong Qi vs Yuan Qi',
-    ragPriorityContext: 'RAG PRIORITY: Qi Types differentiation. Compare Pectoral Qi vs Source Qi.',
-    role: 'Physiology',
-    icon: '⚡',
-    fullAiPrompt: 'RAG PRIORITY: Qi Types differentiation. Compare Pectoral Qi (Chest) vs Source Qi (Kidneys). Retrieve source locations, functions, and relevant tonification points. ZONG QI: CV17, LU1, ST36. YUAN QI: CV4, GV4, KI3.'
-  },
-  {
-    id: 'yy_ext_wind',
-    hebrewLabel: 'סילוק רוח חיצונית',
-    ragPriorityContext: 'RAG PRIORITY: Exterior Wind pathology. Wind-Heat vs Wind-Cold differentiation.',
-    role: 'Clinical Differential',
-    icon: '🌬️',
-    fullAiPrompt: 'RAG PRIORITY: Exterior Wind pathology. Search for Wind-Heat vs Wind-Cold differentiation. Retrieve immediate acupuncture relief points. KEY POINTS: LI4, LU7, BL12, GV14 (Wind-Heat), GB20. HERBS: Gui Zhi Tang (Cold), Yin Qiao San (Heat).'
-  },
-  {
-    id: 'yy_heart_sweat',
-    hebrewLabel: 'לב והזעה',
-    ragPriorityContext: 'RAG PRIORITY: Heart/Fluid relationship. Connection between sweat and Heart blood.',
-    role: 'Physiology',
-    icon: '💦',
-    fullAiPrompt: 'RAG PRIORITY: Heart/Fluid relationship. Explain clinical connection between sweat and Heart blood. Retrieve pathology for night sweats vs spontaneous daytime sweating. NIGHT SWEATS: Yin Deficiency - HT6, KI6. SPONTANEOUS: Qi Deficiency - ST36, LU9.'
-  },
-  {
-    id: 'yy_stomach_cold',
-    hebrewLabel: 'קור בקיבה - כאב בטן',
-    ragPriorityContext: 'RAG PRIORITY: Stomach Cold. Warming protocols for abdominal pain.',
+    id: 'yy_constitutional',
+    hebrewLabel: 'טיפול קונסטיטוציוני',
+    ragPriorityContext: 'RAG PRIORITY: Constitutional treatment. Long-term plan based on innate structure.',
     role: 'Treatment Strategy',
-    icon: '🥶',
-    fullAiPrompt: 'RAG PRIORITY: Stomach Cold. Search RAG for warming protocols. Focus on pain quality that is relieved by warmth. KEY POINTS: ST36, CV12, Moxa essential. HERBS: Li Zhong Wan, Xiao Jian Zhong Tang.'
+    icon: '🧬',
+    fullAiPrompt: 'RAG PRIORITY: Constitutional treatment planning. Build long-term protocol based on patient innate constitution.',
+    voiceText: 'בניית תוכנית טיפול ארוכת טווח לפי המבנה המולד של המטופל.'
   },
   {
-    id: 'yy_treasures',
-    hebrewLabel: 'שלושת האוצרות',
-    ragPriorityContext: 'RAG PRIORITY: Three Treasures (Jing, Qi, Shen). Definitions and diagnostic weights.',
-    role: 'Physiology',
-    icon: '💎',
-    fullAiPrompt: 'RAG PRIORITY: Three Treasures (Jing, Qi, Shen). Retrieve definitions and diagnostic weights. Explain how depletion of one affects the others in a clinical context. JING: KI3, GV4. QI: ST36, CV6. SHEN: HT7, GV20.'
+    id: 'yy_western_integration',
+    hebrewLabel: 'שילוב מערבי',
+    ragPriorityContext: 'RAG PRIORITY: Western integration. Cross-reference TCM with Western medicine terms.',
+    role: 'Clinical Differential',
+    icon: '🏥',
+    fullAiPrompt: 'RAG PRIORITY: East-West integration. Cross-reference Chinese diagnosis with Western medical terminology and pathologies.',
+    voiceText: 'הצלבת האבחנה הסינית עם המונחים והפתולוגיות של הרפואה המערבית.'
   },
 
-  // === SECTION 2: FIVE ELEMENTS (15 items) ===
+  // === SECTION 2: ORTHOPEDIC & PAIN CATEGORY (15 items) ===
   {
-    id: 'fe_wood',
-    hebrewLabel: 'יסוד העץ - כבד/מרה',
-    ragPriorityContext: 'RAG PRIORITY: Wood Element. Liver/Gallbladder pair. Spring, growth, planning functions.',
-    role: 'Five Elements',
-    icon: '🌳',
-    fullAiPrompt: 'RAG PRIORITY: Wood Element. ORGANS: Liver/Gallbladder. SEASON: Spring. EMOTION: Anger. COLOR: Green. TASTE: Sour. KEY POINTS: LV3, LV14, GB34, GB40. FUNCTIONS: Planning, decision-making, smooth flow of Qi. PATHOLOGY: Stagnation, rising Yang, Wind.'
+    id: 'ortho_wind',
+    hebrewLabel: 'רוח נודדת',
+    ragPriorityContext: 'RAG PRIORITY: Wandering Bi Syndrome. Migratory pain, wind expulsion.',
+    role: 'Orthopedic',
+    icon: '🌬️',
+    fullAiPrompt: 'RAG PRIORITY: Wandering Bi (Wind). Migratory pain moving from place to place. Focus on releasing exterior, expelling wind. KEY POINTS: GB20, BL12, LI4, GB31.',
+    voiceText: 'לכאב שזז ממקום למקום. נתמקד בשחרור החיצון וסילוק רוח.'
   },
   {
-    id: 'fe_fire',
-    hebrewLabel: 'יסוד האש - לב/מעי דק',
-    ragPriorityContext: 'RAG PRIORITY: Fire Element. Heart/Small Intestine pair. Summer, joy, Shen residence.',
-    role: 'Five Elements',
-    icon: '🔥',
-    fullAiPrompt: 'RAG PRIORITY: Fire Element. ORGANS: Heart/Small Intestine (+Pericardium/San Jiao). SEASON: Summer. EMOTION: Joy. COLOR: Red. TASTE: Bitter. KEY POINTS: HT7, HT5, SI3, PC6. FUNCTIONS: Shen residence, blood circulation, consciousness. PATHOLOGY: Shen disturbance, heat, insomnia.'
+    id: 'ortho_cold',
+    hebrewLabel: 'כאב קור',
+    ragPriorityContext: 'RAG PRIORITY: Cold Bi Syndrome. Fixed intense pain improved by warmth.',
+    role: 'Orthopedic',
+    icon: '❄️',
+    fullAiPrompt: 'RAG PRIORITY: Cold Bi. Fixed, intense pain improved by warming. Use moxa and warm meridians. KEY POINTS: ST36 moxa, local Ashi, BL60.',
+    voiceText: 'לכאב עז וממוקד המשתפר בחימום. נשתמש במוקסה וחימום מרידיאנים.'
   },
   {
-    id: 'fe_earth',
-    hebrewLabel: 'יסוד האדמה - טחול/קיבה',
-    ragPriorityContext: 'RAG PRIORITY: Earth Element. Spleen/Stomach pair. Late summer, transformation, nourishment.',
-    role: 'Five Elements',
-    icon: '🏔️',
-    fullAiPrompt: 'RAG PRIORITY: Earth Element. ORGANS: Spleen/Stomach. SEASON: Late Summer. EMOTION: Worry/Pensiveness. COLOR: Yellow. TASTE: Sweet. KEY POINTS: ST36, SP6, SP3, CV12. FUNCTIONS: Transformation, transportation, holding blood. PATHOLOGY: Dampness, prolapse, bleeding.'
+    id: 'ortho_damp',
+    hebrewLabel: 'לחות קבועה',
+    ragPriorityContext: 'RAG PRIORITY: Damp Bi Syndrome. Pain with heaviness and swelling.',
+    role: 'Orthopedic',
+    icon: '💦',
+    fullAiPrompt: 'RAG PRIORITY: Damp Bi. Pain accompanied by heaviness and swelling. Focus on transforming dampness. KEY POINTS: SP9, SP6, ST36, CV9.',
+    voiceText: 'לכאב המלווה בכבדות ונפיחות. נתמקד בהתמרת לחות.'
   },
   {
-    id: 'fe_metal',
-    hebrewLabel: 'יסוד המתכת - ריאות/מעי גס',
-    ragPriorityContext: 'RAG PRIORITY: Metal Element. Lung/Large Intestine pair. Autumn, letting go, Wei Qi.',
-    role: 'Five Elements',
-    icon: '⚙️',
-    fullAiPrompt: 'RAG PRIORITY: Metal Element. ORGANS: Lung/Large Intestine. SEASON: Autumn. EMOTION: Grief/Sadness. COLOR: White. TASTE: Pungent. KEY POINTS: LU7, LU9, LI4, LI11. FUNCTIONS: Wei Qi, respiration, elimination, boundaries. PATHOLOGY: Dryness, weak defense, constipation.'
+    id: 'ortho_heat',
+    hebrewLabel: 'חום במפרקים',
+    ragPriorityContext: 'RAG PRIORITY: Heat Bi Syndrome. Red, hot joints, cooling and draining.',
+    role: 'Orthopedic',
+    icon: '🔴',
+    fullAiPrompt: 'RAG PRIORITY: Heat Bi. Red and hot joints. Cooling and drainage strategy. KEY POINTS: LI11, SP10, ST44, local bleeding.',
+    voiceText: 'למפרקים אדומים וחמים. אסטרטגיה של קירור וניקוז דלקת.'
   },
   {
-    id: 'fe_water',
-    hebrewLabel: 'יסוד המים - כליות/שלפוחית',
-    ragPriorityContext: 'RAG PRIORITY: Water Element. Kidney/Bladder pair. Winter, storage, willpower.',
-    role: 'Five Elements',
-    icon: '💧',
-    fullAiPrompt: 'RAG PRIORITY: Water Element. ORGANS: Kidney/Bladder. SEASON: Winter. EMOTION: Fear. COLOR: Black/Blue. TASTE: Salty. KEY POINTS: KI3, KI6, KI7, BL23, BL52. FUNCTIONS: Jing storage, bones, willpower, reproduction. PATHOLOGY: Deficiency (Yin/Yang), fear, deafness.'
+    id: 'ortho_back_trauma',
+    hebrewLabel: 'טראומה בגב',
+    ragPriorityContext: 'RAG PRIORITY: Acute back trauma. Strong blood-moving points.',
+    role: 'Orthopedic',
+    icon: '🦴',
+    fullAiPrompt: 'RAG PRIORITY: Acute back trauma. Use strong blood-moving points for injury. KEY POINTS: BL40 bleeding, BL60, Yaotongxue, local Ashi.',
+    voiceText: 'למקרים אקוטיים של פציעה. נשתמש בנקודות מניעות דם חזקות.'
   },
   {
-    id: 'fe_sheng_cycle',
-    hebrewLabel: 'מעגל השנג - יצירה',
-    ragPriorityContext: 'RAG PRIORITY: Sheng Cycle. Mother-Child generating sequence. Tonification strategies.',
-    role: 'Five Elements',
-    icon: '🔄',
-    fullAiPrompt: 'RAG PRIORITY: Sheng (Generating) Cycle. SEQUENCE: Wood→Fire→Earth→Metal→Water→Wood. CLINICAL: Tonify mother to strengthen child. EXAMPLES: KI weak → tonify LU (Metal generates Water). SP weak → tonify HT (Fire generates Earth). POINTS: Use mother point on affected meridian.'
+    id: 'ortho_neck',
+    hebrewLabel: 'תפיסות בצוואר',
+    ragPriorityContext: 'RAG PRIORITY: Neck stiffness. Release Qi and blood in shoulders and neck.',
+    role: 'Orthopedic',
+    icon: '🦒',
+    fullAiPrompt: 'RAG PRIORITY: Neck stiffness. Release Qi and blood stagnation in shoulders and neck, often stress-related. KEY POINTS: GB21, GB20, SI3, BL10.',
+    voiceText: 'שחרור תקיעות צ׳י ודם באזור הכתפיים והצוואר, לרוב על רקע סטרס.'
   },
   {
-    id: 'fe_ke_cycle',
-    hebrewLabel: 'מעגל הקה - שליטה',
-    ragPriorityContext: 'RAG PRIORITY: Ke Cycle. Control/restraint sequence. Sedation strategies.',
-    role: 'Five Elements',
-    icon: '⚖️',
-    fullAiPrompt: 'RAG PRIORITY: Ke (Control) Cycle. SEQUENCE: Wood→Earth→Water→Fire→Metal→Wood. CLINICAL: Control excess by strengthening controller. OVERACTING: Wood invades Earth (stress→digestion). INSULTING: Reverse control (Water insults Fire). STRATEGY: Sedate excess, support controlled organ.'
+    id: 'ortho_tennis_elbow',
+    hebrewLabel: 'מרפק טניס',
+    ragPriorityContext: 'RAG PRIORITY: Tennis elbow. LI meridian blockage, blood flow to joint.',
+    role: 'Orthopedic',
+    icon: '🎾',
+    fullAiPrompt: 'RAG PRIORITY: Tennis elbow (lateral epicondylitis). Treat LI meridian blockage, blood flow to elbow joint. KEY POINTS: LI11, LI10, LI4, Ashi.',
+    voiceText: 'טיפול בחסימה של מרידיאן המעי הגס והזרמת דם למפרק.'
   },
   {
-    id: 'fe_wood_fire',
-    hebrewLabel: 'עץ מזין אש',
-    ragPriorityContext: 'RAG PRIORITY: Wood-Fire relationship. Liver blood nourishes Heart. Clinical applications.',
-    role: 'Five Elements',
-    icon: '🔥',
-    fullAiPrompt: 'RAG PRIORITY: Wood-Fire Sheng. Liver blood nourishes Heart blood. DEFICIENCY: Liver Blood Def → Heart Blood Def (palpitations, insomnia, pale). KEY POINTS: LV8 (nourish LV blood), HT7, SP6, BL17. HERBS: Si Wu Tang + Gui Pi Tang.'
+    id: 'ortho_sciatica',
+    hebrewLabel: 'סיאטיקה',
+    ragPriorityContext: 'RAG PRIORITY: Sciatica. Radiating leg pain, Bladder meridian focus.',
+    role: 'Orthopedic',
+    icon: '⚡',
+    fullAiPrompt: 'RAG PRIORITY: Sciatica. Radiating pain along leg, Bladder meridian emphasis. KEY POINTS: BL40, BL57, BL60, GB30, GB34, Huatuojiaji.',
+    voiceText: 'טיפול בהקרנה לאורך הרגל תוך דגש על מרידיאן השלפוחית.'
   },
   {
-    id: 'fe_fire_earth',
-    hebrewLabel: 'אש מזינה אדמה',
-    ragPriorityContext: 'RAG PRIORITY: Fire-Earth relationship. Heart Yang warms Spleen. Digestive support.',
-    role: 'Five Elements',
-    icon: '🏔️',
-    fullAiPrompt: 'RAG PRIORITY: Fire-Earth Sheng. Heart Yang/Ming Men Fire warms Middle Jiao for digestion. DEFICIENCY: Poor transformation, cold abdomen, loose stools. KEY POINTS: CV8 (moxa), CV12, ST36, GV4. HERBS: Li Zhong Wan, Fu Zi Li Zhong Wan.'
+    id: 'ortho_cartilage',
+    hebrewLabel: 'שחיקת סחוס',
+    ragPriorityContext: 'RAG PRIORITY: Cartilage erosion. Strengthen Kidneys, nourish bones.',
+    role: 'Orthopedic',
+    icon: '🦿',
+    fullAiPrompt: 'RAG PRIORITY: Cartilage erosion/OA. Strengthen Kidneys, nourish bones for chronic joint pain. KEY POINTS: KI3, BL23, GB34, local points.',
+    voiceText: 'חיזוק הכליות והזנת העצמות למניעת כאב כרוני במפרקים.'
   },
   {
-    id: 'fe_earth_metal',
-    hebrewLabel: 'אדמה מזינה מתכת',
-    ragPriorityContext: 'RAG PRIORITY: Earth-Metal relationship. Spleen Qi supports Lung Qi. Immune connection.',
-    role: 'Five Elements',
-    icon: '⚙️',
-    fullAiPrompt: 'RAG PRIORITY: Earth-Metal Sheng. Spleen produces post-heaven Qi for Lung. DEFICIENCY: Weak SP → weak LU → frequent colds. KEY POINTS: ST36, SP3, LU9, BL13, BL20. HERBS: Bu Zhong Yi Qi Tang, Yu Ping Feng San.'
+    id: 'ortho_carpal',
+    hebrewLabel: 'תעלה קרפלית',
+    ragPriorityContext: 'RAG PRIORITY: Carpal tunnel. Pericardium meridian blockage at wrist.',
+    role: 'Orthopedic',
+    icon: '🖐️',
+    fullAiPrompt: 'RAG PRIORITY: Carpal tunnel syndrome. Open blockages in Pericardium meridian at wrist. KEY POINTS: PC7, PC6, LI4, SJ5.',
+    voiceText: 'פתיחת חסימות במרידיאן המעטפת בפרק כף היד.'
   },
   {
-    id: 'fe_metal_water',
-    hebrewLabel: 'מתכת מזינה מים',
-    ragPriorityContext: 'RAG PRIORITY: Metal-Water relationship. Lung descends fluids to Kidney.',
-    role: 'Five Elements',
-    icon: '💧',
-    fullAiPrompt: 'RAG PRIORITY: Metal-Water Sheng. Lung descends Qi and fluids to Kidney. PATHOLOGY: Lung fails to descend → edema, urinary issues. KEY POINTS: LU7+KI6 (Ren Mai), LU5 (descend), KI3. HERBS: Ma Xing Shi Gan Tang (acute), Liu Wei Di Huang Wan (chronic).'
+    id: 'ortho_shoulder',
+    hebrewLabel: 'כאב כתף כרוני',
+    ragPriorityContext: 'RAG PRIORITY: Chronic shoulder pain. Move stagnant blood in tendons.',
+    role: 'Orthopedic',
+    icon: '💪',
+    fullAiPrompt: 'RAG PRIORITY: Chronic shoulder pain. Move stagnant blood in shoulder tendons for improved ROM. KEY POINTS: LI15, SJ14, SI9, GB21.',
+    voiceText: 'הנעת דם תקוע בגידי הכתף לשיפור טווח התנועה.'
   },
   {
-    id: 'fe_water_wood',
-    hebrewLabel: 'מים מזינים עץ',
-    ragPriorityContext: 'RAG PRIORITY: Water-Wood relationship. Kidney Yin nourishes Liver blood.',
-    role: 'Five Elements',
-    icon: '🌳',
-    fullAiPrompt: 'RAG PRIORITY: Water-Wood Sheng. Kidney Yin nourishes Liver Blood. DEFICIENCY: KI Yin Def → LV Blood Def → Yang Rising. KEY POINTS: KI3, KI6, LV8, SP6. HERBS: Liu Wei Di Huang Wan + Qi Ju Di Huang Wan. SIGNS: Dizziness, tinnitus, blurred vision, irritability.'
+    id: 'ortho_fibromyalgia',
+    hebrewLabel: 'פיברומיאלגיה',
+    ragPriorityContext: 'RAG PRIORITY: Fibromyalgia. Systemic treatment, calm Liver, strengthen blood.',
+    role: 'Orthopedic',
+    icon: '🌐',
+    fullAiPrompt: 'RAG PRIORITY: Fibromyalgia. Systemic treatment combining Liver calming with blood and Qi strengthening. KEY POINTS: LV3, SP6, ST36, GB34.',
+    voiceText: 'טיפול מערכתי המשלב הרגעת כבד וחיזוק דם וצ׳י.'
   },
   {
-    id: 'fe_constitutional',
-    hebrewLabel: 'אבחון חוקתי חמישה יסודות',
-    ragPriorityContext: 'RAG PRIORITY: Constitutional Five Element diagnosis. Facial features, body type, preferences.',
-    role: 'Five Elements',
-    icon: '👤',
-    fullAiPrompt: 'RAG PRIORITY: Constitutional Diagnosis. WOOD: Tall, tense, green tinge, anger-prone. FIRE: Pointed features, ruddy, excitable. EARTH: Round, yellow tinge, worrier. METAL: Pale, defined features, melancholic. WATER: Dark circles, fearful, rounded back. Use for treatment prioritization.'
+    id: 'ortho_heel_spur',
+    hebrewLabel: 'דורבן בכף הרגל',
+    ragPriorityContext: 'RAG PRIORITY: Heel spur/plantar fasciitis. Local treatment with Kidney support.',
+    role: 'Orthopedic',
+    icon: '🦶',
+    fullAiPrompt: 'RAG PRIORITY: Heel spur/plantar fasciitis. Local treatment combined with Kidney meridian strengthening. KEY POINTS: KI1, KI3, BL60, Ashi.',
+    voiceText: 'טיפול מקומי בשילוב חיזוק מרידיאן הכליות.'
   },
   {
-    id: 'fe_emotion_organs',
-    hebrewLabel: 'רגשות ואיברים',
-    ragPriorityContext: 'RAG PRIORITY: Emotion-Organ correspondences. Psychosomatic connections in TCM.',
-    role: 'Five Elements',
-    icon: '💭',
-    fullAiPrompt: 'RAG PRIORITY: Emotion-Organ Map. ANGER→Liver (LV3, GB34). JOY→Heart (HT7, PC6). WORRY→Spleen (SP3, ST36). GRIEF→Lung (LU7, LU3). FEAR→Kidney (KI3, BL52). CLINICAL: Treat organ to calm emotion; treat emotion to heal organ. HERBS by emotion provided.'
+    id: 'ortho_gout',
+    hebrewLabel: 'גאוט',
+    ragPriorityContext: 'RAG PRIORITY: Gout. Clear damp-heat from small joints, diet advice.',
+    role: 'Orthopedic',
+    icon: '🍖',
+    fullAiPrompt: 'RAG PRIORITY: Gout. Clear damp-heat from small joints, provide adapted nutrition advice. KEY POINTS: SP9, LI11, SP6, local bleeding.',
+    voiceText: 'סילוק לחות חמה מהמפרקים הקטנים ותזונה מותאמת.'
   },
   {
-    id: 'fe_seasonal_treatment',
-    hebrewLabel: 'טיפול עונתי',
-    ragPriorityContext: 'RAG PRIORITY: Seasonal treatment according to Five Elements. Prevention and optimization.',
-    role: 'Five Elements',
+    id: 'ortho_ankle_sprain',
+    hebrewLabel: 'נקע בקרסול',
+    ragPriorityContext: 'RAG PRIORITY: Ankle sprain. Reduce swelling, accelerate local trauma recovery.',
+    role: 'Orthopedic',
+    icon: '🩹',
+    fullAiPrompt: 'RAG PRIORITY: Ankle sprain. Reduce swelling, accelerate recovery from local trauma. KEY POINTS: GB40, ST41, BL60, Ashi.',
+    voiceText: 'הפחתת נפיחות והאצת החלמה בטראומה מקומית.'
+  },
+
+  // === SECTION 3: WOMEN & FERTILITY CATEGORY (15 items) ===
+  {
+    id: 'gyn_late_period',
+    hebrewLabel: 'מחזור מאחר',
+    ragPriorityContext: 'RAG PRIORITY: Delayed menstruation. Cold uterus or blood deficiency.',
+    role: 'Gynecology',
     icon: '📅',
-    fullAiPrompt: 'RAG PRIORITY: Seasonal Treatment. SPRING: Soothe LV, avoid wind. SUMMER: Clear HT heat, stay cool. LATE SUMMER: Strengthen SP, avoid damp. AUTUMN: Moisten LU, avoid dryness. WINTER: Tonify KI, conserve energy. POINTS: Seasonal point selection for prevention.'
+    fullAiPrompt: 'RAG PRIORITY: Delayed menstruation. Usually indicates cold uterus or blood deficiency. Use warming points. KEY POINTS: CV4, SP6, ST36, Zigong moxa.',
+    voiceText: 'מצביע לרוב על קור ברחם או חוסר דם. נשתמש בנקודות מחממות.'
+  },
+  {
+    id: 'gyn_early_period',
+    hebrewLabel: 'מחזור מקדים',
+    ragPriorityContext: 'RAG PRIORITY: Early menstruation. Blood heat pushing cycle forward.',
+    role: 'Gynecology',
+    icon: '⏰',
+    fullAiPrompt: 'RAG PRIORITY: Early menstruation. Blood heat pushing the cycle. Cool and calm. KEY POINTS: SP10, LV2, SP1, KI2.',
+    voiceText: 'מצביע על חום בדם הדוחף את המחזור. נקרר ונרגיע.'
+  },
+  {
+    id: 'gyn_irregular',
+    hebrewLabel: 'מחזור לא סדיר',
+    ragPriorityContext: 'RAG PRIORITY: Irregular menstruation. Liver Qi stagnation, regulation.',
+    role: 'Gynecology',
+    icon: '🔄',
+    fullAiPrompt: 'RAG PRIORITY: Irregular menstruation. Usually related to Liver Qi stagnation. Focus on regulation and harmony. KEY POINTS: LV3, SP6, CV6, LV14.',
+    voiceText: 'קשור לרוב לתקיעות צ׳י הכבד. נתמקד בוויסות והרמוניה.'
+  },
+  {
+    id: 'gyn_dysmenorrhea',
+    hebrewLabel: 'כאבי מחזור',
+    ragPriorityContext: 'RAG PRIORITY: Dysmenorrhea. Intense pain with clots, move blood in uterus.',
+    role: 'Gynecology',
+    icon: '😣',
+    fullAiPrompt: 'RAG PRIORITY: Dysmenorrhea. Intense pain with blood clots, move blood in uterus. KEY POINTS: SP6, SP8, CV3, LV3, Zigong.',
+    voiceText: 'טיפול בכאב עז עם קרישי דם דרך הנעת דם ברחם.'
+  },
+  {
+    id: 'gyn_amenorrhea',
+    hebrewLabel: 'אל-וסת',
+    ragPriorityContext: 'RAG PRIORITY: Amenorrhea. Rebuild blood and Qi reserves in Spleen and Kidneys.',
+    role: 'Gynecology',
+    icon: '🚫',
+    fullAiPrompt: 'RAG PRIORITY: Amenorrhea. Rebuild blood and Qi reserves in Spleen and Kidneys. KEY POINTS: ST36, SP6, CV4, BL20, BL23.',
+    voiceText: 'בנייה מחדש של מאגרי הדם והצ׳י בטחול ובכליות.'
+  },
+  {
+    id: 'gyn_fertility_cold',
+    hebrewLabel: 'פוריות וקור',
+    ragPriorityContext: 'RAG PRIORITY: Fertility with cold. Warm Gate of Life and uterus.',
+    role: 'Gynecology',
+    icon: '❄️',
+    fullAiPrompt: 'RAG PRIORITY: Fertility and cold. Warm Ming Men and uterus for receptive environment. KEY POINTS: GV4, CV4, ST36 moxa, Zigong.',
+    voiceText: 'חימום ״שער החיים״ והרחם ליצירת סביבה קולטת להריון.'
+  },
+  {
+    id: 'gyn_fertility_yin',
+    hebrewLabel: 'פוריות ויין',
+    ragPriorityContext: 'RAG PRIORITY: Fertility with Yin deficiency. Nourish fluids and blood.',
+    role: 'Gynecology',
+    icon: '💧',
+    fullAiPrompt: 'RAG PRIORITY: Fertility and Yin. Nourish fluids and blood for lining and egg quality. KEY POINTS: KI6, SP6, CV4, LV8.',
+    voiceText: 'הזנת נוזלים ודם לשיפור איכות הרירית והביציות.'
+  },
+  {
+    id: 'gyn_pcos',
+    hebrewLabel: 'שחלות פוליציסטיות',
+    ragPriorityContext: 'RAG PRIORITY: PCOS. Clear phlegm and dampness blocking ovulation.',
+    role: 'Gynecology',
+    icon: '🔵',
+    fullAiPrompt: 'RAG PRIORITY: PCOS. Clear phlegm and dampness blocking ovulation. KEY POINTS: SP9, SP6, CV3, ST40, Zigong.',
+    voiceText: 'סילוק ליחה ולחות המעכבים את הביוץ.'
+  },
+  {
+    id: 'gyn_endometriosis',
+    hebrewLabel: 'אנדומטריוזיס',
+    ragPriorityContext: 'RAG PRIORITY: Endometriosis. Intensive blood stasis treatment in pelvis.',
+    role: 'Gynecology',
+    icon: '🩸',
+    fullAiPrompt: 'RAG PRIORITY: Endometriosis. Intensive blood stasis treatment in pelvis. KEY POINTS: SP10, SP6, CV3, LV3, BL32.',
+    voiceText: 'טיפול אינטנסיבי בתקיעות דם וסטזיס באגן.'
+  },
+  {
+    id: 'gyn_pms',
+    hebrewLabel: 'תסמונת קדם וסתית',
+    ragPriorityContext: 'RAG PRIORITY: PMS. Regulate Liver for mental tension and breast distension.',
+    role: 'Gynecology',
+    icon: '😤',
+    fullAiPrompt: 'RAG PRIORITY: PMS. Regulate Liver to reduce mental tension and breast distension. KEY POINTS: LV3, LV14, PC6, GB34.',
+    voiceText: 'ויסות הכבד להפחתת מתח נפשי וגודש בשדיים.'
+  },
+  {
+    id: 'gyn_menopause',
+    hebrewLabel: 'גיל המעבר',
+    ragPriorityContext: 'RAG PRIORITY: Menopause. Nourish Yin for hot flashes and night sweats.',
+    role: 'Gynecology',
+    icon: '🌡️',
+    fullAiPrompt: 'RAG PRIORITY: Menopause. Nourish Yin for hot flashes, night sweats, restlessness. KEY POINTS: KI6, SP6, HT6, LV3.',
+    voiceText: 'הזנת היין לטיפול בגלי חום, הזעות לילה וחוסר שקט.'
+  },
+  {
+    id: 'gyn_postpartum',
+    hebrewLabel: 'שיקום לאחר לידה',
+    ragPriorityContext: 'RAG PRIORITY: Postpartum recovery. Strengthen body after blood and Qi loss.',
+    role: 'Gynecology',
+    icon: '👶',
+    fullAiPrompt: 'RAG PRIORITY: Postpartum recovery. Strengthen body after blood and Qi loss in childbirth. KEY POINTS: ST36, SP6, CV6, BL20.',
+    voiceText: 'חיזוק הגוף לאחר אובדן דם וצ׳י בתהליך הלידה.'
+  },
+  {
+    id: 'gyn_threatened_miscarriage',
+    hebrewLabel: 'הפלה מאיימת',
+    ragPriorityContext: 'RAG PRIORITY: Threatened miscarriage. Strengthen Spleen Qi, raise energy.',
+    role: 'Gynecology',
+    icon: '⚠️',
+    fullAiPrompt: 'RAG PRIORITY: Threatened miscarriage. Strengthen Spleen Qi, raise energy to hold fetus. KEY POINTS: GV20, ST36, SP6, CV4.',
+    voiceText: 'חיזוק צ׳י הטחול והרמת האנרגיה כדי לשמור על העובר.'
+  },
+  {
+    id: 'gyn_morning_sickness',
+    hebrewLabel: 'בחילות בוקר',
+    ragPriorityContext: 'RAG PRIORITY: Morning sickness. Descend rebellious Stomach Qi.',
+    role: 'Gynecology',
+    icon: '🤢',
+    fullAiPrompt: 'RAG PRIORITY: Morning sickness. Descend rebellious Stomach Qi, calm digestion. KEY POINTS: PC6, ST36, CV12, SP4.',
+    voiceText: 'הורדת צ׳י הקיבה המורד והרגעת מערכת העיכול.'
+  },
+  {
+    id: 'gyn_pregnancy_forbidden',
+    hebrewLabel: 'איסורי הריון',
+    ragPriorityContext: 'RAG PRIORITY: Pregnancy contraindications. Forbidden points during pregnancy.',
+    role: 'Gynecology',
+    icon: '🚷',
+    fullAiPrompt: 'RAG PRIORITY: Pregnancy contraindications. Forbidden points for acupuncture during pregnancy. Caution is paramount. FORBIDDEN: LI4, SP6, BL60, BL67, GB21, sacral points.',
+    voiceText: 'נקודות אסורות לדיקור בזמן הריון. זהירות היא ערך עליון כאן.'
+  },
+
+  // === SECTION 4: SYSTEM & MANAGEMENT (15 items) ===
+  {
+    id: 'sys_stack',
+    hebrewLabel: 'סל הניתוח',
+    ragPriorityContext: 'SYSTEM: Analysis basket. Collection of selected queries before final analysis.',
+    role: 'System',
+    icon: '🧺',
+    fullAiPrompt: 'SYSTEM: Analysis basket functionality. All selections are collected here before final synthesis.',
+    voiceText: 'כאן נאספות כל הבחירות שלך לפני הניתוח הסופי.'
+  },
+  {
+    id: 'sys_synthesis',
+    hebrewLabel: 'כפתור סינתזה',
+    ragPriorityContext: 'SYSTEM: Synthesis button. Unifies all data into one smart report.',
+    role: 'System',
+    icon: '🔮',
+    fullAiPrompt: 'SYSTEM: Synthesis button functionality. The most important click - unifies all information into one intelligent report.',
+    voiceText: 'הקליק החשוב ביותר. הוא מאחד את כל המידע לדו״ח חכם אחד.'
+  },
+  {
+    id: 'sys_economy',
+    hebrewLabel: 'מוניטור כלכלי',
+    ragPriorityContext: 'SYSTEM: Economy monitor. Real-time query cost tracking.',
+    role: 'System',
+    icon: '💰',
+    fullAiPrompt: 'SYSTEM: Economy monitor functionality. Real-time tracking of query cost. We save you money.',
+    voiceText: 'מעקב אחר עלות השאילתה בזמן אמת. אנחנו חוסכים לך כסף.'
+  },
+  {
+    id: 'sys_rag_report',
+    hebrewLabel: 'דוח RAG',
+    ragPriorityContext: 'SYSTEM: RAG report. Final answer based on knowledge base.',
+    role: 'System',
+    icon: '📋',
+    fullAiPrompt: 'SYSTEM: RAG report output. Here you receive the final answer based on our knowledge base.',
+    voiceText: 'כאן תקבל את התשובה הסופית המבוססת על מאגר הידע שלנו.'
+  },
+  {
+    id: 'sys_free_search',
+    hebrewLabel: 'חיפוש חופשי',
+    ragPriorityContext: 'SYSTEM: Free text search. Add custom text to refine AI analysis.',
+    role: 'System',
+    icon: '🔍',
+    fullAiPrompt: 'SYSTEM: Free text search. Add custom text to refine AI analysis precision.',
+    voiceText: 'ניתן להוסיף טקסט חופשי כדי לדייק את הניתוח של הבינה המלאכותית.'
+  },
+  {
+    id: 'sys_body_map',
+    hebrewLabel: 'מפת הגוף',
+    ragPriorityContext: 'SYSTEM: Body map. Visual anatomical reference for point selection.',
+    role: 'System',
+    icon: '🧍',
+    fullAiPrompt: 'SYSTEM: Body map functionality. Visual anatomical reference for acupoint selection.',
+    voiceText: 'מפת הגוף הוויזואלית לבחירת נקודות דיקור.'
+  },
+  {
+    id: 'sys_clear',
+    hebrewLabel: 'ניקוי הכל',
+    ragPriorityContext: 'SYSTEM: Clear all. Reset all selections and start fresh.',
+    role: 'System',
+    icon: '🗑️',
+    fullAiPrompt: 'SYSTEM: Clear all functionality. Reset all selections and start a fresh session.',
+    voiceText: 'איפוס כל הבחירות והתחלה מחדש.'
+  },
+  {
+    id: 'sys_export',
+    hebrewLabel: 'ייצוא לPDF',
+    ragPriorityContext: 'SYSTEM: Export to PDF. Generate professional clinical report.',
+    role: 'System',
+    icon: '📄',
+    fullAiPrompt: 'SYSTEM: PDF export functionality. Generate professional clinical report for documentation.',
+    voiceText: 'יצירת דוח קליני מקצועי לתיעוד.'
+  },
+  {
+    id: 'sys_history',
+    hebrewLabel: 'היסטוריית שאילתות',
+    ragPriorityContext: 'SYSTEM: Query history. View past analysis sessions.',
+    role: 'System',
+    icon: '📚',
+    fullAiPrompt: 'SYSTEM: Query history functionality. View and reference past analysis sessions.',
+    voiceText: 'צפייה בניתוחים קודמים לעיון והשוואה.'
+  },
+  {
+    id: 'sys_favorites',
+    hebrewLabel: 'מועדפים',
+    ragPriorityContext: 'SYSTEM: Favorites. Save frequently used query combinations.',
+    role: 'System',
+    icon: '⭐',
+    fullAiPrompt: 'SYSTEM: Favorites functionality. Save frequently used query combinations for quick access.',
+    voiceText: 'שמירת שילובי שאילתות נפוצים לגישה מהירה.'
+  },
+  {
+    id: 'sys_settings',
+    hebrewLabel: 'הגדרות',
+    ragPriorityContext: 'SYSTEM: Settings. Customize interface and preferences.',
+    role: 'System',
+    icon: '⚙️',
+    fullAiPrompt: 'SYSTEM: Settings panel. Customize interface, language, and user preferences.',
+    voiceText: 'התאמה אישית של הממשק וההעדפות שלך.'
+  },
+  {
+    id: 'sys_help',
+    hebrewLabel: 'עזרה',
+    ragPriorityContext: 'SYSTEM: Help guide. Tutorial and documentation.',
+    role: 'System',
+    icon: '❓',
+    fullAiPrompt: 'SYSTEM: Help and documentation. Access tutorials and usage guides.',
+    voiceText: 'גישה למדריכים והסברים על השימוש במערכת.'
+  },
+  {
+    id: 'sys_voice',
+    hebrewLabel: 'הקראה קולית',
+    ragPriorityContext: 'SYSTEM: Voice narration. Read results aloud.',
+    role: 'System',
+    icon: '🔊',
+    fullAiPrompt: 'SYSTEM: Voice narration functionality. Read analysis results aloud for accessibility.',
+    voiceText: 'הקראת תוצאות הניתוח בקול לנגישות מירבית.'
+  },
+  {
+    id: 'sys_feedback',
+    hebrewLabel: 'משוב',
+    ragPriorityContext: 'SYSTEM: Feedback. Rate and improve AI responses.',
+    role: 'System',
+    icon: '💬',
+    fullAiPrompt: 'SYSTEM: Feedback functionality. Rate responses and help improve AI accuracy.',
+    voiceText: 'דירוג תשובות ועזרה בשיפור דיוק הבינה המלאכותית.'
+  },
+  {
+    id: 'sys_token_counter',
+    hebrewLabel: 'מונה טוקנים',
+    ragPriorityContext: 'SYSTEM: Token counter. Track API usage in real-time.',
+    role: 'System',
+    icon: '🔢',
+    fullAiPrompt: 'SYSTEM: Token counter. Track API token usage in real-time for cost awareness.',
+    voiceText: 'מעקב בזמן אמת אחר שימוש בטוקנים לחיסכון בעלויות.'
   }
 ];
 
@@ -295,4 +600,9 @@ export const getMappingsByRole = (): Record<string, PromptMapping[]> => {
     acc[mapping.role].push(mapping);
     return acc;
   }, {} as Record<string, PromptMapping[]>);
+};
+
+// Get voice text for speech synthesis
+export const getVoiceText = (id: string): string | undefined => {
+  return MAPPING_BY_ID.get(id)?.voiceText;
 };
