@@ -196,7 +196,7 @@ export function ClinicalQuerySelector({
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div id="clinical-query-selector" data-teleprompter="query-selector" className="h-full flex flex-col">
       {/* Header */}
       <div className="p-3 border-b bg-gradient-to-r from-violet-500/10 to-transparent shrink-0">
         <div className="flex items-center justify-between">

@@ -59,6 +59,7 @@ import { useSessionHeaderBoxes } from '@/hooks/useSessionHeaderBoxes';
 import { ClinicalQuerySelector } from '@/components/tcm-brain/ClinicalQuerySelector';
 import { BodyMapSidebar } from '@/components/tcm-brain/BodyMapSidebar';
 import { IntelligenceHub } from '@/components/tcm-brain/IntelligenceHub';
+import { TherapistTeleprompter } from '@/components/tcm-brain/TherapistTeleprompter';
 
 
 export default function TcmBrain() {
@@ -86,6 +87,7 @@ export default function TcmBrain() {
   const [qaFavoritesCount, setQaFavoritesCount] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [layoutMode, setLayoutMode] = useState<'classic' | 'three-column'>('three-column');
+  const [showTeleprompter, setShowTeleprompter] = useState(false);
   const quickActionsRef = useRef<QuickActionsRef>(null);
   
   // Clinical Session Stacking Hook
@@ -336,6 +338,16 @@ export default function TcmBrain() {
                 </Link>
                 <Button variant="ghost" size="sm" onClick={() => setShowHelpGuide(true)} className="h-8 px-2 bg-yellow-400/10 hover:bg-yellow-400/20 text-yellow-700 dark:text-yellow-400">
                   <HelpCircle className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowTeleprompter(true)} 
+                  className="h-8 px-2 bg-jade/10 hover:bg-jade/20 text-jade"
+                  title="מדריך אינטראקטיבי"
+                >
+                  <Play className="h-4 w-4" />
+                  <span className="hidden sm:inline ml-1 text-xs">מדריך</span>
                 </Button>
               </div>
 
@@ -729,6 +741,12 @@ export default function TcmBrain() {
           metrics={sessionMetrics}
           stackedQueries={stackedQueries}
           isVisible={stackCount > 0 || sessionMetrics.tokensUsed > 0}
+        />
+        
+        {/* Therapist Teleprompter - Guided Tour */}
+        <TherapistTeleprompter 
+          isOpen={showTeleprompter} 
+          onClose={() => setShowTeleprompter(false)} 
         />
       </div>
     </>

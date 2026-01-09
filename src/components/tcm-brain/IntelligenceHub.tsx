@@ -75,6 +75,8 @@ export function IntelligenceHub({
       <AnimatePresence>
         {hasStackedQueries && (
           <motion.div
+            id="stack-display"
+            data-teleprompter="stack-display"
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -98,6 +100,8 @@ export function IntelligenceHub({
                     נקה הכל
                   </Button>
                   <Button
+                    id="clinical-synthesis-btn"
+                    data-teleprompter="synthesis-btn"
                     size="sm"
                     onClick={onExecuteSynthesis}
                     disabled={isAnalyzing || stackedQueries.length === 0}

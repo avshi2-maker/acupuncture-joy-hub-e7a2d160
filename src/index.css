@@ -527,3 +527,20 @@ body {
   border-color: rgba(255, 255, 255, 0.1) !important;
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
 }
+
+/* Teleprompter Highlight Effect */
+.teleprompter-highlight {
+  box-shadow: 0 0 0 4px hsl(var(--gold)), 0 0 20px 5px hsl(var(--gold) / 0.5) !important;
+  z-index: 10001 !important;
+  position: relative;
+  animation: teleprompter-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes teleprompter-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 4px hsl(var(--gold)), 0 0 20px 5px hsl(var(--gold) / 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 6px hsl(var(--gold)), 0 0 30px 8px hsl(var(--gold) / 0.7);
+  }
+}
