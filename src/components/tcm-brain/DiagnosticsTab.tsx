@@ -23,6 +23,7 @@ interface DiagnosticsTabProps {
   quickActionsRef?: RefObject<QuickActionsRef>;
   externalInput?: string;
   onExternalInputHandled?: () => void;
+  onViewBodyMap?: (points: string[]) => void;
 }
 
 export function DiagnosticsTab({
@@ -37,6 +38,7 @@ export function DiagnosticsTab({
   quickActionsRef,
   externalInput,
   onExternalInputHandled,
+  onViewBodyMap,
 }: DiagnosticsTabProps) {
   const [input, setInput] = useState('');
   const [voiceLanguage, setVoiceLanguage] = useState<'en-US' | 'he-IL'>('en-US');
@@ -250,7 +252,7 @@ export function DiagnosticsTab({
           isLoading={isLoading}
           content={lastAssistantMessage?.content || ''}
           query={lastUserMessage?.content || ''}
-          onViewBodyMap={() => {}}
+          onViewBodyMap={onViewBodyMap || (() => {})}
         />
       )}
     </div>
