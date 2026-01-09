@@ -45,7 +45,7 @@ export function VideoSessionThreeColumnLayout({
       </div>
 
       {/* Column 2 (Center): Live Interaction Hub - 50% */}
-      <div className="lg:col-span-2 flex flex-col gap-3 md:gap-4 overflow-hidden order-3 lg:order-none">
+      <div className="lg:col-span-2 flex flex-col gap-3 md:gap-4 overflow-hidden order-3 lg:order-none min-h-0">
         {centerColumn}
       </div>
 

@@ -107,11 +107,14 @@ interface UseSmartSuggestOptions {
   debounceMs?: number;
 }
 
+// Default debounce of 2 seconds to prevent "Christmas tree flickering"
+const DEFAULT_DEBOUNCE_MS = 2000;
+
 export function useSmartSuggest(
   liveTranscription: string,
   options: UseSmartSuggestOptions = {}
 ) {
-  const { enabled = true, voiceEnabled = false, onMatch, debounceMs = 1000 } = options;
+  const { enabled = true, voiceEnabled = false, onMatch, debounceMs = DEFAULT_DEBOUNCE_MS } = options;
   const [activeMatches, setActiveMatches] = useState<Map<string, SmartSuggestMatch>>(new Map());
   const [pulsingIds, setPulsingIds] = useState<Set<string>>(new Set());
   const haptic = useHapticFeedback();

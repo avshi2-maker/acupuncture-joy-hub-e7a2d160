@@ -115,13 +115,16 @@ export function RAGLiveSummaryZone({
         {isExpanded && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
+            animate={{ height: 200, opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
+            // Zero-Shake Rule: Fixed height, no layout shifts when AI streams
+            style={{ height: 200, flexShrink: 0 }}
           >
             <ScrollArea 
               ref={scrollRef}
-              className="h-[200px] md:h-[250px]"
+              className="h-[200px]"
+              style={{ height: 200 }}
             >
               <div className="p-4 space-y-3">
                 {/* Live transcription snippet */}

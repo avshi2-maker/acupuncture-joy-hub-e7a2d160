@@ -106,6 +106,13 @@ import {
 } from '@/components/video/VideoSessionEnhancements';
 import { TcmTurboDashboard, TurboDashboardStatus } from '@/components/tcm/TcmTurboDashboard';
 import { VideoSessionHeaderBoxes } from '@/components/video/VideoSessionHeaderBoxes';
+import { VideoSessionThreeColumnLayout, VideoSessionRightColumn, VideoSessionCenterColumn, VideoSessionLeftColumn } from '@/components/video/VideoSessionThreeColumnLayout';
+import { RAGLiveSummaryZone } from '@/components/video/RAGLiveSummaryZone';
+import { VideoContainer } from '@/components/video/VideoContainer';
+import { PatientBriefCompact, SessionTimerCompact } from '@/components/video/PatientBriefCompact';
+import { SpecialtyIconsGrid } from '@/components/video/SpecialtyIconsGrid';
+import { useSmartSuggest } from '@/hooks/useSmartSuggest';
+import { usePhaseVoiceTeleprompter } from '@/hooks/usePhaseVoiceTeleprompter';
 
 import { TcmBrainPanel } from '@/components/video/TcmBrainPanel';
 import { SessionBriefPanel } from '@/components/video/SessionBriefPanel';
@@ -270,6 +277,29 @@ export default function VideoSession() {
 
   // Session phase with haptic feedback and persistence
   const { currentPhase, setPhase, clearManualPhase, isManualOverride } = useSessionPhase(sessionDuration, sessionStartTime);
+  
+  // Smart-Suggest: monitors live transcription for keyword matches (2s debounce)
+  const { 
+    pulsingIds: smartSuggestPulsingIds, 
+    isPulsing: isSmartSuggestPulsing,
+    triggerGoldPulse,
+    clearMatches: clearSmartSuggestMatches 
+  } = useSmartSuggest(liveTranscription, {
+    enabled: sessionStatus === 'running',
+    voiceEnabled: voiceAlwaysOn,
+    debounceMs: 2000, // 2 second debounce to prevent "Christmas tree flickering"
+  });
+  
+  // Phase-aware Voice Teleprompter
+  const { 
+    speakCurrentPhase, 
+    cancelSpeech: cancelPhaseSpeech 
+  } = usePhaseVoiceTeleprompter(currentPhase, {
+    enabled: sessionStatus === 'running',
+    voiceEnabled: voiceAlwaysOn,
+    hapticEnabled: true,
+  });
+  
   useBackgroundDetection({
     onBackground: () => {
       if (sessionStatus === 'running') {
@@ -1972,506 +2002,159 @@ export default function VideoSession() {
           </div>
         )}
 
-        {/* Main Content - Dynamic Grid Layout */}
+        {/* Main Content - 3-Column RTL Zen Layout (25% | 50% | 25%) */}
         <main className="p-3 md:p-4 flex-1 overflow-hidden pb-24 md:pb-4">
-          <div className={cn(
-            "grid grid-cols-1 gap-3 md:gap-4 h-full",
-            showSessionGuide ? "lg:grid-cols-5" : "lg:grid-cols-4"
-          )}>
-            
-            {/* Left Column - Video + Anxiety Q&A */}
-            <div className={cn(
-              "flex flex-col gap-3 md:gap-4 h-full overflow-hidden",
-              showSessionGuide ? "lg:col-span-3" : "lg:col-span-3"
-            )}>
-              {/* Mobile Inspiration Carousel - Above Video */}
-              <div className="md:hidden">
-                <MiniInspirationCarousel 
-                  autoPlay={sessionStatus === 'running'}
-                  interval={6000}
-                  language="he"
-                  sessionDuration={sessionDuration}
-                  autoSync={true}
-                />
-              </div>
-
-              {/* Top Row: Video Area + Anxiety Q&A Chat */}
-              <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 min-h-0">
-                {/* Video Area - Compact on mobile */}
-                <Card className="bg-muted/30 overflow-hidden">
-                  <CardContent className="p-0 h-full flex items-center justify-center min-h-[200px] md:min-h-[300px]">
-                    <div className="w-full h-full bg-gradient-to-br from-jade/10 to-jade/5 rounded-lg flex flex-col items-center justify-center p-4 md:p-6">
-                      <Video className="h-10 w-10 md:h-16 md:w-16 text-jade/40 mb-2 md:mb-3" />
-                      <p className="text-muted-foreground text-base md:text-lg">אזור וידאו</p>
-                      <p className="text-xs text-muted-foreground mt-1 hidden md:block">Zoom / Google Meet</p>
-                      
-                      {sessionStatus !== 'idle' && (
-                        <Badge className={`mt-3 md:mt-4 text-xs md:text-sm px-2 md:px-3 py-0.5 md:py-1 ${
-                          sessionStatus === 'running' ? 'bg-jade animate-pulse' : 
-                          sessionStatus === 'paused' ? 'bg-gold' : 'bg-destructive'
-                        }`}>
-                          {sessionStatus === 'running' ? '● בשידור חי' :
-                           sessionStatus === 'paused' ? '⏸ מושהה' : '■ הסתיים'}
-                        </Badge>
-                      )}
-                      
-                      <div 
-                        className={cn(
-                          "text-3xl md:text-4xl font-mono mt-3 md:mt-4 text-jade font-bold hidden md:block cursor-pointer",
-                          "hover:scale-105 transition-transform select-none",
-                          longPressTimer.isPressing && "scale-95"
-                        )}
-                        {...longPressTimer.handlers}
-                        title="Long press for quick actions"
-                      >
-                        {formatDuration(sessionDuration)}
-                      </div>
-                      
-                      {/* Session Presets - Desktop */}
-                      <div className="hidden md:block mt-3 w-full max-w-xs">
-                        <SessionPresets
-                          sessionDuration={sessionDuration}
-                          sessionStatus={sessionStatus}
-                          onPresetSelect={setSessionPreset}
-                        />
-                      </div>
-                      
-                      {sessionStartTime && sessionStatus !== 'idle' && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          התחלה: {getSessionStartTimeDisplay()}
-                        </p>
-                      )}
-                      
-                      {selectedPatientName && sessionStatus === 'running' && (
-                        <Badge variant="outline" className="mt-2 text-sm px-3">
-                          {selectedPatientName}
-                        </Badge>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Featured Q&A Discussion Box */}
-                <Card 
-                  className="relative overflow-hidden border-rose-200/50 animate-fade-in"
-                  style={{
-                    backgroundImage: `linear-gradient(rgba(255,255,255,0.75), rgba(255,255,255,0.75)), url(${anxietySessionBg})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }}
-                >
-                  <CardContent className="p-4 flex flex-col min-h-[180px] md:min-h-[250px]">
-                    {!selectedQAType ? (
-                      <div className="flex flex-col items-center justify-center flex-1 animate-fade-in">
-                        <Heart className="h-8 w-8 text-rose-500 mx-auto mb-2" />
-                        <h3 className="text-lg font-semibold text-foreground">התחל דיון בנושא</h3>
-                        <p className="text-sm text-muted-foreground mt-1 mb-4">בחר סוג שיחה להתחיל</p>
-                        <QATypeDropdown
-                          variant="tile"
-                          selectedType={selectedQAType}
-                          onSelect={(type) => {
-                            setSelectedQAType(type);
-                            haptic.medium();
-                          }}
-                          onReset={() => setSelectedQAType(null)}
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex flex-col h-full animate-fade-in">
-                        {/* Header with reset */}
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <Heart className="h-5 w-5 text-rose-500" />
-                            <span className="font-medium text-sm">
-                              {selectedQAType === 'anxiety' ? 'שאלון חרדה' : 
-                               selectedQAType === 'tcm-brain' ? 'TCM Brain' :
-                               selectedQAType === 'diagnostics' ? 'אבחון' : 'כללי'}
-                            </span>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedQAType(null);
-                              setInlineAnxietyMessages([]);
-                              setAnxietyInput('');
-                            }}
-                            className="h-7 text-xs"
-                          >
-                            <RotateCcw className="h-3 w-3 mr-1" />
-                            החלף
-                          </Button>
-                        </div>
-                        
-                        {/* Quick Question Chips */}
-                        {inlineAnxietyMessages.length === 0 && (
-                          <div className="flex flex-wrap gap-1.5 mb-3">
-                            {(selectedQAType === 'anxiety' ? [
-                              'איך להתמודד עם חרדה?',
-                              'טכניקות הרגעה',
-                              'מה עוזר לשינה?',
-                              'תסמיני לחץ'
-                            ] : selectedQAType === 'tcm-brain' ? [
-                              'נקודות לכאב ראש',
-                              'איזון אנרגיה',
-                              'דופק חלש',
-                              'לשון לבנה'
-                            ] : [
-                              'שאלה כללית',
-                              'עצה טיפולית',
-                              'המלצה'
-                            ]).map((q, i) => (
-                              <button
-                                key={i}
-                                onClick={() => {
-                                  setAnxietyInput(q);
-                                  haptic.light();
-                                }}
-                                className="px-2 py-1 text-xs bg-rose-100/80 hover:bg-rose-200 text-rose-700 rounded-full transition-colors"
-                              >
-                                {q}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                        
-                        {/* Messages Area */}
-                        <div 
-                          ref={inlineChatRef}
-                          className="flex-1 overflow-y-auto space-y-2 mb-3 min-h-[60px] max-h-[100px] scroll-smooth"
-                        >
-                          {inlineAnxietyMessages.length === 0 ? (
-                            <div className="text-center text-muted-foreground text-xs py-2">
-                              <p>בחר שאלה מהירה או כתוב משלך</p>
-                            </div>
-                          ) : (
-                            <>
-                              {inlineAnxietyMessages.map((msg, idx) => (
-                                <div key={idx} className={`p-2 rounded-lg text-sm relative group ${
-                                  msg.role === 'user' 
-                                    ? 'bg-rose-100 text-rose-900 mr-8' 
-                                    : 'bg-background/80 border ml-8'
-                                }`}>
-                                  {msg.content}
-                                  {msg.role === 'assistant' && (
-                                    <button
-                                      onClick={() => {
-                                        navigator.clipboard.writeText(msg.content);
-                                        toast.success('התשובה הועתקה');
-                                        haptic.light();
-                                      }}
-                                      className="absolute top-1 left-1 p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-muted transition-opacity"
-                                      title="העתק"
-                                    >
-                                      <FileText className="h-3 w-3 text-muted-foreground" />
-                                    </button>
-                                  )}
-                                </div>
-                              ))}
-                              {/* Typing Indicator */}
-                              {aiQueryLoading && (
-                                <div className="bg-background/80 border ml-8 p-2 rounded-lg flex items-center gap-1.5">
-                                  <span className="w-2 h-2 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                                  <span className="w-2 h-2 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                                  <span className="w-2 h-2 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                                </div>
-                              )}
-                            </>
-                          )}
-                        </div>
-                        
-                        {/* Input Area */}
-                        <div className="flex gap-2 items-end">
-                          <div className="flex-1 relative">
-                            <Textarea
-                              value={anxietyInput}
-                              onChange={(e) => setAnxietyInput(e.target.value)}
-                              placeholder="שאל שאלה..."
-                              rows={1}
-                              className="text-sm pr-10 resize-none bg-background/80"
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                  e.preventDefault();
-                                  handleAnxietyQuestion();
-                                }
-                              }}
-                            />
-                            <button 
-                              onClick={() => setShowVoiceDictation(true)}
-                              className="absolute bottom-1.5 right-2 p-1 rounded-full hover:bg-rose-100 transition-colors"
-                              title="Voice input"
-                            >
-                              <img 
-                                src={animatedMicGif} 
-                                alt="Voice input" 
-                                className="h-5 w-5 object-contain"
-                              />
-                            </button>
-                          </div>
-                          <Button 
-                            onClick={handleAnxietyQuestion} 
-                            disabled={aiQueryLoading || !anxietyInput.trim()}
-                            size="sm"
-                            className="bg-rose-600 hover:bg-rose-700 h-9"
-                          >
-                            {aiQueryLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Session Notes - Below with double-tap gesture and inline voice input */}
-              <Card 
-                className="touch-manipulation"
-                {...doubleTapHandlers}
-              >
-                <CardContent className="p-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <label className="text-xs font-medium">הערות פגישה:</label>
-                      <AutoSaveIndicator isSaving={isSaving} lastSaved={lastSaved} />
-                    </div>
-                    <span className="text-[10px] text-muted-foreground">
-                      🎤 Click mic for voice • Double-tap for timestamp
-                    </span>
-                  </div>
-                  <InlineVoiceTextarea
-                    ref={notesTextareaRef as any}
-                    value={sessionNotes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    onVoiceInput={(text) => {
-                      haptic.success();
-                      toast.success('Voice note added', { duration: 1500 });
-                    }}
-                    placeholder="רשום הערות במהלך הפגישה... (לחץ על המיקרופון להקלטה)"
-                    rows={3}
-                    showLanguageSelector={true}
-                    defaultLanguage="he-IL"
+          <VideoSessionThreeColumnLayout
+            className="h-full"
+            rightColumn={
+              <VideoSessionRightColumn
+                phaseIndicator={
+                  <SessionPhaseIndicator
+                    currentPhase={currentPhase}
+                    onPhaseClick={setPhase}
+                    onResetToAuto={clearManualPhase}
+                    isManualOverride={isManualOverride}
+                    patientName={selectedPatientName}
+                    showTools={true}
                   />
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Session Guide Teleprompter Panel - Shows when enabled */}
-            {showSessionGuide && (
-              <div className={cn(
-                "hidden md:block",
-                sessionGuideExpanded ? "fixed inset-4 z-50 bg-background" : "md:col-span-1"
-              )}>
-                <SessionGuideTeleprompter
-                  sessionDuration={sessionDuration}
-                  isSessionActive={sessionStatus === 'running'}
-                  onClose={() => setShowSessionGuide(false)}
-                  isExpanded={sessionGuideExpanded}
-                  onToggleExpand={() => setSessionGuideExpanded(!sessionGuideExpanded)}
-                />
-              </div>
-            )}
-
-            {/* AI Session Suggestions Panel - Shows when enabled */}
-            {showAISuggestions && (
-              <div className="hidden md:block md:col-span-1 max-h-[calc(100vh-105px)]">
-                <AISessionSuggestions
-                  sessionDuration={sessionDuration}
-                  isSessionActive={sessionStatus === 'running'}
-                  transcription={liveTranscription}
-                  patientName={selectedPatientName || undefined}
-                  currentPhase={`phase-${Math.min(6, Math.floor(sessionDuration / 600) + 1)}`}
-                  onSuggestionUsed={(suggestion) => {
-                    setNotes(sessionNotes + `\n📌 Used: ${suggestion.slice(0, 50)}...`);
-                  }}
-                  onClose={() => setShowAISuggestions(false)}
-                  isListening={recordingModuleRef.current?.isRecording() || false}
-                />
-              </div>
-            )}
-
-            {/* Right Sidebar - All Tools & Controls (1/4 width) - Hidden on mobile */}
-            <div className={cn(
-              "hidden lg:flex flex-col gap-3 overflow-y-auto max-h-[calc(100vh-105px)]",
-              showSessionGuide ? "lg:col-span-1" : "lg:col-span-1"
-            )}>
-              {/* Patient Selection */}
-              <Card>
-                <CardHeader className="pb-2 pt-3">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    בחירת מטופל
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 pb-3">
-                  <div className="flex items-center gap-1">
-                    <Select
-                      value={selectedPatientId || 'none'}
-                      onValueChange={handlePatientSelect}
-                      disabled={loadingPatients}
-                    >
-                      <SelectTrigger className="flex-1 bg-background h-8 text-sm">
-                        <SelectValue placeholder={loadingPatients ? "טוען..." : "בחר מטופל"} />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover border shadow-lg z-50">
-                        <SelectItem value="none">ללא מטופל</SelectItem>
-                        {patients.map((patient) => (
-                          <SelectItem key={patient.id} value={patient.id}>
-                            {patient.full_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleRefreshPatients} disabled={refreshingPatients}>
-                      <RefreshCw className={`h-3 w-3 ${refreshingPatients ? 'animate-spin' : ''}`} />
-                    </Button>
-                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setShowSettings(true)}>
-                      <Settings className="h-3 w-3" />
-                    </Button>
+                }
+                specialtyIcons={
+                  <SpecialtyIconsGrid
+                    pulsingIds={smartSuggestPulsingIds}
+                    onIconClick={(mapping) => {
+                      // Add to Smart-Summary context when clicked
+                      const timestamp = formatDuration(sessionDuration);
+                      setNotes(sessionNotes + `\n📌 [${timestamp}] ${mapping.hebrewLabel}`);
+                      haptic.medium();
+                      toast.success(`נוסף: ${mapping.hebrewLabel}`, { duration: 1500 });
+                    }}
+                    showCategories={true}
+                    compact={false}
+                  />
+                }
+              />
+            }
+            centerColumn={
+              <VideoSessionCenterColumn
+                stickyHeader={
+                  <div className="flex items-center justify-between gap-2 p-2 bg-card/80 backdrop-blur-sm rounded-lg border border-jade/10">
+                    <div className="flex items-center gap-2">
+                      <Badge 
+                        className={cn(
+                          "text-xs px-2 py-0.5",
+                          sessionStatus === 'running' ? 'bg-jade animate-pulse' : 
+                          sessionStatus === 'paused' ? 'bg-gold' : 'bg-muted'
+                        )}
+                      >
+                        {sessionStatus === 'running' ? '● בשידור חי' :
+                         sessionStatus === 'paused' ? '⏸ מושהה' : 
+                         sessionStatus === 'ended' ? '■ הסתיים' : '○ מוכן'}
+                      </Badge>
+                      <span className="text-xl font-mono font-bold text-jade">
+                        {formatDuration(sessionDuration)}
+                      </span>
+                    </div>
+                    {selectedPatientName && (
+                      <Badge variant="outline" className="text-xs">
+                        {selectedPatientName}
+                      </Badge>
+                    )}
                   </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full gap-1 h-8 text-xs" 
-                    onClick={() => navigate('/crm/patients/new?returnTo=/video-session')}
+                }
+                videoContainer={
+                  <VideoContainer
+                    sessionStatus={sessionStatus}
+                    sessionDuration={sessionDuration}
+                    patientName={selectedPatientName}
+                    onStartCall={handleStart}
+                    onEndCall={handleEnd}
+                  />
+                }
+                ragSummaryZone={
+                  <RAGLiveSummaryZone
+                    currentPhase={currentPhase}
+                    liveTranscription={liveTranscription}
+                    aiSummary={aiQueryResult || ''}
+                    isProcessing={aiQueryLoading}
+                  />
+                }
+              />
+            }
+            leftColumn={
+              <VideoSessionLeftColumn
+                patientBrief={
+                  <PatientBriefCompact
+                    patientId={selectedPatientId}
+                    patientName={selectedPatientName}
+                    patientPhone={selectedPatientPhone}
+                    onViewHistory={() => {
+                      if (selectedPatientId) {
+                        navigate(`/crm/patients/${selectedPatientId}`);
+                      }
+                    }}
+                  />
+                }
+                sessionTimer={
+                  <SessionTimerCompact
+                    duration={sessionDuration}
+                    status={sessionStatus}
+                    onStart={handleStart}
+                    onPause={handlePause}
+                    onResume={handleResume}
+                    onReset={handleRepeat}
+                  />
+                }
+                voiceNotes={
+                  <Card 
+                    className="touch-manipulation h-full flex flex-col"
+                    {...doubleTapHandlers}
                   >
-                    <UserPlus className="h-3 w-3" />
-                    הוסף מטופל חדש
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Patient History Panel - Desktop */}
-              <PatientHistoryPanel 
-                patientId={selectedPatientId} 
-                patientName={selectedPatientName}
-              />
-
-              {/* Session Controls */}
-              <Card className="border-jade/30">
-                <CardHeader className="pb-2 pt-3">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Video className="h-4 w-4 text-jade" />
-                    בקרת פגישה
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 pb-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    {sessionStatus === 'idle' && (
-                      <Button onClick={handleStart} size="sm" className="bg-jade hover:bg-jade/90 gap-1 col-span-2 h-9">
-                        <Play className="h-4 w-4" />
-                        התחל פגישה
-                      </Button>
-                    )}
-                    {sessionStatus === 'running' && (
-                      <Button onClick={handlePause} size="sm" variant="secondary" className="gap-1 h-9">
-                        <Pause className="h-4 w-4" />
-                        השהה
-                      </Button>
-                    )}
-                    {sessionStatus === 'paused' && (
-                      <Button onClick={handleResume} size="sm" className="bg-jade hover:bg-jade/90 gap-1 h-9">
-                        <Play className="h-4 w-4" />
-                        המשך
-                      </Button>
-                    )}
-                    {(sessionStatus === 'running' || sessionStatus === 'paused') && (
-                      <>
-                        <Button onClick={handleRepeat} size="sm" variant="outline" className="gap-1 h-9">
-                          <RotateCcw className="h-4 w-4" />
-                          מחדש
-                        </Button>
-                        <Button onClick={handleEnd} size="sm" variant="destructive" className="gap-1 col-span-2 h-9">
-                          <Square className="h-4 w-4" />
-                          סיים ושמור
-                        </Button>
-                      </>
-                    )}
-                    {sessionStatus === 'ended' && (
-                      <Button onClick={handleRepeat} size="sm" className="bg-jade hover:bg-jade/90 gap-1 col-span-2 h-9">
-                        <RotateCcw className="h-4 w-4" />
-                        פגישה חדשה
-                      </Button>
-                    )}
-                  </div>
-
-                  <div className="flex gap-1 pt-1">
-                    <Button onClick={handlePrint} variant="outline" size="sm" className="flex-1 gap-1 h-7 text-xs">
-                      <Printer className="h-3 w-3" />
-                      הדפס
-                    </Button>
-                    <Button onClick={handleSendEmail} variant="outline" size="sm" className="flex-1 gap-1 h-7 text-xs">
-                      <Mail className="h-3 w-3" />
-                      אימייל
-                    </Button>
-                    <Button onClick={handleSendWhatsApp} variant="outline" size="sm" className="flex-1 gap-1 h-7 text-xs">
-                      <MessageCircle className="h-3 w-3" />
-                      וואטס
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Session Recording Module */}
-              <SessionRecordingModule
-                ref={recordingModuleRef}
-                patientId={selectedPatientId || undefined}
-                patientName={selectedPatientName || undefined}
-                onTranscriptionUpdate={(text) => {
-                  setNotes(sessionNotes + '\n' + text);
-                  // Feed transcription to AI suggestions panel
-                  setLiveTranscription(prev => prev + ' ' + text);
-                }}
-              />
-
-              {/* Zoom Timer */}
-              {sessionStatus !== 'idle' && sessionStatus !== 'ended' && (
-                <Card className={`${isZoomExpired ? 'border-destructive bg-destructive/5' : isZoomWarning ? 'border-amber-500 bg-amber-50' : 'border-blue-200 bg-blue-50'}`}>
-                  <CardContent className="p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-1">
-                        {isZoomExpired ? <AlertTriangle className="h-3 w-3 text-destructive" /> : <Clock className={`h-3 w-3 ${isZoomWarning ? 'text-amber-600' : 'text-blue-600'}`} />}
-                        <span className={`text-xs font-medium ${isZoomExpired ? 'text-destructive' : isZoomWarning ? 'text-amber-700' : 'text-blue-700'}`}>
-                          {isZoomExpired ? 'Zoom הסתיים!' : `נותרו ${getZoomTimeRemaining()}`}
+                    <CardContent className="p-3 flex-1 flex flex-col">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <label className="text-xs font-medium">הערות פגישה:</label>
+                          <AutoSaveIndicator isSaving={isSaving} lastSaved={lastSaved} />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground">
+                          🎤 Double-tap = timestamp
                         </span>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={handleExtendZoomTimer} className="h-6 px-2 text-xs">
-                        <RotateCcw className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <Progress value={getZoomProgress()} className={`h-1.5 ${isZoomExpired ? '[&>div]:bg-destructive' : isZoomWarning ? '[&>div]:bg-amber-500' : '[&>div]:bg-blue-500'}`} />
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Calendar Block */}
-              {currentAppointmentId && (
-                <Card className="border-green-200 bg-green-50">
-                  <CardContent className="p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3 text-green-600" />
-                        <span className="text-xs font-medium text-green-700">חסום ביומן</span>
+                      <InlineVoiceTextarea
+                        ref={notesTextareaRef as any}
+                        value={sessionNotes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        onVoiceInput={(text) => {
+                          haptic.success();
+                          toast.success('Voice note added', { duration: 1500 });
+                        }}
+                        placeholder="רשום הערות במהלך הפגישה..."
+                        rows={6}
+                        showLanguageSelector={true}
+                        defaultLanguage="he-IL"
+                        className="flex-1"
+                      />
+                      
+                      {/* Action Buttons */}
+                      <div className="flex gap-1 mt-2 pt-2 border-t border-muted">
+                        <Button onClick={handlePrint} variant="outline" size="sm" className="flex-1 gap-1 h-7 text-xs">
+                          <Printer className="h-3 w-3" />
+                          הדפס
+                        </Button>
+                        <Button onClick={handleSendEmail} variant="outline" size="sm" className="flex-1 gap-1 h-7 text-xs">
+                          <Mail className="h-3 w-3" />
+                          אימייל
+                        </Button>
+                        <Button onClick={handleSendWhatsApp} variant="outline" size="sm" className="flex-1 gap-1 h-7 text-xs">
+                          <MessageCircle className="h-3 w-3" />
+                          וואטס
+                        </Button>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={handleCancelCalendarBlock} disabled={isCancellingBlock} className="h-6 px-2 text-xs text-red-600">
-                        {isCancellingBlock ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Mini Inspiration Carousel - Session Tips */}
-              <div className="mt-2">
-                <MiniInspirationCarousel 
-                  autoPlay={sessionStatus === 'running'}
-                  interval={6000}
-                  language="he"
-                  sessionDuration={sessionDuration}
-                  autoSync={true}
-                />
-              </div>
-            </div>
-          </div>
+                    </CardContent>
+                  </Card>
+                }
+              />
+            }
+          />
         </main>
 
         {/* Mobile Session Bar - Fixed bottom bar for mobile */}

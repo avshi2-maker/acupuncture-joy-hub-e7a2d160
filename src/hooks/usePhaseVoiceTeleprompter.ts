@@ -41,6 +41,8 @@ export function usePhaseVoiceTeleprompter(
   const haptic = useHapticFeedback();
 
   // Speak function using Web Speech API
+  // Uses lower volume (0.5) to avoid interfering with Zoom/Meet audio
+  // Patient on call should NOT hear these prompts
   const speak = useCallback((text: string) => {
     if (!voiceEnabled || typeof window === 'undefined') return;
     
@@ -52,7 +54,9 @@ export function usePhaseVoiceTeleprompter(
       utterance.lang = 'he-IL';
       utterance.rate = 0.85;
       utterance.pitch = 1.0;
-      utterance.volume = 0.8;
+      // Lower volume to not interfere with call audio
+      // This audio plays through device speakers only, not through call
+      utterance.volume = 0.5;
       
       window.speechSynthesis.speak(utterance);
     } catch (error) {
