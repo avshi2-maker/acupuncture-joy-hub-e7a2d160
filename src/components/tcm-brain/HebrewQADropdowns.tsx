@@ -6,9 +6,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChevronDown, Flame, Circle } from 'lucide-react';
+import { ChevronDown, Flame, Circle, Leaf } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 // Five Elements Q&A in Hebrew
 const FIVE_ELEMENTS_QA = [
@@ -181,90 +182,115 @@ export function HebrewQADropdowns({
 }: HebrewQADropdownsProps) {
   const [openFiveElements, setOpenFiveElements] = useState(false);
   const [openYinYang, setOpenYinYang] = useState(false);
+  const [openHerbal, setOpenHerbal] = useState(false);
 
   const handleSelect = (question: string) => {
     onSelectQuestion(question);
   };
 
   return (
-    <div className={cn('flex gap-2 flex-wrap', className)} dir="rtl">
-      {/* Five Elements Dropdown */}
-      <DropdownMenu open={openFiveElements} onOpenChange={setOpenFiveElements}>
-        <DropdownMenuTrigger asChild>
+    <div className={cn('flex flex-col gap-2', className)} dir="rtl">
+      {/* Herbal Encyclopedia - Green Header Box with Collapsible */}
+      <Collapsible open={openHerbal} onOpenChange={setOpenHerbal}>
+        <CollapsibleTrigger asChild>
           <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1.5 bg-gradient-to-r from-green-500/10 to-amber-500/10 border-green-500/30 hover:from-green-500/20 hover:to-amber-500/20"
+            variant="ghost"
+            className="w-full h-10 justify-between px-4 bg-white border border-jade/30 rounded-lg hover:bg-jade/5"
             disabled={disabled}
           >
-            <Flame className="h-3 w-3 text-amber-500" />
-            <span>חמשת האלמנטים</span>
-            <ChevronDown className="h-3 w-3" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent 
-          className="w-80 max-h-80 overflow-hidden z-50 bg-background border shadow-lg"
-          align="start"
-        >
-          <ScrollArea className="h-72">
-            <div className="p-1" dir="rtl">
-              {FIVE_ELEMENTS_QA.map((qa) => (
-                <DropdownMenuItem
-                  key={qa.id}
-                  onClick={() => handleSelect(qa.question)}
-                  className="flex flex-col items-start gap-1 py-2 px-3 cursor-pointer focus:bg-green-500/10"
-                >
-                  <span className="text-sm font-medium text-foreground leading-relaxed">
-                    {qa.question}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed">
-                    {qa.context}
-                  </span>
-                </DropdownMenuItem>
-              ))}
+            <ChevronDown className={cn("h-4 w-4 text-jade transition-transform", openHerbal && "rotate-180")} />
+            <div className="flex items-center gap-2">
+              <span className="text-jade font-medium">אנציקלופדיית צמחים</span>
+              <Leaf className="h-4 w-4 text-jade" />
             </div>
-          </ScrollArea>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-1">
+          <div className="bg-background border rounded-lg shadow-md p-2 space-y-1">
+            {/* Five Elements Dropdown */}
+            <DropdownMenu open={openFiveElements} onOpenChange={setOpenFiveElements}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-8 text-xs gap-1.5 justify-between bg-gradient-to-r from-green-500/10 to-amber-500/10 border-green-500/30 hover:from-green-500/20 hover:to-amber-500/20"
+                  disabled={disabled}
+                >
+                  <ChevronDown className="h-3 w-3" />
+                  <div className="flex items-center gap-1.5">
+                    <span>חמשת האלמנטים</span>
+                    <Flame className="h-3 w-3 text-amber-500" />
+                  </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                className="w-80 max-h-80 overflow-hidden z-50 bg-background border shadow-lg"
+                align="end"
+              >
+                <ScrollArea className="h-72">
+                  <div className="p-1" dir="rtl">
+                    {FIVE_ELEMENTS_QA.map((qa) => (
+                      <DropdownMenuItem
+                        key={qa.id}
+                        onClick={() => handleSelect(qa.question)}
+                        className="flex flex-col items-start gap-1 py-2 px-3 cursor-pointer focus:bg-green-500/10"
+                      >
+                        <span className="text-sm font-medium text-foreground leading-relaxed">
+                          {qa.question}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed">
+                          {qa.context}
+                        </span>
+                      </DropdownMenuItem>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-      {/* Yin Yang Dropdown */}
-      <DropdownMenu open={openYinYang} onOpenChange={setOpenYinYang}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs gap-1.5 bg-gradient-to-r from-slate-500/10 to-white/10 border-slate-500/30 hover:from-slate-500/20 hover:to-white/20"
-            disabled={disabled}
-          >
-            <Circle className="h-3 w-3" style={{ background: 'linear-gradient(90deg, #000 50%, #fff 50%)', borderRadius: '50%' }} />
-            <span>יין ויאנג</span>
-            <ChevronDown className="h-3 w-3" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent 
-          className="w-80 max-h-80 overflow-hidden z-50 bg-background border shadow-lg"
-          align="start"
-        >
-          <ScrollArea className="h-72">
-            <div className="p-1" dir="rtl">
-              {YIN_YANG_QA.map((qa) => (
-                <DropdownMenuItem
-                  key={qa.id}
-                  onClick={() => handleSelect(qa.question)}
-                  className="flex flex-col items-start gap-1 py-2 px-3 cursor-pointer focus:bg-slate-500/10"
+            {/* Yin Yang Dropdown */}
+            <DropdownMenu open={openYinYang} onOpenChange={setOpenYinYang}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-8 text-xs gap-1.5 justify-between bg-gradient-to-r from-slate-500/10 to-white/10 border-slate-500/30 hover:from-slate-500/20 hover:to-white/20"
+                  disabled={disabled}
                 >
-                  <span className="text-sm font-medium text-foreground leading-relaxed">
-                    {qa.question}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed">
-                    {qa.context}
-                  </span>
-                </DropdownMenuItem>
-              ))}
-            </div>
-          </ScrollArea>
-        </DropdownMenuContent>
-      </DropdownMenu>
+                  <ChevronDown className="h-3 w-3" />
+                  <div className="flex items-center gap-1.5">
+                    <span>יין ויאנג</span>
+                    <Circle className="h-3 w-3" style={{ background: 'linear-gradient(90deg, #000 50%, #fff 50%)', borderRadius: '50%' }} />
+                  </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                className="w-80 max-h-80 overflow-hidden z-50 bg-background border shadow-lg"
+                align="end"
+              >
+                <ScrollArea className="h-72">
+                  <div className="p-1" dir="rtl">
+                    {YIN_YANG_QA.map((qa) => (
+                      <DropdownMenuItem
+                        key={qa.id}
+                        onClick={() => handleSelect(qa.question)}
+                        className="flex flex-col items-start gap-1 py-2 px-3 cursor-pointer focus:bg-slate-500/10"
+                      >
+                        <span className="text-sm font-medium text-foreground leading-relaxed">
+                          {qa.question}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed">
+                          {qa.context}
+                        </span>
+                      </DropdownMenuItem>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }
