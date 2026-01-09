@@ -1453,7 +1453,7 @@ export default function VideoSession() {
         />
         
         {/* Header - Optimized for mobile - ALWAYS sticky */}
-        <header className="bg-card border-b border-border sticky top-0 z-50">
+        <header className="bg-card border-b border-border sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
           <div className="max-w-full mx-auto px-3 md:px-4 py-2 md:py-4 relative flex items-center justify-between">
             {/* Mobile: Back button + Logo */}
             <div className="flex items-center gap-1 md:gap-4">
@@ -2072,7 +2072,7 @@ export default function VideoSession() {
         )}
 
         {/* Main Content - 3-Column RTL Zen Layout (25% | 50% | 25%) */}
-        <main className="p-3 md:p-4 flex-1 overflow-hidden pb-24 md:pb-4">
+        <main className="p-3 pt-16 md:p-4 md:pt-4 flex-1 overflow-hidden pb-24 md:pb-4">
           <VideoSessionThreeColumnLayout
             className="h-full"
             rightColumn={

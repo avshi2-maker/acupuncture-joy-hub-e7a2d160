@@ -322,7 +322,7 @@ export function VideoContainerZoom({
               <div className="w-px h-6 bg-muted-foreground/20" />
 
               {/* Call Control */}
-              {sessionStatus === 'idle' ? (
+              {(sessionStatus === 'idle' || sessionStatus === 'ended') ? (
                 <Button
                   className="rounded-full bg-jade hover:bg-jade/90 px-4"
                   onClick={handleStartCall}
