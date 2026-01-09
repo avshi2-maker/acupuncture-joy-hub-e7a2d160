@@ -64,12 +64,6 @@ export function DiagnosticsTab({
     }
   };
 
-  // Listen for loading state changes to update engine indicator
-  useEffect(() => {
-    if (!isLoading) {
-      window.dispatchEvent(new CustomEvent('tcm-query-end'));
-    }
-  }, [isLoading]);
 
   const lastAssistantMessage = messages.filter(m => m.role === 'assistant').pop();
   const lastUserMessage = messages.filter(m => m.role === 'user').pop();

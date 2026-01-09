@@ -343,14 +343,73 @@ export function useTcmBrainState() {
                 ? 'Credits exhausted. Please add credits.'
                 : 'AI service error. Please try again.';
 
-        // No popups: show the error inline as an assistant message
         setMessages(prev => [...prev, { role: 'assistant', content: msg }]);
         setIsLoading(false);
         setLoadingStartTime(null);
+        // End engine indicators even on error
+        window.dispatchEvent(new CustomEvent('tcm-query-end', { detail: { source: 'rag_internal', score: 0 } }));
         return;
       }
 
-      // Handle SSE streaming response
+      const contentType = response.headers.get('content-type') ?? '';
+
+      // Non-streaming JSON responses (current backend behavior)
+      if (contentType.includes('application/json')) {
+        const data = await response.json();
+
+        const md = data?.metadata ?? data ?? {};
+        const chunksFound = Number(md.chunksFound ?? md.chunks_found ?? md?.sourceAudit?.chunksFound ?? 0);
+        const documentsSearched = Number(md.documentsSearched ?? md.documents_searched ?? md?.sourceAudit?.documentsSearched ?? 0);
+        const searchTermsUsed = String(md.searchTermsUsed ?? md.search_terms_used ?? md.searchTerms ?? '');
+        const isExternal = Boolean(md.isExternal ?? md.is_external ?? false);
+        const confidence =
+          typeof md.actualConfidence === 'number'
+            ? md.actualConfidence
+            : typeof md.confidenceScore === 'number'
+              ? md.confidenceScore
+              : typeof md?.sourceAudit?.actualConfidence === 'number'
+                ? md.sourceAudit.actualConfidence
+                : null;
+
+        setLastRagStats({
+          chunksFound,
+          documentsSearched,
+          searchTerms: searchTermsUsed,
+          timestamp: new Date(),
+          isExternal,
+          auditLogged: false,
+          auditLogId: null,
+          auditLoggedAt: null,
+        });
+
+        if (!isExternal && chunksFound === 0) {
+          setExternalFallbackQuery(userMessage);
+        } else {
+          setExternalFallbackQuery(null);
+        }
+
+        const assistantText =
+          (typeof data?.response === 'string' && data.response.trim())
+            ? data.response
+            : (typeof data?.answer === 'string' && data.answer.trim())
+              ? data.answer
+              : (typeof data?.message === 'string' && data.message.trim())
+                ? data.message
+                : 'No response generated.';
+
+        setMessages(prev => [...prev, { role: 'assistant', content: assistantText }]);
+
+        const score = confidence === null ? (chunksFound > 0 ? 98 : 0) : Math.round(confidence * 100);
+        window.dispatchEvent(
+          new CustomEvent('tcm-query-end', {
+            detail: { source: isExternal ? 'llm_fallback' : 'rag_internal', score },
+          })
+        );
+
+        return;
+      }
+
+      // Streaming SSE responses (legacy/optional)
       const reader = response.body?.getReader();
       if (!reader) {
         throw new Error('No response body');
