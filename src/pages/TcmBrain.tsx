@@ -39,6 +39,7 @@ import { PregnancySafetyDialog, ElderlyLifestyleDialog, PediatricAcupunctureDial
 import { SessionBriefPanel } from '@/components/video/SessionBriefPanel';
 import { EmotionalProcessingPanel } from '@/components/session/EmotionalProcessingPanel';
 import { PediatricTCMAssistant } from '@/components/tcm-brain/PediatricTCMAssistant';
+import { HerbalMasterWidget } from '@/components/herbal/HerbalMasterWidget';
 import { HebrewQADropdowns } from '@/components/tcm-brain/HebrewQADropdowns';
 import { CustomizableToolbar, ToolbarItemId } from '@/components/video/CustomizableToolbar';
 import { AnxietyQADialog } from '@/components/video/AnxietyQADialog';
@@ -68,6 +69,7 @@ export default function TcmBrain() {
   const [showSessionBrief, setShowSessionBrief] = useState(false);
   const [showPediatricAssistant, setShowPediatricAssistant] = useState(false);
   const [showHerbEncyclopedia, setShowHerbEncyclopedia] = useState(false);
+  const [showHebrewQADropdowns, setShowHebrewQADropdowns] = useState(false);
   const [showEmotionalPanel, setShowEmotionalPanel] = useState(false);
   const [emotionalPanelEmotion, setEmotionalPanelEmotion] = useState<'grief' | 'trauma' | 'fear' | 'anger'>('grief');
   const [qaFavoritesCount, setQaFavoritesCount] = useState(0);
@@ -418,7 +420,7 @@ export default function TcmBrain() {
                    )}
                 </div>
 
-                {/* 4. Herb Encyclopedia Q&A (Collapsible) */}
+                {/* 4. Herb Encyclopedia (Collapsible) */}
                 <div className="bg-card rounded-lg border shadow-sm">
                    <Button variant="ghost" className="w-full flex justify-between p-3" onClick={() => setShowHerbEncyclopedia(!showHerbEncyclopedia)}>
                       <div className="flex items-center gap-2 font-bold text-jade">
@@ -428,7 +430,22 @@ export default function TcmBrain() {
                    </Button>
                    {showHerbEncyclopedia && (
                      <div className="p-3 border-t">
-                       <HebrewQADropdowns 
+                       <HerbalMasterWidget className="w-full" />
+                     </div>
+                   )}
+                </div>
+
+                {/* 5. Hebrew Q&A (Dropdowns) */}
+                <div className="bg-card rounded-lg border shadow-sm">
+                   <Button variant="ghost" className="w-full flex justify-between p-3" onClick={() => setShowHebrewQADropdowns(!showHebrewQADropdowns)}>
+                      <div className="flex items-center gap-2 font-bold text-violet-700">
+                        <MessageCircleQuestion className="h-5 w-5" /> שאלות מוכנות בעברית
+                      </div>
+                      {showHebrewQADropdowns ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}
+                   </Button>
+                   {showHebrewQADropdowns && (
+                     <div className="p-3 border-t">
+                       <HebrewQADropdowns
                          onSelectQuestion={(question) => {
                            streamChat(question);
                            setActiveTab('diagnostics');
