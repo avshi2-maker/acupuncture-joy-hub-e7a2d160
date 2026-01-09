@@ -115,6 +115,7 @@ import { useSmartSuggest } from '@/hooks/useSmartSuggest';
 import { usePhaseVoiceTeleprompter } from '@/hooks/usePhaseVoiceTeleprompter';
 import { useSessionTranscription } from '@/hooks/useSessionTranscription';
 import { useAIContextEngine } from '@/hooks/useAIContextEngine';
+import { useVideoSessionGuide } from '@/hooks/useVideoSessionGuide';
 
 import { TcmBrainPanel } from '@/components/video/TcmBrainPanel';
 import { SessionBriefPanel } from '@/components/video/SessionBriefPanel';
@@ -300,6 +301,72 @@ export default function VideoSession() {
     enabled: sessionStatus === 'running',
     voiceEnabled: voiceAlwaysOn,
     hapticEnabled: true,
+  });
+
+  // Live Transcription Bridge (ElevenLabs Scribe)
+  const {
+    isConnected: isTranscribing,
+    isConnecting: isTranscriptionConnecting,
+    partialTranscript,
+    committedTranscripts,
+    getRollingWindowText,
+    getFullTranscript,
+    connect: connectTranscription,
+    disconnect: disconnectTranscription,
+    clearTranscripts,
+  } = useSessionTranscription({
+    enabled: sessionStatus === 'running',
+    onTranscript: (text) => {
+      setLiveTranscription(text);
+    },
+    onCommittedTranscript: (text) => {
+      // Append committed transcript to notes with timestamp
+      if (text.trim().length > 10) {
+        console.log('[Transcription] Committed:', text.slice(0, 50));
+      }
+    },
+  });
+
+  // AI Context Engine - processes rolling window and generates summaries
+  const {
+    summary: aiLiveSummary,
+    finalReport: aiFinalReport,
+    isProcessing: isAIProcessing,
+    isGeneratingReport: isGeneratingFinalReport,
+    triggerSummary: triggerAISummary,
+    generateFinalReport,
+    clearSummary: clearAISummary,
+  } = useAIContextEngine(
+    getRollingWindowText,
+    getFullTranscript,
+    {
+      enabled: sessionStatus === 'running' && isTranscribing,
+      phase: currentPhase,
+      patientName: selectedPatientName,
+      keywords: Array.from(smartSuggestPulsingIds), // Pass active keywords
+      intervalMs: 30000, // 30 second interval
+      onSummaryUpdate: (summary) => {
+        console.log('[AI Engine] Summary updated');
+      },
+      onFinalReport: (report) => {
+        // Append final report to session notes
+        setNotes(sessionNotes + '\n\n--- 📋 דוח סיום AI ---\n' + report);
+      },
+    }
+  );
+
+  // Video Session Ghost Guide (Teleprompter Help)
+  const {
+    isActive: isGuideActive,
+    currentStepIndex: guideStepIndex,
+    totalSteps: guideTotalSteps,
+    startVideoSessionGuide,
+    stopGuide: stopVideoSessionGuide,
+  } = useVideoSessionGuide({
+    onComplete: () => {
+      setGuideCompleted(true);
+      toast.success('🎓 סיום סיור ההדרכה - אתה מוכן!');
+    },
   });
   
   useBackgroundDetection({
@@ -2011,28 +2078,32 @@ export default function VideoSession() {
             rightColumn={
               <VideoSessionRightColumn
                 phaseIndicator={
-                  <SessionPhaseIndicator
-                    currentPhase={currentPhase}
-                    onPhaseClick={setPhase}
-                    onResetToAuto={clearManualPhase}
-                    isManualOverride={isManualOverride}
-                    patientName={selectedPatientName}
-                    showTools={true}
-                  />
+                  <div id="SessionPhaseIndicator">
+                    <SessionPhaseIndicator
+                      currentPhase={currentPhase}
+                      onPhaseClick={setPhase}
+                      onResetToAuto={clearManualPhase}
+                      isManualOverride={isManualOverride}
+                      patientName={selectedPatientName}
+                      showTools={true}
+                    />
+                  </div>
                 }
                 specialtyIcons={
-                  <SpecialtyIconsGrid
-                    pulsingIds={smartSuggestPulsingIds}
-                    onIconClick={(mapping) => {
-                      // Add to Smart-Summary context when clicked
-                      const timestamp = formatDuration(sessionDuration);
-                      setNotes(sessionNotes + `\n📌 [${timestamp}] ${mapping.hebrewLabel}`);
-                      haptic.medium();
-                      toast.success(`נוסף: ${mapping.hebrewLabel}`, { duration: 1500 });
-                    }}
-                    showCategories={true}
-                    compact={false}
-                  />
+                  <div id="SpecialtyIconsGrid">
+                    <SpecialtyIconsGrid
+                      pulsingIds={smartSuggestPulsingIds}
+                      onIconClick={(mapping) => {
+                        // Add to Smart-Summary context when clicked
+                        const timestamp = formatDuration(sessionDuration);
+                        setNotes(sessionNotes + `\n📌 [${timestamp}] ${mapping.hebrewLabel}`);
+                        haptic.medium();
+                        toast.success(`נוסף: ${mapping.hebrewLabel}`, { duration: 1500 });
+                      }}
+                      showCategories={true}
+                      compact={false}
+                    />
+                  </div>
                 }
               />
             }
@@ -2064,21 +2135,27 @@ export default function VideoSession() {
                   </div>
                 }
                 videoContainer={
-                  <VideoContainerZoom
-                    sessionStatus={sessionStatus}
-                    sessionDuration={sessionDuration}
-                    patientName={selectedPatientName}
-                    onStartCall={handleStart}
-                    onEndCall={handleEnd}
-                  />
+                  <div id="VideoContainer">
+                    <VideoContainerZoom
+                      sessionStatus={sessionStatus}
+                      sessionDuration={sessionDuration}
+                      patientName={selectedPatientName}
+                      onStartCall={handleStart}
+                      onEndCall={handleEnd}
+                    />
+                  </div>
                 }
                 ragSummaryZone={
-                  <RAGLiveSummaryZoneEnhanced
-                    currentPhase={currentPhase}
-                    liveTranscription={liveTranscription}
-                    aiSummary={aiQueryResult || ''}
-                    isProcessing={aiQueryLoading}
-                  />
+                  <div id="RAGLiveSummaryZone">
+                    <RAGLiveSummaryZoneEnhanced
+                      currentPhase={currentPhase}
+                      liveTranscription={partialTranscript || liveTranscription}
+                      aiSummary={aiFinalReport || aiLiveSummary || aiQueryResult || ''}
+                      isProcessing={isAIProcessing || aiQueryLoading}
+                      isTranscribing={isTranscribing}
+                      highlightKeywords={Array.from(smartSuggestPulsingIds)}
+                    />
+                  </div>
                 }
               />
             }
@@ -2122,6 +2199,7 @@ export default function VideoSession() {
                         </span>
                       </div>
                       <InlineVoiceTextarea
+                        id="InlineVoiceTextarea"
                         ref={notesTextareaRef as any}
                         value={sessionNotes}
                         onChange={(e) => setNotes(e.target.value)}

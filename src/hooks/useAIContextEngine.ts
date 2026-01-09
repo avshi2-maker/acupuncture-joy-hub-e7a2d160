@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { SessionPhase } from '@/components/session/SessionPhaseIndicator';
+import { toast } from 'sonner';
 
 interface UseAIContextEngineOptions {
   enabled?: boolean;
@@ -8,40 +9,80 @@ interface UseAIContextEngineOptions {
   keywords?: string[];
   intervalMs?: number; // How often to call AI (default 30s)
   onSummaryUpdate?: (summary: string) => void;
+  onFinalReport?: (report: string) => void;
 }
 
 const SUMMARIZE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/session-ai-summarize`;
 
+// TCM Report structure for closing phase
+const CLOSING_REPORT_PROMPT = `
+בהתבסס על כל התמלול המצטבר, צור דוח TCM מובנה בעברית:
+
+## דוח סיום טיפול
+
+### תלונה עיקרית
+[תמצית התלונה]
+
+### ממצאי אבחון
+- דופק: [תיאור]
+- לשון: [תיאור]
+- תסמונת TCM: [זיהוי]
+
+### פרוטוקול טיפול
+- נקודות שנבחרו: [רשימה]
+- טכניקות: [דיקור/מוקסה/כוסות]
+
+### המלצות להמשך
+- [המלצה 1]
+- [המלצה 2]
+- תאריך מעקב מומלץ: [המלצה]
+`;
+
 export function useAIContextEngine(
   getRollingWindowText: () => string,
-  options: UseAIContextEngineOptions
+  getFullTranscript?: () => string,
+  options?: UseAIContextEngineOptions
 ) {
   const {
     enabled = false,
-    phase,
+    phase = 'opening',
     patientName,
     keywords = [],
     intervalMs = 30000, // 30 seconds default
     onSummaryUpdate,
-  } = options;
+    onFinalReport,
+  } = options || {};
 
   const [summary, setSummary] = useState('');
+  const [finalReport, setFinalReport] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastTranscriptRef = useRef<string>('');
+  const lastPhaseRef = useRef<SessionPhase>(phase);
+  const hasGeneratedClosingReportRef = useRef(false);
 
   // Stream AI summary with token-by-token rendering
-  const streamSummary = useCallback(async () => {
-    const transcript = getRollingWindowText();
+  const streamSummary = useCallback(async (isClosingReport = false) => {
+    const transcript = isClosingReport && getFullTranscript 
+      ? getFullTranscript() 
+      : getRollingWindowText();
     
-    // Skip if no new content or same as last
-    if (!transcript.trim() || transcript === lastTranscriptRef.current) {
+    // Skip if no new content or same as last (unless closing report)
+    if (!isClosingReport && (!transcript.trim() || transcript === lastTranscriptRef.current)) {
       return;
     }
     
-    lastTranscriptRef.current = transcript;
-    setIsProcessing(true);
+    if (!isClosingReport) {
+      lastTranscriptRef.current = transcript;
+    }
+    
+    if (isClosingReport) {
+      setIsGeneratingReport(true);
+    } else {
+      setIsProcessing(true);
+    }
     setError(null);
 
     try {
@@ -52,8 +93,10 @@ export function useAIContextEngine(
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({
-          transcript,
-          phase,
+          transcript: isClosingReport 
+            ? `${CLOSING_REPORT_PROMPT}\n\n--- תמלול מלא ---\n${transcript}`
+            : transcript,
+          phase: isClosingReport ? 'closing' : phase,
           patientName,
           keywords,
         }),
@@ -76,7 +119,7 @@ export function useAIContextEngine(
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let textBuffer = '';
-      let currentSummary = '';
+      let currentContent = '';
 
       while (true) {
         const { done, value } = await reader.read();
@@ -101,9 +144,14 @@ export function useAIContextEngine(
             const parsed = JSON.parse(jsonStr);
             const content = parsed.choices?.[0]?.delta?.content as string | undefined;
             if (content) {
-              currentSummary += content;
-              setSummary(currentSummary);
-              onSummaryUpdate?.(currentSummary);
+              currentContent += content;
+              if (isClosingReport) {
+                setFinalReport(currentContent);
+                onFinalReport?.(currentContent);
+              } else {
+                setSummary(currentContent);
+                onSummaryUpdate?.(currentContent);
+              }
             }
           } catch {
             // Incomplete JSON, put back and wait for more
@@ -124,35 +172,61 @@ export function useAIContextEngine(
             const parsed = JSON.parse(jsonStr);
             const content = parsed.choices?.[0]?.delta?.content as string | undefined;
             if (content) {
-              currentSummary += content;
-              setSummary(currentSummary);
-              onSummaryUpdate?.(currentSummary);
+              currentContent += content;
+              if (isClosingReport) {
+                setFinalReport(currentContent);
+                onFinalReport?.(currentContent);
+              } else {
+                setSummary(currentContent);
+                onSummaryUpdate?.(currentContent);
+              }
             }
           } catch { /* ignore */ }
         }
       }
 
-      console.log('[AI Context Engine] Summary updated:', currentSummary.slice(0, 100));
+      if (isClosingReport) {
+        console.log('[AI Context Engine] Final report generated:', currentContent.slice(0, 100));
+        toast.success('📋 דוח סיום הטיפול נוצר בהצלחה');
+      } else {
+        console.log('[AI Context Engine] Summary updated:', currentContent.slice(0, 100));
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'AI summarization failed';
       setError(message);
       console.error('[AI Context Engine] Error:', err);
+      toast.error(`שגיאת AI: ${message}`);
     } finally {
-      setIsProcessing(false);
+      if (isClosingReport) {
+        setIsGeneratingReport(false);
+      } else {
+        setIsProcessing(false);
+      }
     }
-  }, [getRollingWindowText, phase, patientName, keywords, onSummaryUpdate]);
+  }, [getRollingWindowText, getFullTranscript, phase, patientName, keywords, onSummaryUpdate, onFinalReport]);
+
+  // Handle phase change to "closing" - generate final report
+  useEffect(() => {
+    if (phase === 'closing' && lastPhaseRef.current !== 'closing' && !hasGeneratedClosingReportRef.current && enabled) {
+      hasGeneratedClosingReportRef.current = true;
+      console.log('[AI Context Engine] Closing phase detected - generating final report');
+      toast.info('🧠 מכין דוח סיום טיפול...', { duration: 3000 });
+      streamSummary(true); // Generate closing report with full transcript
+    }
+    lastPhaseRef.current = phase;
+  }, [phase, enabled, streamSummary]);
 
   // Start/stop interval based on enabled state
   useEffect(() => {
-    if (enabled) {
+    if (enabled && phase !== 'closing') {
       // Initial call after a short delay
       const initialTimeout = setTimeout(() => {
-        streamSummary();
+        streamSummary(false);
       }, 5000);
 
       // Set up interval
       intervalRef.current = setInterval(() => {
-        streamSummary();
+        streamSummary(false);
       }, intervalMs);
 
       return () => {
@@ -168,7 +242,7 @@ export function useAIContextEngine(
         intervalRef.current = null;
       }
     }
-  }, [enabled, intervalMs, streamSummary]);
+  }, [enabled, intervalMs, streamSummary, phase]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -181,20 +255,30 @@ export function useAIContextEngine(
 
   // Manual trigger
   const triggerSummary = useCallback(() => {
-    streamSummary();
+    streamSummary(false);
+  }, [streamSummary]);
+
+  // Generate final report manually
+  const generateFinalReport = useCallback(() => {
+    streamSummary(true);
   }, [streamSummary]);
 
   // Clear summary
   const clearSummary = useCallback(() => {
     setSummary('');
+    setFinalReport('');
     lastTranscriptRef.current = '';
+    hasGeneratedClosingReportRef.current = false;
   }, []);
 
   return {
     summary,
+    finalReport,
     isProcessing,
+    isGeneratingReport,
     error,
     triggerSummary,
+    generateFinalReport,
     clearSummary,
   };
 }
