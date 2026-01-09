@@ -50,7 +50,7 @@ import { CalendarInviteDialog } from '@/components/video/CalendarInviteDialog';
 import { SessionReportDialog } from '@/components/video/SessionReportDialog';
 import { SessionGuideTeleprompter } from '@/components/video/SessionGuideTeleprompter';
 import { useSessionHeaderBoxes } from '@/hooks/useSessionHeaderBoxes';
-import { toast } from 'sonner';
+
 
 export default function TcmBrain() {
   const navigate = useNavigate();
@@ -87,6 +87,7 @@ export default function TcmBrain() {
   const [showSessionReport, setShowSessionReport] = useState(false);
   const [highContrast, setHighContrast] = useState(false);
   const [activeAiQuery, setActiveAiQuery] = useState<ToolbarItemId | null>(null);
+  const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
 
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -123,10 +124,8 @@ export default function TcmBrain() {
   useEffect(() => {
     const saved = loadSavedSession();
     if (saved && saved.messages.length > 0) {
-      toast.info(`Found auto-saved session from ${saved.patientName || 'Unknown'}. Continue?`, {
-        duration: 10000,
-        action: { label: 'Restore', onClick: () => { toast.success('Session restored'); clearSavedSession(); } }
-      });
+      // Silently available for restore without toast
+      console.log('Auto-saved session found');
     }
   }, []);
 
@@ -159,7 +158,7 @@ export default function TcmBrain() {
   }, []);
 
   useEffect(() => {
-    if (selectedPatient?.id) { setShowSessionBrief(true); toast.info('🧠 Generating session brief...', { duration: 2000 }); }
+    if (selectedPatient?.id) { setShowSessionBrief(true); }
     else { setShowSessionBrief(false); }
   }, [selectedPatient?.id]);
 
@@ -184,7 +183,7 @@ export default function TcmBrain() {
     showSessionBrief,
     onToggleSessionBrief: () => setShowSessionBrief(!showSessionBrief),
     onOpenPediatric: () => setShowPediatricAssistant(true),
-    onOpenHerbs: () => toast.info('Herbal Master in side panel'),
+    onOpenHerbs: () => setShowHerbEncyclopedia(true),
     showEmotionalPanel,
     emotionalPanelEmotion,
     onOpenStress: () => { setShowTcmBrainPanel(true); },
@@ -192,7 +191,7 @@ export default function TcmBrain() {
     onOpenTrauma: () => { setEmotionalPanelEmotion('trauma'); setShowEmotionalPanel(true); },
     onOpenFear: () => { setEmotionalPanelEmotion('fear'); setShowEmotionalPanel(true); },
     onOpenAnger: () => { setEmotionalPanelEmotion('anger'); setShowEmotionalPanel(true); },
-    onOpenNutrition: () => toast.info('Nutrition guidance - use TCM Brain'),
+    onOpenNutrition: () => console.log('Nutrition guidance - use TCM Brain'),
     onOpenCalendar: () => navigate('/crm/calendar'),
     onOpenAppointment: () => setShowQuickAppointment(true),
     onOpenFollowUp: () => setShowFollowUpPlan(true),
@@ -202,7 +201,6 @@ export default function TcmBrain() {
     highContrast,
     onToggleAccessibility: () => {
       setHighContrast(!highContrast);
-      toast.success(highContrast ? 'Normal contrast' : 'High contrast enabled');
     },
   });
 
@@ -230,8 +228,8 @@ export default function TcmBrain() {
       case 'clear-chat': clearChat(); break;
       case 'next-tab': setActiveTab(prev => { const idx = tabItems.findIndex(t => t.id === prev); return tabItems[(idx + 1) % tabItems.length].id; }); break;
       case 'previous-tab': setActiveTab(prev => { const idx = tabItems.findIndex(t => t.id === prev); return tabItems[(idx - 1 + tabItems.length) % tabItems.length].id; }); break;
-      case 'show-brief': setShowSessionBrief(true); toast.success('📋 Session Brief opened'); break;
-      case 'hide-brief': setShowSessionBrief(false); toast.info('Session Brief closed'); break;
+      case 'show-brief': setShowSessionBrief(true); break;
+      case 'hide-brief': setShowSessionBrief(false); break;
     }
   }, [sessionStatus, startSession, pauseSession, continueSession, endSession, clearChat, tabItems]);
 
@@ -369,7 +367,7 @@ export default function TcmBrain() {
                   {/* Scrollable Content Container */}
                   <div className="flex-1 overflow-y-auto bg-card rounded-lg border shadow-sm p-0">
                     <TabsContent value="diagnostics" className="m-0 h-full p-0">
-                      <DiagnosticsTab messages={messages} isLoading={isLoading} onSendMessage={streamChat} onClear={clearChat} selectedPatient={selectedPatient} sessionSeconds={sessionSeconds} questionsAsked={questionsAsked} formatSessionTime={formatSessionTime} quickActionsRef={quickActionsRef} />
+                      <DiagnosticsTab messages={messages} isLoading={isLoading} onSendMessage={streamChat} onClear={clearChat} selectedPatient={selectedPatient} sessionSeconds={sessionSeconds} questionsAsked={questionsAsked} formatSessionTime={formatSessionTime} quickActionsRef={quickActionsRef} externalInput={pendingQuestion || undefined} onExternalInputHandled={() => setPendingQuestion(null)} />
                     </TabsContent>
                     <TabsContent value="symptoms" className="m-0 h-full p-0">
                       <SymptomsTab messages={messages} isLoading={isLoading} onSendMessage={streamChat} onClear={clearChat} selectedPatient={selectedPatient} sessionSeconds={sessionSeconds} questionsAsked={questionsAsked} formatSessionTime={formatSessionTime} quickActionsRef={quickActionsRef} />
@@ -466,7 +464,7 @@ export default function TcmBrain() {
                    </Button>
                    {showQASuggestions && (
                      <div className="p-3 border-t">
-                       <QASuggestionsPanel onSelectQuestion={(q) => { streamChat(q); setActiveTab('diagnostics'); }} sessionSeconds={sessionSeconds} />
+                       <QASuggestionsPanel onSelectQuestion={(q) => { setPendingQuestion(q); setActiveTab('diagnostics'); }} sessionSeconds={sessionSeconds} />
                      </div>
                    )}
                 </div>
@@ -480,7 +478,7 @@ export default function TcmBrain() {
           <ExternalAIFallbackCard query={externalFallbackQuery} isLoading={isLoading} onDismiss={dismissExternalFallback} onUseExternalAI={(provider) => runExternalAIFallback(provider)} />
         )}
 
-        <IntakeReviewDialog open={showIntakeReview} onOpenChange={setShowIntakeReview} patientId={selectedPatient?.id} patientName={selectedPatient?.name} onComplete={() => toast.success('Verified')} />
+        <IntakeReviewDialog open={showIntakeReview} onOpenChange={setShowIntakeReview} patientId={selectedPatient?.id} patientName={selectedPatient?.name} onComplete={() => console.log('Verified')} />
         <FloatingHelpGuide isOpen={showHelpGuide} onOpenChange={setShowHelpGuide} />
         <PregnancySafetyDialog open={showPregnancyCalc} onOpenChange={setShowPregnancyCalc} patientName={selectedPatient?.name} />
         <ElderlyLifestyleDialog open={showElderlyGuide} onOpenChange={setShowElderlyGuide} />
@@ -490,14 +488,14 @@ export default function TcmBrain() {
         <HRVTrackerDialog open={showHRVTracker} onOpenChange={setShowHRVTracker} patientId={selectedPatient?.id} />
         
         {/* New shared dialogs */}
-        <AnxietyQADialog open={showAnxietyQA} onOpenChange={setShowAnxietyQA} onConversationSave={() => toast.success('Q&A saved')} />
+        <AnxietyQADialog open={showAnxietyQA} onOpenChange={setShowAnxietyQA} onConversationSave={() => console.log('Q&A saved')} />
         <QuickAppointmentDialog open={showQuickAppointment} onOpenChange={setShowQuickAppointment} />
         <FollowUpPlanDialog open={showFollowUpPlan} onOpenChange={setShowFollowUpPlan} patientId={selectedPatient?.id} patientName={selectedPatient?.name} />
         <ZoomInviteDialog open={showZoomInvite} onOpenChange={setShowZoomInvite} patientName={selectedPatient?.name} />
         <CalendarInviteDialog open={showCalendarInvite} onOpenChange={setShowCalendarInvite} patientName={selectedPatient?.name} />
         <SessionReportDialog open={showSessionReport} onOpenChange={setShowSessionReport} patientName={selectedPatient?.name} patientPhone={selectedPatient?.phone} sessionNotes="" />
         
-        <SessionBriefPanel patientId={selectedPatient?.id || null} patientName={selectedPatient?.name || null} isOpen={showSessionBrief} onClose={() => setShowSessionBrief(false)} onQuestionUsed={(q) => { streamChat(q); setActiveTab('diagnostics'); }} onQuestionPinned={() => toast.success('Pinned')} autoTrigger={true} />
+        <SessionBriefPanel patientId={selectedPatient?.id || null} patientName={selectedPatient?.name || null} isOpen={showSessionBrief} onClose={() => setShowSessionBrief(false)} onQuestionUsed={(q) => { setPendingQuestion(q); setActiveTab('diagnostics'); }} onQuestionPinned={() => console.log('Pinned')} autoTrigger={true} />
         
         <EmotionalProcessingPanel isOpen={showEmotionalPanel} onClose={() => setShowEmotionalPanel(false)} initialEmotion={emotionalPanelEmotion} onAskQuestion={(q) => { streamChat(q); setShowEmotionalPanel(false); setActiveTab('symptoms'); }} />
       </div>
