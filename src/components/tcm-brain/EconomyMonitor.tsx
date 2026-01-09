@@ -1,7 +1,7 @@
 import React from 'react';
 import { SessionMetrics } from '@/hooks/useClinicalSession';
 import { PromptMapping } from '@/data/tcm-prompt-mapping';
-import { Activity, Zap, Clock, DollarSign } from 'lucide-react';
+import { Activity, Zap, Clock, DollarSign, Database, CheckCircle2 } from 'lucide-react';
 
 interface EconomyMonitorProps {
   metrics: SessionMetrics;
@@ -16,63 +16,93 @@ export const EconomyMonitor: React.FC<EconomyMonitorProps> = ({
 }) => {
   if (!isVisible) return null;
 
+  const hasQueries = stackedQueries.length > 0;
+  const hasCost = metrics.tokensUsed > 0;
+
   return (
     <div 
       id="economy-monitor"
-      className="fixed bottom-4 right-4 bg-black/90 text-green-400 p-3 rounded-lg font-mono text-xs z-50 border border-green-900/50 shadow-lg min-w-[200px]"
+      className="fixed bottom-5 right-5 bg-black/95 text-green-400 p-4 rounded-xl font-mono text-xs z-[9999] border border-green-500/30 shadow-2xl shadow-green-900/20 min-w-[220px] backdrop-blur-sm"
+      style={{ pointerEvents: 'none' }}
     >
-      <div className="flex items-center gap-2 mb-2 pb-2 border-b border-green-900/30">
-        <Activity className="h-3 w-3 animate-pulse" />
-        <span className="text-green-300 font-semibold">STACKED SESSION</span>
+      {/* Header with indexed indicator */}
+      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-green-500/20">
+        <Database className="h-3.5 w-3.5 text-green-400" />
+        <span className="text-green-300 font-bold tracking-wide">INDEXED MODE</span>
+        <CheckCircle2 className="h-3 w-3 text-green-500 ml-auto" />
       </div>
       
-      <div className="space-y-1.5">
+      {/* Status indicator */}
+      <div className="flex items-center gap-2 mb-3 text-[10px] text-green-500/70">
+        <Activity className="h-2.5 w-2.5 animate-pulse" />
+        <span>O(1) Map Lookup • No Linear Scan</span>
+      </div>
+      
+      {/* Metrics grid */}
+      <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <span className="flex items-center gap-1.5 text-green-500">
+          <span className="flex items-center gap-2 text-green-500/80">
             <Zap className="h-3 w-3" />
-            QUERIES:
+            STACKED:
           </span>
-          <span>{stackedQueries.length}</span>
+          <span className="text-green-300 font-bold">{stackedQueries.length}</span>
         </div>
         
-        <div className="flex items-center justify-between">
-          <span className="flex items-center gap-1.5 text-green-500">
-            <Clock className="h-3 w-3" />
-            TIME:
-          </span>
-          <span>{metrics.timeMs}ms</span>
-        </div>
-        
-        <div className="flex items-center justify-between">
-          <span className="flex items-center gap-1.5 text-green-500">
-            <Activity className="h-3 w-3" />
-            TOKENS:
-          </span>
-          <span>{metrics.tokensUsed}</span>
-        </div>
-        
-        <div className="flex items-center justify-between pt-1 border-t border-green-900/30">
-          <span className="flex items-center gap-1.5 text-green-300">
-            <DollarSign className="h-3 w-3" />
-            TOTAL COST:
-          </span>
-          <span className="text-green-300 font-semibold">
-            ${metrics.totalCost.toFixed(5)}
-          </span>
-        </div>
+        {hasCost && (
+          <>
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-2 text-green-500/80">
+                <Clock className="h-3 w-3" />
+                LATENCY:
+              </span>
+              <span className={metrics.timeMs < 5000 ? 'text-green-300' : 'text-yellow-400'}>
+                {metrics.timeMs}ms
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-2 text-green-500/80">
+                <Activity className="h-3 w-3" />
+                TOKENS:
+              </span>
+              <span className="text-green-300">{metrics.tokensUsed.toLocaleString()}</span>
+            </div>
+            
+            <div className="flex items-center justify-between pt-2 border-t border-green-500/20">
+              <span className="flex items-center gap-2 text-green-300">
+                <DollarSign className="h-3 w-3" />
+                COST:
+              </span>
+              <span className="text-green-300 font-bold text-sm">
+                ${metrics.totalCost.toFixed(5)}
+              </span>
+            </div>
+          </>
+        )}
       </div>
 
-      {stackedQueries.length > 0 && (
-        <div className="mt-2 pt-2 border-t border-green-900/30">
-          <div className="flex flex-wrap gap-1">
+      {/* Stacked query icons */}
+      {hasQueries && (
+        <div className="mt-3 pt-3 border-t border-green-500/20">
+          <div className="text-[10px] text-green-500/60 mb-1.5">SESSION BASKET:</div>
+          <div className="flex flex-wrap gap-1.5">
             {stackedQueries.map(q => (
-              <span key={q.id} className="text-base" title={q.hebrewLabel}>
+              <span 
+                key={q.id} 
+                className="text-lg filter drop-shadow-[0_0_4px_rgba(34,197,94,0.5)]" 
+                title={q.hebrewLabel}
+              >
                 {q.icon}
               </span>
             ))}
           </div>
         </div>
       )}
+
+      {/* Efficiency note */}
+      <div className="mt-3 pt-2 border-t border-green-500/10 text-[9px] text-green-600/50">
+        {stackedQueries.length} queries → 1 API call
+      </div>
     </div>
   );
 };

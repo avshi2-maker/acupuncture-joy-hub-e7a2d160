@@ -43,17 +43,25 @@ export const useClinicalSession = () => {
   const buildCombinedPrompt = useCallback((): string => {
     if (stackedQueries.length === 0) return '';
 
-    const contexts = stackedQueries
-      .map((q, i) => `${i + 1}. ${q.ragPriorityContext}`)
-      .join('\n\n');
+    // Use fullAiPrompt for direct context injection - NO RAG search needed
+    const directContexts = stackedQueries
+      .map((q, i) => `[${i + 1}] ${q.hebrewLabel}\n${q.fullAiPrompt}`)
+      .join('\n\n---\n\n');
 
-    return `System: You are a TCM Clinical Assistant.
+    // Build optimized single-call prompt
+    return `SYSTEM: You are a TCM Clinical Assistant. IMPORTANT: Use ONLY the provided clinical context below. Do NOT search or scan external data.
 
-Patient Profile: The following inquiries are stacked for a single patient analysis:
+=== DIRECT CLINICAL CONTEXT (Pre-indexed) ===
+${directContexts}
 
-${contexts}
+=== OUTPUT INSTRUCTIONS ===
+Provide a UNIFIED Treatment Plan:
+1. Combined Diagnosis (synthesize all patterns)
+2. Primary Points (deduplicated, max 8-10)
+3. Herbal Formula (single integrated prescription)
+4. Clinical Notes (brief, actionable)
 
-Output: Provide a Unified Treatment Plan. Combine the point selections and herbal suggestions into a single efficient protocol. Use RAG data first. Be concise and clinically actionable.`;
+Format: Concise bullet points. No lengthy explanations.`;
   }, [stackedQueries]);
 
   const updateMetrics = useCallback((tokensUsed: number, timeMs: number) => {
