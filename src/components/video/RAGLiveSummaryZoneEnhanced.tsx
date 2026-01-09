@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Sparkles, Brain, Loader2, ChevronDown, ChevronUp, Mic, Wifi, WifiOff } from 'lucide-react';
@@ -117,7 +117,8 @@ function HighlightedText({ text, keywords }: { text: string; keywords: string[] 
   );
 }
 
-export function RAGLiveSummaryZoneEnhanced({
+// Level 3: Wrapped in React.memo to prevent re-renders from transcription updates
+export const RAGLiveSummaryZoneEnhanced = memo(function RAGLiveSummaryZoneEnhanced({
   currentPhase,
   liveTranscription = '',
   aiSummary = '',
@@ -324,4 +325,4 @@ export function RAGLiveSummaryZoneEnhanced({
       <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-white/80 dark:from-card/80 to-transparent pointer-events-none" />
     </motion.div>
   );
-}
+});

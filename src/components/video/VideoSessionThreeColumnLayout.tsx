@@ -28,29 +28,28 @@ export function VideoSessionThreeColumnLayout({
   return (
     <div 
       className={cn(
-        // RTL layout - grid flows right to left
+        // Level 1: Stable 3-column skeleton with FIXED overflow
         "grid grid-cols-1 lg:grid-cols-4 gap-3 md:gap-4",
-        "h-full min-h-0 overflow-hidden",
-        // RTL direction for natural Hebrew layout
+        "h-full overflow-hidden", // Parent = overflow:hidden ONLY
         "dir-rtl",
         className
       )}
       dir="rtl"
     >
       {/* Column 1 (Right): Clinical Control & Navigation - 25% */}
-      <div className="lg:col-span-1 flex flex-col gap-3 md:gap-4 overflow-hidden order-1 lg:order-none">
+      <div className="lg:col-span-1 flex flex-col gap-3 md:gap-4 overflow-hidden order-1 lg:order-none h-full">
         <div className="flex-1 overflow-y-auto scrollbar-hide">
           {rightColumn}
         </div>
       </div>
 
-      {/* Column 2 (Center): Live Interaction Hub - 50% */}
-      <div className="lg:col-span-2 flex flex-col gap-3 md:gap-4 overflow-hidden order-3 lg:order-none min-h-0">
+      {/* Column 2 (Center): Live Interaction Hub - 50% - FIXED HEIGHT, NO SHRINK */}
+      <div className="lg:col-span-2 flex flex-col gap-3 md:gap-4 overflow-hidden order-3 lg:order-none h-full">
         {centerColumn}
       </div>
 
       {/* Column 3 (Left): Patient Data & Records - 25% */}
-      <div className="lg:col-span-1 flex flex-col gap-3 md:gap-4 overflow-hidden order-2 lg:order-none">
+      <div className="lg:col-span-1 flex flex-col gap-3 md:gap-4 overflow-hidden order-2 lg:order-none h-full">
         {leftColumn}
       </div>
     </div>
@@ -103,21 +102,21 @@ export function VideoSessionCenterColumn({
   className,
 }: CenterColumnProps) {
   return (
-    <div className={cn("flex flex-col gap-3 md:gap-4 h-full", className)} dir="rtl">
-      {/* Sticky Header (Timer + Status) */}
+    <div className={cn("flex flex-col gap-3 md:gap-4 h-full overflow-hidden", className)} dir="rtl">
+      {/* Sticky Header (Timer + Status) - NEVER MOVES */}
       {stickyHeader && (
-        <div className="flex-shrink-0 sticky top-0 z-30">
+        <div className="flex-shrink-0">
           {stickyHeader}
         </div>
       )}
       
-      {/* Video Container - Takes priority space */}
-      <div className="flex-1 min-h-[300px] md:min-h-[400px]">
+      {/* Level 2: Video Anchor - FIXED aspect ratio, NEVER SHRINKS */}
+      <div className="flex-shrink-0 aspect-video min-h-[250px] max-h-[400px]">
         {videoContainer}
       </div>
       
-      {/* RAG Live Summary Zone - Fixed height, no shrink */}
-      <div className="flex-shrink-0">
+      {/* RAG Live Summary Zone - Takes remaining space, INTERNAL scroll */}
+      <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide">
         {ragSummaryZone}
       </div>
     </div>

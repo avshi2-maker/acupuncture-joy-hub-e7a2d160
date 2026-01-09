@@ -2072,7 +2072,7 @@ export default function VideoSession() {
         )}
 
         {/* Main Content - 3-Column RTL Zen Layout (25% | 50% | 25%) */}
-        <main className="p-3 pt-16 md:p-4 md:pt-4 flex-1 overflow-hidden pb-24 md:pb-4">
+        <main className="p-3 md:p-4 flex-1 overflow-hidden pb-24 md:pb-4">
           <VideoSessionThreeColumnLayout
             className="h-full"
             rightColumn={

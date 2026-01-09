@@ -96,8 +96,8 @@ export function VideoContainerZoom({
           "overflow-hidden relative",
           "bg-gradient-to-br from-muted/30 to-muted/10",
           "border border-jade/20",
-          // Explicit height for visibility
-          "h-full min-h-[300px] md:min-h-[400px]",
+          // Level 2: FIXED height - Video Anchor, never collapses
+          "h-full w-full",
           className
         )}
       >
