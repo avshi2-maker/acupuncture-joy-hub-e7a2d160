@@ -1487,8 +1487,18 @@ serve(async (req) => {
       });
     }
 
-    const { query, messages, useExternalAI, includeChunkDetails, ageGroup, patientContext, language } = await req.json();
+    const { query, messages, useExternalAI, includeChunkDetails, ageGroup, patientContext, language, liteMode } = await req.json();
     const searchQuery = query || messages?.[messages.length - 1]?.content || '';
+    
+    // LITE MODE: Drastically reduce token consumption for quick queries
+    const isLiteMode = liteMode === true;
+    const LITE_HYBRID_CHUNKS = 5;      // vs 15 in normal mode
+    const LITE_PILLAR_CHUNKS = 3;      // vs 8 in normal mode
+    const LITE_FALLBACK_LIMIT = 8;     // vs 20 in normal mode
+    const LITE_CAF_LIMIT = 1;          // vs 3 in normal mode
+    const LITE_TRIALS_LIMIT = 1;       // vs 3 in normal mode
+    
+    console.log('=== LITE MODE:', isLiteMode ? 'ENABLED (reduced tokens)' : 'DISABLED (full search)', '===');
 
     // ========================================================================
     // CROSS-LINGUAL RAG - STEP 1: LANGUAGE DETECTION
@@ -1577,12 +1587,13 @@ serve(async (req) => {
     const searchLanguage = 'en'; // Force English search for cross-lingual RAG
     
     // First, perform hybrid search for overall confidence assessment
-    // OPTIMIZED: Reduced from 30 to 15 chunks to lower token consumption (~50% reduction)
+    // LITE MODE: Use 5 chunks, NORMAL: Use 15 chunks
+    const hybridChunkLimit = isLiteMode ? LITE_HYBRID_CHUNKS : 15;
     const hybridSearchResult = await performHybridSearch(
       supabaseClient,
       searchQueryForDB, // Use the English-translated query
       searchLanguage,   // Always search English knowledge base
-      15  // Reduced from 30 - most relevant chunks only
+      hybridChunkLimit
     );
     
     console.log('=== HYBRID SEARCH CONFIDENCE CHECK ===');
@@ -1735,7 +1746,7 @@ serve(async (req) => {
         .or(searchQuery.toLowerCase().split(/\s+/).filter((w: string) => w.length > 2).map((w: string) => 
           `western_label.ilike.%${w}%,tcm_pattern.ilike.%${w}%,key_symptoms.ilike.%${w}%,acupoints_display.ilike.%${w}%`
         ).join(','))
-        .limit(3),  // Reduced from 5 to optimize token consumption
+        .limit(isLiteMode ? LITE_CAF_LIMIT : 3),  // LITE: 1, NORMAL: 3
 
       // Clinical Trials
       supabaseClient
@@ -1745,7 +1756,7 @@ serve(async (req) => {
           `condition.ilike.%${w}%,title.ilike.%${w}%,intervention.ilike.%${w}%`
         ).join(','))
         .order('sapir_verified', { ascending: false })
-        .limit(3)  // Reduced from 5 to optimize token consumption
+        .limit(isLiteMode ? LITE_TRIALS_LIMIT : 3)  // LITE: 1, NORMAL: 3
     ]);
 
     // ========================================================================
@@ -1755,30 +1766,31 @@ serve(async (req) => {
     const queryKeywords = expandedKeywords.slice(0, 12); // Use expanded keywords instead of just keywordTerms
     
     // Rank each pillar by relevance to the user's query (with bilingual term matching)
-    // OPTIMIZED: Reduced per-pillar ranking from 15 to 8 chunks max
+    // LITE MODE: 3 chunks per pillar, NORMAL: 8 chunks per pillar
+    const pillarLimit = isLiteMode ? LITE_PILLAR_CHUNKS : 8;
     const clinicalChunks = rankChunksByRelevance(
       clinicalResult.data || [], 
       queryKeywords, 
       CLINICAL_KEYWORDS, 
-      8  // Reduced from 15
+      pillarLimit
     );
     const pharmacopeiaChunks = rankChunksByRelevance(
       pharmacopeiaResult.data || [], 
       queryKeywords, 
       PHARMACOPEIA_KEYWORDS, 
-      8  // Reduced from 15
+      pillarLimit
     );
     const nutritionChunks = rankChunksByRelevance(
       nutritionResult.data || [], 
       queryKeywords, 
       NUTRITION_KEYWORDS, 
-      8  // Reduced from 15
+      pillarLimit
     );
     const lifestyleChunks = rankChunksByRelevance(
       lifestyleResult.data || [], 
       queryKeywords, 
       LIFESTYLE_KEYWORDS, 
-      8  // Reduced from 15
+      pillarLimit
     );
     const ageSpecificChunks = ageSpecificResult.data || [];
     const cafStudies = cafStudiesResult.data || [];
@@ -1828,26 +1840,27 @@ serve(async (req) => {
         `)
         .eq('language', searchLanguage)
         .or(ilikeConditions)
-        .limit(20);  // Reduced from 50 to optimize token consumption
+        .limit(isLiteMode ? LITE_FALLBACK_LIMIT : 20);  // LITE: 8, NORMAL: 20
       
       if (fallbackData) {
         // Rank fallback chunks by relevance before distributing
-        const rankedFallback = rankChunksByRelevance(fallbackData, expandedKeywords, [], 25);
+        const rankedFallback = rankChunksByRelevance(fallbackData, expandedKeywords, [], isLiteMode ? 10 : 25);
         
         // Categorize fallback chunks into pillars
+        // LITE MODE: Max 2 per pillar, NORMAL: Max 5 per pillar
+        const fallbackPillarLimit = isLiteMode ? 2 : 5;
         rankedFallback.forEach(chunk => {
           const pillars = detectPillar(chunk.content);
-          // OPTIMIZED: Reduced per-pillar limits from 10 to 5 to cut tokens
-          if (pillars.includes('clinical') && clinicalChunks.length < 5) {
+          if (pillars.includes('clinical') && clinicalChunks.length < fallbackPillarLimit) {
             clinicalChunks.push(chunk);
           }
-          if (pillars.includes('pharmacopeia') && pharmacopeiaChunks.length < 5) {
+          if (pillars.includes('pharmacopeia') && pharmacopeiaChunks.length < fallbackPillarLimit) {
             pharmacopeiaChunks.push(chunk);
           }
-          if (pillars.includes('nutrition') && nutritionChunks.length < 5) {
+          if (pillars.includes('nutrition') && nutritionChunks.length < fallbackPillarLimit) {
             nutritionChunks.push(chunk);
           }
-          if (pillars.includes('lifestyle') && lifestyleChunks.length < 5) {
+          if (pillars.includes('lifestyle') && lifestyleChunks.length < fallbackPillarLimit) {
             lifestyleChunks.push(chunk);
           }
         });

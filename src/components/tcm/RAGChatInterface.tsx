@@ -6,7 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
-import { Send, Loader2, BookOpen, FileText, AlertCircle, Printer, Shield, CheckCircle2, Database, ExternalLink, Activity, Eye, EyeOff, AlertTriangle, Bot, Lightbulb } from 'lucide-react';
+import { Send, Loader2, BookOpen, FileText, AlertCircle, Printer, Shield, CheckCircle2, Database, ExternalLink, Activity, Eye, EyeOff, AlertTriangle, Bot, Lightbulb, Zap } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { VoiceInputButton } from '@/components/ui/VoiceInputButton';
 import { usePrintContent } from '@/hooks/usePrintContent';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -122,6 +124,7 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
   } | undefined>();
   const [showExternalDisclaimer, setShowExternalDisclaimer] = useState(false);
   const [externalConsent, setExternalConsent] = useState(false);
+  const [liteMode, setLiteMode] = useState(false); // Lite mode for faster, lower-token queries
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const { printContent } = usePrintContent();
@@ -239,7 +242,8 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
             content: m.content
           })),
           useExternalAI,
-          includeChunkDetails: true // Request full chunk details for tracing
+          includeChunkDetails: true, // Request full chunk details for tracing
+          liteMode // Pass lite mode for reduced token consumption
         }
       });
 
@@ -855,10 +859,33 @@ export function RAGChatInterface({ className }: RAGChatInterfaceProps) {
               <AlertCircle className="w-3 h-3" />
               Responses include source citations for verification
             </p>
-            <p className="text-xs text-green-600 flex items-center gap-1">
-              <Shield className="w-3 h-3" />
-              All queries logged
-            </p>
+            <div className="flex items-center gap-3">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1.5">
+                      <Switch
+                        id="lite-mode"
+                        checked={liteMode}
+                        onCheckedChange={setLiteMode}
+                        className="h-4 w-7 data-[state=checked]:bg-amber-500"
+                      />
+                      <label htmlFor="lite-mode" className={`text-xs cursor-pointer flex items-center gap-1 ${liteMode ? 'text-amber-600 font-medium' : 'text-muted-foreground'}`}>
+                        <Zap className="w-3 h-3" />
+                        Lite
+                      </label>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-[200px]">
+                    <p className="text-xs">Lite Mode: Faster queries with ~70% fewer tokens. Uses only top 5 chunks instead of full 4-pillar search.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <p className="text-xs text-green-600 flex items-center gap-1">
+                <Shield className="w-3 h-3" />
+                All queries logged
+              </p>
+            </div>
           </div>
         </div>
       </CardContent>
