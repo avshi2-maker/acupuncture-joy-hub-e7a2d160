@@ -456,20 +456,6 @@ export default function TcmBrain() {
                    )}
                 </div>
 
-                {/* 5. Knowledge Assets */}
-                <div className="bg-card rounded-lg border shadow-sm">
-                   <Button variant="ghost" className="w-full flex justify-between p-3" onClick={() => setShowKnowledgeAssets(!showKnowledgeAssets)}>
-                      <div className="flex items-center gap-2 font-bold text-emerald-700">
-                        <Database className="h-5 w-5" /> Knowledge Base
-                      </div>
-                      <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">{activeAssets.length} Active</Badge>
-                   </Button>
-                   {showKnowledgeAssets && (
-                     <div className="p-3 border-t">
-                       <KnowledgeAssetTabs activeAssets={activeAssets} showLabels={true} onAssetClick={(id) => toast.info(`${id} selected`)} />
-                     </div>
-                   )}
-                </div>
 
                 {/* 5. Q&A Suggestions */}
                 <div className="bg-card rounded-lg border shadow-sm">
