@@ -20,12 +20,19 @@ import {
 } from '@/data/tcmBrainQuestions';
 
 // Silence all pop-up notices ("sonner" toasts) across TCM Brain flow
-const toast = {
-  success: () => {},
-  info: () => {},
-  error: () => {},
-  warning: () => {},
-} as const;
+// We keep the same API surface but no-op everything.
+const toast = new Proxy(
+  {},
+  {
+    get: () => (..._args: unknown[]) => {},
+  }
+) as unknown as {
+  [key: string]: (...args: unknown[]) => void;
+  success: (...args: unknown[]) => void;
+  info: (...args: unknown[]) => void;
+  error: (...args: unknown[]) => void;
+  warning: (...args: unknown[]) => void;
+};
 
 export interface Message {
   role: 'user' | 'assistant';
