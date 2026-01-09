@@ -40,6 +40,7 @@ import { SessionBriefPanel } from '@/components/video/SessionBriefPanel';
 import { EmotionalProcessingPanel } from '@/components/session/EmotionalProcessingPanel';
 import { PediatricTCMAssistant } from '@/components/tcm-brain/PediatricTCMAssistant';
 import { HerbalMasterWidget } from '@/components/herbal/HerbalMasterWidget';
+import { HebrewQADropdowns } from '@/components/tcm-brain/HebrewQADropdowns';
 import { CustomizableToolbar, ToolbarItemId } from '@/components/video/CustomizableToolbar';
 import { AnxietyQADialog } from '@/components/video/AnxietyQADialog';
 import { QuickAppointmentDialog } from '@/components/video/QuickAppointmentDialog';
@@ -67,6 +68,7 @@ export default function TcmBrain() {
   const [showHRVTracker, setShowHRVTracker] = useState(false);
   const [showSessionBrief, setShowSessionBrief] = useState(false);
   const [showPediatricAssistant, setShowPediatricAssistant] = useState(false);
+  const [showHerbEncyclopedia, setShowHerbEncyclopedia] = useState(false);
   const [showEmotionalPanel, setShowEmotionalPanel] = useState(false);
   const [emotionalPanelEmotion, setEmotionalPanelEmotion] = useState<'grief' | 'trauma' | 'fear' | 'anger'>('grief');
   const [qaFavoritesCount, setQaFavoritesCount] = useState(0);
@@ -421,7 +423,28 @@ export default function TcmBrain() {
                    )}
                 </div>
 
-                {/* 4. Knowledge Assets */}
+                {/* 4. Herb Encyclopedia Q&A (Collapsible) */}
+                <div className="bg-card rounded-lg border shadow-sm">
+                   <Button variant="ghost" className="w-full flex justify-between p-3" onClick={() => setShowHerbEncyclopedia(!showHerbEncyclopedia)}>
+                      <div className="flex items-center gap-2 font-bold text-jade">
+                        <Leaf className="h-5 w-5" /> אנציקלופדיית צמחים
+                      </div>
+                      {showHerbEncyclopedia ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}
+                   </Button>
+                   {showHerbEncyclopedia && (
+                     <div className="p-3 border-t">
+                       <HebrewQADropdowns 
+                         onSelectQuestion={(question) => {
+                           streamChat(question);
+                           setActiveTab('diagnostics');
+                         }}
+                         disabled={isLoading}
+                       />
+                     </div>
+                   )}
+                </div>
+
+                {/* 5. Knowledge Assets */}
                 <div className="bg-card rounded-lg border shadow-sm">
                    <Button variant="ghost" className="w-full flex justify-between p-3" onClick={() => setShowKnowledgeAssets(!showKnowledgeAssets)}>
                       <div className="flex items-center gap-2 font-bold text-emerald-700">
