@@ -22,7 +22,9 @@ async function translateToEnglish(query: string, apiKey: string): Promise<string
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+        model: "google/gemini-3-flash-preview",
+        temperature: 1.0,
+        top_p: 0.95,
       messages: [
         { 
           role: "system", 
@@ -266,7 +268,7 @@ serve(async (req) => {
       chatMessages.push(...messages);
     }
 
-    // STEP 4: Generate response (will be in user's language due to prompt)
+    // STEP 4: Generate response with Performance Max config for sub-second speeds
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -274,9 +276,12 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-3-flash-preview",
         messages: chatMessages,
         stream: true,
+        temperature: 1.0,
+        top_p: 0.95,
+        max_tokens: 4096,
       }),
     });
 
@@ -311,7 +316,7 @@ serve(async (req) => {
         search_terms: translatedQuery || searchQuery,
         chunks_found: contextChunks.length,
         sources_used: sourceDocs,
-        ai_model: "google/gemini-2.5-flash",
+        ai_model: "google/gemini-3-flash-preview",
         chunks_matched: { input_language: inputLanguage, translated_query: translatedQuery, latency_ms: latencyMs }
       });
       console.log("Query logged successfully");
