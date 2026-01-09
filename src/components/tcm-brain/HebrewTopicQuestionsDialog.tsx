@@ -1,18 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  MessageCircleQuestion, Search, ChevronDown, ChevronRight,
+  MessageCircleQuestion, Search, ChevronDown, ChevronRight, Star, Trash2,
   Eye, Heart, Activity, AlertTriangle, Brain, Thermometer,
   Battery, Sun, Shield, Utensils, Stethoscope, MapPin, Compass,
   Flame, Droplets, Wind, Moon, Zap, Flower2, Baby, Users, 
   Sparkles, Clock, Target, BookOpen, Waves, CircleDot, TreeDeciduous, Pill
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+
+const FAVORITES_STORAGE_KEY = 'hebrew-topic-questions-favorites';
+
+interface FavoriteQuestion {
+  categoryId: string;
+  categoryName: string;
+  questionId: string;
+  textHe: string;
+  textEn: string;
+  addedAt: string;
+}
 
 // Question data structure
 interface Question {
@@ -886,6 +899,54 @@ export function HebrewTopicQuestionsDialog({
   const [internalOpen, setInternalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
+  const [favorites, setFavorites] = useState<FavoriteQuestion[]>([]);
+  const [activeTab, setActiveTab] = useState<'all' | 'favorites'>('all');
+
+  // Load favorites from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(FAVORITES_STORAGE_KEY);
+      if (saved) {
+        setFavorites(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error('Error loading favorites:', e);
+    }
+  }, []);
+
+  // Save favorites to localStorage
+  const saveFavorites = (newFavorites: FavoriteQuestion[]) => {
+    setFavorites(newFavorites);
+    localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(newFavorites));
+  };
+
+  const isFavorite = (categoryId: string, questionId: string) => {
+    return favorites.some(f => f.categoryId === categoryId && f.questionId === questionId);
+  };
+
+  const toggleFavorite = (categoryId: string, categoryName: string, question: { id: string; textHe: string; textEn: string }) => {
+    if (isFavorite(categoryId, question.id)) {
+      const newFavorites = favorites.filter(f => !(f.categoryId === categoryId && f.questionId === question.id));
+      saveFavorites(newFavorites);
+      toast.success('הוסר מהמועדפים');
+    } else {
+      const newFavorite: FavoriteQuestion = {
+        categoryId,
+        categoryName,
+        questionId: question.id,
+        textHe: question.textHe,
+        textEn: question.textEn,
+        addedAt: new Date().toISOString(),
+      };
+      saveFavorites([...favorites, newFavorite]);
+      toast.success('נוסף למועדפים ⭐');
+    }
+  };
+
+  const clearAllFavorites = () => {
+    saveFavorites([]);
+    toast.success('כל המועדפים נמחקו');
+  };
 
   // Support both controlled and uncontrolled modes
   const isControlled = controlledOpen !== undefined;
@@ -914,6 +975,178 @@ export function HebrewTopicQuestionsDialog({
 
   const totalQuestions = questionnairesData.reduce((acc, cat) => acc + cat.questions.length, 0);
 
+  // Render question item with favorite button
+  const renderQuestionItem = (
+    question: { id: string; textHe: string; textEn: string },
+    idx: number,
+    categoryId: string,
+    categoryName: string
+  ) => {
+    const starred = isFavorite(categoryId, question.id);
+    return (
+      <div key={`${categoryId}-${question.id}`} className="flex items-center gap-1 group">
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "h-7 w-7 shrink-0 opacity-50 group-hover:opacity-100 transition-opacity",
+            starred && "opacity-100 text-yellow-500"
+          )}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleFavorite(categoryId, categoryName, question);
+          }}
+        >
+          <Star className={cn("h-4 w-4", starred && "fill-yellow-500")} />
+        </Button>
+        <Button
+          variant="ghost"
+          className="flex-1 justify-start text-right h-auto py-2 px-2 hover:bg-muted/50"
+          onClick={() => handleSelectQuestion(question.textHe)}
+        >
+          <span className="text-xs text-muted-foreground ml-2 shrink-0">
+            {idx + 1}.
+          </span>
+          <span className="text-sm leading-relaxed line-clamp-2">
+            {question.textHe}
+          </span>
+        </Button>
+      </div>
+    );
+  };
+
+  // Render favorites section
+  const renderFavoritesSection = () => {
+    if (favorites.length === 0) {
+      return (
+        <div className="p-8 text-center text-muted-foreground">
+          <Star className="h-12 w-12 mx-auto mb-3 opacity-20" />
+          <p className="font-medium">אין שאלות מועדפות</p>
+          <p className="text-sm mt-1">לחץ על ⭐ ליד שאלה כדי להוסיף אותה למועדפים</p>
+        </div>
+      );
+    }
+
+    // Group favorites by category
+    const groupedFavorites = favorites.reduce((acc, fav) => {
+      if (!acc[fav.categoryId]) {
+        acc[fav.categoryId] = { name: fav.categoryName, questions: [] };
+      }
+      acc[fav.categoryId].questions.push(fav);
+      return acc;
+    }, {} as Record<string, { name: string; questions: FavoriteQuestion[] }>);
+
+    return (
+      <div className="p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <Badge variant="secondary">{favorites.length} מועדפים</Badge>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-destructive hover:text-destructive"
+            onClick={clearAllFavorites}
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            נקה הכל
+          </Button>
+        </div>
+        {Object.entries(groupedFavorites).map(([catId, { name, questions }]) => (
+          <div key={catId} className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground px-2">{name}</p>
+            <div className="space-y-1 pr-2 border-r-2 border-yellow-500/30 mr-2">
+              {questions.map((fav, idx) => (
+                <div key={fav.questionId} className="flex items-center gap-1 group">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 shrink-0 text-yellow-500"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFavorite(catId, name, { id: fav.questionId, textHe: fav.textHe, textEn: fav.textEn });
+                    }}
+                  >
+                    <Star className="h-4 w-4 fill-yellow-500" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="flex-1 justify-start text-right h-auto py-2 px-2 hover:bg-muted/50"
+                    onClick={() => handleSelectQuestion(fav.textHe)}
+                  >
+                    <span className="text-sm leading-relaxed line-clamp-2">
+                      {fav.textHe}
+                    </span>
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // Render the categories content
+  const renderCategoriesContent = () => (
+    <div className="p-4 space-y-2">
+      {filteredData.map((category) => {
+        const isExpanded = expandedCategories.includes(category.id);
+        const Icon = category.icon;
+        const categoryFavCount = favorites.filter(f => f.categoryId === category.id).length;
+        
+        return (
+          <Collapsible
+            key={category.id}
+            open={isExpanded}
+            onOpenChange={() => toggleCategory(category.id)}
+          >
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-between p-3 h-auto",
+                  category.bgColor,
+                  category.borderColor,
+                  "border hover:opacity-80"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <Icon className={cn("h-5 w-5", category.color)} />
+                  <div className="text-right">
+                    <p className="font-medium text-sm">{category.name}</p>
+                    <p className="text-xs text-muted-foreground">{category.nameEn}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {categoryFavCount > 0 && (
+                    <Badge variant="outline" className="text-[10px] bg-yellow-500/10 border-yellow-500/30 text-yellow-600">
+                      <Star className="h-3 w-3 mr-0.5 fill-yellow-500" />
+                      {categoryFavCount}
+                    </Badge>
+                  )}
+                  <Badge variant="secondary" className="text-xs">
+                    {category.questions.length}
+                  </Badge>
+                  {isExpanded ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </div>
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-1">
+              <div className="space-y-1 pr-2 border-r-2 border-muted mr-4">
+                {category.questions.map((question, idx) => 
+                  renderQuestionItem(question, idx, category.id, category.name)
+                )}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        );
+      })}
+    </div>
+  );
+
   // If controlled, don't render the trigger button
   if (isControlled) {
     return (
@@ -926,6 +1159,12 @@ export function HebrewTopicQuestionsDialog({
               <Badge variant="outline" className="mr-2">
                 {totalQuestions} שאלות ב-{questionnairesData.length} נושאים
               </Badge>
+              {favorites.length > 0 && (
+                <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/30">
+                  <Star className="h-3 w-3 mr-1 fill-yellow-500" />
+                  {favorites.length}
+                </Badge>
+              )}
             </DialogTitle>
             <div className="relative mt-2">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -938,71 +1177,30 @@ export function HebrewTopicQuestionsDialog({
             </div>
           </DialogHeader>
           
-          <ScrollArea className="h-[60vh]">
-            <div className="p-4 space-y-2">
-              {filteredData.map((category) => {
-                const isExpanded = expandedCategories.includes(category.id);
-                const Icon = category.icon;
-                
-                return (
-                  <Collapsible
-                    key={category.id}
-                    open={isExpanded}
-                    onOpenChange={() => toggleCategory(category.id)}
-                  >
-                    <CollapsibleTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className={cn(
-                          "w-full justify-between p-3 h-auto",
-                          category.bgColor,
-                          category.borderColor,
-                          "border hover:opacity-80"
-                        )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Icon className={cn("h-5 w-5", category.color)} />
-                          <div className="text-right">
-                            <p className="font-medium text-sm">{category.name}</p>
-                            <p className="text-xs text-muted-foreground">{category.nameEn}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className="text-xs">
-                            {category.questions.length}
-                          </Badge>
-                          {isExpanded ? (
-                            <ChevronDown className="h-4 w-4" />
-                          ) : (
-                            <ChevronRight className="h-4 w-4" />
-                          )}
-                        </div>
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-1">
-                      <div className="space-y-1 pr-4 border-r-2 border-muted mr-4">
-                        {category.questions.map((question, idx) => (
-                          <Button
-                            key={question.id}
-                            variant="ghost"
-                            className="w-full justify-start text-right h-auto py-2 px-3 hover:bg-muted/50"
-                            onClick={() => handleSelectQuestion(question.textHe)}
-                          >
-                            <span className="text-xs text-muted-foreground ml-2 shrink-0">
-                              {idx + 1}.
-                            </span>
-                            <span className="text-sm leading-relaxed line-clamp-2">
-                              {question.textHe}
-                            </span>
-                          </Button>
-                        ))}
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                );
-              })}
-            </div>
-          </ScrollArea>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'all' | 'favorites')} className="flex flex-col h-[60vh]">
+            <TabsList className="grid w-full grid-cols-2 mx-4 mt-2" style={{ width: 'calc(100% - 2rem)' }}>
+              <TabsTrigger value="all" className="gap-2">
+                <BookOpen className="h-4 w-4" />
+                כל הנושאים ({questionnairesData.length})
+              </TabsTrigger>
+              <TabsTrigger value="favorites" className="gap-2">
+                <Star className="h-4 w-4" />
+                מועדפים ({favorites.length})
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="all" className="flex-1 mt-0">
+              <ScrollArea className="h-full">
+                {renderCategoriesContent()}
+              </ScrollArea>
+            </TabsContent>
+            
+            <TabsContent value="favorites" className="flex-1 mt-0">
+              <ScrollArea className="h-full">
+                {renderFavoritesSection()}
+              </ScrollArea>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
     );
@@ -1022,6 +1220,11 @@ export function HebrewTopicQuestionsDialog({
           <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
             {questionnairesData.length}
           </Badge>
+          {favorites.length > 0 && (
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-yellow-500/20 text-yellow-600">
+              <Star className="h-3 w-3 fill-yellow-500" />
+            </Badge>
+          )}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[85vh] p-0" dir="rtl">
@@ -1032,6 +1235,12 @@ export function HebrewTopicQuestionsDialog({
             <Badge variant="outline" className="mr-2">
               {totalQuestions} שאלות ב-{questionnairesData.length} נושאים
             </Badge>
+            {favorites.length > 0 && (
+              <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/30">
+                <Star className="h-3 w-3 mr-1 fill-yellow-500" />
+                {favorites.length}
+              </Badge>
+            )}
           </DialogTitle>
           <div className="relative mt-2">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -1044,71 +1253,30 @@ export function HebrewTopicQuestionsDialog({
           </div>
         </DialogHeader>
         
-        <ScrollArea className="h-[60vh]">
-          <div className="p-4 space-y-2">
-            {filteredData.map((category) => {
-              const isExpanded = expandedCategories.includes(category.id);
-              const Icon = category.icon;
-              
-              return (
-                <Collapsible
-                  key={category.id}
-                  open={isExpanded}
-                  onOpenChange={() => toggleCategory(category.id)}
-                >
-                  <CollapsibleTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className={cn(
-                        "w-full justify-between p-3 h-auto",
-                        category.bgColor,
-                        category.borderColor,
-                        "border hover:opacity-80"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Icon className={cn("h-5 w-5", category.color)} />
-                        <div className="text-right">
-                          <p className="font-medium text-sm">{category.name}</p>
-                          <p className="text-xs text-muted-foreground">{category.nameEn}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="text-xs">
-                          {category.questions.length}
-                        </Badge>
-                        {isExpanded ? (
-                          <ChevronDown className="h-4 w-4" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4" />
-                        )}
-                      </div>
-                    </Button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="mt-1">
-                    <div className="space-y-1 pr-4 border-r-2 border-muted mr-4">
-                      {category.questions.map((question, idx) => (
-                        <Button
-                          key={question.id}
-                          variant="ghost"
-                          className="w-full justify-start text-right h-auto py-2 px-3 hover:bg-muted/50"
-                          onClick={() => handleSelectQuestion(question.textHe)}
-                        >
-                          <span className="text-xs text-muted-foreground ml-2 shrink-0">
-                            {idx + 1}.
-                          </span>
-                          <span className="text-sm leading-relaxed line-clamp-2">
-                            {question.textHe}
-                          </span>
-                        </Button>
-                      ))}
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
-              );
-            })}
-          </div>
-        </ScrollArea>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'all' | 'favorites')} className="flex flex-col h-[60vh]">
+          <TabsList className="grid w-full grid-cols-2 mx-4 mt-2" style={{ width: 'calc(100% - 2rem)' }}>
+            <TabsTrigger value="all" className="gap-2">
+              <BookOpen className="h-4 w-4" />
+              כל הנושאים ({questionnairesData.length})
+            </TabsTrigger>
+            <TabsTrigger value="favorites" className="gap-2">
+              <Star className="h-4 w-4" />
+              מועדפים ({favorites.length})
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="all" className="flex-1 mt-0">
+            <ScrollArea className="h-full">
+              {renderCategoriesContent()}
+            </ScrollArea>
+          </TabsContent>
+          
+          <TabsContent value="favorites" className="flex-1 mt-0">
+            <ScrollArea className="h-full">
+              {renderFavoritesSection()}
+            </ScrollArea>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
