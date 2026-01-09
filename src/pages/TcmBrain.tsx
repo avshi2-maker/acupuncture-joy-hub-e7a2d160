@@ -99,7 +99,7 @@ export default function TcmBrain() {
     formatSessionTime, startSession, pauseSession, continueSession, endSession,
     patients, selectedPatient, setSelectedPatient, loadingPatients, voiceNotes,
     handleAddVoiceNote, handleDeleteVoiceNote, activeTemplate, handleApplyTemplate,
-    questionsAsked, highlightedPoints, patientSessions, setChainedWorkflow,
+    questionsAsked, highlightedPoints, setHighlightedPoints, patientSessions, setChainedWorkflow,
     openGmailWithSession, openWhatsAppWithSession, externalFallbackQuery,
     dismissExternalFallback, runExternalAIFallback, lastRagStats, isStreaming,
     searchDepth, setSearchDepth,
@@ -233,6 +233,17 @@ export default function TcmBrain() {
       case 'hide-brief': setShowSessionBrief(false); break;
     }
   }, [sessionStatus, startSession, pauseSession, continueSession, endSession, clearChat, tabItems]);
+
+  // Handler to view points on body map
+  const handleViewBodyMap = useCallback((points: string[]) => {
+    // Add points to highlighted points (merge with existing)
+    setHighlightedPoints(prev => {
+      const combined = [...new Set([...prev, ...points])];
+      return combined;
+    });
+    // Switch to body map tab
+    setActiveTab('bodymap');
+  }, [setHighlightedPoints]);
 
   return (
     <>
@@ -372,7 +383,7 @@ export default function TcmBrain() {
                   {/* Scrollable Content Container */}
                   <div className="flex-1 overflow-y-auto bg-card rounded-lg border shadow-sm p-0">
                     <TabsContent value="diagnostics" className="m-0 h-full p-0">
-                      <DiagnosticsTab messages={messages} isLoading={isLoading} onSendMessage={streamChat} onClear={clearChat} selectedPatient={selectedPatient} sessionSeconds={sessionSeconds} questionsAsked={questionsAsked} formatSessionTime={formatSessionTime} quickActionsRef={quickActionsRef} externalInput={pendingQuestion || undefined} onExternalInputHandled={() => setPendingQuestion(null)} />
+                      <DiagnosticsTab messages={messages} isLoading={isLoading} onSendMessage={streamChat} onClear={clearChat} selectedPatient={selectedPatient} sessionSeconds={sessionSeconds} questionsAsked={questionsAsked} formatSessionTime={formatSessionTime} quickActionsRef={quickActionsRef} externalInput={pendingQuestion || undefined} onExternalInputHandled={() => setPendingQuestion(null)} onViewBodyMap={handleViewBodyMap} />
                     </TabsContent>
                     <TabsContent value="symptoms" className="m-0 h-full p-0">
                       <SymptomsTab messages={messages} isLoading={isLoading} onSendMessage={streamChat} onClear={clearChat} selectedPatient={selectedPatient} sessionSeconds={sessionSeconds} questionsAsked={questionsAsked} formatSessionTime={formatSessionTime} quickActionsRef={quickActionsRef} />
