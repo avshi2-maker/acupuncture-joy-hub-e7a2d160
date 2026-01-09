@@ -10,6 +10,7 @@ import {
   Square, RotateCcw, Printer, MessageCircle, Mail, ArrowRight, HelpCircle, 
   BookOpen, Heart, Mic, Baby, Sparkles, Apple, Activity, Wind, Leaf
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { APIUsageMeter } from '@/components/tcm-brain/APIUsageMeter';
 import { AITrustHeader } from '@/components/tcm-brain/AITrustHeader';
 import { TcmTurboDashboard, TurboDashboardStatus } from '@/components/tcm/TcmTurboDashboard';
@@ -243,6 +244,11 @@ export default function TcmBrain() {
     });
     // Switch to body map tab
     setActiveTab('bodymap');
+    // Show toast notification
+    toast.success(`📍 Viewing ${points.length} point${points.length > 1 ? 's' : ''} on Body Map`, {
+      description: points.join(', '),
+      duration: 3000,
+    });
   }, [setHighlightedPoints]);
 
   return (
