@@ -642,6 +642,87 @@ function getLanguageFilePatterns(lang: DetectedLanguage): string[] {
 // ============================================================================
 
 /**
+ * Step 0: Extract clinical symptoms from conversational questions
+ * Converts intake questions like "Sleep, mood, energy now?" to 
+ * searchable symptom keywords like "insomnia, depression, fatigue, qi deficiency"
+ */
+async function extractSymptomsFromQuestion(
+  query: string
+): Promise<{ symptomQuery: string; wasExtracted: boolean }> {
+  // Quick check: if query already contains clinical terms, skip extraction
+  const clinicalTermsPattern = /\b(deficiency|stagnation|syndrome|pattern|pain|ache|insomnia|fatigue|anxiety|depression|headache|migraine|nausea|constipation|diarrhea|bloating|edema|hypertension|diabetes|arthritis|fibromyalgia|sciatica|vertigo|tinnitus|palpitation|sweating|hot flash|cold|heat|damp|phlegm|blood stasis|qi xu|yin xu|yang xu|liver|spleen|kidney|heart|lung|stomach|gallbladder|bladder|BL\d|GB\d|ST\d|SP\d|LI\d|KI\d|LR\d|HT\d|PC\d|TE\d|LU\d)\b/i;
+  
+  if (clinicalTermsPattern.test(query)) {
+    console.log('Query already contains clinical terms, skipping symptom extraction');
+    return { symptomQuery: query, wasExtracted: false };
+  }
+  
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) {
+    console.warn('LOVABLE_API_KEY not configured, skipping symptom extraction');
+    return { symptomQuery: query, wasExtracted: false };
+  }
+  
+  try {
+    console.log('=== SYMPTOM EXTRACTION: Converting question to clinical terms ===');
+    console.log('Original question:', query);
+    
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-3-flash-preview',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a TCM (Traditional Chinese Medicine) clinical keyword extractor.
+
+TASK: Convert conversational patient intake questions into searchable clinical symptom keywords.
+
+EXAMPLES:
+- "Sleep, mood, energy now?" → "insomnia, sleep disorder, depression, mood disorder, fatigue, qi deficiency, heart blood deficiency, liver qi stagnation"
+- "How has your condition evolved?" → "symptom progression, disease course, treatment response, chronic condition"  
+- "Tingling, heaviness, warmth during needling?" → "de qi sensation, needle response, acupuncture sensation, qi arrival"
+- "Feel informed and supported?" → "patient education, therapeutic relationship, treatment compliance"
+- "Able to perform daily activities more easily?" → "functional improvement, quality of life, treatment efficacy, mobility"
+- "Any digestive issues?" → "digestive disorder, stomach pain, nausea, bloating, constipation, diarrhea, spleen qi deficiency"
+- "Headaches or migraines?" → "headache, migraine, head pain, liver yang rising, blood stasis, wind invasion"
+
+RULES:
+1. Output ONLY comma-separated clinical keywords (no explanations)
+2. Include relevant TCM patterns (qi deficiency, blood stasis, liver yang rising, etc.)
+3. Include Western symptoms AND TCM terminology
+4. Keep output under 100 words
+5. Focus on terms that would appear in clinical TCM literature`
+          },
+          { role: 'user', content: query }
+        ],
+        temperature: 0.1,
+        max_tokens: 150
+      }),
+    });
+    
+    if (!response.ok) {
+      console.error('Symptom extraction API error:', response.status);
+      return { symptomQuery: query, wasExtracted: false };
+    }
+    
+    const data = await response.json();
+    const symptomQuery = data.choices?.[0]?.message?.content?.trim() || query;
+    
+    console.log('Extracted symptoms:', symptomQuery);
+    
+    return { symptomQuery, wasExtracted: true };
+  } catch (error) {
+    console.error('Symptom extraction error:', error);
+    return { symptomQuery: query, wasExtracted: false };
+  }
+}
+
+/**
  * Step 1: Translate query to English for database search
  * This is the "Bridge" - converts Hebrew/Russian queries to English keywords
  * that match our English-only knowledge base
@@ -1430,10 +1511,26 @@ serve(async (req) => {
     console.log('User response language:', userLanguage);
 
     // ========================================================================
+    // CROSS-LINGUAL RAG - STEP 0: EXTRACT SYMPTOMS FROM CONVERSATIONAL QUESTIONS
+    // ========================================================================
+    // This converts intake questions like "Sleep, mood, energy now?" to clinical keywords
+    const { symptomQuery, wasExtracted } = await extractSymptomsFromQuestion(searchQuery);
+    
+    // Use symptom-enriched query for further processing
+    const queryAfterSymptomExtraction = wasExtracted ? symptomQuery : searchQuery;
+    
+    console.log('=== SYMPTOM EXTRACTION RESULT ===');
+    console.log('Original query:', searchQuery);
+    console.log('Was extracted:', wasExtracted);
+    console.log('Query after symptom extraction:', queryAfterSymptomExtraction);
+    
+    // ========================================================================
     // CROSS-LINGUAL RAG - STEP 1: TRANSLATE QUERY TO ENGLISH (THE "BRIDGE")
     // ========================================================================
     // This translates Hebrew/Russian queries to English keywords that match our English CSVs
-    const { englishQuery, wasTranslated } = await translateQueryToEnglish(searchQuery, detectedLanguage);
+    // Note: If symptoms were already extracted (English output), translation may be skipped
+    const detectedLanguageAfterExtraction = detectLanguage(queryAfterSymptomExtraction);
+    const { englishQuery, wasTranslated } = await translateQueryToEnglish(queryAfterSymptomExtraction, detectedLanguageAfterExtraction);
     
     // Use English query for ALL searches (our knowledge base is in English)
     const searchQueryForDB = englishQuery;
