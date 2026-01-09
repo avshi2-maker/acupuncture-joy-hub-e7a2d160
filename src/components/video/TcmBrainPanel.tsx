@@ -138,6 +138,13 @@ export function TcmBrainPanel({
           <HebrewQADropdowns
             onSelectQuestion={(question) => {
               setInput(question);
+              // Auto-submit after setting input
+              setTimeout(() => {
+                const submitBtn = document.querySelector('[data-tcm-submit]') as HTMLButtonElement;
+                if (submitBtn && !submitBtn.disabled) {
+                  submitBtn.click();
+                }
+              }, 50);
             }}
             disabled={isLoading}
           />
@@ -239,6 +246,7 @@ export function TcmBrainPanel({
               onClick={sendMessage}
               disabled={!input.trim() || isLoading}
               className="h-auto bg-jade hover:bg-jade/90"
+              data-tcm-submit
             >
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
