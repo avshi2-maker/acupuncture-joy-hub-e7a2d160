@@ -8,7 +8,8 @@ import {
   Stethoscope, Brain, Pill, User as UserIcon, FileText, Clock, Save, 
   Database, ChevronDown, ChevronUp, MessageCircleQuestion, Play, Pause, 
   Square, RotateCcw, Printer, MessageCircle, Mail, ArrowRight, HelpCircle, 
-  BookOpen, Heart, Mic, Baby, Sparkles, Apple, Activity, Wind, Leaf, Layers
+  BookOpen, Heart, Mic, Baby, Sparkles, Apple, Activity, Wind, Leaf, Layers,
+  LayoutGrid
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { APIUsageMeter } from '@/components/tcm-brain/APIUsageMeter';
@@ -55,6 +56,9 @@ import { CalendarInviteDialog } from '@/components/video/CalendarInviteDialog';
 import { SessionReportDialog } from '@/components/video/SessionReportDialog';
 import { SessionGuideTeleprompter } from '@/components/video/SessionGuideTeleprompter';
 import { useSessionHeaderBoxes } from '@/hooks/useSessionHeaderBoxes';
+import { ClinicalQuerySelector } from '@/components/tcm-brain/ClinicalQuerySelector';
+import { BodyMapSidebar } from '@/components/tcm-brain/BodyMapSidebar';
+import { IntelligenceHub } from '@/components/tcm-brain/IntelligenceHub';
 
 
 export default function TcmBrain() {
@@ -81,6 +85,7 @@ export default function TcmBrain() {
   const [emotionalPanelEmotion, setEmotionalPanelEmotion] = useState<'grief' | 'trauma' | 'fear' | 'anger'>('grief');
   const [qaFavoritesCount, setQaFavoritesCount] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [layoutMode, setLayoutMode] = useState<'classic' | 'three-column'>('three-column');
   const quickActionsRef = useRef<QuickActionsRef>(null);
   
   // Clinical Session Stacking Hook
@@ -386,202 +391,288 @@ export default function TcmBrain() {
           />
         </div>
 
-        {/* --- MAIN SPLIT-SCREEN LAYOUT --- */}
+        {/* --- MAIN LAYOUT --- */}
         <main className="flex-1 overflow-hidden">
-          <div className="h-full grid grid-cols-1 lg:grid-cols-12 gap-0">
-            
-            {/* --- LEFT COMMANDER COLUMN (Chat/Tabs) - 66% width --- */}
-            <div className="lg:col-span-8 flex flex-col h-full border-r bg-card/30 overflow-hidden">
-              
-              {/* Phase Indicator */}
-              <div className="px-4 py-2 border-b bg-gradient-to-r from-jade/5 to-transparent shrink-0">
-                <SessionPhaseIndicator
-                  currentPhase={currentPhase}
-                  patientName={selectedPatient?.name}
-                  isManualOverride={isManualOverride}
-                  onResetToAuto={clearManualPhase}
-                  onPhaseClick={(phase) => {
-                    setPhase(phase);
-                    if (phase === 'opening') setActiveTab('history');
-                    else if (phase === 'diagnosis') setActiveTab('diagnostics');
-                    else if (phase === 'treatment') setActiveTab('treatment');
-                    else if (phase === 'closing') setActiveTab('session');
+          {/* Layout Mode Toggle */}
+          <div className="px-4 py-1 border-b bg-muted/30 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-2">
+              <Button
+                variant={layoutMode === 'three-column' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setLayoutMode('three-column')}
+                className="h-7 text-xs gap-1"
+              >
+                <LayoutGrid className="h-3 w-3" />
+                3-Column
+              </Button>
+              <Button
+                variant={layoutMode === 'classic' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setLayoutMode('classic')}
+                className="h-7 text-xs gap-1"
+              >
+                <Stethoscope className="h-3 w-3" />
+                Classic
+              </Button>
+            </div>
+            <div className="flex items-center gap-2">
+              {stackCount > 0 && (
+                <Badge className="bg-violet-600 text-white text-xs">
+                  {stackCount} stacked
+                </Badge>
+              )}
+              <PatientSelectorDropdown 
+                patients={patients} 
+                selectedPatient={selectedPatient} 
+                onSelectPatient={setSelectedPatient} 
+                isLoading={loadingPatients} 
+              />
+            </div>
+          </div>
+
+          {layoutMode === 'three-column' ? (
+            /* === NEW 3-COLUMN GRID LAYOUT === */
+            <div 
+              className="h-full grid gap-0"
+              style={{
+                gridTemplateColumns: '25% 50% 25%',
+              }}
+            >
+              {/* COLUMN 1: Body Map Sidebar (LEFT - 25%) */}
+              <div className="h-full overflow-hidden shrink-0" style={{ flexShrink: 0 }}>
+                <BodyMapSidebar
+                  highlightedPoints={highlightedPoints}
+                  onClearPoints={() => setHighlightedPoints([])}
+                  onGenerateProtocol={(points) => {
+                    const prompt = `Generate treatment protocol for points: ${points.join(', ')}`;
+                    streamChat(prompt);
                   }}
                 />
               </div>
 
-              {/* Action Boxes (Horizontal Scroll) - Using shared config */}
-              <div className="px-4 py-2 border-b bg-background/50 shrink-0 overflow-x-auto">
-                 <SessionHeaderBoxes
-                    groups={headerBoxGroups}
-                    size="sm"
-                  />
-              </div>
-
-              {/* Customizable Toolbar - Same as Video Session */}
-              <div className="px-4 py-2 border-b bg-gradient-to-r from-jade/5 to-transparent hidden md:block">
-                <CustomizableToolbar
-                  activeQuery={activeAiQuery}
-                  onQueryChange={setActiveAiQuery}
+              {/* COLUMN 2: Intelligence Hub (CENTER - 50%) */}
+              <div className="h-full overflow-hidden border-x" style={{ flexShrink: 0 }}>
+                <IntelligenceHub
+                  stackedQueries={stackedQueries}
+                  onRemoveFromStack={removeFromStack}
+                  onClearStack={clearStack}
+                  onExecuteSynthesis={handleAnalyzeStackedQueries}
+                  isAnalyzing={isAnalyzing}
+                  messages={messages}
+                  isLoading={isLoading}
+                  onSendMessage={streamChat}
+                  onClear={clearChat}
+                  onViewBodyMap={handleViewBodyMap}
+                  externalInput={pendingQuestion || undefined}
+                  onExternalInputHandled={() => setPendingQuestion(null)}
                 />
               </div>
 
-              {/* MAIN TABS AREA - Fills remaining height */}
-              <div className="flex-1 overflow-hidden flex flex-col p-2">
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-                  <TabsList className="grid grid-cols-6 w-full mb-2 shrink-0">
-                    {tabItems.map((tab) => (
-                      <TabsTrigger key={tab.id} value={tab.id} className="flex flex-col gap-0.5 py-2 data-[state=active]:bg-jade/10 data-[state=active]:text-jade relative">
-                        <tab.icon className="h-4 w-4" />
-                        <span className="text-xs font-medium hidden sm:block">{tab.label}</span>
-                        {tab.id === 'bodymap' && highlightedPoints.length > 0 && (
-                          <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-[10px] font-bold">
-                            {highlightedPoints.length}
-                          </Badge>
-                        )}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-
-                  {/* Scrollable Content Container */}
-                  <div className="flex-1 overflow-y-auto bg-card rounded-lg border shadow-sm p-0">
-                    <TabsContent value="diagnostics" className="m-0 h-full p-0">
-                      <DiagnosticsTab messages={messages} isLoading={isLoading} onSendMessage={streamChat} onClear={clearChat} selectedPatient={selectedPatient} sessionSeconds={sessionSeconds} questionsAsked={questionsAsked} formatSessionTime={formatSessionTime} quickActionsRef={quickActionsRef} externalInput={pendingQuestion || undefined} onExternalInputHandled={() => setPendingQuestion(null)} onViewBodyMap={handleViewBodyMap} />
-                    </TabsContent>
-                    <TabsContent value="symptoms" className="m-0 h-full p-0">
-                      <SymptomsTab messages={messages} isLoading={isLoading} onSendMessage={streamChat} onClear={clearChat} selectedPatient={selectedPatient} sessionSeconds={sessionSeconds} questionsAsked={questionsAsked} formatSessionTime={formatSessionTime} quickActionsRef={quickActionsRef} />
-                    </TabsContent>
-                    <TabsContent value="treatment" className="m-0 h-full p-0">
-                      <TreatmentTab messages={messages} isLoading={isLoading} onSendMessage={streamChat} onClear={clearChat} selectedPatient={selectedPatient} sessionSeconds={sessionSeconds} questionsAsked={questionsAsked} formatSessionTime={formatSessionTime} quickActionsRef={quickActionsRef} />
-                    </TabsContent>
-                    <TabsContent value="bodymap" className="m-0 h-full p-0">
-                      <BodyMapTab highlightedPoints={highlightedPoints} aiResponseText={messages.filter(m => m.role === 'assistant').slice(-1)[0]?.content || ''} streamChat={streamChat} onTabChange={setActiveTab} onClearPoints={() => setHighlightedPoints([])} onSetPoints={setHighlightedPoints} />
-                    </TabsContent>
-                    <TabsContent value="session" className="m-0 h-full p-0">
-                      <SessionNotesTab sessionStatus={sessionStatus} sessionSeconds={sessionSeconds} formatSessionTime={formatSessionTime} questionsAsked={questionsAsked} messages={messages} voiceNotes={voiceNotes} activeTemplate={activeTemplate} startSession={startSession} pauseSession={pauseSession} continueSession={continueSession} endSession={endSession} handleAddVoiceNote={handleAddVoiceNote} handleDeleteVoiceNote={handleDeleteVoiceNote} handleApplyTemplate={handleApplyTemplate} openGmailWithSession={openGmailWithSession} openWhatsAppWithSession={openWhatsAppWithSession} />
-                    </TabsContent>
-                    <TabsContent value="history" className="m-0 h-full p-0">
-                      <PatientHistoryTab selectedPatient={selectedPatient} patientSessions={patientSessions} onLoadWorkflow={(workflow) => setChainedWorkflow(prev => ({ ...prev, ...workflow }))} />
-                    </TabsContent>
-                  </div>
-                </Tabs>
+              {/* COLUMN 3: Clinical Query Selector (RIGHT - 25%) */}
+              <div className="h-full overflow-hidden shrink-0" style={{ flexShrink: 0 }}>
+                <ClinicalQuerySelector
+                  stackedQueries={stackedQueries}
+                  onAddToStack={addToStack}
+                  onRemoveFromStack={removeFromStack}
+                  isInStack={isInStack}
+                  disabled={isLoading || isAnalyzing}
+                />
               </div>
             </div>
-
-            {/* --- RIGHT SIDECAR COLUMN (Tools/Widgets) - 33% width --- */}
-            <div className="lg:col-span-4 h-full overflow-y-auto bg-slate-50 dark:bg-slate-900/50 p-4 border-l custom-scrollbar">
-              <div className="space-y-6">
+          ) : (
+            /* === CLASSIC 2-COLUMN LAYOUT === */
+            <div className="h-full grid grid-cols-1 lg:grid-cols-12 gap-0">
+              {/* --- LEFT COMMANDER COLUMN (Chat/Tabs) - 66% width --- */}
+              <div className="lg:col-span-8 flex flex-col h-full border-r bg-card/30 overflow-hidden">
                 
-                {/* Clinical Stacking Button - Multi-Query System */}
-                <Button 
-                  onClick={() => setShowClinicalStacking(true)}
-                  className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold py-3 text-base shadow-lg relative"
-                >
-                  <Layers className="h-5 w-5 mr-2" />
-                  בניית שאילתה מורכבת
-                  {stackCount > 0 && (
-                    <Badge className="absolute -top-2 -right-2 bg-violet-500 text-white">
-                      {stackCount}
-                    </Badge>
-                  )}
-                </Button>
-
-                {/* Hebrew Topic Questions Button */}
-                <Button 
-                  onClick={() => setShowHebrewTopicQuestions(true)}
-                  variant="outline"
-                  className="w-full border-violet-400/50 hover:bg-violet-500/10 text-violet-700 dark:text-violet-300 font-bold py-3 text-base"
-                >
-                  <BookOpen className="h-5 w-5 mr-2" />
-                  שאלות לפי נושאים (450+)
-                </Button>
-
-                {/* 1. Quick Actions */}
-                <div className="bg-card rounded-lg border shadow-sm p-3">
-                  <h3 className="text-xs font-bold text-muted-foreground uppercase mb-2">Quick Actions</h3>
-                  <QuickActionBoxes 
-                    onActionClick={(prompt) => { streamChat(prompt); setActiveTab('diagnostics'); }} 
-                    isLoading={isLoading} 
+                {/* Phase Indicator */}
+                <div className="px-4 py-2 border-b bg-gradient-to-r from-jade/5 to-transparent shrink-0">
+                  <SessionPhaseIndicator
+                    currentPhase={currentPhase}
+                    patientName={selectedPatient?.name}
+                    isManualOverride={isManualOverride}
+                    onResetToAuto={clearManualPhase}
+                    onPhaseClick={(phase) => {
+                      setPhase(phase);
+                      if (phase === 'opening') setActiveTab('history');
+                      else if (phase === 'diagnosis') setActiveTab('diagnostics');
+                      else if (phase === 'treatment') setActiveTab('treatment');
+                      else if (phase === 'closing') setActiveTab('session');
+                    }}
                   />
                 </div>
 
-
-                {/* 3. Pediatric Assistant (Collapsible) */}
-                <div className="bg-card rounded-lg border shadow-sm">
-                   <Button variant="ghost" className="w-full flex justify-between p-3" onClick={() => setShowPediatricAssistant(!showPediatricAssistant)}>
-                      <div className="flex items-center gap-2 font-bold text-green-700">
-                        <Baby className="h-5 w-5" /> Pediatric Assistant
-                      </div>
-                      {showPediatricAssistant ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}
-                   </Button>
-                   {showPediatricAssistant && (
-                     <div className="p-3 border-t">
-                       <PediatricTCMAssistant />
-                     </div>
-                   )}
+                {/* Action Boxes (Horizontal Scroll) - Using shared config */}
+                <div className="px-4 py-2 border-b bg-background/50 shrink-0 overflow-x-auto">
+                   <SessionHeaderBoxes
+                      groups={headerBoxGroups}
+                      size="sm"
+                    />
                 </div>
 
-                {/* 4. Herb Encyclopedia (Collapsible) */}
-                <div className="bg-card rounded-lg border shadow-sm">
-                   <Button variant="ghost" className="w-full flex justify-between p-3" onClick={() => setShowHerbEncyclopedia(!showHerbEncyclopedia)}>
-                      <div className="flex items-center gap-2 font-bold text-jade">
-                        <Leaf className="h-5 w-5" /> אנציקלופדיית צמחים
-                      </div>
-                      {showHerbEncyclopedia ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}
-                   </Button>
-                   {showHerbEncyclopedia && (
-                     <div className="p-3 border-t">
-                       <HerbalMasterWidget className="w-full" />
-                     </div>
-                   )}
+                {/* Customizable Toolbar - Same as Video Session */}
+                <div className="px-4 py-2 border-b bg-gradient-to-r from-jade/5 to-transparent hidden md:block">
+                  <CustomizableToolbar
+                    activeQuery={activeAiQuery}
+                    onQueryChange={setActiveAiQuery}
+                  />
                 </div>
 
-                {/* 5. Hebrew Q&A (Dropdowns) */}
-                <div className="bg-card rounded-lg border shadow-sm">
-                   <Button variant="ghost" className="w-full flex justify-between p-3" onClick={() => setShowHebrewQADropdowns(!showHebrewQADropdowns)}>
-                      <div className="flex items-center gap-2 font-bold text-violet-700">
-                        <MessageCircleQuestion className="h-5 w-5" /> יין יאנג + חמשת האלמנטים
-                      </div>
-                      {showHebrewQADropdowns ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}
-                   </Button>
-                   {showHebrewQADropdowns && (
-                     <div className="p-3 border-t">
-                       <HebrewQADropdowns
-                         onSelectQuestion={(question) => {
-                           // Fill the auto-chain input ONLY - wait for user to click Run Workflow
-                           setPendingQuestion(question);
-                           setActiveTab('diagnostics');
-                         }}
-                         disabled={isLoading}
-                       />
-                     </div>
-                   )}
+                {/* MAIN TABS AREA - Fills remaining height */}
+                <div className="flex-1 overflow-hidden flex flex-col p-2">
+                  <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+                    <TabsList className="grid grid-cols-6 w-full mb-2 shrink-0">
+                      {tabItems.map((tab) => (
+                        <TabsTrigger key={tab.id} value={tab.id} className="flex flex-col gap-0.5 py-2 data-[state=active]:bg-jade/10 data-[state=active]:text-jade relative">
+                          <tab.icon className="h-4 w-4" />
+                          <span className="text-xs font-medium hidden sm:block">{tab.label}</span>
+                          {tab.id === 'bodymap' && highlightedPoints.length > 0 && (
+                            <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-[10px] font-bold">
+                              {highlightedPoints.length}
+                            </Badge>
+                          )}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+
+                    {/* Scrollable Content Container */}
+                    <div className="flex-1 overflow-y-auto bg-card rounded-lg border shadow-sm p-0">
+                      <TabsContent value="diagnostics" className="m-0 h-full p-0">
+                        <DiagnosticsTab messages={messages} isLoading={isLoading} onSendMessage={streamChat} onClear={clearChat} selectedPatient={selectedPatient} sessionSeconds={sessionSeconds} questionsAsked={questionsAsked} formatSessionTime={formatSessionTime} quickActionsRef={quickActionsRef} externalInput={pendingQuestion || undefined} onExternalInputHandled={() => setPendingQuestion(null)} onViewBodyMap={handleViewBodyMap} />
+                      </TabsContent>
+                      <TabsContent value="symptoms" className="m-0 h-full p-0">
+                        <SymptomsTab messages={messages} isLoading={isLoading} onSendMessage={streamChat} onClear={clearChat} selectedPatient={selectedPatient} sessionSeconds={sessionSeconds} questionsAsked={questionsAsked} formatSessionTime={formatSessionTime} quickActionsRef={quickActionsRef} />
+                      </TabsContent>
+                      <TabsContent value="treatment" className="m-0 h-full p-0">
+                        <TreatmentTab messages={messages} isLoading={isLoading} onSendMessage={streamChat} onClear={clearChat} selectedPatient={selectedPatient} sessionSeconds={sessionSeconds} questionsAsked={questionsAsked} formatSessionTime={formatSessionTime} quickActionsRef={quickActionsRef} />
+                      </TabsContent>
+                      <TabsContent value="bodymap" className="m-0 h-full p-0">
+                        <BodyMapTab highlightedPoints={highlightedPoints} aiResponseText={messages.filter(m => m.role === 'assistant').slice(-1)[0]?.content || ''} streamChat={streamChat} onTabChange={setActiveTab} onClearPoints={() => setHighlightedPoints([])} onSetPoints={setHighlightedPoints} />
+                      </TabsContent>
+                      <TabsContent value="session" className="m-0 h-full p-0">
+                        <SessionNotesTab sessionStatus={sessionStatus} sessionSeconds={sessionSeconds} formatSessionTime={formatSessionTime} questionsAsked={questionsAsked} messages={messages} voiceNotes={voiceNotes} activeTemplate={activeTemplate} startSession={startSession} pauseSession={pauseSession} continueSession={continueSession} endSession={endSession} handleAddVoiceNote={handleAddVoiceNote} handleDeleteVoiceNote={handleDeleteVoiceNote} handleApplyTemplate={handleApplyTemplate} openGmailWithSession={openGmailWithSession} openWhatsAppWithSession={openWhatsAppWithSession} />
+                      </TabsContent>
+                      <TabsContent value="history" className="m-0 h-full p-0">
+                        <PatientHistoryTab selectedPatient={selectedPatient} patientSessions={patientSessions} onLoadWorkflow={(workflow) => setChainedWorkflow(prev => ({ ...prev, ...workflow }))} />
+                      </TabsContent>
+                    </div>
+                  </Tabs>
                 </div>
+              </div>
 
-
-                {/* 5. Q&A Suggestions */}
-                <div className="bg-card rounded-lg border shadow-sm">
-                   <Button variant="ghost" className="w-full flex justify-between p-3" onClick={() => setShowQASuggestions(!showQASuggestions)}>
-                      <div className="flex items-center gap-2 font-bold text-violet-700">
-                        <MessageCircleQuestion className="h-5 w-5" /> Q&A Suggestions
-                      </div>
-                   </Button>
-                     {showQASuggestions && (
-                      <div className="p-3 border-t">
-                        <QASuggestionsPanel
-                          onSelectQuestion={(q) => {
-                            // Fill the auto-chain input ONLY - wait for user to click Run Workflow
-                            setPendingQuestion(q);
-                            setActiveTab('diagnostics');
-                          }}
-                          sessionSeconds={sessionSeconds}
-                        />
-                      </div>
+              {/* --- RIGHT SIDECAR COLUMN (Tools/Widgets) - 33% width --- */}
+              <div className="lg:col-span-4 h-full overflow-y-auto bg-slate-50 dark:bg-slate-900/50 p-4 border-l custom-scrollbar" style={{ flexShrink: 0 }}>
+                <div className="space-y-6">
+                  
+                  {/* Clinical Stacking Button - Multi-Query System */}
+                  <Button 
+                    onClick={() => setShowClinicalStacking(true)}
+                    className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold py-3 text-base shadow-lg relative"
+                  >
+                    <Layers className="h-5 w-5 mr-2" />
+                    בניית שאילתה מורכבת
+                    {stackCount > 0 && (
+                      <Badge className="absolute -top-2 -right-2 bg-violet-500 text-white">
+                        {stackCount}
+                      </Badge>
                     )}
+                  </Button>
+
+                  {/* Hebrew Topic Questions Button */}
+                  <Button 
+                    onClick={() => setShowHebrewTopicQuestions(true)}
+                    variant="outline"
+                    className="w-full border-violet-400/50 hover:bg-violet-500/10 text-violet-700 dark:text-violet-300 font-bold py-3 text-base"
+                  >
+                    <BookOpen className="h-5 w-5 mr-2" />
+                    שאלות לפי נושאים (450+)
+                  </Button>
+
+                  {/* 1. Quick Actions */}
+                  <div className="bg-card rounded-lg border shadow-sm p-3">
+                    <h3 className="text-xs font-bold text-muted-foreground uppercase mb-2">Quick Actions</h3>
+                    <QuickActionBoxes 
+                      onActionClick={(prompt) => { streamChat(prompt); setActiveTab('diagnostics'); }} 
+                      isLoading={isLoading} 
+                    />
+                  </div>
+
+
+                  {/* 3. Pediatric Assistant (Collapsible) */}
+                  <div className="bg-card rounded-lg border shadow-sm">
+                     <Button variant="ghost" className="w-full flex justify-between p-3" onClick={() => setShowPediatricAssistant(!showPediatricAssistant)}>
+                        <div className="flex items-center gap-2 font-bold text-green-700">
+                          <Baby className="h-5 w-5" /> Pediatric Assistant
+                        </div>
+                        {showPediatricAssistant ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}
+                     </Button>
+                     {showPediatricAssistant && (
+                       <div className="p-3 border-t">
+                         <PediatricTCMAssistant />
+                       </div>
+                     )}
+                  </div>
+
+                  {/* 4. Herb Encyclopedia (Collapsible) */}
+                  <div className="bg-card rounded-lg border shadow-sm">
+                     <Button variant="ghost" className="w-full flex justify-between p-3" onClick={() => setShowHerbEncyclopedia(!showHerbEncyclopedia)}>
+                        <div className="flex items-center gap-2 font-bold text-jade">
+                          <Leaf className="h-5 w-5" /> אנציקלופדיית צמחים
+                        </div>
+                        {showHerbEncyclopedia ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}
+                     </Button>
+                     {showHerbEncyclopedia && (
+                       <div className="p-3 border-t">
+                         <HerbalMasterWidget className="w-full" />
+                       </div>
+                     )}
+                  </div>
+
+                  {/* 5. Hebrew Q&A (Dropdowns) */}
+                  <div className="bg-card rounded-lg border shadow-sm">
+                     <Button variant="ghost" className="w-full flex justify-between p-3" onClick={() => setShowHebrewQADropdowns(!showHebrewQADropdowns)}>
+                        <div className="flex items-center gap-2 font-bold text-violet-700">
+                          <MessageCircleQuestion className="h-5 w-5" /> יין יאנג + חמשת האלמנטים
+                        </div>
+                        {showHebrewQADropdowns ? <ChevronUp className="h-4 w-4"/> : <ChevronDown className="h-4 w-4"/>}
+                     </Button>
+                     {showHebrewQADropdowns && (
+                       <div className="p-3 border-t">
+                         <HebrewQADropdowns
+                           onSelectQuestion={(question) => {
+                             setPendingQuestion(question);
+                             setActiveTab('diagnostics');
+                           }}
+                           disabled={isLoading}
+                         />
+                       </div>
+                     )}
+                  </div>
+
+
+                  {/* 5. Q&A Suggestions */}
+                  <div className="bg-card rounded-lg border shadow-sm">
+                     <Button variant="ghost" className="w-full flex justify-between p-3" onClick={() => setShowQASuggestions(!showQASuggestions)}>
+                        <div className="flex items-center gap-2 font-bold text-violet-700">
+                          <MessageCircleQuestion className="h-5 w-5" /> Q&A Suggestions
+                        </div>
+                     </Button>
+                       {showQASuggestions && (
+                        <div className="p-3 border-t">
+                          <QASuggestionsPanel
+                            onSelectQuestion={(q) => {
+                              setPendingQuestion(q);
+                              setActiveTab('diagnostics');
+                            }}
+                            sessionSeconds={sessionSeconds}
+                          />
+                        </div>
+                      )}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </main>
 
         {/* --- GLOBAL DIALOGS & OVERLAYS --- */}
