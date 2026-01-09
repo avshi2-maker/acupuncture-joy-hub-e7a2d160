@@ -244,42 +244,29 @@ export function ExternalAIFallbackCard({
 
   const openExternalUrl = useCallback((provider: AIProviderOption) => {
     const encodedQuery = encodeURIComponent(query);
-    
-    console.log('[ExternalAI] Opening provider:', provider.id, 'Query:', query);
-    
-    // Only Perplexity is supported as external fallback
     const targetUrl = `https://www.perplexity.ai/search?q=${encodedQuery}`;
     
-    console.log('[ExternalAI] Opening URL:', targetUrl);
+    console.log('[ExternalAI] Opening Perplexity URL:', targetUrl);
     
-    const newWindow = window.open(targetUrl, '_blank', 'noopener,noreferrer');
+    // Copy question to clipboard first
+    navigator.clipboard.writeText(query).catch(() => {});
     
-    if (newWindow) {
-      playSound('success', audioEnabled);
-      triggerHaptic('success');
-      
-      // Track usage
-      addUsageHistory(provider.name, query);
-      setUsageHistory(getUsageHistory());
-      
-      toast.success(`Opening ${provider.name}... Question copied!`, {
-        description: 'Paste the question in the chat'
-      });
-      
-      navigator.clipboard.writeText(query).catch(() => {});
-    } else {
-      playSound('error', audioEnabled);
-      triggerHaptic('error');
-      toast.error('Popup blocked! Please allow popups for this site.', {
-        action: {
-          label: 'Copy Link',
-          onClick: () => {
-            navigator.clipboard.writeText(targetUrl);
-            toast.success('Link copied!');
-          }
-        }
-      });
-    }
+    // Track usage
+    addUsageHistory(provider.name, query);
+    setUsageHistory(getUsageHistory());
+    
+    playSound('success', audioEnabled);
+    triggerHaptic('success');
+    
+    // Use window.location for more reliable navigation (no popup blocker issues)
+    // Open in new tab using an anchor element click
+    const link = document.createElement('a');
+    link.href = targetUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }, [query, audioEnabled]);
 
   const handleUseAI = () => {

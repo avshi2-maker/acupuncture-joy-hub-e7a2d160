@@ -445,7 +445,8 @@ export default function TcmBrain() {
                      <div className="p-3 border-t">
                        <HebrewQADropdowns
                          onSelectQuestion={(question) => {
-                           streamChat(question);
+                           // Fill the auto-chain input ONLY - wait for user to click Run Workflow
+                           setPendingQuestion(question);
                            setActiveTab('diagnostics');
                          }}
                          disabled={isLoading}
@@ -466,11 +467,9 @@ export default function TcmBrain() {
                       <div className="p-3 border-t">
                         <QASuggestionsPanel
                           onSelectQuestion={(q) => {
-                            // Fill the auto-chain box + run immediately
-                            window.dispatchEvent(new CustomEvent('tcm-query-start', { detail: { query: q } }));
+                            // Fill the auto-chain input ONLY - wait for user to click Run Workflow
                             setPendingQuestion(q);
                             setActiveTab('diagnostics');
-                            streamChat(q);
                           }}
                           sessionSeconds={sessionSeconds}
                         />
@@ -504,7 +503,7 @@ export default function TcmBrain() {
         <CalendarInviteDialog open={showCalendarInvite} onOpenChange={setShowCalendarInvite} patientName={selectedPatient?.name} />
         <SessionReportDialog open={showSessionReport} onOpenChange={setShowSessionReport} patientName={selectedPatient?.name} patientPhone={selectedPatient?.phone} sessionNotes="" />
         
-        <SessionBriefPanel patientId={selectedPatient?.id || null} patientName={selectedPatient?.name || null} isOpen={showSessionBrief} onClose={() => setShowSessionBrief(false)} onQuestionUsed={(q) => { window.dispatchEvent(new CustomEvent('tcm-query-start', { detail: { query: q } })); setPendingQuestion(q); setActiveTab('diagnostics'); streamChat(q); }} onQuestionPinned={() => console.log('Pinned')} autoTrigger={true} />
+        <SessionBriefPanel patientId={selectedPatient?.id || null} patientName={selectedPatient?.name || null} isOpen={showSessionBrief} onClose={() => setShowSessionBrief(false)} onQuestionUsed={(q) => { setPendingQuestion(q); setActiveTab('diagnostics'); }} onQuestionPinned={() => console.log('Pinned')} autoTrigger={true} />
         
         <EmotionalProcessingPanel isOpen={showEmotionalPanel} onClose={() => setShowEmotionalPanel(false)} initialEmotion={emotionalPanelEmotion} onAskQuestion={(q) => { streamChat(q); setShowEmotionalPanel(false); setActiveTab('symptoms'); }} />
       </div>
