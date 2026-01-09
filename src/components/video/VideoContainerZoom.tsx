@@ -93,11 +93,11 @@ export function VideoContainerZoom({
       <Card 
         ref={containerRef}
         className={cn(
-          "overflow-hidden h-full relative",
+          "overflow-hidden relative",
           "bg-gradient-to-br from-muted/30 to-muted/10",
-          "border-jade/20",
-          // Ensure flex behavior for no layout shifts
-          "flex-1 min-h-0",
+          "border border-jade/20",
+          // Explicit height for visibility
+          "h-full min-h-[300px] md:min-h-[400px]",
           className
         )}
       >
