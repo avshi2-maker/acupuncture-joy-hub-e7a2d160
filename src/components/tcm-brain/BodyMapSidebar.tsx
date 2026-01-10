@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Brain, Maximize2, Minimize2 } from 'lucide-react';
+import { MapPin, Brain, Maximize2, Minimize2, Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -11,6 +11,8 @@ interface BodyMapSidebarProps {
   highlightedPoints: string[];
   onClearPoints?: () => void;
   onGenerateProtocol?: (points: string[]) => void;
+  onOpenPulseGallery?: () => void;
+  showPulseGallery?: boolean;
   className?: string;
 }
 
@@ -18,6 +20,8 @@ export function BodyMapSidebar({
   highlightedPoints,
   onClearPoints,
   onGenerateProtocol,
+  onOpenPulseGallery,
+  showPulseGallery = false,
   className
 }: BodyMapSidebarProps) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -59,6 +63,29 @@ export function BodyMapSidebar({
           Visual reference for point selection
         </p>
       </div>
+
+      {/* Pulse Gallery Trigger - 💓 Button in Left Column */}
+      {onOpenPulseGallery && (
+        <div className="p-2 border-b shrink-0">
+          <Button
+            variant={showPulseGallery ? "default" : "outline"}
+            size="sm"
+            onClick={onOpenPulseGallery}
+            className={cn(
+              "w-full gap-2 h-9 transition-all",
+              showPulseGallery 
+                ? "bg-gold text-black hover:bg-gold/90 animate-gold-pulse" 
+                : "border-jade/30 hover:bg-jade/10 hover:border-jade"
+            )}
+          >
+            <Activity className={cn(
+              "h-4 w-4",
+              showPulseGallery ? "text-black" : "text-jade"
+            )} />
+            <span className="text-sm font-medium">💓 גלריית דופק</span>
+          </Button>
+        </div>
+      )}
 
       {/* Point Summary */}
       {highlightedPoints.length > 0 && (

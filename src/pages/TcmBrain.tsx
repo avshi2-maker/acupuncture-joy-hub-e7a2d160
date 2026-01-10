@@ -60,6 +60,8 @@ import { ClinicalQuerySelector } from '@/components/tcm-brain/ClinicalQuerySelec
 import { BodyMapSidebar } from '@/components/tcm-brain/BodyMapSidebar';
 import { IntelligenceHub } from '@/components/tcm-brain/IntelligenceHub';
 import { TherapistTeleprompter } from '@/components/tcm-brain/TherapistTeleprompter';
+import { PulseGallerySheet } from '@/components/pulse';
+import { useClinicalNexus, type ClinicalNexusResult } from '@/hooks/useClinicalNexus';
 
 
 export default function TcmBrain() {
@@ -88,6 +90,8 @@ export default function TcmBrain() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [layoutMode, setLayoutMode] = useState<'classic' | 'three-column'>('three-column');
   const [showTeleprompter, setShowTeleprompter] = useState(false);
+  const [showPulseGallery, setShowPulseGallery] = useState(false);
+  const [selectedPulseId, setSelectedPulseId] = useState<string | null>(null);
   const quickActionsRef = useRef<QuickActionsRef>(null);
   
   // Clinical Session Stacking Hook
@@ -459,6 +463,8 @@ export default function TcmBrain() {
                     const prompt = `Generate treatment protocol for points: ${points.join(', ')}`;
                     streamChat(prompt);
                   }}
+                  onOpenPulseGallery={() => setShowPulseGallery(true)}
+                  showPulseGallery={showPulseGallery}
                 />
               </div>
 
@@ -747,6 +753,28 @@ export default function TcmBrain() {
         <TherapistTeleprompter 
           isOpen={showTeleprompter} 
           onClose={() => setShowTeleprompter(false)} 
+        />
+        
+        {/* Pulse Gallery Sheet - Non-blocking overlay for Standard Session */}
+        <PulseGallerySheet
+          open={showPulseGallery}
+          onOpenChange={setShowPulseGallery}
+          selectedPulseId={selectedPulseId}
+          side="left"
+          onPulseSelect={(pulse, nexusResult) => {
+            setSelectedPulseId(pulse.finding);
+            console.log('[PulseGallery] Selected:', pulse.finding, nexusResult);
+          }}
+          syncPulseToBody={(nexusResult: ClinicalNexusResult) => {
+            // Sync selected points to body map
+            if (nexusResult.found && nexusResult.points.length > 0) {
+              setHighlightedPoints(prev => {
+                const combined = [...new Set([...prev, ...nexusResult.points])];
+                return combined;
+              });
+              setActiveTab('bodymap');
+            }
+          }}
         />
       </div>
     </>
