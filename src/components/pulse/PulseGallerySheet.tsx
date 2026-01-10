@@ -63,7 +63,7 @@ export function PulseGallerySheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent 
         side={side} 
-        className="w-full sm:max-w-md bg-background/95 backdrop-blur-xl border-jade/20 p-0"
+        className="w-full sm:max-w-md bg-background/95 backdrop-blur-xl border-jade/20 p-0 z-[60]"
       >
         <SheetHeader className="px-4 pt-4 pb-2">
           <SheetTitle className="text-right">גלריית אבחון דופק</SheetTitle>
