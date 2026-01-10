@@ -67,7 +67,6 @@ import { ClinicWalletCard } from '@/components/wallet/ClinicWalletCard';
 import { HerbalMasterWidget } from '@/components/herbal/HerbalMasterWidget';
 import roiWidgetBg from '@/assets/roi-widget-bg.png';
 import { PulseGalleryCard } from '@/components/dashboard/PulseGalleryCard';
-import { HebrewQuestionsCard } from '@/components/dashboard/HebrewQuestionsCard';
 import { BaZiDashboardCard } from '@/components/dashboard/BaZiDashboardCard';
 import { DashboardThreeColumnLayout, GlassCard } from '@/components/dashboard/DashboardThreeColumnLayout';
 import { DashboardGuide, useDashboardGuide } from '@/components/dashboard/DashboardGuide';
@@ -1137,11 +1136,6 @@ export default function Dashboard() {
               {/* Knowledge Tools Grid */}
 
               {/* Additional Widgets */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <GlassCard className="p-0 overflow-hidden">
-                  <HebrewQuestionsCard />
-                </GlassCard>
-              </div>
 
               {/* Herbal Master Widget */}
               <GlassCard className="p-4">

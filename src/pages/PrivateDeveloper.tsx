@@ -9,6 +9,7 @@ import { Lock, Database, Settings, Code, ArrowLeft, Shield, Key } from 'lucide-r
 import { toast } from 'sonner';
 import { KnowledgeBaseCard } from '@/components/dashboard/KnowledgeBaseCard';
 import { AssetInventoryCard } from '@/components/dashboard/AssetInventoryCard';
+import { HebrewQuestionsCard } from '@/components/dashboard/HebrewQuestionsCard';
 
 const DEVELOPER_PASSWORD = 'sapir2024dev'; // Internal password - change as needed
 
@@ -139,6 +140,11 @@ export default function PrivateDeveloper() {
         {/* Asset Inventory */}
         <div className="col-span-1">
           <AssetInventoryCard />
+        </div>
+
+        {/* Hebrew Questions Report */}
+        <div className="col-span-1">
+          <HebrewQuestionsCard />
         </div>
 
         {/* Placeholder: More tools to be added */}
