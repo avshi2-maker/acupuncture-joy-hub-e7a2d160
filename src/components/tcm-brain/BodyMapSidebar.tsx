@@ -110,10 +110,10 @@ export function BodyMapSidebar({
             <Button
               size="sm"
               variant="outline"
-              className="flex-1 h-7 text-[10px]"
+              className="flex-1 h-7 text-[10px] border-destructive/30 text-destructive hover:bg-destructive/10"
               onClick={onClearPoints}
             >
-              נקה
+              🗑️ נקה סימונים
             </Button>
             {onGenerateProtocol && highlightedPoints.length > 0 && (
               <Button
