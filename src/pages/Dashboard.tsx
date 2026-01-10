@@ -1169,11 +1169,8 @@ export default function Dashboard() {
           /* LEFT COLUMN: Visual/Status - Clock, Galleries, Wallet */
           leftColumn={
             <div id="dashboard-left-column" className="space-y-4">
-              {/* Clock & Progress */}
+              {/* Progress */}
               <GlassCard className="p-4">
-                <div className="flex items-center justify-center mb-4">
-                  <ThemedClockWidget theme={clockTheme} />
-                </div>
                 <OnboardingProgress />
               </GlassCard>
 
