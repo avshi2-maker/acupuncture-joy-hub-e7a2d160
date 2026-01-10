@@ -68,7 +68,6 @@ import { HerbalMasterWidget } from '@/components/herbal/HerbalMasterWidget';
 import roiWidgetBg from '@/assets/roi-widget-bg.png';
 import { PulseGalleryCard } from '@/components/dashboard/PulseGalleryCard';
 import { HebrewQuestionsCard } from '@/components/dashboard/HebrewQuestionsCard';
-import { AssetInventoryCard } from '@/components/dashboard/AssetInventoryCard';
 import { BaZiDashboardCard } from '@/components/dashboard/BaZiDashboardCard';
 import { DashboardThreeColumnLayout, GlassCard } from '@/components/dashboard/DashboardThreeColumnLayout';
 import { DashboardGuide, useDashboardGuide } from '@/components/dashboard/DashboardGuide';
@@ -1141,9 +1140,6 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <GlassCard className="p-0 overflow-hidden">
                   <HebrewQuestionsCard />
-                </GlassCard>
-                <GlassCard className="p-0 overflow-hidden">
-                  <AssetInventoryCard />
                 </GlassCard>
               </div>
 

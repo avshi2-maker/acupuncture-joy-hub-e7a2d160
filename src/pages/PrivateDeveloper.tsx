@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Lock, Database, Settings, Code, ArrowLeft, Shield, Key } from 'lucide-react';
 import { toast } from 'sonner';
 import { KnowledgeBaseCard } from '@/components/dashboard/KnowledgeBaseCard';
+import { AssetInventoryCard } from '@/components/dashboard/AssetInventoryCard';
 
 const DEVELOPER_PASSWORD = 'sapir2024dev'; // Internal password - change as needed
 
@@ -133,6 +134,11 @@ export default function PrivateDeveloper() {
         {/* Knowledge Base Management */}
         <div className="col-span-1">
           <KnowledgeBaseCard />
+        </div>
+
+        {/* Asset Inventory */}
+        <div className="col-span-1">
+          <AssetInventoryCard />
         </div>
 
         {/* Placeholder: More tools to be added */}
