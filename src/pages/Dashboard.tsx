@@ -68,7 +68,6 @@ import { HerbalMasterWidget } from '@/components/herbal/HerbalMasterWidget';
 import roiWidgetBg from '@/assets/roi-widget-bg.png';
 import { TongueGalleryCard } from '@/components/dashboard/TongueGalleryCard';
 import { PulseGalleryCard } from '@/components/dashboard/PulseGalleryCard';
-import { CombinedDiagnosisCard } from '@/components/dashboard/CombinedDiagnosisCard';
 import { HebrewQuestionsCard } from '@/components/dashboard/HebrewQuestionsCard';
 import { AssetInventoryCard } from '@/components/dashboard/AssetInventoryCard';
 import { BaZiDashboardCard } from '@/components/dashboard/BaZiDashboardCard';
@@ -1139,10 +1138,6 @@ export default function Dashboard() {
                 </Link>
               </div>
 
-              {/* Diagnosis & AI Widgets */}
-              <GlassCard className="p-4">
-                <CombinedDiagnosisCard />
-              </GlassCard>
 
               {/* Knowledge Tools Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
