@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { BodyFigureSelector } from '@/components/acupuncture/BodyFigureSelector';
 import { RAGBodyFigureDisplay } from '@/components/acupuncture/RAGBodyFigureDisplay';
+import { AIErrorBoundary } from '@/components/tcm-brain/AIErrorBoundary';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -47,7 +48,10 @@ function savePresetsToStorage(presets: PointPreset[]) {
   localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(presets));
 }
 
-export function BodyMapTab({ highlightedPoints, aiResponseText = '', streamChat, onTabChange, onClearPoints, onSetPoints }: BodyMapTabProps) {
+/**
+ * BodyMapTab - Phase 7 Final: React.memo for performance + AIErrorBoundary for graceful degradation
+ */
+export const BodyMapTab = memo(function BodyMapTab({ highlightedPoints, aiResponseText = '', streamChat, onTabChange, onClearPoints, onSetPoints }: BodyMapTabProps) {
   const [viewMode, setViewMode] = useState<'ai' | 'browse'>('browse');
   const [presets, setPresets] = useState<PointPreset[]>([]);
   const [showSaveInput, setShowSaveInput] = useState(false);
@@ -252,23 +256,28 @@ Include:
         </div>
 
         <TabsContent value="ai" className="mt-4">
-          {hasAIContent ? (
-            <RAGBodyFigureDisplay
-              pointCodes={highlightedPoints}
-              aiResponseText={aiResponseText}
-              onGenerateProtocol={handleGenerateProtocol}
-              allowSelection={true}
-              enableNarration={false}
-            />
-          ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              <Brain className="h-16 w-16 mx-auto mb-4 opacity-30" />
-              <p className="text-lg font-medium mb-2">No AI suggestions yet</p>
-              <p className="text-sm">
-                Ask TCM Brain about a condition or treatment to see relevant body figures with point markers.
-              </p>
-            </div>
-          )}
+          <AIErrorBoundary
+            fallbackTitle="שגיאת AI - מצב ידני פעיל"
+            fallbackDescription="שירות ה-AI אינו זמין כרגע. ניתן להמשיך לעבוד במצב 'עיון' - גלריית הגוף ומפת הנקודות פועלות כרגיל."
+          >
+            {hasAIContent ? (
+              <RAGBodyFigureDisplay
+                pointCodes={highlightedPoints}
+                aiResponseText={aiResponseText}
+                onGenerateProtocol={handleGenerateProtocol}
+                allowSelection={true}
+                enableNarration={false}
+              />
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                <Brain className="h-16 w-16 mx-auto mb-4 opacity-30" />
+                <p className="text-lg font-medium mb-2">No AI suggestions yet</p>
+                <p className="text-sm">
+                  Ask TCM Brain about a condition or treatment to see relevant body figures with point markers.
+                </p>
+              </div>
+            )}
+          </AIErrorBoundary>
         </TabsContent>
 
         <TabsContent value="browse" className="mt-4">
@@ -280,4 +289,4 @@ Include:
       </Tabs>
     </div>
   );
-}
+});

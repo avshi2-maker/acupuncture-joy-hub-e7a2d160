@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -117,7 +117,11 @@ interface BodyFigureWithPointsProps {
   patientAgeGroup?: AgeGroupFilter;
 }
 
-export function BodyFigureWithPoints({
+/**
+ * BodyFigureWithPoints - Phase 7 Final: React.memo for zero-lag during video calls
+ * Hardware-accelerated body figure display with acupuncture point markers
+ */
+export const BodyFigureWithPoints = memo(function BodyFigureWithPoints({
   filename,
   highlightedPoints = [],
   selectedPoints = [],
@@ -530,4 +534,4 @@ export function BodyFigureWithPoints({
       </CardContent>
     </Card>
   );
-}
+});
