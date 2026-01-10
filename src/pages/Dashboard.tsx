@@ -70,7 +70,6 @@ import { PulseGalleryCard } from '@/components/dashboard/PulseGalleryCard';
 import { HebrewQuestionsCard } from '@/components/dashboard/HebrewQuestionsCard';
 import { AssetInventoryCard } from '@/components/dashboard/AssetInventoryCard';
 import { BaZiDashboardCard } from '@/components/dashboard/BaZiDashboardCard';
-import { KnowledgeBaseCard } from '@/components/dashboard/KnowledgeBaseCard';
 import { DashboardThreeColumnLayout, GlassCard } from '@/components/dashboard/DashboardThreeColumnLayout';
 import { DashboardGuide, useDashboardGuide } from '@/components/dashboard/DashboardGuide';
 import { Compass } from 'lucide-react';
@@ -1137,11 +1136,6 @@ export default function Dashboard() {
 
 
               {/* Knowledge Tools Grid */}
-
-              {/* Knowledge Base */}
-              <GlassCard className="p-0 overflow-hidden">
-                <KnowledgeBaseCard />
-              </GlassCard>
 
               {/* Additional Widgets */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
