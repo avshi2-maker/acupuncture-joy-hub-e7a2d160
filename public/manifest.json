@@ -2,7 +2,7 @@
   "name": "CCMA Nexus - Chinese Medicine Clinical Assistant",
   "short_name": "CCMA Nexus",
   "description": "AI-powered clinical decision support for Traditional Chinese Medicine practitioners",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
   "theme_color": "#00A896",
