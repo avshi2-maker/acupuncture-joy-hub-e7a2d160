@@ -1,6 +1,6 @@
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -110,7 +110,7 @@ const App = () => (
                   <GlobalSessionProvider>
                     <TooltipProvider>
                       <OfflineBanner />
-                  <BrowserRouter>
+                  <HashRouter>
                     <Routes>
                     {/* Public */}
                       <Route path="/" element={<Index />} />
@@ -206,7 +206,7 @@ const App = () => (
                     </Routes>
                     
                     <AccessibilityPanel />
-                  </BrowserRouter>
+                  </HashRouter>
                   </TooltipProvider>
                   </GlobalSessionProvider>
                 </SessionLockProvider>
