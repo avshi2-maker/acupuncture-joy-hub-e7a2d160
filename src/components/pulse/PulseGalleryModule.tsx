@@ -11,12 +11,14 @@ import {
   Sparkles,
   Filter,
   X,
-  Brain
+  Brain,
+  Bot
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { allPulseFindings } from '@/data/pulse-diagnosis-data';
 import { useClinicalNexus, type ClinicalNexusResult } from '@/hooks/useClinicalNexus';
 import { PULSE_CATEGORY_ICONS } from '@/constants/pulse-library';
+import { AISuggestionInlineBadge } from './AISuggestionBadge';
 
 // Extended type with category
 type PulseFindingWithCategory = typeof allPulseFindings[number];
@@ -37,6 +39,8 @@ interface PulseGalleryModuleProps {
   onPulseSelect?: (pulse: PulseFindingWithCategory, nexusResult: ClinicalNexusResult) => void;
   onAskBrain?: (pulse: PulseFindingWithCategory) => void;
   selectedPulseId?: string | null;
+  /** AI-suggested pulse ID to highlight with special badge */
+  aiSuggestedPulseId?: string | null;
   className?: string;
   compact?: boolean;
   showHeader?: boolean;
@@ -51,6 +55,7 @@ export function PulseGalleryModule({
   onPulseSelect,
   onAskBrain,
   selectedPulseId,
+  aiSuggestedPulseId,
   className,
   compact = false,
   showHeader = true,
@@ -243,6 +248,10 @@ export function PulseGalleryModule({
                                     {pulse.chineseName}
                                   </p>
                                 </div>
+                                {/* AI Suggested Badge */}
+                                {aiSuggestedPulseId === pulse.finding && (
+                                  <AISuggestionInlineBadge className="ml-2" />
+                                )}
                                 {isSelected && (
                                   <motion.div
                                     initial={{ scale: 0 }}
