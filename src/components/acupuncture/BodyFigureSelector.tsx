@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,6 +6,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ArrowLeft, MapPin, ZoomIn, ZoomOut, CheckSquare, Square, Sparkles, X, Trash2, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { PointTooltip, usePointTooltip } from './PointTooltip';
+import { MeridianGlow } from './MeridianGlow';
 
 // Import all 37 body figure images from the master CSV
 import abdomenImg from '@/assets/body-figures/abdomen.png';
@@ -207,10 +209,21 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
   const [loading, setLoading] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(true);
   const imageRef = useRef<HTMLImageElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   
   // Multi-select mode
   const [multiSelectMode, setMultiSelectMode] = useState(false);
   const [selectedPoints, setSelectedPoints] = useState<string[]>([]);
+  
+  // Phase 4: HUD tooltip and meridian glow state
+  const { activePoint, showTooltip, hideTooltip, isVisible: tooltipVisible } = usePointTooltip();
+  const [activeMeridian, setActiveMeridian] = useState<string | null>(null);
+
+  // Handle point hover for HUD tooltip
+  const handlePointHover = useCallback((point: AcuPoint, event: React.MouseEvent) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    showTooltip(point.code, { x: rect.right, y: rect.top });
+  }, [showTooltip]);
 
   // Fetch acupuncture points from database
   useEffect(() => {
@@ -527,6 +540,8 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
                             : 'hover:bg-muted'
                       }`}
                       onClick={() => handlePointClick(point)}
+                      onMouseEnter={(e) => handlePointHover(point, e)}
+                      onMouseLeave={hideTooltip}
                     >
                       {point.code}
                     </Badge>
@@ -539,6 +554,21 @@ export function BodyFigureSelector({ highlightedPoints = [], onPointSelect, onGe
             )}
           </CardContent>
         </Card>
+        
+        {/* Phase 4: Point HUD Tooltip */}
+        {activePoint && (
+          <PointTooltip
+            pointCode={activePoint.code}
+            anchorPosition={activePoint.position}
+            containerRef={containerRef}
+            isVisible={tooltipVisible}
+            onClose={hideTooltip}
+            onMeridianHover={setActiveMeridian}
+          />
+        )}
+        
+        {/* Phase 4: Meridian Context Glow */}
+        <MeridianGlow activeMeridian={activeMeridian} />
       </div>
     );
   }
