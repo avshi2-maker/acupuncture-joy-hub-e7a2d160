@@ -1,11 +1,17 @@
 import { useState, useCallback, useMemo } from 'react';
 import { getPointTechnicalInfo, PointTechnicalInfo } from '@/data/point-technical-data';
 import { pulseDiagnosisData, PulseFinding } from '@/data/pulse-diagnosis-data';
+import { toast } from 'sonner';
 
 /**
  * Session Summary Hook - Phase 6: Protocol Buffer
  * Tracks all active highlights, pulse selections, and AI suggestions
  * for generating the final clinical report
+ * 
+ * Phase 6 Edge Cases:
+ * - "Change of Heart" Test: Pulse change confirmation
+ * - "Empty Data" Safety: Validation before report generation
+ * - RTL/LTR handling for Hebrew/English mix
  */
 
 export interface ProtocolPoint {
@@ -13,6 +19,7 @@ export interface ProtocolPoint {
   source: 'manual' | 'ai-sparkle' | 'ai-suggestion';
   technicalInfo: PointTechnicalInfo | null;
   addedAt: number;
+  associatedPulseId?: string; // Track which pulse suggested this point
 }
 
 export interface SelectedPulse {
@@ -30,12 +37,21 @@ export interface ClinicalContradiction {
   detectedAt: number;
 }
 
+export interface PulseChangeRequest {
+  oldPulse: SelectedPulse;
+  newPulseId: string;
+  newPulseName: string;
+  newChineseName: string;
+  affectedPoints: string[];
+}
+
 export interface SessionSummaryData {
   pulses: SelectedPulse[];
   protocolPoints: ProtocolPoint[];
   contradictions: ClinicalContradiction[];
   sessionStartedAt: number;
   notes: string[];
+  pendingPulseChange: PulseChangeRequest | null;
 }
 
 export interface FinalReport {
@@ -64,6 +80,7 @@ export function useSessionSummary() {
     contradictions: [],
     sessionStartedAt: Date.now(),
     notes: [],
+    pendingPulseChange: null,
   });
 
   // Add a point to the protocol (from manual selection or AI)
@@ -107,8 +124,115 @@ export function useSessionSummary() {
     }));
   }, []);
 
-  // Add a pulse finding
-  const addPulse = useCallback((
+  // Check if changing pulse would affect existing points
+  const checkPulseChange = useCallback((
+    newPulseId: string,
+    newPulseName: string,
+    newChineseName: string
+  ): PulseChangeRequest | null => {
+    const { pulses, protocolPoints } = sessionData;
+    
+    if (pulses.length === 0) return null;
+    
+    const oldPulse = pulses[0]; // Primary pulse
+    if (oldPulse.pulseId === newPulseId) return null;
+    
+    // Find points associated with the old pulse
+    const affectedPoints = protocolPoints
+      .filter(p => p.associatedPulseId === oldPulse.pulseId || p.source === 'ai-suggestion')
+      .map(p => p.code);
+    
+    if (affectedPoints.length === 0) return null;
+    
+    return {
+      oldPulse,
+      newPulseId,
+      newPulseName,
+      newChineseName,
+      affectedPoints,
+    };
+  }, [sessionData]);
+
+  // Request pulse change (triggers confirmation if needed)
+  const requestPulseChange = useCallback((
+    newPulseId: string,
+    newPulseName: string,
+    newChineseName: string,
+    aiReasoning?: string
+  ): boolean => {
+    const changeRequest = checkPulseChange(newPulseId, newPulseName, newChineseName);
+    
+    if (changeRequest) {
+      // Store pending change for confirmation
+      setSessionData(prev => ({
+        ...prev,
+        pendingPulseChange: changeRequest,
+      }));
+      return false; // Needs confirmation
+    }
+    
+    // No conflict, add directly
+    addPulseDirectly(newPulseId, newPulseName, newChineseName, aiReasoning, 'manual');
+    return true;
+  }, [checkPulseChange]);
+
+  // Confirm pulse change and update protocol
+  const confirmPulseChange = useCallback((updateProtocol: boolean) => {
+    setSessionData(prev => {
+      if (!prev.pendingPulseChange) return prev;
+      
+      const { oldPulse, newPulseId, newPulseName, newChineseName, affectedPoints } = prev.pendingPulseChange;
+      
+      let newProtocolPoints = prev.protocolPoints;
+      
+      if (updateProtocol) {
+        // Remove points associated with old pulse
+        newProtocolPoints = prev.protocolPoints.filter(
+          p => !affectedPoints.includes(p.code)
+        );
+      }
+      
+      // Find the new pulse finding
+      let finding: PulseFinding | null = null;
+      for (const category of pulseDiagnosisData) {
+        const found = category.findings.find(f => 
+          f.finding.toLowerCase().includes(newPulseName.toLowerCase()) ||
+          f.chineseName.includes(newChineseName)
+        );
+        if (found) {
+          finding = found;
+          break;
+        }
+      }
+      
+      const newPulse: SelectedPulse = {
+        pulseId: newPulseId,
+        pulseName: newPulseName,
+        chineseName: newChineseName,
+        finding,
+        source: 'manual',
+        addedAt: Date.now(),
+      };
+      
+      return {
+        ...prev,
+        pulses: [newPulse], // Replace with new pulse
+        protocolPoints: newProtocolPoints,
+        pendingPulseChange: null,
+      };
+    });
+  }, []);
+
+  // Cancel pulse change
+  const cancelPulseChange = useCallback(() => {
+    setSessionData(prev => ({
+      ...prev,
+      pendingPulseChange: null,
+    }));
+  }, []);
+
+  // Add a pulse finding directly (internal use)
+  const addPulseDirectly = useCallback((
     pulseId: string,
     pulseName: string,
     chineseName: string,
@@ -150,6 +274,24 @@ export function useSessionSummary() {
       };
     });
   }, []);
+
+  // Public addPulse that checks for conflicts
+  const addPulse = useCallback((
+    pulseId: string,
+    pulseName: string,
+    chineseName: string,
+    aiReasoning?: string,
+    source: 'manual' | 'ai-suggestion' = 'manual'
+  ) => {
+    // For AI suggestions, add directly without confirmation
+    if (source === 'ai-suggestion') {
+      addPulseDirectly(pulseId, pulseName, chineseName, aiReasoning, source);
+      return;
+    }
+    
+    // For manual selection, check if we need confirmation
+    requestPulseChange(pulseId, pulseName, chineseName, aiReasoning);
+  }, [addPulseDirectly, requestPulseChange]);
 
   // Remove a pulse
   const removePulse = useCallback((pulseId: string) => {
@@ -244,6 +386,28 @@ export function useSessionSummary() {
     [sessionData]
   );
 
+  // Validate before report generation (Phase 6: Empty Data Safety)
+  const canGenerateReport = useMemo(() => {
+    return sessionData.pulses.length > 0 || sessionData.protocolPoints.length > 0;
+  }, [sessionData]);
+
+  // Show validation error if trying to generate empty report
+  const validateAndGenerateReport = useCallback((): FinalReport | null => {
+    if (!canGenerateReport) {
+      toast.error('נא להזין אבחנת דופק כדי להפיק סיכום טיפול', {
+        description: 'יש לבחור לפחות דופק אחד או נקודת דיקור אחת',
+      });
+      return null;
+    }
+    return generateFinalReport();
+  }, [canGenerateReport, generateFinalReport]);
+
+  // Check if there's a pending pulse change
+  const hasPendingPulseChange = useMemo(() => 
+    sessionData.pendingPulseChange !== null,
+    [sessionData]
+  );
+
   // Reset session
   const resetSession = useCallback(() => {
     setSessionData({
@@ -252,6 +416,7 @@ export function useSessionSummary() {
       contradictions: [],
       sessionStartedAt: Date.now(),
       notes: [],
+      pendingPulseChange: null,
     });
   }, []);
 
@@ -259,14 +424,21 @@ export function useSessionSummary() {
     sessionData,
     counts,
     hasData,
+    canGenerateReport,
+    hasPendingPulseChange,
+    pendingPulseChange: sessionData.pendingPulseChange,
     addProtocolPoint,
     addSparklePoints,
     removeProtocolPoint,
     addPulse,
     removePulse,
+    requestPulseChange,
+    confirmPulseChange,
+    cancelPulseChange,
     addContradiction,
     addNote,
     generateFinalReport,
+    validateAndGenerateReport,
     resetSession,
   };
 }

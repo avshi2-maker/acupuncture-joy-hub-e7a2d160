@@ -9,3 +9,5 @@ export { SafetyGateModal, useSafetyGate } from './SafetyGateModal';
 export { DraftProtocolWidget } from './DraftProtocolWidget';
 export { FinalReportModal } from './FinalReportModal';
 export { SessionSummaryButton } from './SessionSummaryButton';
+export { PulseChangeConfirmModal } from './PulseChangeConfirmModal';
+export { CelebrationConfetti, useCelebration } from './CelebrationConfetti';

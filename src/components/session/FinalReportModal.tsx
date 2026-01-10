@@ -24,15 +24,18 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { FinalReport } from '@/hooks/useSessionSummary';
+import { CelebrationConfetti } from './CelebrationConfetti';
 
 interface FinalReportModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   report: FinalReport | null;
+  onCopied?: () => void; // Callback for celebration
 }
 
-export function FinalReportModal({ open, onOpenChange, report }: FinalReportModalProps) {
+export function FinalReportModal({ open, onOpenChange, report, onCopied }: FinalReportModalProps) {
   const [copied, setCopied] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   if (!report) return null;
 
@@ -40,8 +43,15 @@ export function FinalReportModal({ open, onOpenChange, report }: FinalReportModa
     try {
       await navigator.clipboard.writeText(report.hebrewSummary);
       setCopied(true);
-      toast.success('הועתק ללוח!');
-      setTimeout(() => setCopied(false), 2000);
+      setShowCelebration(true); // Trigger celebration!
+      toast.success('🎉 הועתק ללוח!', {
+        description: 'כעת ניתן להדביק בווטסאפ או בכל מקום אחר',
+      });
+      onCopied?.();
+      setTimeout(() => {
+        setCopied(false);
+        setShowCelebration(false);
+      }, 4000);
     } catch (err) {
       toast.error('שגיאה בהעתקה');
     }
@@ -67,8 +77,12 @@ export function FinalReportModal({ open, onOpenChange, report }: FinalReportModa
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+    <>
+      {/* Phase 7: Celebration Animation */}
+      <CelebrationConfetti show={showCelebration} />
+      
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-xl flex items-center gap-2" dir="rtl">
             <CheckCircle className="h-5 w-5 text-jade" />
@@ -246,6 +260,7 @@ export function FinalReportModal({ open, onOpenChange, report }: FinalReportModa
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    </>
   );
 }
 
