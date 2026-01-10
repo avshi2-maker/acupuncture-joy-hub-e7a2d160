@@ -32,10 +32,15 @@ export function PointSparkleOverlay({
 }
 
 // Individual sparkle effect for a point
+// Phase 7: Hardware-accelerated with will-change for zero-latency
 function SparkleEffect({ pointCode }: { pointCode: string }) {
   return (
     <motion.div
       className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+      style={{ 
+        willChange: 'transform, opacity',
+        transform: 'translateZ(0)', // Force GPU layer
+      }}
       initial={{ opacity: 0, scale: 0 }}
       animate={{ 
         opacity: [0, 1, 0.8, 1, 0],
@@ -47,7 +52,7 @@ function SparkleEffect({ pointCode }: { pointCode: string }) {
         ease: 'easeInOut',
       }}
     >
-      {/* Sparkle particles */}
+      {/* Sparkle particles - GPU accelerated */}
       {[...Array(6)].map((_, i) => (
         <motion.div
           key={i}
@@ -55,6 +60,8 @@ function SparkleEffect({ pointCode }: { pointCode: string }) {
           style={{
             left: '50%',
             top: '50%',
+            willChange: 'transform, opacity',
+            backfaceVisibility: 'hidden',
           }}
           animate={{
             x: [0, Math.cos((i * 60) * Math.PI / 180) * 20],
@@ -70,9 +77,13 @@ function SparkleEffect({ pointCode }: { pointCode: string }) {
         />
       ))}
       
-      {/* Central glow */}
+      {/* Central glow - GPU accelerated */}
       <motion.div
         className="w-4 h-4 rounded-full bg-amber-400/80"
+        style={{
+          willChange: 'transform, box-shadow',
+          backfaceVisibility: 'hidden',
+        }}
         animate={{
           boxShadow: [
             '0 0 8px 2px rgba(251, 191, 36, 0.4)',
@@ -99,6 +110,7 @@ interface SparklePointBadgeProps {
   className?: string;
 }
 
+// Phase 7: Hardware-accelerated SparklePointBadge
 export function SparklePointBadge({
   pointCode,
   isSparkle,
@@ -114,6 +126,11 @@ export function SparklePointBadge({
           : "bg-jade/20 text-jade border border-jade/30",
         className
       )}
+      style={{
+        willChange: isSparkle ? 'transform, box-shadow' : 'auto',
+        backfaceVisibility: 'hidden',
+        transform: 'translateZ(0)', // Force GPU compositing
+      }}
       onClick={onClick}
       animate={isSparkle ? {
         boxShadow: [
@@ -131,11 +148,12 @@ export function SparklePointBadge({
     >
       {pointCode}
       
-      {/* Sparkle indicator */}
+      {/* Sparkle indicator - GPU accelerated */}
       <AnimatePresence>
         {isSparkle && (
           <motion.span
             className="absolute -top-1 -right-1 w-2 h-2 bg-amber-400 rounded-full"
+            style={{ willChange: 'transform', backfaceVisibility: 'hidden' }}
             initial={{ scale: 0 }}
             animate={{ scale: [1, 1.3, 1] }}
             exit={{ scale: 0 }}

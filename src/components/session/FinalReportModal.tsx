@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { cn } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -57,10 +58,19 @@ export function FinalReportModal({ open, onOpenChange, report, onCopied }: Final
     }
   };
 
+  const [whatsappSuccess, setWhatsappSuccess] = useState(false);
+
   const handleShareWhatsApp = () => {
     const encodedText = encodeURIComponent(report.hebrewSummary);
     const whatsappUrl = `https://wa.me/?text=${encodedText}`;
     window.open(whatsappUrl, '_blank');
+    
+    // Phase 7: Jade Success Glow feedback
+    setWhatsappSuccess(true);
+    toast.success('🎯 קובץ הועתק בהצלחה!', {
+      description: 'נפתח חלון WhatsApp לשיתוף',
+    });
+    setTimeout(() => setWhatsappSuccess(false), 2000);
   };
 
   const handleDownloadText = () => {
@@ -230,15 +240,35 @@ export function FinalReportModal({ open, onOpenChange, report, onCopied }: Final
               {copied ? 'הועתק!' : 'העתק'}
             </Button>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleShareWhatsApp}
-              className="gap-2"
+            {/* Phase 7: WhatsApp with Jade Success Glow */}
+            <motion.div
+              animate={whatsappSuccess ? {
+                boxShadow: [
+                  '0 0 0 0 hsla(158, 64%, 52%, 0)',
+                  '0 0 20px 8px hsla(158, 64%, 52%, 0.6)',
+                  '0 0 0 0 hsla(158, 64%, 52%, 0)',
+                ],
+              } : {}}
+              transition={{ duration: 0.8 }}
+              className="rounded-md"
             >
-              <Share2 className="h-4 w-4" />
-              WhatsApp
-            </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleShareWhatsApp}
+                className={cn(
+                  "gap-2 transition-all duration-300",
+                  whatsappSuccess && "bg-jade/20 border-jade text-jade"
+                )}
+              >
+                {whatsappSuccess ? (
+                  <CheckCircle className="h-4 w-4 text-jade" />
+                ) : (
+                  <Share2 className="h-4 w-4" />
+                )}
+                WhatsApp
+              </Button>
+            </motion.div>
 
             <Button
               variant="outline"
