@@ -122,6 +122,8 @@ import { SessionBriefPanel } from '@/components/video/SessionBriefPanel';
 import { PregnancySafetyDialog, ElderlyLifestyleDialog } from '@/components/clinical';
 import { HerbalMasterWidget } from '@/components/herbal/HerbalMasterWidget';
 import { EmotionalProcessingPanel } from '@/components/session/EmotionalProcessingPanel';
+import { PulseGallerySheet } from '@/components/pulse';
+import { useClinicalNexus, type ClinicalNexusResult } from '@/hooks/useClinicalNexus';
 import newLogo from '@/assets/new-logo.png';
 
 import { SessionWorkflowIndicator } from '@/components/video/SessionWorkflowIndicator';
@@ -185,6 +187,8 @@ export default function VideoSession() {
   const [showPregnancyCalc, setShowPregnancyCalc] = useState(false);
   const [showElderlyGuide, setShowElderlyGuide] = useState(false);
   const [showEmotionalPanel, setShowEmotionalPanel] = useState(false);
+  const [showPulseGallery, setShowPulseGallery] = useState(false);
+  const [selectedPulseId, setSelectedPulseId] = useState<string | null>(null);
   const [emotionalPanelEmotion, setEmotionalPanelEmotion] = useState<'grief' | 'trauma' | 'fear' | 'anger'>('grief');
   const [voiceAlwaysOn, setVoiceAlwaysOn] = useState(false);
   const [voiceWakeWord, setVoiceWakeWord] = useState(() => getVoiceWakeWord());
@@ -1813,6 +1817,17 @@ export default function VideoSession() {
                     tooltip: 'AI Session Brief with patient analysis & visit history',
                     onClick: () => setShowSessionBrief(!showSessionBrief),
                   },
+                  {
+                    id: 'pulse-gallery',
+                    name: 'Pulse',
+                    nameHe: 'דופק',
+                    icon: Activity,
+                    color: showPulseGallery ? 'text-gold' : 'text-jade',
+                    borderColor: showPulseGallery ? 'border-gold' : 'border-jade/50',
+                    isActive: showPulseGallery,
+                    tooltip: 'Pulse Diagnosis Gallery - TCM Patterns & Points',
+                    onClick: () => setShowPulseGallery(!showPulseGallery),
+                  },
                 ],
               },
               {
@@ -2359,6 +2374,27 @@ export default function VideoSession() {
           setShowEmotionalPanel(false);
           setShowTcmBrainPanel(true);
           toast.info(`Asking: ${question.slice(0, 50)}...`);
+        }}
+      />
+      
+      {/* Pulse Gallery Sheet - Non-blocking overlay */}
+      <PulseGallerySheet
+        open={showPulseGallery}
+        onOpenChange={setShowPulseGallery}
+        selectedPulseId={selectedPulseId}
+        onPulseSelect={(pulse, nexusResult) => {
+          setSelectedPulseId(pulse.finding);
+          // Log the nexus result for debugging
+          console.log('[PulseGallery] Selected:', pulse.finding, nexusResult);
+        }}
+        syncPulseToBody={(nexusResult) => {
+          // Add selected points to notes with timestamp
+          if (nexusResult.found && nexusResult.points.length > 0) {
+            const timestamp = formatDuration(sessionDuration);
+            const pointsStr = nexusResult.points.join(', ');
+            setNotes(sessionNotes + `\n💓 [${timestamp}] דופק: ${nexusResult.pulse?.chineseName || ''}\n📍 נקודות: ${pointsStr}`);
+            haptic.success();
+          }
         }}
       />
       

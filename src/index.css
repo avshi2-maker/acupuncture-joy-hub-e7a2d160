@@ -228,6 +228,20 @@
     background-color: hsl(var(--jade));
   }
 
+  /* Gold Pulse Animation for selected pulse cards */
+  @keyframes gold-pulse {
+    0%, 100% {
+      box-shadow: 0 0 0 0 hsl(var(--gold) / 0.4);
+    }
+    50% {
+      box-shadow: 0 0 20px 4px hsl(var(--gold) / 0.3);
+    }
+  }
+
+  .animate-gold-pulse {
+    animation: gold-pulse 2s ease-in-out infinite;
+  }
+
   .bg-jade-light {
     background-color: hsl(var(--jade-light));
   }
