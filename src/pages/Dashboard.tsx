@@ -66,7 +66,6 @@ import { DashboardTokenCalculator } from '@/components/usage/DashboardTokenCalcu
 import { ClinicWalletCard } from '@/components/wallet/ClinicWalletCard';
 import { HerbalMasterWidget } from '@/components/herbal/HerbalMasterWidget';
 import roiWidgetBg from '@/assets/roi-widget-bg.png';
-import { TongueGalleryCard } from '@/components/dashboard/TongueGalleryCard';
 import { PulseGalleryCard } from '@/components/dashboard/PulseGalleryCard';
 import { HebrewQuestionsCard } from '@/components/dashboard/HebrewQuestionsCard';
 import { AssetInventoryCard } from '@/components/dashboard/AssetInventoryCard';
@@ -1182,10 +1181,6 @@ export default function Dashboard() {
                 <OnboardingProgress />
               </GlassCard>
 
-              {/* Visual Galleries */}
-              <GlassCard className="p-0 overflow-hidden">
-                <TongueGalleryCard />
-              </GlassCard>
               
               <GlassCard className="p-0 overflow-hidden">
                 <PulseGalleryCard />
