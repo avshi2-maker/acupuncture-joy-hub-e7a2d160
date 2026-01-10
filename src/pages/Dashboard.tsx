@@ -69,6 +69,10 @@ import { PulseGalleryCard } from '@/components/dashboard/PulseGalleryCard';
 import { BaZiDashboardCard } from '@/components/dashboard/BaZiDashboardCard';
 import { DashboardThreeColumnLayout, GlassCard } from '@/components/dashboard/DashboardThreeColumnLayout';
 import { DashboardGuide, useDashboardGuide } from '@/components/dashboard/DashboardGuide';
+import { GoldenPathGuide, useGoldenPathGuide } from '@/components/dashboard/GoldenPathGuide';
+import { ActiveSessionWidget } from '@/components/dashboard/ActiveSessionWidget';
+import { HelpFAB } from '@/components/dashboard/HelpFAB';
+import { useGlobalSessionOptional } from '@/contexts/GlobalSessionContext';
 import { Compass } from 'lucide-react';
 
 
@@ -270,6 +274,8 @@ export default function Dashboard() {
   const { lock, isPaused, pauseReason, pauseLock, resumeLock } = useSessionLock();
   const { hasPin } = usePinAuth();
   const { isGuideOpen, startGuide, closeGuide } = useDashboardGuide();
+  const { isGuideOpen: isGoldenPathOpen, startGoldenPath, closeGoldenPath } = useGoldenPathGuide();
+  const globalSession = useGlobalSessionOptional();
 
   // Check therapist disclaimer status
   useEffect(() => {
@@ -1131,6 +1137,8 @@ export default function Dashboard() {
                 </Link>
               </div>
 
+              {/* Phase 7: Active Session Widget with Live Teleprompter */}
+              <ActiveSessionWidget showTeleprompter={true} />
 
               {/* Knowledge Tools Grid */}
 
@@ -1201,6 +1209,15 @@ export default function Dashboard() {
       
       {/* Dashboard Guide Teleprompter */}
       <DashboardGuide isOpen={isGuideOpen} onClose={closeGuide} />
+      
+      {/* Phase 7: Golden Path Guide */}
+      <GoldenPathGuide isOpen={isGoldenPathOpen} onClose={closeGoldenPath} />
+      
+      {/* Phase 7: Help FAB - triggers Golden Path */}
+      <HelpFAB 
+        onClick={startGoldenPath} 
+        isSessionActive={globalSession?.isSessionActive ?? false}
+      />
       
       {/* First-time tutorial overlay */}
       <WorkflowTutorial />

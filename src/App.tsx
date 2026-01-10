@@ -8,6 +8,7 @@ import { TierProvider } from "@/hooks/useTier";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { SessionLockProvider } from "@/contexts/SessionLockContext";
+import { GlobalSessionProvider } from "@/contexts/GlobalSessionContext";
 import RequireTier from "@/components/auth/RequireTier";
 
 import { OfflineBanner } from "@/components/ui/OfflineBanner";
@@ -106,8 +107,9 @@ const App = () => (
             <AuthProvider>
               <TierProvider>
                 <SessionLockProvider>
-                  <TooltipProvider>
-                    <OfflineBanner />
+                  <GlobalSessionProvider>
+                    <TooltipProvider>
+                      <OfflineBanner />
                   <BrowserRouter>
                     <Routes>
                     {/* Public */}
@@ -206,6 +208,7 @@ const App = () => (
                     <AccessibilityPanel />
                   </BrowserRouter>
                   </TooltipProvider>
+                  </GlobalSessionProvider>
                 </SessionLockProvider>
               </TierProvider>
             </AuthProvider>
