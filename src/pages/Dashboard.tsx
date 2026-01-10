@@ -64,7 +64,6 @@ import { PediatricInfographicCard, VagusNerveCard, VagusStimulationDialog, Stres
 import { UsageWidget, UsageCard } from '@/components/usage/UnifiedUsageMeter';
 import { DashboardTokenCalculator } from '@/components/usage/DashboardTokenCalculator';
 import { ClinicWalletCard } from '@/components/wallet/ClinicWalletCard';
-import { HerbalMasterWidget } from '@/components/herbal/HerbalMasterWidget';
 import roiWidgetBg from '@/assets/roi-widget-bg.png';
 import { PulseGalleryCard } from '@/components/dashboard/PulseGalleryCard';
 import { BaZiDashboardCard } from '@/components/dashboard/BaZiDashboardCard';
@@ -1136,11 +1135,6 @@ export default function Dashboard() {
               {/* Knowledge Tools Grid */}
 
               {/* Additional Widgets */}
-
-              {/* Herbal Master Widget */}
-              <GlassCard className="p-4">
-                <HerbalMasterWidget className="w-full" />
-              </GlassCard>
             </div>
           }
 
