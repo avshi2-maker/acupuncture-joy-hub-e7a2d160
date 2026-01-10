@@ -316,23 +316,11 @@ export function HerbalMasterWidget({ className }: { className?: string }) {
   const [compareFormula2, setCompareFormula2] = useState<FormulaData | null>(null);
   const [showCompareModal, setShowCompareModal] = useState(false);
 
-  // Legal disclaimer state
+  // Legal disclaimer state - no longer auto-shows on dashboard load
   const [showLegalModal, setShowLegalModal] = useState(false);
-  const [legalAccepted, setLegalAccepted] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('herbalLegalAccepted') === 'true';
-    }
-    return false;
-  });
+  const [legalAccepted, setLegalAccepted] = useState(true); // Default to accepted
   const [isSavingAcknowledgment, setIsSavingAcknowledgment] = useState(false);
   const legalContentRef = useRef<HTMLDivElement>(null);
-
-  // Show legal modal on first load
-  useEffect(() => {
-    if (!legalAccepted) {
-      setShowLegalModal(true);
-    }
-  }, [legalAccepted]);
 
   const handleAcceptLegal = async () => {
     setIsSavingAcknowledgment(true);
