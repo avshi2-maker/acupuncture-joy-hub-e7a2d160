@@ -97,23 +97,23 @@ export function GoldenPathGuide({ isOpen, onClose }: GoldenPathGuideProps) {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Dark overlay with backdrop blur */}
+          {/* Dark overlay with backdrop blur - z-[9997] to stay below Economy Monitor */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9998]"
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9997]"
             onClick={onClose}
           />
 
-          {/* Jade Spotlight Effect */}
+          {/* Jade Spotlight Effect - z-[9998] below Economy Monitor */}
           <motion.div
             key={step.targetId}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className={cn(
-              "fixed z-[9999] pointer-events-none",
+              "fixed z-[9998] pointer-events-none",
               step.position === 'right' && "top-0 right-0 w-1/4 h-full lg:block hidden",
               step.position === 'center' && "top-0 left-1/4 w-1/2 h-full lg:block hidden",
               step.position === 'left' && "top-0 left-0 w-1/4 h-full lg:block hidden",
@@ -137,12 +137,12 @@ export function GoldenPathGuide({ isOpen, onClose }: GoldenPathGuideProps) {
             />
           </motion.div>
 
-          {/* Guide Card */}
+          {/* Guide Card - z-[9999] between spotlight and Economy Monitor */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[10000] w-[90%] max-w-lg"
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[9999] w-[90%] max-w-lg"
           >
             <div className="bg-card/95 backdrop-blur-xl border border-jade/40 rounded-2xl shadow-2xl shadow-jade/20 p-6">
               {/* Header */}

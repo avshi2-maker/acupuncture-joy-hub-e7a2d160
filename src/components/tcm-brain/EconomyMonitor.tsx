@@ -19,10 +19,11 @@ export const EconomyMonitor: React.FC<EconomyMonitorProps> = ({
   const hasQueries = stackedQueries.length > 0;
   const hasCost = metrics.tokensUsed > 0;
 
+  // Phase 7 Final: Z-Index Audit - z-[10001] ensures Economy Monitor stays above ALL overlays
   return (
     <div 
       id="economy-monitor"
-      className="fixed bottom-5 right-5 bg-black/95 text-green-400 p-4 rounded-xl font-mono text-xs z-[9999] border border-green-500/30 shadow-2xl shadow-green-900/20 min-w-[220px] backdrop-blur-sm"
+      className="fixed bottom-5 right-5 bg-black/95 text-green-400 p-4 rounded-xl font-mono text-xs z-[10001] border border-green-500/30 shadow-2xl shadow-green-900/20 min-w-[220px] backdrop-blur-sm"
       style={{ pointerEvents: 'none' }}
     >
       {/* Header with indexed indicator */}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -57,8 +57,9 @@ interface RAGBodyFigureDisplayProps {
  * RAG-aware body figure display component
  * Automatically shows the correct body figures based on AI response or point codes
  * With 3D-like celebration animations and audio narration
+ * Phase 7 Final: React.memo for zero-lag during video calls
  */
-export function RAGBodyFigureDisplay({
+export const RAGBodyFigureDisplay = memo(function RAGBodyFigureDisplay({
   aiResponseText = '',
   pointCodes = [],
   onPointSelect,
@@ -665,4 +666,4 @@ export function RAGBodyFigureDisplay({
       )}
     </div>
   );
-}
+});

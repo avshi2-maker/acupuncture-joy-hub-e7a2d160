@@ -193,12 +193,12 @@ export function TherapistTeleprompter({ isOpen, onClose, onSkipGuide }: Therapis
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Dark overlay with cutout */}
+          {/* Dark overlay with cutout - z-[9997] to stay below Economy Monitor */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[10000] pointer-events-auto"
+            className="fixed inset-0 z-[9997] pointer-events-auto"
             onClick={handleClose}
             style={{
               background: highlightRect 
@@ -207,13 +207,13 @@ export function TherapistTeleprompter({ isOpen, onClose, onSkipGuide }: Therapis
             }}
           />
 
-          {/* Tooltip */}
+          {/* Tooltip - z-[9998] below Economy Monitor */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ type: 'spring', damping: 20 }}
-            className="fixed z-[10001] pointer-events-auto"
+            className="fixed z-[9998] pointer-events-auto"
             style={{
               top: tooltipPosition.top,
               left: tooltipPosition.left,

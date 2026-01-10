@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -10,8 +11,9 @@ interface PointSparkleOverlayProps {
 /**
  * Point Sparkle Overlay - Phase 5: Visual Sync
  * Renders sparkle effects on points when AI mentions them
+ * Phase 7 Final: React.memo for zero-lag during video calls
  */
-export function PointSparkleOverlay({
+export const PointSparkleOverlay = memo(function PointSparkleOverlay({
   isSparklingPoint,
   highlightedPoints,
   className,
@@ -24,12 +26,12 @@ export function PointSparkleOverlay({
     <div className={cn("absolute inset-0 pointer-events-none z-50", className)}>
       <AnimatePresence>
         {sparklingPoints.map((point) => (
-          <SparkleEffect key={point} pointCode={point} />
+          <SparkleEffectMemo key={point} pointCode={point} />
         ))}
       </AnimatePresence>
     </div>
   );
-}
+});
 
 // Individual sparkle effect for a point
 // Phase 7: Hardware-accelerated with will-change for zero-latency
@@ -40,6 +42,7 @@ function SparkleEffect({ pointCode }: { pointCode: string }) {
       style={{ 
         willChange: 'transform, opacity',
         transform: 'translateZ(0)', // Force GPU layer
+        backfaceVisibility: 'hidden',
       }}
       initial={{ opacity: 0, scale: 0 }}
       animate={{ 
@@ -62,6 +65,7 @@ function SparkleEffect({ pointCode }: { pointCode: string }) {
             top: '50%',
             willChange: 'transform, opacity',
             backfaceVisibility: 'hidden',
+            transform: 'translateZ(0)',
           }}
           animate={{
             x: [0, Math.cos((i * 60) * Math.PI / 180) * 20],
@@ -83,6 +87,7 @@ function SparkleEffect({ pointCode }: { pointCode: string }) {
         style={{
           willChange: 'transform, box-shadow',
           backfaceVisibility: 'hidden',
+          transform: 'translateZ(0)',
         }}
         animate={{
           boxShadow: [
@@ -102,6 +107,9 @@ function SparkleEffect({ pointCode }: { pointCode: string }) {
   );
 }
 
+// Memoized SparkleEffect for performance
+const SparkleEffectMemo = memo(SparkleEffect);
+
 // Badge component to show point code with sparkle
 interface SparklePointBadgeProps {
   pointCode: string;
@@ -110,8 +118,8 @@ interface SparklePointBadgeProps {
   className?: string;
 }
 
-// Phase 7: Hardware-accelerated SparklePointBadge
-export function SparklePointBadge({
+// Phase 7 Final: Hardware-accelerated SparklePointBadge with React.memo
+export const SparklePointBadge = memo(function SparklePointBadge({
   pointCode,
   isSparkle,
   onClick,
@@ -153,7 +161,11 @@ export function SparklePointBadge({
         {isSparkle && (
           <motion.span
             className="absolute -top-1 -right-1 w-2 h-2 bg-amber-400 rounded-full"
-            style={{ willChange: 'transform', backfaceVisibility: 'hidden' }}
+            style={{ 
+              willChange: 'transform', 
+              backfaceVisibility: 'hidden',
+              transform: 'translateZ(0)',
+            }}
             initial={{ scale: 0 }}
             animate={{ scale: [1, 1.3, 1] }}
             exit={{ scale: 0 }}
@@ -163,4 +175,4 @@ export function SparklePointBadge({
       </AnimatePresence>
     </motion.button>
   );
-}
+});
