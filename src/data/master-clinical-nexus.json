@@ -1,0 +1,548 @@
+{
+  "version": "1.0.0",
+  "description": "Master Clinical Nexus - Pulse-to-Point Mapping for TCM Diagnosis",
+  "lastUpdated": "2025-01-10",
+  "pulseNexus": [
+    {
+      "pulseId": "P-SHU-01",
+      "finding": "Rapid Pulse (Shuo Mai)",
+      "chineseName": "数脉 Shuò Mài",
+      "category": "Pulse Rate",
+      "tcmPatterns": ["Heat (Excess or Deficiency)", "Yin deficiency"],
+      "primaryPoints": ["LI11", "GV14", "LI4", "KI6", "SP6"],
+      "bodyMapCoords": {
+        "LI11": { "figure": "arm-anterior-right", "x": 72, "y": 38 },
+        "GV14": { "figure": "back-upper", "x": 50, "y": 15 },
+        "LI4": { "figure": "hand-dorsal-right", "x": 35, "y": 25 },
+        "KI6": { "figure": "foot-medial-right", "x": 45, "y": 85 },
+        "SP6": { "figure": "leg-medial-right", "x": 40, "y": 75 }
+      },
+      "treatmentPrinciple": "Clear heat, nourish yin if deficiency heat",
+      "clinicalSignificance": "Heat accelerating blood circulation, fever, inflammation"
+    },
+    {
+      "pulseId": "P-CHI-02",
+      "finding": "Slow Pulse (Chi Mai)",
+      "chineseName": "迟脉 Chí Mài",
+      "category": "Pulse Rate",
+      "tcmPatterns": ["Cold (Excess or Deficiency)", "Yang deficiency"],
+      "primaryPoints": ["ST36", "CV4", "CV6", "GV4", "RN8"],
+      "bodyMapCoords": {
+        "ST36": { "figure": "leg-anterior-right", "x": 55, "y": 45 },
+        "CV4": { "figure": "abdomen-anterior", "x": 50, "y": 72 },
+        "CV6": { "figure": "abdomen-anterior", "x": 50, "y": 68 },
+        "GV4": { "figure": "back-lower", "x": 50, "y": 55 },
+        "RN8": { "figure": "abdomen-anterior", "x": 50, "y": 60 }
+      },
+      "treatmentPrinciple": "Warm yang, expel cold",
+      "clinicalSignificance": "Cold slowing circulation, weak yang unable to propel blood"
+    },
+    {
+      "pulseId": "P-HUA-03",
+      "finding": "Slippery/Rolling Pulse (Hua Mai)",
+      "chineseName": "滑脉 Huá Mài",
+      "category": "Pulse Quality - Flow",
+      "tcmPatterns": ["Phlegm", "Dampness", "Food stagnation", "Pregnancy (normal)"],
+      "primaryPoints": ["ST40", "SP9", "CV12", "PC6", "ST36"],
+      "bodyMapCoords": {
+        "ST40": { "figure": "leg-lateral-right", "x": 60, "y": 55 },
+        "SP9": { "figure": "leg-medial-right", "x": 45, "y": 48 },
+        "CV12": { "figure": "abdomen-anterior", "x": 50, "y": 45 },
+        "PC6": { "figure": "arm-anterior-right", "x": 50, "y": 65 },
+        "ST36": { "figure": "leg-anterior-right", "x": 55, "y": 45 }
+      },
+      "treatmentPrinciple": "Transform phlegm, resolve dampness, move food",
+      "clinicalSignificance": "Excess condition with turbid substances, or normal in pregnancy"
+    },
+    {
+      "pulseId": "P-SE-04",
+      "finding": "Choppy/Rough Pulse (Se Mai)",
+      "chineseName": "涩脉 Sè Mài",
+      "category": "Pulse Quality - Flow",
+      "tcmPatterns": ["Blood stasis", "Qi-Blood deficiency", "Essence depletion"],
+      "primaryPoints": ["SP10", "BL17", "LV3", "SP6", "ST36"],
+      "bodyMapCoords": {
+        "SP10": { "figure": "leg-medial-right", "x": 48, "y": 35 },
+        "BL17": { "figure": "back-upper", "x": 35, "y": 45 },
+        "LV3": { "figure": "foot-dorsal-right", "x": 45, "y": 30 },
+        "SP6": { "figure": "leg-medial-right", "x": 40, "y": 75 },
+        "ST36": { "figure": "leg-anterior-right", "x": 55, "y": 45 }
+      },
+      "treatmentPrinciple": "Invigorate blood, nourish blood, remove stasis",
+      "clinicalSignificance": "Obstruction or deficiency causing rough flow"
+    },
+    {
+      "pulseId": "P-FU-05",
+      "finding": "Superficial/Floating Pulse (Fu Mai)",
+      "chineseName": "浮脉 Fú Mài",
+      "category": "Pulse Depth",
+      "tcmPatterns": ["Exterior pattern", "Wei qi rising to surface"],
+      "primaryPoints": ["LU7", "LI4", "GB20", "GV16", "BL12"],
+      "bodyMapCoords": {
+        "LU7": { "figure": "arm-anterior-right", "x": 45, "y": 72 },
+        "LI4": { "figure": "hand-dorsal-right", "x": 35, "y": 25 },
+        "GB20": { "figure": "head-posterior", "x": 35, "y": 85 },
+        "GV16": { "figure": "head-posterior", "x": 50, "y": 90 },
+        "BL12": { "figure": "back-upper", "x": 35, "y": 25 }
+      },
+      "treatmentPrinciple": "Release exterior, expel pathogen",
+      "clinicalSignificance": "Pathogen at exterior level, body mounting defensive response"
+    },
+    {
+      "pulseId": "P-CHEN-06",
+      "finding": "Deep/Sinking Pulse (Chen Mai)",
+      "chineseName": "沉脉 Chén Mài",
+      "category": "Pulse Depth",
+      "tcmPatterns": ["Interior pattern", "Internal organ involvement"],
+      "primaryPoints": ["CV6", "ST36", "SP6", "KI3", "BL23"],
+      "bodyMapCoords": {
+        "CV6": { "figure": "abdomen-anterior", "x": 50, "y": 68 },
+        "ST36": { "figure": "leg-anterior-right", "x": 55, "y": 45 },
+        "SP6": { "figure": "leg-medial-right", "x": 40, "y": 75 },
+        "KI3": { "figure": "foot-medial-right", "x": 48, "y": 88 },
+        "BL23": { "figure": "back-lower", "x": 35, "y": 50 }
+      },
+      "treatmentPrinciple": "Treat interior, address root cause",
+      "clinicalSignificance": "Pathogen has penetrated interior, or deep-seated chronic condition"
+    },
+    {
+      "pulseId": "P-XI-07",
+      "finding": "Fine/Thin Pulse (Xi Mai)",
+      "chineseName": "细脉 Xì Mài",
+      "category": "Pulse Width",
+      "tcmPatterns": ["Blood and/or Yin deficiency", "Qi deficiency"],
+      "primaryPoints": ["SP6", "ST36", "BL17", "BL20", "CV4"],
+      "bodyMapCoords": {
+        "SP6": { "figure": "leg-medial-right", "x": 40, "y": 75 },
+        "ST36": { "figure": "leg-anterior-right", "x": 55, "y": 45 },
+        "BL17": { "figure": "back-upper", "x": 35, "y": 45 },
+        "BL20": { "figure": "back-middle", "x": 35, "y": 55 },
+        "CV4": { "figure": "abdomen-anterior", "x": 50, "y": 72 }
+      },
+      "treatmentPrinciple": "Nourish blood and yin, tonify qi",
+      "clinicalSignificance": "Insufficient blood in vessels, depletion of yin fluids"
+    },
+    {
+      "pulseId": "P-HONG-08",
+      "finding": "Flooding/Surging Pulse (Hong Mai)",
+      "chineseName": "洪脉 Hóng Mài",
+      "category": "Pulse Width",
+      "tcmPatterns": ["Extreme excess heat", "Yang Ming stage heat"],
+      "primaryPoints": ["LI11", "ST44", "GV14", "LI4", "ST45"],
+      "bodyMapCoords": {
+        "LI11": { "figure": "arm-anterior-right", "x": 72, "y": 38 },
+        "ST44": { "figure": "foot-dorsal-right", "x": 55, "y": 25 },
+        "GV14": { "figure": "back-upper", "x": 50, "y": 15 },
+        "LI4": { "figure": "hand-dorsal-right", "x": 35, "y": 25 },
+        "ST45": { "figure": "foot-dorsal-right", "x": 60, "y": 15 }
+      },
+      "treatmentPrinciple": "Strongly clear heat, drain fire",
+      "clinicalSignificance": "Peak of heat, vessels maximally expanded, high fever pattern"
+    },
+    {
+      "pulseId": "P-XIAN-09",
+      "finding": "Wiry/String-like Pulse (Xian Mai)",
+      "chineseName": "弦脉 Xián Mài",
+      "category": "Pulse Quality - Tension",
+      "tcmPatterns": ["Liver/Gallbladder disorders", "Pain", "Constraint", "Phlegm"],
+      "primaryPoints": ["LV3", "LV14", "GB34", "PC6", "LI4"],
+      "bodyMapCoords": {
+        "LV3": { "figure": "foot-dorsal-right", "x": 45, "y": 30 },
+        "LV14": { "figure": "chest-anterior", "x": 35, "y": 55 },
+        "GB34": { "figure": "leg-lateral-right", "x": 65, "y": 45 },
+        "PC6": { "figure": "arm-anterior-right", "x": 50, "y": 65 },
+        "LI4": { "figure": "hand-dorsal-right", "x": 35, "y": 25 }
+      },
+      "treatmentPrinciple": "Soothe liver, move qi, relieve constraint, stop pain",
+      "clinicalSignificance": "Liver qi stagnation, liver yang rising, or pain constraining qi"
+    },
+    {
+      "pulseId": "P-JIN-10",
+      "finding": "Tight/Tense Pulse (Jin Mai)",
+      "chineseName": "紧脉 Jǐn Mài",
+      "category": "Pulse Quality - Tension",
+      "tcmPatterns": ["Cold", "Pain", "Food stagnation"],
+      "primaryPoints": ["ST36", "CV12", "LI4", "PC6", "SP4"],
+      "bodyMapCoords": {
+        "ST36": { "figure": "leg-anterior-right", "x": 55, "y": 45 },
+        "CV12": { "figure": "abdomen-anterior", "x": 50, "y": 45 },
+        "LI4": { "figure": "hand-dorsal-right", "x": 35, "y": 25 },
+        "PC6": { "figure": "arm-anterior-right", "x": 50, "y": 65 },
+        "SP4": { "figure": "foot-medial-right", "x": 35, "y": 45 }
+      },
+      "treatmentPrinciple": "Warm and dispel cold, stop pain, resolve stagnation",
+      "clinicalSignificance": "Cold constricting, or pain causing tension in vessels"
+    },
+    {
+      "pulseId": "P-RUO-11",
+      "finding": "Weak/Deficient Pulse (Ruo Mai)",
+      "chineseName": "弱脉 Ruò Mài",
+      "category": "Pulse Strength",
+      "tcmPatterns": ["Severe Qi and Blood deficiency", "Dampness"],
+      "primaryPoints": ["ST36", "SP6", "CV6", "BL20", "BL21"],
+      "bodyMapCoords": {
+        "ST36": { "figure": "leg-anterior-right", "x": 55, "y": 45 },
+        "SP6": { "figure": "leg-medial-right", "x": 40, "y": 75 },
+        "CV6": { "figure": "abdomen-anterior", "x": 50, "y": 68 },
+        "BL20": { "figure": "back-middle", "x": 35, "y": 55 },
+        "BL21": { "figure": "back-middle", "x": 35, "y": 60 }
+      },
+      "treatmentPrinciple": "Strongly tonify qi and blood, resolve dampness if present",
+      "clinicalSignificance": "Profound deficiency of qi and blood"
+    },
+    {
+      "pulseId": "P-RU-12",
+      "finding": "Soft/Soggy Pulse (Ru Mai)",
+      "chineseName": "濡脉 Rú Mài",
+      "category": "Pulse Strength",
+      "tcmPatterns": ["Dampness with Qi-Blood deficiency"],
+      "primaryPoints": ["SP9", "ST36", "CV9", "SP6", "BL22"],
+      "bodyMapCoords": {
+        "SP9": { "figure": "leg-medial-right", "x": 45, "y": 48 },
+        "ST36": { "figure": "leg-anterior-right", "x": 55, "y": 45 },
+        "CV9": { "figure": "abdomen-anterior", "x": 50, "y": 55 },
+        "SP6": { "figure": "leg-medial-right", "x": 40, "y": 75 },
+        "BL22": { "figure": "back-lower", "x": 35, "y": 48 }
+      },
+      "treatmentPrinciple": "Tonify qi, resolve dampness",
+      "clinicalSignificance": "Dampness burdening a deficient body"
+    },
+    {
+      "pulseId": "P-SAN-13",
+      "finding": "Scattered/Dissipated Pulse (San Mai)",
+      "chineseName": "散脉 Sàn Mài",
+      "category": "Pulse Strength",
+      "tcmPatterns": ["Yuan qi collapsing", "Kidney essence scattering", "Critical deficiency"],
+      "primaryPoints": ["CV4", "CV6", "GV4", "KI1", "ST36"],
+      "bodyMapCoords": {
+        "CV4": { "figure": "abdomen-anterior", "x": 50, "y": 72 },
+        "CV6": { "figure": "abdomen-anterior", "x": 50, "y": 68 },
+        "GV4": { "figure": "back-lower", "x": 50, "y": 55 },
+        "KI1": { "figure": "foot-plantar-right", "x": 50, "y": 35 },
+        "ST36": { "figure": "leg-anterior-right", "x": 55, "y": 45 }
+      },
+      "treatmentPrinciple": "Emergency rescue qi, attempt to gather and stabilize essence",
+      "clinicalSignificance": "Life-threatening depletion, loss of root, dying pulse"
+    },
+    {
+      "pulseId": "P-DAI-14",
+      "finding": "Intermittent Pulse (Dai Mai)",
+      "chineseName": "代脉 Dài Mài",
+      "category": "Pulse Rhythm",
+      "tcmPatterns": ["Organ qi exhaustion", "Wind-stroke", "Severe trauma"],
+      "primaryPoints": ["PC6", "HT7", "CV14", "BL15", "ST36"],
+      "bodyMapCoords": {
+        "PC6": { "figure": "arm-anterior-right", "x": 50, "y": 65 },
+        "HT7": { "figure": "wrist-anterior-right", "x": 45, "y": 85 },
+        "CV14": { "figure": "chest-anterior", "x": 50, "y": 65 },
+        "BL15": { "figure": "back-upper", "x": 35, "y": 38 },
+        "ST36": { "figure": "leg-anterior-right", "x": 55, "y": 45 }
+      },
+      "treatmentPrinciple": "Tonify organ qi, calm spirit, treat underlying severe condition",
+      "clinicalSignificance": "Serious organ damage or severe pathology, heart qi deficiency"
+    },
+    {
+      "pulseId": "P-JIE-15",
+      "finding": "Knotted Pulse (Jie Mai)",
+      "chineseName": "结脉 Jié Mài",
+      "category": "Pulse Rhythm",
+      "tcmPatterns": ["Yin-cold", "Qi-blood stagnation", "Phlegm obstruction", "Masses"],
+      "primaryPoints": ["PC6", "SP4", "LV3", "CV17", "BL17"],
+      "bodyMapCoords": {
+        "PC6": { "figure": "arm-anterior-right", "x": 50, "y": 65 },
+        "SP4": { "figure": "foot-medial-right", "x": 35, "y": 45 },
+        "LV3": { "figure": "foot-dorsal-right", "x": 45, "y": 30 },
+        "CV17": { "figure": "chest-anterior", "x": 50, "y": 45 },
+        "BL17": { "figure": "back-upper", "x": 35, "y": 45 }
+      },
+      "treatmentPrinciple": "Warm yang, invigorate blood, resolve phlegm, remove stasis",
+      "clinicalSignificance": "Cold or stagnation causing irregular flow"
+    },
+    {
+      "pulseId": "P-CU-16",
+      "finding": "Hurried Pulse (Cu Mai)",
+      "chineseName": "促脉 Cù Mài",
+      "category": "Pulse Rhythm",
+      "tcmPatterns": ["Yang excess", "Heat with stagnation"],
+      "primaryPoints": ["PC6", "HT7", "LI11", "LV2", "SP6"],
+      "bodyMapCoords": {
+        "PC6": { "figure": "arm-anterior-right", "x": 50, "y": 65 },
+        "HT7": { "figure": "wrist-anterior-right", "x": 45, "y": 85 },
+        "LI11": { "figure": "arm-anterior-right", "x": 72, "y": 38 },
+        "LV2": { "figure": "foot-dorsal-right", "x": 42, "y": 20 },
+        "SP6": { "figure": "leg-medial-right", "x": 40, "y": 75 }
+      },
+      "treatmentPrinciple": "Clear heat, move stagnation, calm heart",
+      "clinicalSignificance": "Heat and stagnation combined, yang excess disrupting rhythm"
+    },
+    {
+      "pulseId": "P-KONG-17",
+      "finding": "Hollow/Scallion Stalk Pulse (Kong Mai)",
+      "chineseName": "空脉 Kōng Mài",
+      "category": "Special Pulse Qualities",
+      "tcmPatterns": ["Severe blood loss", "Hemorrhage"],
+      "primaryPoints": ["SP1", "BL17", "CV4", "ST36", "SP6"],
+      "bodyMapCoords": {
+        "SP1": { "figure": "foot-medial-right", "x": 55, "y": 15 },
+        "BL17": { "figure": "back-upper", "x": 35, "y": 45 },
+        "CV4": { "figure": "abdomen-anterior", "x": 50, "y": 72 },
+        "ST36": { "figure": "leg-anterior-right", "x": 55, "y": 45 },
+        "SP6": { "figure": "leg-medial-right", "x": 40, "y": 75 }
+      },
+      "treatmentPrinciple": "Stop bleeding, strongly tonify blood",
+      "clinicalSignificance": "Blood depleted from vessels leaving hollow sensation"
+    },
+    {
+      "pulseId": "P-LAO-18",
+      "finding": "Confined/Imprisoned Pulse (Lao Mai)",
+      "chineseName": "牢脉 Láo Mài",
+      "category": "Special Pulse Qualities",
+      "tcmPatterns": ["Interior excess cold", "Hernia", "Internal accumulation"],
+      "primaryPoints": ["CV6", "ST36", "CV4", "LV3", "SP6"],
+      "bodyMapCoords": {
+        "CV6": { "figure": "abdomen-anterior", "x": 50, "y": 68 },
+        "ST36": { "figure": "leg-anterior-right", "x": 55, "y": 45 },
+        "CV4": { "figure": "abdomen-anterior", "x": 50, "y": 72 },
+        "LV3": { "figure": "foot-dorsal-right", "x": 45, "y": 30 },
+        "SP6": { "figure": "leg-medial-right", "x": 40, "y": 75 }
+      },
+      "treatmentPrinciple": "Warm interior, disperse accumulation",
+      "clinicalSignificance": "Strong pathogen trapped deeply with sufficient zheng qi to resist"
+    },
+    {
+      "pulseId": "P-SHI-19",
+      "finding": "Firm Pulse (Shi Mai)",
+      "chineseName": "实脉 Shí Mài",
+      "category": "Special Pulse Qualities",
+      "tcmPatterns": ["Excess pattern", "Strong zheng qi fighting strong pathogen"],
+      "primaryPoints": ["LI11", "ST44", "LI4", "ST25", "CV12"],
+      "bodyMapCoords": {
+        "LI11": { "figure": "arm-anterior-right", "x": 72, "y": 38 },
+        "ST44": { "figure": "foot-dorsal-right", "x": 55, "y": 25 },
+        "LI4": { "figure": "hand-dorsal-right", "x": 35, "y": 25 },
+        "ST25": { "figure": "abdomen-anterior", "x": 35, "y": 60 },
+        "CV12": { "figure": "abdomen-anterior", "x": 50, "y": 45 }
+      },
+      "treatmentPrinciple": "Purge or drain excess depending on nature",
+      "clinicalSignificance": "Full excess condition with robust resistance"
+    },
+    {
+      "pulseId": "P-WEI-20",
+      "finding": "Minute/Barely Perceptible Pulse (Wei Mai)",
+      "chineseName": "微脉 Wēi Mài",
+      "category": "Special Pulse Qualities",
+      "tcmPatterns": ["Collapse of yang qi", "Critical qi-blood depletion"],
+      "primaryPoints": ["CV4", "CV8", "GV4", "ST36", "KI1"],
+      "bodyMapCoords": {
+        "CV4": { "figure": "abdomen-anterior", "x": 50, "y": 72 },
+        "CV8": { "figure": "abdomen-anterior", "x": 50, "y": 60 },
+        "GV4": { "figure": "back-lower", "x": 50, "y": 55 },
+        "ST36": { "figure": "leg-anterior-right", "x": 55, "y": 45 },
+        "KI1": { "figure": "foot-plantar-right", "x": 50, "y": 35 }
+      },
+      "treatmentPrinciple": "Emergency rescue qi and yang",
+      "clinicalSignificance": "Life-threatening deficiency, near-death pulse"
+    },
+    {
+      "pulseId": "P-DONG-21",
+      "finding": "Spinning Bean/Moving Pulse (Dong Mai)",
+      "chineseName": "动脉 Dòng Mài",
+      "category": "Special Pulse Qualities",
+      "tcmPatterns": ["Fright", "Pain", "Pregnancy disorders"],
+      "primaryPoints": ["PC6", "HT7", "LV3", "KI3", "SP6"],
+      "bodyMapCoords": {
+        "PC6": { "figure": "arm-anterior-right", "x": 50, "y": 65 },
+        "HT7": { "figure": "wrist-anterior-right", "x": 45, "y": 85 },
+        "LV3": { "figure": "foot-dorsal-right", "x": 45, "y": 30 },
+        "KI3": { "figure": "foot-medial-right", "x": 48, "y": 88 },
+        "SP6": { "figure": "leg-medial-right", "x": 40, "y": 75 }
+      },
+      "treatmentPrinciple": "Calm spirit, stop pain, stabilize kidney qi",
+      "clinicalSignificance": "Disturbance of spirit or severe pain, kidney qi instability"
+    },
+    {
+      "pulseId": "P-GE-22",
+      "finding": "Leather/Drum-skin Pulse (Ge Mai)",
+      "chineseName": "革脉 Gé Mài",
+      "category": "Pulse Quality - Tension",
+      "tcmPatterns": ["Blood loss", "Essence depletion", "Pregnancy disorders"],
+      "primaryPoints": ["BL17", "SP6", "CV4", "KI3", "ST36"],
+      "bodyMapCoords": {
+        "BL17": { "figure": "back-upper", "x": 35, "y": 45 },
+        "SP6": { "figure": "leg-medial-right", "x": 40, "y": 75 },
+        "CV4": { "figure": "abdomen-anterior", "x": 50, "y": 72 },
+        "KI3": { "figure": "foot-medial-right", "x": 48, "y": 88 },
+        "ST36": { "figure": "leg-anterior-right", "x": 55, "y": 45 }
+      },
+      "treatmentPrinciple": "Stop bleeding, tonify blood and essence urgently",
+      "clinicalSignificance": "Severe blood or essence loss with exterior appearance of excess"
+    },
+    {
+      "pulseId": "P-CHANG-23",
+      "finding": "Long Pulse (Chang Mai)",
+      "chineseName": "长脉 Cháng Mài",
+      "category": "Pulse Length",
+      "tcmPatterns": ["Excess heat", "Strong constitution", "Liver fire"],
+      "primaryPoints": ["LV2", "LV3", "GB34", "LI11", "GV20"],
+      "bodyMapCoords": {
+        "LV2": { "figure": "foot-dorsal-right", "x": 42, "y": 20 },
+        "LV3": { "figure": "foot-dorsal-right", "x": 45, "y": 30 },
+        "GB34": { "figure": "leg-lateral-right", "x": 65, "y": 45 },
+        "LI11": { "figure": "arm-anterior-right", "x": 72, "y": 38 },
+        "GV20": { "figure": "head-superior", "x": 50, "y": 50 }
+      },
+      "treatmentPrinciple": "Clear excess heat, subdue liver yang if pathological",
+      "clinicalSignificance": "Excess yang or heat extending vessels, or healthy if no symptoms"
+    },
+    {
+      "pulseId": "P-DUAN-24",
+      "finding": "Short Pulse (Duan Mai)",
+      "chineseName": "短脉 Duǎn Mài",
+      "category": "Pulse Length",
+      "tcmPatterns": ["Qi stagnation", "Severe qi deficiency", "Phlegm obstruction"],
+      "primaryPoints": ["CV17", "PC6", "ST36", "LV3", "ST40"],
+      "bodyMapCoords": {
+        "CV17": { "figure": "chest-anterior", "x": 50, "y": 45 },
+        "PC6": { "figure": "arm-anterior-right", "x": 50, "y": 65 },
+        "ST36": { "figure": "leg-anterior-right", "x": 55, "y": 45 },
+        "LV3": { "figure": "foot-dorsal-right", "x": 45, "y": 30 },
+        "ST40": { "figure": "leg-lateral-right", "x": 60, "y": 55 }
+      },
+      "treatmentPrinciple": "Move qi if stagnation, tonify qi if deficiency",
+      "clinicalSignificance": "Qi unable to extend pulse, obstruction or severe deficiency"
+    },
+    {
+      "pulseId": "P-DA-25",
+      "finding": "Big/Large Pulse (Da Mai)",
+      "chineseName": "大脉 Dà Mài",
+      "category": "Pulse Width",
+      "tcmPatterns": ["Excess heat", "Overabundant qi and blood"],
+      "primaryPoints": ["LI11", "GV14", "ST44", "LI4", "SP6"],
+      "bodyMapCoords": {
+        "LI11": { "figure": "arm-anterior-right", "x": 72, "y": 38 },
+        "GV14": { "figure": "back-upper", "x": 50, "y": 15 },
+        "ST44": { "figure": "foot-dorsal-right", "x": 55, "y": 25 },
+        "LI4": { "figure": "hand-dorsal-right", "x": 35, "y": 25 },
+        "SP6": { "figure": "leg-medial-right", "x": 40, "y": 75 }
+      },
+      "treatmentPrinciple": "Clear excess heat OR strongly tonify if deficiency",
+      "clinicalSignificance": "Vessels expanding with heat or overabundance"
+    },
+    {
+      "pulseId": "P-YOULI-26",
+      "finding": "Forceful/Strong Pulse (You Li)",
+      "chineseName": "有力 Yǒu Lì",
+      "category": "Pulse Strength",
+      "tcmPatterns": ["Excess pattern", "Sufficient zheng qi fighting pathogen"],
+      "primaryPoints": ["LI11", "LI4", "ST44", "GV14", "LV2"],
+      "bodyMapCoords": {
+        "LI11": { "figure": "arm-anterior-right", "x": 72, "y": 38 },
+        "LI4": { "figure": "hand-dorsal-right", "x": 35, "y": 25 },
+        "ST44": { "figure": "foot-dorsal-right", "x": 55, "y": 25 },
+        "GV14": { "figure": "back-upper", "x": 50, "y": 15 },
+        "LV2": { "figure": "foot-dorsal-right", "x": 42, "y": 20 }
+      },
+      "treatmentPrinciple": "Disperse excess, drain or purge depending on pattern",
+      "clinicalSignificance": "Body has strength to resist, excess condition"
+    },
+    {
+      "pulseId": "P-WULI-27",
+      "finding": "Forceless/Weak Pulse (Wu Li)",
+      "chineseName": "无力 Wú Lì",
+      "category": "Pulse Strength",
+      "tcmPatterns": ["Deficiency pattern", "Weak zheng qi"],
+      "primaryPoints": ["ST36", "CV6", "SP6", "BL20", "CV4"],
+      "bodyMapCoords": {
+        "ST36": { "figure": "leg-anterior-right", "x": 55, "y": 45 },
+        "CV6": { "figure": "abdomen-anterior", "x": 50, "y": 68 },
+        "SP6": { "figure": "leg-medial-right", "x": 40, "y": 75 },
+        "BL20": { "figure": "back-middle", "x": 35, "y": 55 },
+        "CV4": { "figure": "abdomen-anterior", "x": 50, "y": 72 }
+      },
+      "treatmentPrinciple": "Tonify qi and blood, strengthen zheng qi",
+      "clinicalSignificance": "Insufficient qi and blood, weak body resistance"
+    },
+    {
+      "pulseId": "P-HUAN-28",
+      "finding": "Normal Rate (Huan Mai - Moderate Pulse)",
+      "chineseName": "缓脉 Huǎn Mài",
+      "category": "Pulse Rate",
+      "tcmPatterns": ["Normal, healthy state", "Harmonious qi and blood"],
+      "primaryPoints": ["ST36", "SP6", "CV12", "PC6", "LI4"],
+      "bodyMapCoords": {
+        "ST36": { "figure": "leg-anterior-right", "x": 55, "y": 45 },
+        "SP6": { "figure": "leg-medial-right", "x": 40, "y": 75 },
+        "CV12": { "figure": "abdomen-anterior", "x": 50, "y": 45 },
+        "PC6": { "figure": "arm-anterior-right", "x": 50, "y": 65 },
+        "LI4": { "figure": "hand-dorsal-right", "x": 35, "y": 25 }
+      },
+      "treatmentPrinciple": "Maintain balance, preventive care",
+      "clinicalSignificance": "Balanced physiology, no pathology"
+    },
+    {
+      "pulseId": "P-JI-29",
+      "finding": "Racing/Hasty Pulse (Ji Mai)",
+      "chineseName": "疾脉 Jí Mài",
+      "category": "Pulse Rate",
+      "tcmPatterns": ["Extreme heat", "Yang excess", "Critical condition"],
+      "primaryPoints": ["LI11", "GV14", "LI4", "PC3", "KI1"],
+      "bodyMapCoords": {
+        "LI11": { "figure": "arm-anterior-right", "x": 72, "y": 38 },
+        "GV14": { "figure": "back-upper", "x": 50, "y": 15 },
+        "LI4": { "figure": "hand-dorsal-right", "x": 35, "y": 25 },
+        "PC3": { "figure": "arm-anterior-right", "x": 50, "y": 45 },
+        "KI1": { "figure": "foot-plantar-right", "x": 50, "y": 35 }
+      },
+      "treatmentPrinciple": "Strongly clear heat, emergency cooling",
+      "clinicalSignificance": "Severe heat or yang excess, emergency situation"
+    },
+    {
+      "pulseId": "P-FU2-30",
+      "finding": "Hidden/Secluded Pulse (Fu Mai/Bi Mai)",
+      "chineseName": "伏脉 Fú Mài / 闭脉 Bì Mài",
+      "category": "Pulse Depth",
+      "tcmPatterns": ["Extreme cold", "Severe pain", "Yang collapse"],
+      "primaryPoints": ["CV4", "CV8", "GV4", "ST36", "KI1"],
+      "bodyMapCoords": {
+        "CV4": { "figure": "abdomen-anterior", "x": 50, "y": 72 },
+        "CV8": { "figure": "abdomen-anterior", "x": 50, "y": 60 },
+        "GV4": { "figure": "back-lower", "x": 50, "y": 55 },
+        "ST36": { "figure": "leg-anterior-right", "x": 55, "y": 45 },
+        "KI1": { "figure": "foot-plantar-right", "x": 50, "y": 35 }
+      },
+      "treatmentPrinciple": "Rescue yang, strongly warm interior, or address severe pain",
+      "clinicalSignificance": "Critical condition, severe interior pathology, or extreme pain"
+    }
+  ],
+  "figureIndex": {
+    "arm-anterior-right": "Upper limb anterior view",
+    "arm-posterior-right": "Upper limb posterior view",
+    "back-upper": "Upper back (thoracic)",
+    "back-middle": "Middle back",
+    "back-lower": "Lower back (lumbar)",
+    "chest-anterior": "Chest anterior view",
+    "abdomen-anterior": "Abdomen anterior view",
+    "leg-anterior-right": "Lower limb anterior view",
+    "leg-posterior-right": "Lower limb posterior view",
+    "leg-lateral-right": "Lower limb lateral view",
+    "leg-medial-right": "Lower limb medial view",
+    "foot-dorsal-right": "Foot dorsal view",
+    "foot-plantar-right": "Foot plantar view",
+    "foot-medial-right": "Foot medial view",
+    "hand-dorsal-right": "Hand dorsal view",
+    "wrist-anterior-right": "Wrist anterior view",
+    "head-posterior": "Head posterior view",
+    "head-superior": "Head superior view"
+  },
+  "categoryIndex": [
+    "Pulse Rate",
+    "Pulse Depth",
+    "Pulse Width",
+    "Pulse Strength",
+    "Pulse Quality - Tension",
+    "Pulse Quality - Flow",
+    "Pulse Length",
+    "Pulse Rhythm",
+    "Special Pulse Qualities"
+  ]
+}
