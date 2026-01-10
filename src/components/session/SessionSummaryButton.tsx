@@ -28,6 +28,7 @@ export function SessionSummaryButton({
       transition={{ type: 'spring', stiffness: 200, damping: 20 }}
     >
       <Button
+        id="SessionSummaryButton"
         onClick={onClick}
         disabled={disabled}
         className="gap-2 bg-gradient-to-r from-jade to-jade/80 hover:from-jade/90 hover:to-jade/70 text-white shadow-lg relative overflow-hidden group"

@@ -8,36 +8,37 @@ interface GuideStep {
   position?: 'top' | 'bottom' | 'left' | 'right';
 }
 
+// Phase 7: Golden Path - Jade Spotlight Guide Steps
 const VIDEO_SESSION_GUIDE_STEPS: GuideStep[] = [
   {
-    id: 'phase-indicator',
-    elementId: 'SessionPhaseIndicator',
-    message: 'כאן מנווטים את שלבי המפגש.',
+    id: 'pulse-gallery',
+    elementId: 'PulseGalleryIcon',
+    message: '✨ התחל כאן: בחר דופק כדי להפעיל את ה-AI ומפת הדיקור.',
     position: 'bottom',
   },
   {
-    id: 'video-container',
-    elementId: 'VideoContainer',
-    message: 'מרכז המפגש. כאן משולב ה-Zoom וה-AI המקשיב.',
-    position: 'bottom',
-  },
-  {
-    id: 'specialty-icons',
-    elementId: 'SpecialtyIconsGrid',
-    message: 'תיבות ה-Smart-Suggest שמהבהבות בזהב בזמן השיחה.',
+    id: 'body-map',
+    elementId: 'BodyMapContainer',
+    message: '🗺️ מפת הגוף - כאן הנקודות "מנצנצות" בזמן אמת כש-AI מזהה אותן.',
     position: 'left',
   },
   {
-    id: 'rag-summary',
+    id: 'ai-center',
     elementId: 'RAGLiveSummaryZone',
-    message: 'סיכום ה-AI שנכתב כאן בזמן אמת.',
+    message: '🤖 כאן ה-AI יציע לך נקודות בזמן אמת. פשוט עקוב אחרי הנצנוץ על מפת הגוף.',
     position: 'top',
   },
   {
-    id: 'voice-notes',
-    elementId: 'InlineVoiceTextarea',
-    message: 'תיעוד הערות ידניות עם חותמת זמן בנקישה כפולה.',
-    position: 'right',
+    id: 'draft-protocol',
+    elementId: 'DraftProtocolWidget',
+    message: '📋 פרוטוקול הטיפול נבנה כאן אוטומטית - עומק, זווית והכל.',
+    position: 'left',
+  },
+  {
+    id: 'session-summary',
+    elementId: 'SessionSummaryButton',
+    message: '🎯 סיימת? לחיצה אחת תפיק דוח מלא לווטסאפ של המטופל, כולל כל הנקודות והאבחנות.',
+    position: 'top',
   },
 ];
 
@@ -77,22 +78,39 @@ export function useVideoSessionGuide(options: UseVideoSessionGuideOptions = {}) 
           }
         }
         
+        /* Phase 7: Jade Spotlight - Golden Path */
         .${GOLD_PULSE_CLASS} {
-          animation: goldPulseGuide 1.5s ease-in-out infinite !important;
+          animation: jadeSpotlight 1.8s ease-in-out infinite !important;
           position: relative;
           z-index: 9998 !important;
-          outline: 3px solid rgba(218, 165, 32, 0.8) !important;
-          outline-offset: 4px !important;
-          border-radius: 12px !important;
+          outline: 4px solid hsl(158, 64%, 52%) !important;
+          outline-offset: 6px !important;
+          border-radius: 16px !important;
+          box-shadow: 0 0 30px 10px hsla(158, 64%, 52%, 0.4),
+                      inset 0 0 20px hsla(158, 64%, 52%, 0.1) !important;
+        }
+        
+        @keyframes jadeSpotlight {
+          0%, 100% { 
+            box-shadow: 0 0 20px 5px hsla(158, 64%, 52%, 0.3),
+                        0 0 40px 15px hsla(158, 64%, 52%, 0.15);
+            outline-color: hsl(158, 64%, 52%);
+          }
+          50% { 
+            box-shadow: 0 0 40px 15px hsla(158, 64%, 52%, 0.5),
+                        0 0 60px 25px hsla(158, 64%, 52%, 0.25);
+            outline-color: hsl(158, 64%, 62%);
+          }
         }
         
         .video-session-guide-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(0, 0, 0, 0.5);
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(4px);
           z-index: 9997;
           pointer-events: none;
-          transition: opacity 0.3s ease;
+          transition: opacity 0.4s ease;
         }
         
         .video-session-guide-tooltip {
