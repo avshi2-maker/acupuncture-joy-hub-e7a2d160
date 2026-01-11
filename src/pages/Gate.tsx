@@ -226,7 +226,7 @@ export default function Gate() {
   const { isAvailable: isBiometricAvailable, isEnabled: isBiometricEnabled, authenticate, enableBiometric, isAuthenticating } = useBiometricAuth();
   
   // Check if user has previously logged in (has stored tier info)
-  const hasStoredSession = localStorage.getItem('tier') !== null;
+  const hasStoredSession = localStorage.getItem('therapist_tier') !== null;
   
   // Handle return from intake form - check URL params
   useEffect(() => {
@@ -453,9 +453,9 @@ export default function Gate() {
   const handleBiometricLogin = async () => {
     const result = await authenticate();
     if (result.success) {
-      // Restore stored tier from localStorage
-      const storedTier = localStorage.getItem('tier') as 'trial' | 'standard' | 'premium' | null;
-      const storedExpiry = localStorage.getItem('tierExpiresAt');
+      // Restore stored tier from localStorage (use correct key names)
+      const storedTier = localStorage.getItem('therapist_tier') as 'trial' | 'standard' | 'premium' | null;
+      const storedExpiry = localStorage.getItem('therapist_expires_at');
       
       if (storedTier) {
         setTier(storedTier);
