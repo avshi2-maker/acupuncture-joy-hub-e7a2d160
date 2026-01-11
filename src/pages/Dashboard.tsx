@@ -65,7 +65,6 @@ import { UsageWidget, UsageCard } from '@/components/usage/UnifiedUsageMeter';
 import { DashboardTokenCalculator } from '@/components/usage/DashboardTokenCalculator';
 import { ClinicWalletCard } from '@/components/wallet/ClinicWalletCard';
 import roiWidgetBg from '@/assets/roi-widget-bg.png';
-import { PulseGalleryCard } from '@/components/dashboard/PulseGalleryCard';
 import { ClinicalNexusCard } from '@/components/dashboard/ClinicalNexusCard';
 import { BaZiDashboardCard } from '@/components/dashboard/BaZiDashboardCard';
 import { DashboardThreeColumnLayout, GlassCard } from '@/components/dashboard/DashboardThreeColumnLayout';
@@ -1158,10 +1157,6 @@ export default function Dashboard() {
               {/* Clinical NEXUS Card - AI Pulse Analysis */}
               <GlassCard className="p-0 overflow-hidden">
                 <ClinicalNexusCard />
-              </GlassCard>
-              
-              <GlassCard className="p-0 overflow-hidden">
-                <PulseGalleryCard />
               </GlassCard>
 
               {/* Economy Monitor - z-[9999] */}
