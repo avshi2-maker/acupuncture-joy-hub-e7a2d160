@@ -97,6 +97,7 @@ import HebrewQuestionsReport from "./pages/HebrewQuestionsReport";
 import PatientTimeline from "./pages/PatientTimeline";
 import AssetInventory from "./pages/AssetInventory";
 import PrivateDeveloper from "./pages/PrivateDeveloper";
+import StandardSession from "./pages/StandardSession";
 const queryClient = new QueryClient();
 
 function HashPathRedirect() {
@@ -222,6 +223,7 @@ const App = () => (
                       <Route path="/asset-inventory" element={<RequireTier><AssetInventory /></RequireTier>} />
                       <Route path="/music-test" element={<MusicPlayerTest />} />
                       <Route path="/private-developer" element={<PrivateDeveloper />} />
+                      <Route path="/standard-session" element={<StandardSession />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                     
