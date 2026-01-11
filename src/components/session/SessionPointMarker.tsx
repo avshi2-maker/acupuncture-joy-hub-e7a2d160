@@ -1,20 +1,20 @@
 import { cn } from '@/lib/utils';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface SessionPointMarkerProps {
   code: string;
   label: string;
   hebrewLabel: string;
   function?: string;
-  x: number; // SVG coordinate
-  y: number; // SVG coordinate
+  x: number;
+  y: number;
   isActive: boolean;
   onClick: () => void;
 }
 
 /**
- * Phase #001: Interactive point marker with glow animation
- * Shows Hebrew card on tap with name and function
+ * Phase #001: Interactive point marker with Popover for clinical info
+ * Shows Hebrew card on click with name and function
  */
 export function SessionPointMarker({
   code,
@@ -27,37 +27,49 @@ export function SessionPointMarker({
   onClick,
 }: SessionPointMarkerProps) {
   return (
-    <Tooltip delayDuration={0}>
-      <TooltipTrigger asChild>
+    <Popover>
+      <PopoverTrigger asChild>
         <g
-          className="cursor-pointer transition-transform hover:scale-110"
+          className="cursor-pointer"
           onClick={onClick}
-          style={{ transformOrigin: `${x}px ${y}px` }}
+          role="button"
+          tabIndex={0}
+          aria-label={`${code} - ${hebrewLabel}`}
         >
           {/* Outer glow ring when active */}
           {isActive && (
-            <circle
-              cx={x}
-              cy={y}
-              r="12"
-              className="fill-primary/20 animate-ping"
-              style={{ animationDuration: '1.5s' }}
-            />
+            <>
+              <circle
+                cx={x}
+                cy={y}
+                r="14"
+                className="fill-primary/20"
+                style={{
+                  animation: 'ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite',
+                }}
+              />
+              <circle
+                cx={x}
+                cy={y}
+                r="10"
+                className="fill-primary/30"
+              />
+            </>
           )}
           
           {/* Main point circle */}
           <circle
             cx={x}
             cy={y}
-            r="8"
+            r="7"
             className={cn(
-              'transition-all duration-300 stroke-2',
+              'transition-all duration-300',
               isActive
-                ? 'fill-primary stroke-primary animate-pulse shadow-lg'
-                : 'fill-muted-foreground/30 stroke-muted-foreground/60 hover:fill-primary/50 hover:stroke-primary'
+                ? 'fill-primary stroke-primary-foreground stroke-1'
+                : 'fill-muted-foreground/40 stroke-muted-foreground/60 stroke-1 hover:fill-primary/60 hover:stroke-primary'
             )}
             style={{
-              filter: isActive ? 'drop-shadow(0 0 8px hsl(var(--primary)))' : 'none',
+              filter: isActive ? 'drop-shadow(0 0 6px hsl(var(--primary)))' : 'none',
             }}
           />
           
@@ -68,36 +80,47 @@ export function SessionPointMarker({
             textAnchor="middle"
             dominantBaseline="middle"
             className={cn(
-              'text-[6px] font-bold pointer-events-none select-none',
-              isActive ? 'fill-primary-foreground' : 'fill-foreground'
+              'text-[5px] font-bold pointer-events-none select-none tracking-tight',
+              isActive ? 'fill-primary-foreground' : 'fill-background'
             )}
           >
             {code}
           </text>
         </g>
-      </TooltipTrigger>
-      <TooltipContent 
+      </PopoverTrigger>
+      
+      <PopoverContent 
         side="left" 
-        className="bg-card border border-border shadow-lg p-3 min-w-[180px]"
+        sideOffset={12}
+        className="w-56 bg-card/95 backdrop-blur-sm border-border/50 shadow-xl"
         dir="rtl"
       >
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between gap-2">
-            <span className="font-bold text-primary text-lg">{code}</span>
-            {isActive && (
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            )}
+        <div className="space-y-3">
+          {/* Header with code and status */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-bold text-primary">{code}</span>
+              {isActive && (
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              )}
+            </div>
           </div>
-          <div className="font-semibold text-foreground text-base">{hebrewLabel}</div>
-          <div className="text-muted-foreground text-xs">{label}</div>
+          
+          {/* Hebrew Name */}
+          <div>
+            <div className="text-base font-semibold text-foreground">{hebrewLabel}</div>
+            <div className="text-xs text-muted-foreground mt-0.5">{label}</div>
+          </div>
+          
+          {/* Clinical Function */}
           {pointFunction && (
-            <div className="pt-1.5 border-t border-border mt-1.5">
-              <div className="text-xs text-muted-foreground">פעולה:</div>
-              <div className="text-sm text-foreground">{pointFunction}</div>
+            <div className="pt-2 border-t border-border/50">
+              <div className="text-xs font-medium text-muted-foreground mb-1">פעולה קלינית:</div>
+              <div className="text-sm text-foreground leading-relaxed">{pointFunction}</div>
             </div>
           )}
         </div>
-      </TooltipContent>
-    </Tooltip>
+      </PopoverContent>
+    </Popover>
   );
 }
