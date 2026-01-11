@@ -95,48 +95,42 @@ export function PointInfoCard({
 
   return (
     <div
-      className="absolute inset-0 z-30"
-      onPointerDown={onClose}
+      ref={cardRef}
+      dir="rtl"
+      className={cn(
+        'absolute z-30 w-[min(75%,260px)] rounded-lg border border-border bg-card shadow-xl p-3',
+        'animate-in fade-in zoom-in-95 duration-200'
+      )}
+      style={style}
       aria-hidden={!open}
     >
-      <div
-        ref={cardRef}
-        dir="rtl"
-        onPointerDown={(e) => e.stopPropagation()}
-        className={cn(
-          'absolute w-[min(75%,260px)] rounded-lg border border-border bg-card shadow-xl p-3',
-          'animate-in fade-in zoom-in-95 duration-200'
-        )}
-        style={style}
-      >
-        <div className="space-y-2.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-primary">{point.code}</span>
-              {isActive && <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />}
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-1 rounded-full hover:bg-muted transition-colors"
-              aria-label="סגירה"
-            >
-              <X className="h-4 w-4 text-muted-foreground" />
-            </button>
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-bold text-primary">{point.code}</span>
+            {isActive && <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />}
           </div>
-
-          <div>
-            <div className="text-base font-semibold text-foreground">{point.hebrewLabel}</div>
-            <div className="text-xs text-muted-foreground mt-0.5">{point.label}</div>
-          </div>
-
-          {point.function && (
-            <div className="pt-2 border-t border-border/50">
-              <div className="text-xs font-medium text-muted-foreground mb-1">פעולה קלינית:</div>
-              <div className="text-sm text-foreground leading-relaxed">{point.function}</div>
-            </div>
-          )}
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1 rounded-full hover:bg-muted transition-colors"
+            aria-label="סגירה"
+          >
+            <X className="h-4 w-4 text-muted-foreground" />
+          </button>
         </div>
+
+        <div>
+          <div className="text-base font-semibold text-foreground">{point.hebrewLabel}</div>
+          <div className="text-xs text-muted-foreground mt-0.5">{point.label}</div>
+        </div>
+
+        {point.function && (
+          <div className="pt-2 border-t border-border/50">
+            <div className="text-xs font-medium text-muted-foreground mb-1">פעולה קלינית:</div>
+            <div className="text-sm text-foreground leading-relaxed">{point.function}</div>
+          </div>
+        )}
       </div>
     </div>
   );

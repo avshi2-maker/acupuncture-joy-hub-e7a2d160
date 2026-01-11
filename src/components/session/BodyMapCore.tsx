@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { SessionPointMarker } from './SessionPointMarker';
 import { PointInfoCard } from './PointInfoCard';
 
-import bodyFigureFront from '@/assets/body-figures/adult_front_clinical.png';
+import bodyFigureFront from '@/assets/body-figures/body_front_zen.png';
 
 /**
  * Phase #001: Primary acupuncture points with SVG coordinates (200x400 viewBox)
@@ -30,8 +30,8 @@ const PRIMARY_POINTS: Point[] = [
     label: 'Fenglong (Abundant Bulge)',
     hebrewLabel: 'פנג לונג',
     function: 'התמרת ליחה, ניקוז לחות.',
-    x: 82,
-    y: 310,
+    x: 86,
+    y: 312,
     protocols: ['slippery'],
   },
   {
@@ -39,8 +39,8 @@ const PRIMARY_POINTS: Point[] = [
     label: 'Yinlingquan (Yin Mound Spring)',
     hebrewLabel: 'ין לינג צ׳ואן',
     function: 'ניקוז לחות מהמחמם התחתון.',
-    x: 115,
-    y: 272,
+    x: 114,
+    y: 270,
     protocols: ['slippery'],
   },
   {
@@ -48,8 +48,9 @@ const PRIMARY_POINTS: Point[] = [
     label: 'Taichong (Supreme Rush)',
     hebrewLabel: 'טאי צ׳ונג',
     function: 'הנעת צ׳י הכבד, הרגעת נפש, ויסות מחזור.',
-    x: 115,
-    y: 385,
+    // adjusted to stay on-foot within the current full-body asset
+    x: 108,
+    y: 370,
     protocols: [],
   },
   {
@@ -57,8 +58,9 @@ const PRIMARY_POINTS: Point[] = [
     label: 'Hegu (Union Valley)',
     hebrewLabel: 'הא גו',
     function: 'שחרור רוח, כאבי ראש, ויסות מעי גס.',
-    x: 28,
-    y: 260,
+    // adjusted to sit on the hand within the current full-body asset
+    x: 58,
+    y: 258,
     protocols: [],
   },
 ];
