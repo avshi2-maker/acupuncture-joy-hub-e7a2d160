@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { BodyMapCore } from '@/components/session/BodyMapCore';
+import { PointSearchPanel } from '@/components/acupuncture/PointSearchPanel';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -73,6 +74,9 @@ export default function StandardSession() {
                 לחצו על הנקודות במפה או על הכפתורים למטה להפעלה
               </p>
             </div>
+
+            {/* Search (z-index fixed) */}
+            <PointSearchPanel className="max-w-md mx-auto" />
 
             {/* Body Map */}
             <BodyMapCore 

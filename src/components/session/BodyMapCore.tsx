@@ -2,36 +2,26 @@ import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Droplets, User, Ear, Languages } from 'lucide-react';
+import { MapPin, User, Ear, Languages } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { SessionPointMarker } from './SessionPointMarker';
 import { PointInfoPopover } from './PointInfoPopover';
-import { 
-  CLINICAL_POINTS, 
-  ClinicalPoint, 
-  ViewType, 
-  getPointsForView, 
-  getDefaultAssetForView 
+import {
+  CLINICAL_POINTS,
+  ClinicalPoint,
+  ViewType,
+  getDefaultAssetForView,
 } from '@/data/clinicalMapData';
 
-// Import body figure assets
-import chestImg from '@/assets/body-figures/chest.png';
-import tongueImg from '@/assets/body-figures/tongue.png';
-import earImg from '@/assets/body-figures/ear.png';
-import abdomenFemaleImg from '@/assets/body-figures/abdomen_female.png';
-import handDorsumImg from '@/assets/body-figures/hand_dorsum.png';
-import lowerLegImg from '@/assets/body-figures/lower_leg.png';
-import footTopImg from '@/assets/body-figures/foot_top.png';
-
-// Asset mapping
+// IMPORTANT: Use manual, explicit source paths (no SVG generator fallback)
+// Requested: src/assets/body-figures/chest.png
 const ASSET_MAP: Record<string, string> = {
-  'chest.png': chestImg,
-  'tongue.png': tongueImg,
-  'ear.png': earImg,
-  'abdomen_female.png': abdomenFemaleImg,
-  'hand_dorsum.png': handDorsumImg,
-  'lower_leg.png': lowerLegImg,
-  'foot_top.png': footTopImg,
+  'chest.png': '/src/assets/body-figures/chest.png',
+  'tongue.png': '/src/assets/body-figures/tongue.png',
+  'ear.png': '/src/assets/body-figures/ear.png',
+  'abdomen_female.png': '/src/assets/body-figures/abdomen_female.png',
+  'hand_dorsum.png': '/src/assets/body-figures/hand_dorsum.png',
+  'lower_leg.png': '/src/assets/body-figures/lower_leg.png',
+  'foot_top.png': '/src/assets/body-figures/foot_top.png',
 };
 
 type PopoverState = {
@@ -55,13 +45,14 @@ export function BodyMapCore({ className, onPointSelect }: BodyMapCoreProps) {
   const [activePoints, setActivePoints] = useState<Set<string>>(new Set());
   const [currentView, setCurrentView] = useState<ViewType>('body');
   const [currentAsset, setCurrentAsset] = useState<string>('chest.png');
+  const [imageError, setImageError] = useState<string | null>(null);
   const [popover, setPopover] = useState<PopoverState>(null);
 
   const [containerSize, setContainerSize] = useState<{ w: number; h: number } | null>(null);
   const [imgNatural, setImgNatural] = useState<{ w: number; h: number } | null>(null);
 
-  // Get current image source
-  const currentImageSrc = ASSET_MAP[currentAsset] || chestImg;
+  // Get current image source (no fallback: missing image must show error)
+  const currentImageSrc = ASSET_MAP[currentAsset];
 
   // Get points for current asset
   const currentPoints = useMemo(() => {
@@ -121,6 +112,7 @@ export function BodyMapCore({ className, onPointSelect }: BodyMapCoreProps) {
   const handleViewChange = useCallback((view: ViewType) => {
     setCurrentView(view);
     setCurrentAsset(getDefaultAssetForView(view));
+    setImageError(null);
     setPopover(null);
     setImgNatural(null); // Reset for new image
   }, []);
@@ -188,57 +180,62 @@ export function BodyMapCore({ className, onPointSelect }: BodyMapCoreProps) {
                 : { inset: 0 }
             }
           >
-            {/* Body figure asset */}
-            <img
-              src={currentImageSrc}
-              alt="איור גוף רפואי"
-              className="absolute inset-0 w-full h-full object-contain select-none"
-              draggable={false}
-              loading="eager"
-              onLoad={(e) =>
-                setImgNatural({
-                  w: e.currentTarget.naturalWidth || 0,
-                  h: e.currentTarget.naturalHeight || 0,
-                })
-              }
-            />
-
-            {/* SVG overlay for point visuals */}
-            <svg
-              viewBox="0 0 100 100"
-              className="absolute inset-0 w-full h-full pointer-events-none"
-              xmlns="http://www.w3.org/2000/svg"
-              preserveAspectRatio="none"
-            >
-              {currentPoints.map((p) => (
-                <SessionPointMarker 
-                  key={p.pointCode} 
-                  code={p.pointCode} 
-                  x={p.xPercentage} 
-                  y={p.yPercentage} 
-                  isActive={activePoints.has(p.pointCode)} 
+            {/* Body figure asset (absolute background layer) */}
+            {!currentImageSrc || imageError ? (
+              <div className="absolute inset-0 z-0 flex items-center justify-center rounded-md border border-destructive/30 bg-background">
+                <div className="max-w-[240px] text-center">
+                  <p className="text-sm font-semibold text-destructive">Missing body figure asset</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Expected file: <span className="font-mono">{currentAsset}</span>
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <img
+                  src={currentAsset === 'chest.png' ? '/src/assets/body-figures/chest.png' : currentImageSrc}
+                  alt="איור גוף רפואי"
+                  className="absolute inset-0 z-0 w-full h-full object-contain select-none"
+                  draggable={false}
+                  loading="eager"
+                  onLoad={(e) =>
+                    setImgNatural({
+                      w: e.currentTarget.naturalWidth || 0,
+                      h: e.currentTarget.naturalHeight || 0,
+                    })
+                  }
+                  onError={() => setImageError(`Missing image: ${currentAsset}`)}
                 />
-              ))}
-            </svg>
 
-            {/* HTML tap targets */}
-            {currentPoints.map((p) => (
-              <button
-                key={`hit-${p.pointCode}`}
-                type="button"
-                className={cn(
-                  'absolute w-10 h-10 -translate-x-1/2 -translate-y-1/2 rounded-full z-10',
-                  'bg-transparent hover:bg-primary/10 transition-colors',
-                  activePoints.has(p.pointCode) && 'ring-2 ring-primary ring-offset-2'
-                )}
-                style={{ 
-                  left: `${p.xPercentage}%`, 
-                  top: `${p.yPercentage}%` 
-                }}
-                onClick={(e) => handlePointTap(p, e.currentTarget.getBoundingClientRect())}
-                aria-label={`${p.pointCode} - ${p.hebrewName}`}
-              />
-            ))}
+                {/* Acupuncture point overlays (HTML only, no SVG/canvas) */}
+                {currentPoints.map((p) => {
+                  const isActive = activePoints.has(p.pointCode);
+
+                  return (
+                    <button
+                      key={p.pointCode}
+                      type="button"
+                      className={cn(
+                        'absolute z-10 -translate-x-1/2 -translate-y-1/2',
+                        'h-9 w-9 rounded-full flex items-center justify-center',
+                        'text-[10px] font-bold select-none',
+                        'border border-border bg-background/70 backdrop-blur-sm',
+                        'transition-all duration-200',
+                        'hover:bg-accent/40',
+                        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                        isActive &&
+                          'bg-primary text-primary-foreground border-primary shadow-[0_0_0_8px_hsl(var(--primary)/0.15)]'
+                      )}
+                      style={{ left: `${p.xPercentage}%`, top: `${p.yPercentage}%` }}
+                      onClick={(e) => handlePointTap(p, e.currentTarget.getBoundingClientRect())}
+                      aria-label={`${p.pointCode} - ${p.hebrewName}`}
+                    >
+                      {p.pointCode}
+                    </button>
+                  );
+                })}
+              </>
+            )}
           </div>
 
           <PointInfoPopover

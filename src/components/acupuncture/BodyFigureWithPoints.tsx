@@ -414,20 +414,20 @@ export const BodyFigureWithPoints = memo(function BodyFigureWithPoints({
         
         {/* Search Bar */}
         {showSearch && (
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+          <div className="relative z-[9999]">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
             <Input
               type="text"
               placeholder="Search points (e.g., ST36, Zusanli)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-7 pl-7 pr-7 text-xs"
+              className="h-7 pl-7 pr-7 text-xs relative z-[9999]"
             />
             {searchQuery && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-5 w-5"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-5 w-5 z-[9999]"
                 onClick={() => setSearchQuery('')}
               >
                 <X className="h-3 w-3" />
