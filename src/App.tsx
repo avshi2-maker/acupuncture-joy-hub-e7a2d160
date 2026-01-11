@@ -131,8 +131,8 @@ const App = () => (
                       <Route path="/patient-360" element={<RequireTier><Patient360 /></RequireTier>} />
                       <Route path="/invite" element={<ProfessionalInvite />} />
 
-                      {/* Protected (requires tier) */}
-                      <Route path="/dashboard" element={<RequireTier><Dashboard /></RequireTier>} />
+                      {/* Dashboard - open access */}
+                      <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/video-session" element={<RequireTier><VideoSession /></RequireTier>} />
                       <Route path="/tcm-brain" element={<RequireTier><TcmBrain /></RequireTier>} />
 
