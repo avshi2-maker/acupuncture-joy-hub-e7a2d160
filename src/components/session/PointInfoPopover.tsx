@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
@@ -45,7 +45,7 @@ export function PointInfoPopover({
     };
   }, [anchorRect]);
 
-  useLayoutEffect(() => {
+  const computePosition = useCallback(() => {
     if (!isReady || !anchorRect || !anchorCenter) return;
 
     const el = popoverRef.current;
@@ -53,10 +53,10 @@ export function PointInfoPopover({
     const vh = window.innerHeight;
     const margin = 12;
 
-    // Default size if not measured yet
+    // Measure after render
     const rect = el?.getBoundingClientRect();
-    const pw = rect?.width ?? 220;
-    const ph = rect?.height ?? 160;
+    const pw = rect?.width ?? 280;
+    const ph = rect?.height ?? 170;
 
     // Choose side with more space
     const preferRight = anchorCenter.x < vw / 2;
@@ -67,7 +67,14 @@ export function PointInfoPopover({
     const top = clamp(anchorCenter.y - ph / 2, margin, vh - margin - ph);
 
     setPos({ left, top });
-  }, [isReady, anchorRect, anchorCenter, point?.code]);
+  }, [isReady, anchorRect, anchorCenter]);
+
+  useLayoutEffect(() => {
+    if (!isReady) return;
+    computePosition();
+    // One extra frame to ensure we measured final size (fonts, content)
+    requestAnimationFrame(computePosition);
+  }, [isReady, point?.code, computePosition]);
 
   useEffect(() => {
     if (!isReady) return;
@@ -76,27 +83,23 @@ export function PointInfoPopover({
       if (e.key === 'Escape') onClose();
     };
 
-    const onResize = () => {
-      // Recompute position on resize/orientation change
-      setPos(null);
-      requestAnimationFrame(() => {
-        if (!popoverRef.current) return;
-        // Trigger layout effect by updating state
-        setPos({ left: 0, top: 0 });
-        setPos(null);
-      });
+    let raf = 0;
+    const onViewportChange = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => computePosition());
     };
 
     window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('resize', onResize);
-    window.addEventListener('scroll', onResize, true);
+    window.addEventListener('resize', onViewportChange);
+    window.addEventListener('scroll', onViewportChange, true);
 
     return () => {
+      cancelAnimationFrame(raf);
       window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('resize', onResize);
-      window.removeEventListener('scroll', onResize, true);
+      window.removeEventListener('resize', onViewportChange);
+      window.removeEventListener('scroll', onViewportChange, true);
     };
-  }, [isReady, onClose]);
+  }, [isReady, onClose, computePosition]);
 
   if (!isReady) return null;
 

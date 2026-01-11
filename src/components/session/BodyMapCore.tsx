@@ -1,13 +1,13 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin, Droplets } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SessionPointMarker } from './SessionPointMarker';
-import { PointInfoCard } from './PointInfoCard';
+import { PointInfoPopover } from './PointInfoPopover';
 
-import bodyFigureFront from '@/assets/body-figures/body_front_zen.png';
+import bodyFigureFront from '@/assets/body-figures/adult_front_clinical.png';
 
 /**
  * Phase #001: Primary acupuncture points with SVG coordinates (200x400 viewBox)
@@ -48,9 +48,9 @@ const PRIMARY_POINTS: Point[] = [
     label: 'Taichong (Supreme Rush)',
     hebrewLabel: 'טאי צ׳ונג',
     function: 'הנעת צ׳י הכבד, הרגעת נפש, ויסות מחזור.',
-    // adjusted to stay on-foot within the current full-body asset
-    x: 108,
-    y: 370,
+    // calibrated for adult_front_clinical.png (foot dorsum)
+    x: 96,
+    y: 372,
     protocols: [],
   },
   {
@@ -58,17 +58,16 @@ const PRIMARY_POINTS: Point[] = [
     label: 'Hegu (Union Valley)',
     hebrewLabel: 'הא גו',
     function: 'שחרור רוח, כאבי ראש, ויסות מעי גס.',
-    // adjusted to sit on the hand within the current full-body asset
-    x: 58,
-    y: 258,
+    // calibrated for adult_front_clinical.png (hand dorsum)
+    x: 52,
+    y: 224,
     protocols: [],
   },
 ];
 
-
 type PopoverState = {
   code: PointCode;
-  anchor: { xPct: number; yPct: number };
+  anchorRect: DOMRect;
 } | null;
 
 interface BodyMapCoreProps {
@@ -88,6 +87,36 @@ export function BodyMapCore({ className, onPointSelect }: BodyMapCoreProps) {
   const [activeProtocol, setActiveProtocol] = useState<string | null>(null);
   const [popover, setPopover] = useState<PopoverState>(null);
 
+  const [containerSize, setContainerSize] = useState<{ w: number; h: number } | null>(null);
+  const [imgNatural, setImgNatural] = useState<{ w: number; h: number } | null>(null);
+
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const ro = new ResizeObserver((entries) => {
+      const rect = entries[0]?.contentRect;
+      if (!rect) return;
+      setContainerSize({ w: rect.width, h: rect.height });
+    });
+
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Compute the rendered "object-contain" box so SVG/buttons align to the real image pixels.
+  const containBox = useMemo(() => {
+    if (!containerSize || !imgNatural) return null;
+
+    const scale = Math.min(containerSize.w / imgNatural.w, containerSize.h / imgNatural.h);
+    const w = imgNatural.w * scale;
+    const h = imgNatural.h * scale;
+    const x = (containerSize.w - w) / 2;
+    const y = (containerSize.h - h) / 2;
+
+    return { x, y, w, h, scale };
+  }, [containerSize, imgNatural]);
+
   const togglePoint = useCallback(
     (code: PointCode) => {
       setActivePoints((prev) => {
@@ -106,8 +135,8 @@ export function BodyMapCore({ className, onPointSelect }: BodyMapCoreProps) {
   );
 
   const handlePointTap = useCallback(
-    (code: PointCode, anchor: { xPct: number; yPct: number }) => {
-      setPopover((prev) => (prev?.code === code ? null : { code, anchor }));
+    (code: PointCode, anchorRect: DOMRect) => {
+      setPopover((prev) => (prev?.code === code ? null : { code, anchorRect }));
       togglePoint(code);
     },
     [togglePoint]
@@ -150,7 +179,7 @@ export function BodyMapCore({ className, onPointSelect }: BodyMapCoreProps) {
   });
 
   return (
-    <Card className={className}>
+    <Card className={cn('relative z-10', className)}>
       <CardHeader className="pb-3 space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <CardTitle className="flex items-center gap-2.5 text-lg font-medium tracking-tight">
@@ -179,52 +208,70 @@ export function BodyMapCore({ className, onPointSelect }: BodyMapCoreProps) {
       </CardHeader>
 
       <CardContent className="p-4 pt-0">
-        <div ref={containerRef} className="relative w-full max-w-xs mx-auto aspect-[1/2] min-h-[320px] overflow-hidden rounded-md">
-          {/* Body figure asset */}
-          <img
-            src={bodyFigureFront}
-            alt="איור גוף רפואי"
-            className="absolute inset-0 w-full h-full object-contain select-none"
-            draggable={false}
-            loading="eager"
-          />
-
-          {/* SVG overlay for point visuals */}
-          <svg
-            viewBox="0 0 200 400"
-            className="absolute inset-0 w-full h-full"
-            xmlns="http://www.w3.org/2000/svg"
+        <div
+          ref={containerRef}
+          className="relative w-full max-w-xs mx-auto aspect-[1/2] min-h-[320px] overflow-hidden rounded-md"
+        >
+          {/* Rendered image box (matches object-contain) */}
+          <div
+            className="absolute"
+            style={
+              containBox
+                ? { left: containBox.x, top: containBox.y, width: containBox.w, height: containBox.h }
+                : { inset: 0 }
+            }
           >
-            {PRIMARY_POINTS.map((p) => (
-              <SessionPointMarker key={p.code} code={p.code} x={p.x} y={p.y} isActive={activePoints.has(p.code)} />
-            ))}
-          </svg>
+            {/* Body figure asset */}
+            <img
+              src={bodyFigureFront}
+              alt="איור גוף רפואי"
+              className="absolute inset-0 w-full h-full object-contain select-none"
+              draggable={false}
+              loading="eager"
+              onLoad={(e) =>
+                setImgNatural({
+                  w: e.currentTarget.naturalWidth || 0,
+                  h: e.currentTarget.naturalHeight || 0,
+                })
+              }
+            />
 
-          {/* HTML tap targets */}
-          {PRIMARY_POINTS.map((p) => {
-            const pos = svgPos(p.x, p.y);
-            return (
-              <button
-                key={`hit-${p.code}`}
-                type="button"
-                className={cn(
-                  'absolute w-9 h-9 -translate-x-1/2 -translate-y-1/2 rounded-full z-10',
-                  'bg-transparent hover:bg-primary/10 transition-colors'
-                )}
-                style={{ left: pos.left, top: pos.top }}
-                onClick={() => handlePointTap(p.code, { xPct: pos.xPct, yPct: pos.yPct })}
-                aria-label={`${p.code} - ${p.hebrewLabel}`}
-              />
-            );
-          })}
+            {/* SVG overlay for point visuals (non-interactive) */}
+            <svg
+              viewBox="0 0 200 400"
+              className="absolute inset-0 w-full h-full pointer-events-none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              {PRIMARY_POINTS.map((p) => (
+                <SessionPointMarker key={p.code} code={p.code} x={p.x} y={p.y} isActive={activePoints.has(p.code)} />
+              ))}
+            </svg>
 
-          <PointInfoCard
+            {/* HTML tap targets */}
+            {PRIMARY_POINTS.map((p) => {
+              const pos = svgPos(p.x, p.y);
+              return (
+                <button
+                  key={`hit-${p.code}`}
+                  type="button"
+                  className={cn(
+                    'absolute w-9 h-9 -translate-x-1/2 -translate-y-1/2 rounded-full z-10',
+                    'bg-transparent hover:bg-primary/10 transition-colors'
+                  )}
+                  style={{ left: pos.left, top: pos.top }}
+                  onClick={(e) => handlePointTap(p.code, e.currentTarget.getBoundingClientRect())}
+                  aria-label={`${p.code} - ${p.hebrewLabel}`}
+                />
+              );
+            })}
+          </div>
+
+          <PointInfoPopover
             open={!!popover && !!popoverPoint}
-            anchor={popover?.anchor ?? null}
+            anchorRect={popover?.anchorRect ?? null}
             point={popoverPoint}
             isActive={popoverPoint ? activePoints.has(popoverPoint.code) : false}
             onClose={() => setPopover(null)}
-            containerRef={containerRef}
           />
         </div>
 
