@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { SessionPointMarker } from './SessionPointMarker';
 import { PointInfoPopover } from './PointInfoPopover';
 
-import bodyFigureFront from '@/assets/body-figures/adult_front_clinical.png';
+import bodyFigureFront from '@/assets/body-figures/body_main.png';
 
 /**
  * Phase #001: Primary acupuncture points with SVG coordinates (200x400 viewBox)
@@ -47,20 +47,20 @@ const PRIMARY_POINTS: Point[] = [
     code: 'LV3',
     label: 'Taichong (Supreme Rush)',
     hebrewLabel: 'טאי צ׳ונג',
-    function: 'הנעת צ׳י הכבד, הרגעת נפש, ויסות מחזור.',
-    // calibrated for adult_front_clinical.png (foot dorsum)
-    x: 96,
-    y: 372,
+    function: "הנעת צ'י הכבד",
+    // calibrated for body_main.png (foot dorsum)
+    x: 90,
+    y: 382,
     protocols: [],
   },
   {
     code: 'LI4',
     label: 'Hegu (Union Valley)',
     hebrewLabel: 'הא גו',
-    function: 'שחרור רוח, כאבי ראש, ויסות מעי גס.',
-    // calibrated for adult_front_clinical.png (hand dorsum)
-    x: 52,
-    y: 224,
+    function: 'שחרור רוח',
+    // calibrated for body_main.png (hand dorsum)
+    x: 40,
+    y: 252,
     protocols: [],
   },
 ];
