@@ -12,16 +12,24 @@ import {
   getDefaultAssetForView,
 } from '@/data/clinicalMapData';
 
-// IMPORTANT: Use manual, explicit source paths (no SVG generator fallback)
-// Requested: src/assets/body-figures/chest.png
+// ES6 IMPORTS - This is the ONLY way Vite serves src/assets correctly
+import chestPng from '@/assets/body-figures/chest.png';
+import tonguePng from '@/assets/body-figures/tongue.png';
+import earPng from '@/assets/body-figures/ear.png';
+import abdomenFemalePng from '@/assets/body-figures/abdomen_female.png';
+import handDorsumPng from '@/assets/body-figures/hand_dorsum.png';
+import lowerLegPng from '@/assets/body-figures/lower_leg.png';
+import footTopPng from '@/assets/body-figures/foot_top.png';
+
+// Map asset filenames to imported modules
 const ASSET_MAP: Record<string, string> = {
-  'chest.png': '/src/assets/body-figures/chest.png',
-  'tongue.png': '/src/assets/body-figures/tongue.png',
-  'ear.png': '/src/assets/body-figures/ear.png',
-  'abdomen_female.png': '/src/assets/body-figures/abdomen_female.png',
-  'hand_dorsum.png': '/src/assets/body-figures/hand_dorsum.png',
-  'lower_leg.png': '/src/assets/body-figures/lower_leg.png',
-  'foot_top.png': '/src/assets/body-figures/foot_top.png',
+  'chest.png': chestPng,
+  'tongue.png': tonguePng,
+  'ear.png': earPng,
+  'abdomen_female.png': abdomenFemalePng,
+  'hand_dorsum.png': handDorsumPng,
+  'lower_leg.png': lowerLegPng,
+  'foot_top.png': footTopPng,
 };
 
 type PopoverState = {
@@ -193,7 +201,7 @@ export function BodyMapCore({ className, onPointSelect }: BodyMapCoreProps) {
             ) : (
               <>
                 <img
-                  src={currentAsset === 'chest.png' ? '/src/assets/body-figures/chest.png' : currentImageSrc}
+                  src={currentImageSrc}
                   alt="איור גוף רפואי"
                   className="absolute inset-0 z-0 w-full h-full object-contain select-none"
                   draggable={false}
@@ -204,7 +212,7 @@ export function BodyMapCore({ className, onPointSelect }: BodyMapCoreProps) {
                       h: e.currentTarget.naturalHeight || 0,
                     })
                   }
-                  onError={() => setImageError(`Missing image: ${currentAsset}`)}
+                  onError={() => setImageError(`404 Image Missing: ${currentAsset}`)}
                 />
 
                 {/* Acupuncture point overlays (HTML only, no SVG/canvas) */}
