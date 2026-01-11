@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, forwardRef } from 'react';
 import { Accessibility, Plus, Minus, Eye } from 'lucide-react';
 import { Button } from './button';
 import { Switch } from './switch';
@@ -21,7 +21,8 @@ interface AccessibilityPanelProps {
   inline?: boolean;
 }
 
-export function AccessibilityPanel({ inline = false }: AccessibilityPanelProps) {
+export const AccessibilityPanel = forwardRef<HTMLDivElement, AccessibilityPanelProps>(
+  function AccessibilityPanel({ inline = false }, ref) {
   const { fontSize, setFontSize, highContrast, setHighContrast } = useAccessibility();
   const [open, setOpen] = useState(false);
 
@@ -126,4 +127,6 @@ export function AccessibilityPanel({ inline = false }: AccessibilityPanelProps) 
       </PopoverContent>
     </Popover>
   );
-}
+});
+
+AccessibilityPanel.displayName = 'AccessibilityPanel';
