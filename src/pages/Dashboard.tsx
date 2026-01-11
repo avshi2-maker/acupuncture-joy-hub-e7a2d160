@@ -52,6 +52,7 @@ export default function Dashboard() {
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [showPinSetup, setShowPinSetup] = useState(false);
   const [showVagusStimulation, setShowVagusStimulation] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [disclaimerStatus, setDisclaimerStatus] = useState<DisclaimerStatus>({ isSigned: false, isExpired: false });
   const { isGuideOpen, closeGuide } = useDashboardGuide();
   const { isGuideOpen: isGoldenPathOpen, startGoldenPath, closeGoldenPath } = useGoldenPathGuide();
@@ -212,20 +213,21 @@ export default function Dashboard() {
       />
 
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900" dir="rtl">
-        {/* Dark Sidebar - Hidden on mobile */}
-        <div className="hidden lg:block">
-          <DashboardSidebar 
-            onLogout={handleLogout} 
-            disclaimerSigned={disclaimerStatus.isSigned} 
-          />
-        </div>
+        {/* Sidebar - Desktop always visible, Mobile slide-in */}
+        <DashboardSidebar 
+          onLogout={handleLogout} 
+          disclaimerSigned={disclaimerStatus.isSigned}
+          isOpen={isMobileSidebarOpen}
+          onClose={() => setIsMobileSidebarOpen(false)}
+        />
 
         {/* Main Content Area - With right margin for sidebar on desktop */}
         <div className="lg:mr-64">
           {/* Header */}
           <DashboardHeader 
             greeting={getGreeting()} 
-            tierMessage={getTierMessage()} 
+            tierMessage={getTierMessage()}
+            onMenuClick={() => setIsMobileSidebarOpen(true)}
           />
 
           {/* Main Content */}
