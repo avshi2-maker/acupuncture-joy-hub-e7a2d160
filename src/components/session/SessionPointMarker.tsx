@@ -4,6 +4,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 interface SessionPointMarkerProps {
   code: string;
   label: string;
+  hebrewLabel: string;
+  function?: string;
   x: number; // SVG coordinate
   y: number; // SVG coordinate
   isActive: boolean;
@@ -12,18 +14,20 @@ interface SessionPointMarkerProps {
 
 /**
  * Phase #001: Interactive point marker with glow animation
- * Uses Tailwind animate-pulse when active
+ * Shows Hebrew card on tap with name and function
  */
 export function SessionPointMarker({
   code,
   label,
+  hebrewLabel,
+  function: pointFunction,
   x,
   y,
   isActive,
   onClick,
 }: SessionPointMarkerProps) {
   return (
-    <Tooltip>
+    <Tooltip delayDuration={0}>
       <TooltipTrigger asChild>
         <g
           className="cursor-pointer transition-transform hover:scale-110"
@@ -72,9 +76,27 @@ export function SessionPointMarker({
           </text>
         </g>
       </TooltipTrigger>
-      <TooltipContent side="left" className="text-sm">
-        <div className="font-semibold">{code}</div>
-        <div className="text-muted-foreground text-xs">{label}</div>
+      <TooltipContent 
+        side="left" 
+        className="bg-card border border-border shadow-lg p-3 min-w-[180px]"
+        dir="rtl"
+      >
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-bold text-primary text-lg">{code}</span>
+            {isActive && (
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            )}
+          </div>
+          <div className="font-semibold text-foreground text-base">{hebrewLabel}</div>
+          <div className="text-muted-foreground text-xs">{label}</div>
+          {pointFunction && (
+            <div className="pt-1.5 border-t border-border mt-1.5">
+              <div className="text-xs text-muted-foreground">פעולה:</div>
+              <div className="text-sm text-foreground">{pointFunction}</div>
+            </div>
+          )}
+        </div>
       </TooltipContent>
     </Tooltip>
   );
