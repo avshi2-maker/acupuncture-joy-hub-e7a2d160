@@ -55,21 +55,23 @@ export function PointSearchPanel({
         </CardTitle>
       </CardHeader>
       <CardContent className="p-3 pt-0 space-y-3">
-        {/* Search Input */}
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        {/* Search Input - z-index: 9999 to ensure it's always typable */}
+        <div className="relative" style={{ zIndex: 9999 }}>
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" style={{ zIndex: 9999 }} />
           <Input
             type="text"
             placeholder="Search ST36, Zusanli, Stomach..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="pl-9 pr-9"
+            className="pl-9 pr-9 relative"
+            style={{ zIndex: 9999, position: 'relative' }}
           />
           {query && (
             <Button
               variant="ghost"
               size="icon"
               className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6"
+              style={{ zIndex: 9999 }}
               onClick={() => setQuery('')}
             >
               <X className="h-4 w-4" />
