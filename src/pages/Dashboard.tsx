@@ -211,7 +211,7 @@ export default function Dashboard() {
         onSuccess={() => toast.success('PIN מוגדר! כעת תוכל להשתמש בו לגישה מהירה')}
       />
 
-      <div className="min-h-screen bg-slate-100 dark:bg-background" dir="rtl">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900" dir="rtl">
         {/* Dark Sidebar - Hidden on mobile */}
         <div className="hidden lg:block">
           <DashboardSidebar 
@@ -252,22 +252,22 @@ export default function Dashboard() {
             {/* Secondary Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Onboarding Progress */}
-              <div className="bg-white dark:bg-card rounded-xl p-6 shadow-sm border border-border">
+              <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
                 <h3 className="text-lg font-semibold mb-4">התקדמות</h3>
                 <OnboardingProgress />
               </div>
 
               {/* Clinical NEXUS */}
-              <div className="bg-white dark:bg-card rounded-xl overflow-hidden shadow-sm border border-border">
+              <div className="bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700">
                 <ClinicalNexusCard />
               </div>
 
               {/* Wallet & Usage */}
               <div className="space-y-4">
-                <div className="bg-white dark:bg-card rounded-xl overflow-hidden shadow-sm border border-border">
+                <div className="bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700">
                   <ClinicWalletCard />
                 </div>
-                <div className="bg-white dark:bg-card rounded-xl overflow-hidden shadow-sm border border-border">
+                <div className="bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700">
                   <UsageWidget backgroundImage={roiWidgetBg} />
                 </div>
               </div>
@@ -275,13 +275,13 @@ export default function Dashboard() {
 
             {/* Upgrade CTA for non-premium */}
             {tier !== 'premium' && (
-              <div className="bg-gradient-to-r from-jade/20 to-jade/5 rounded-2xl p-6 border border-jade/20">
+              <div className="bg-gradient-to-r from-blue-600/10 to-indigo-600/5 rounded-2xl p-6 border border-blue-200 dark:border-blue-600/30">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div>
-                    <h3 className="font-display text-xl mb-1">רוצים גישה לכל הפיצ׳רים?</h3>
-                    <p className="text-muted-foreground">שדרגו לתוכנית פרימיום וקבלו גישה מלאה כולל פגישות וידאו</p>
+                    <h3 className="font-display text-xl mb-1 text-slate-800 dark:text-slate-100">רוצים גישה לכל הפיצ׳רים?</h3>
+                    <p className="text-slate-600 dark:text-slate-400">שדרגו לתוכנית פרימיום וקבלו גישה מלאה כולל פגישות וידאו</p>
                   </div>
-                  <Button asChild className="bg-jade hover:bg-jade/90 shrink-0">
+                  <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white shrink-0">
                     <Link to="/pricing">צפו בתוכניות</Link>
                   </Button>
                 </div>
