@@ -5,11 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin, Droplets } from 'lucide-react';
-import { TooltipProvider } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 /**
  * Phase #001: Primary acupuncture points with SVG coordinates
- * Mapped to front-facing human silhouette (200x400 viewBox)
+ * Mapped to new Zen-clinical human silhouette (200x400 viewBox)
  */
 const PRIMARY_POINTS = [
   {
@@ -17,8 +17,8 @@ const PRIMARY_POINTS = [
     label: 'Fenglong (Abundant Bulge)',
     hebrewLabel: 'פנג לונג',
     function: 'מפזר ליחה, מבהיר את הראש',
-    x: 65,   // Left lower leg - lateral
-    y: 310,  // Mid-calf level
+    x: 72,   // Left lower leg - lateral
+    y: 325,  // Mid-calf level
     meridian: 'Stomach',
     protocols: ['slippery'],
   },
@@ -27,8 +27,8 @@ const PRIMARY_POINTS = [
     label: 'Yinlingquan (Yin Mound Spring)',
     hebrewLabel: 'ין לינג צ׳ואן',
     function: 'מייבש רטיבות, מחזק את הטחול',
-    x: 82,   // Left leg - medial knee
-    y: 265,  // Below knee level
+    x: 85,   // Left leg - medial knee
+    y: 268,  // Below knee level
     meridian: 'Spleen',
     protocols: ['slippery'],
   },
@@ -37,8 +37,8 @@ const PRIMARY_POINTS = [
     label: 'Taichong (Supreme Rush)',
     hebrewLabel: 'טאי צ׳ונג',
     function: 'מרגיע את הכבד, מסדיר את זרימת הצ׳י',
-    x: 140,  // Right foot dorsum
-    y: 375,  // Foot level
+    x: 130,  // Right foot dorsum
+    y: 385,  // Foot level
     meridian: 'Liver',
     protocols: [],
   },
@@ -47,8 +47,8 @@ const PRIMARY_POINTS = [
     label: 'Hegu (Union Valley)',
     hebrewLabel: 'הא גו',
     function: 'משחרר את החיצוני, מרגיע כאב',
-    x: 180,  // Right hand
-    y: 215,  // Hand level
+    x: 185,  // Right hand
+    y: 218,  // Hand level
     meridian: 'Large Intestine',
     protocols: [],
   },
@@ -116,77 +116,75 @@ export function BodyMapCore({ className, onPointSelect }: BodyMapCoreProps) {
   const activeCount = activePoints.size;
 
   return (
-    <TooltipProvider>
-      <Card className={className}>
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <MapPin className="h-5 w-5 text-primary" />
-              <span>מפת גוף אינטראקטיבית</span>
-            </CardTitle>
-            {activeCount > 0 && (
-              <Badge variant="default" className="animate-pulse">
-                {activeCount} נקודות פעילות
-              </Badge>
-            )}
-          </div>
-          
-          {/* Protocol Buttons */}
-          <div className="flex flex-wrap gap-2 mt-3">
-            <Button
-              variant={activeProtocol === 'slippery' ? 'default' : 'outline'}
-              size="sm"
-              onClick={activateSlipperyProtocol}
-              className="gap-2"
-            >
-              <Droplets className="h-4 w-4" />
-              <span>דופק חלקלק (Slippery)</span>
-            </Button>
-          </div>
-        </CardHeader>
+    <Card className={className}>
+      <CardHeader className="pb-3 space-y-4">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <CardTitle className="flex items-center gap-2.5 text-lg font-medium tracking-tight">
+            <MapPin className="h-5 w-5 text-primary" />
+            <span>מפת גוף אינטראקטיבית</span>
+          </CardTitle>
+          {activeCount > 0 && (
+            <Badge variant="default" className="animate-pulse font-medium">
+              {activeCount} נקודות פעילות
+            </Badge>
+          )}
+        </div>
         
-        <CardContent className="p-4">
-          {/* Responsive container that maintains aspect ratio */}
-          <div className="relative w-full max-w-sm mx-auto aspect-[1/2] min-h-[300px]">
-            <HumanSilhouetteSvg className="w-full h-full">
-              {PRIMARY_POINTS.map(point => (
-                <SessionPointMarker
-                  key={point.code}
-                  code={point.code}
-                  label={point.label}
-                  hebrewLabel={point.hebrewLabel}
-                  function={point.function}
-                  x={point.x}
-                  y={point.y}
-                  isActive={activePoints.has(point.code)}
-                  onClick={() => togglePoint(point.code)}
-                />
-              ))}
-            </HumanSilhouetteSvg>
-          </div>
-
-          {/* Active Points Legend */}
-          <div className="mt-4 flex flex-wrap gap-2 justify-center">
+        {/* Protocol Buttons - Refined Zen styling */}
+        <div className="flex flex-wrap gap-3">
+          <Button
+            variant={activeProtocol === 'slippery' ? 'default' : 'outline'}
+            size="sm"
+            onClick={activateSlipperyProtocol}
+            className="gap-2.5 font-medium tracking-wide px-4 py-2 h-auto rounded-full transition-all duration-300 hover:shadow-md"
+          >
+            <Droplets className="h-4 w-4" />
+            <span>דופק חלקלק</span>
+            <span className="text-xs opacity-70">(Slippery)</span>
+          </Button>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="p-4 pt-0">
+        {/* Responsive container that maintains aspect ratio */}
+        <div className="relative w-full max-w-xs mx-auto aspect-[1/2] min-h-[320px]">
+          <HumanSilhouetteSvg className="w-full h-full">
             {PRIMARY_POINTS.map(point => (
-              <button
+              <SessionPointMarker
                 key={point.code}
+                code={point.code}
+                label={point.label}
+                hebrewLabel={point.hebrewLabel}
+                function={point.function}
+                x={point.x}
+                y={point.y}
+                isActive={activePoints.has(point.code)}
                 onClick={() => togglePoint(point.code)}
-                className={`
-                  px-3 py-1.5 rounded-full text-sm font-medium transition-all
-                  ${activePoints.has(point.code)
-                    ? 'bg-primary text-primary-foreground shadow-md animate-pulse'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }
-                `}
-              >
-                <span className="font-bold">{point.code}</span>
-                <span className="mx-1.5">•</span>
-                <span>{point.hebrewLabel}</span>
-              </button>
+              />
             ))}
-          </div>
-        </CardContent>
-      </Card>
-    </TooltipProvider>
+          </HumanSilhouetteSvg>
+        </div>
+
+        {/* Active Points Legend - Refined */}
+        <div className="mt-6 flex flex-wrap gap-2 justify-center">
+          {PRIMARY_POINTS.map(point => (
+            <button
+              key={point.code}
+              onClick={() => togglePoint(point.code)}
+              className={cn(
+                'px-3.5 py-2 rounded-full text-sm font-medium transition-all duration-300',
+                activePoints.has(point.code)
+                  ? 'bg-primary text-primary-foreground shadow-md animate-pulse'
+                  : 'bg-muted/50 text-muted-foreground hover:bg-muted border border-border/50'
+              )}
+            >
+              <span className="font-bold">{point.code}</span>
+              <span className="mx-1.5 opacity-50">•</span>
+              <span>{point.hebrewLabel}</span>
+            </button>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
