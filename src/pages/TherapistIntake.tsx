@@ -181,20 +181,38 @@ export default function TherapistIntake() {
     toast.success('הטופס נוקה בהצלחה');
   };
 
-  // Check if already completed
+  // Check if already completed - if so, redirect appropriately
   useEffect(() => {
     const completed = localStorage.getItem(INTAKE_STORAGE_KEY);
     if (completed) {
       try {
         const data = JSON.parse(completed);
         if (data.completedAt && new Date(data.completedAt) > new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)) {
-          navigate('/dashboard');
+          // Intake already completed - redirect based on context
+          if (isFromGate) {
+            // User came from Gate to select a tier - send them to payment/password step
+            const selectedTier = sessionStorage.getItem('selected_tier_for_intake');
+            if (selectedTier === 'trial') {
+              navigate('/gate?step=password');
+            } else if (selectedTier) {
+              navigate('/gate?step=payment&tier=' + selectedTier);
+            } else {
+              // No tier selected, go back to tier selection
+              navigate('/gate');
+            }
+          } else if (isFromRegister) {
+            // From registration - go to gate for tier selection
+            navigate('/gate');
+          } else {
+            // Direct access - go to dashboard
+            navigate('/dashboard');
+          }
         }
       } catch {
         // Invalid JSON
       }
     }
-  }, [navigate]);
+  }, [navigate, isFromGate, isFromRegister]);
 
   const checkIdNumber = async (idNumber: string) => {
     if (!idNumber || idNumber.length < 5) {
