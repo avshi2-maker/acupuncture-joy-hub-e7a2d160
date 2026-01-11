@@ -55,9 +55,9 @@ export const DashboardSidebar = memo(function DashboardSidebar({
   return (
     <aside className="fixed right-0 top-0 h-screen w-64 bg-slate-900 text-white flex flex-col z-40 shadow-2xl">
       {/* Logo Section */}
-      <div className="p-6 border-b border-slate-700">
+      <div className="p-6 border-b border-slate-700/50">
         <Link to="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-jade/20 flex items-center justify-center overflow-hidden">
+          <div className="w-10 h-10 rounded-lg bg-blue-600/20 flex items-center justify-center overflow-hidden">
             <img src={newLogo} alt="CM Clinic" className="w-8 h-8 object-contain" />
           </div>
           <div>
@@ -68,7 +68,7 @@ export const DashboardSidebar = memo(function DashboardSidebar({
       </div>
 
       {/* Tier Badge */}
-      <div className="px-4 py-3 border-b border-slate-700">
+      <div className="px-4 py-3 border-b border-slate-700/50">
         <TierBadge />
       </div>
 
@@ -85,7 +85,7 @@ export const DashboardSidebar = memo(function DashboardSidebar({
                 className={cn(
                   "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200",
                   isActive(item.href)
-                    ? "bg-jade text-white shadow-lg shadow-jade/30"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
                     : "text-slate-300 hover:bg-slate-800 hover:text-white"
                 )}
               >
@@ -111,14 +111,14 @@ export const DashboardSidebar = memo(function DashboardSidebar({
                   className={cn(
                     "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200",
                     isActive(item.href)
-                      ? "bg-jade text-white shadow-lg shadow-jade/30"
+                      ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
                       : "text-slate-300 hover:bg-slate-800 hover:text-white"
                   )}
                 >
                   {item.icon}
                   <span className="text-sm font-medium">{item.label}</span>
                   {item.href === '/therapist-intake' && disclaimerSigned && (
-                    <span className="mr-auto text-xs text-jade">✓</span>
+                    <span className="mr-auto text-xs text-blue-400">✓</span>
                   )}
                 </Link>
               </li>
@@ -128,7 +128,7 @@ export const DashboardSidebar = memo(function DashboardSidebar({
       </nav>
 
       {/* Footer Actions */}
-      <div className="p-4 border-t border-slate-700 space-y-2">
+      <div className="p-4 border-t border-slate-700/50 space-y-2">
         <Link
           to="/crm/settings"
           className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
