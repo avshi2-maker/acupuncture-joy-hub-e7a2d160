@@ -1,13 +1,13 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin, Droplets } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SessionPointMarker } from './SessionPointMarker';
-import { PointInfoPopover } from './PointInfoPopover';
+import { PointInfoCard } from './PointInfoCard';
 
-import bodyFigureFront from '@/assets/body-figures/child_front.png';
+import bodyFigureFront from '@/assets/body-figures/body_front_zen.png';
 
 /**
  * Phase #001: Primary acupuncture points with SVG coordinates (200x400 viewBox)
@@ -30,8 +30,8 @@ const PRIMARY_POINTS: Point[] = [
     label: 'Fenglong (Abundant Bulge)',
     hebrewLabel: 'פנג לונג',
     function: 'מפזר ליחה, מבהיר את הראש',
-    x: 72,
-    y: 325,
+    x: 76,
+    y: 318,
     protocols: ['slippery'],
   },
   {
@@ -39,8 +39,8 @@ const PRIMARY_POINTS: Point[] = [
     label: 'Yinlingquan (Yin Mound Spring)',
     hebrewLabel: 'ין לינג צ׳ואן',
     function: 'מייבש רטיבות, מחזק את הטחול',
-    x: 85,
-    y: 268,
+    x: 86,
+    y: 270,
     protocols: ['slippery'],
   },
   {
@@ -48,8 +48,8 @@ const PRIMARY_POINTS: Point[] = [
     label: 'Taichong (Supreme Rush)',
     hebrewLabel: 'טאי צ׳ונג',
     function: 'מרגיע את הכבד, מסדיר את זרימת הצ׳י',
-    x: 130,
-    y: 385,
+    x: 128,
+    y: 365,
     protocols: [],
   },
   {
@@ -57,8 +57,8 @@ const PRIMARY_POINTS: Point[] = [
     label: 'Hegu (Union Valley)',
     hebrewLabel: 'הא גו',
     function: 'משחרר את החיצוני, מרגיע כאב',
-    x: 185,
-    y: 218,
+    x: 168,
+    y: 220,
     protocols: [],
   },
 ];
@@ -66,7 +66,7 @@ const PRIMARY_POINTS: Point[] = [
 
 type PopoverState = {
   code: PointCode;
-  anchorRect: DOMRect;
+  anchor: { xPct: number; yPct: number };
 } | null;
 
 interface BodyMapCoreProps {
@@ -81,6 +81,7 @@ interface BodyMapCoreProps {
  * - Uses a portal popover to prevent clipping on mobile
  */
 export function BodyMapCore({ className, onPointSelect }: BodyMapCoreProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const [activePoints, setActivePoints] = useState<Set<PointCode>>(new Set());
   const [activeProtocol, setActiveProtocol] = useState<string | null>(null);
   const [popover, setPopover] = useState<PopoverState>(null);
@@ -102,11 +103,12 @@ export function BodyMapCore({ className, onPointSelect }: BodyMapCoreProps) {
     [onPointSelect]
   );
 
-  const handlePointInfo = useCallback(
-    (code: PointCode, anchorRect: DOMRect) => {
-      setPopover((prev) => (prev?.code === code ? null : { code, anchorRect }));
+  const handlePointTap = useCallback(
+    (code: PointCode, anchor: { xPct: number; yPct: number }) => {
+      setPopover((prev) => (prev?.code === code ? null : { code, anchor }));
+      togglePoint(code);
     },
-    []
+    [togglePoint]
   );
 
   const activateSlipperyProtocol = useCallback(() => {
@@ -139,6 +141,8 @@ export function BodyMapCore({ className, onPointSelect }: BodyMapCoreProps) {
   }, [popover]);
 
   const svgPos = (x: number, y: number) => ({
+    xPct: x / 200,
+    yPct: y / 400,
     left: `${(x / 200) * 100}%`,
     top: `${(y / 400) * 100}%`,
   });
@@ -173,7 +177,7 @@ export function BodyMapCore({ className, onPointSelect }: BodyMapCoreProps) {
       </CardHeader>
 
       <CardContent className="p-4 pt-0">
-        <div className="relative w-full max-w-xs mx-auto aspect-[1/2] min-h-[320px]">
+        <div ref={containerRef} className="relative w-full max-w-xs mx-auto aspect-[1/2] min-h-[320px] overflow-hidden rounded-md">
           {/* Body figure asset */}
           <img
             src={bodyFigureFront}
@@ -190,13 +194,7 @@ export function BodyMapCore({ className, onPointSelect }: BodyMapCoreProps) {
             xmlns="http://www.w3.org/2000/svg"
           >
             {PRIMARY_POINTS.map((p) => (
-              <SessionPointMarker
-                key={p.code}
-                code={p.code}
-                x={p.x}
-                y={p.y}
-                isActive={activePoints.has(p.code)}
-              />
+              <SessionPointMarker key={p.code} code={p.code} x={p.x} y={p.y} isActive={activePoints.has(p.code)} />
             ))}
           </svg>
 
@@ -212,18 +210,19 @@ export function BodyMapCore({ className, onPointSelect }: BodyMapCoreProps) {
                   'bg-transparent hover:bg-primary/10 transition-colors'
                 )}
                 style={{ left: pos.left, top: pos.top }}
-                onClick={(e) => handlePointInfo(p.code, e.currentTarget.getBoundingClientRect())}
+                onClick={() => handlePointTap(p.code, { xPct: pos.xPct, yPct: pos.yPct })}
                 aria-label={`${p.code} - ${p.hebrewLabel}`}
               />
             );
           })}
 
-          <PointInfoPopover
+          <PointInfoCard
             open={!!popover && !!popoverPoint}
-            anchorRect={popover?.anchorRect ?? null}
+            anchor={popover?.anchor ?? null}
             point={popoverPoint}
             isActive={popoverPoint ? activePoints.has(popoverPoint.code) : false}
             onClose={() => setPopover(null)}
+            containerRef={containerRef}
           />
         </div>
 
