@@ -98,7 +98,7 @@ export function getDefaultAssetForView(view: ViewType): string {
     case 'tongue':
       return 'tongue.png';
     case 'ear':
-      return 'ear.png';
+      return 'ear.png'; // User requested: show ear.png for proof-of-life
     case 'body':
     default:
       return 'chest.png'; // Default to chest as requested
