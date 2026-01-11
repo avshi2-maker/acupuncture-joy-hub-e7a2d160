@@ -29,18 +29,27 @@ const featuresByTier: Record<string, TierFeature[]> = {
 
 const TierContext = createContext<TierContextType | undefined>(undefined);
 
-// Always allow access - default to trial if no tier is set
+// Dev mode bypass: only enabled with explicit query param ?devmode=true
+const isDevMode = typeof window !== 'undefined' && 
+  window.location.search.includes('devmode=true');
+
 export function TierProvider({ children }: { children: ReactNode }) {
   const [tier, setTierState] = useState<SubscriptionTier>(() => {
+    // In dev mode, default to premium for easy testing
+    if (isDevMode) {
+      return 'premium';
+    }
     const stored = localStorage.getItem('therapist_tier');
-    // Default to 'trial' if no tier is stored - allows easy browsing
-    return (stored as SubscriptionTier) || 'trial';
+    return (stored as SubscriptionTier) || null;
   });
   
   const [expiresAt, setExpiresAtState] = useState<Date | null>(() => {
+    // In dev mode, set expiry far in the future
+    if (isDevMode) {
+      return new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 year from now
+    }
     const stored = localStorage.getItem('therapist_expires_at');
-    // Default to 1 year from now if no expiry is stored
-    return stored ? new Date(stored) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+    return stored ? new Date(stored) : null;
   });
 
   const setTier = (newTier: SubscriptionTier) => {

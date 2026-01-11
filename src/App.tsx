@@ -1,7 +1,8 @@
+import { useEffect } from "react";
+import { HelmetProvider } from "react-helmet-async";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter, Routes, Route } from "react-router-dom";
-import { HelmetProvider } from "react-helmet-async";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/hooks/useAuth";
 import { TierProvider } from "@/hooks/useTier";
@@ -98,6 +99,24 @@ import AssetInventory from "./pages/AssetInventory";
 import PrivateDeveloper from "./pages/PrivateDeveloper";
 const queryClient = new QueryClient();
 
+function HashPathRedirect() {
+  useEffect(() => {
+    // App uses HashRouter. If a user navigates directly to /dashboard (no #/...),
+    // convert it to the equivalent hash route so refresh / direct links work.
+    if (typeof window === "undefined") return;
+
+    const hasHashRoute = window.location.hash.startsWith("#/");
+    const isDirectPath = window.location.pathname !== "/";
+
+    if (!hasHashRoute && isDirectPath) {
+      const targetHash = `#${window.location.pathname}${window.location.search}`;
+      window.location.replace(`${window.location.origin}/${targetHash}`);
+    }
+  }, []);
+
+  return null;
+}
+
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
@@ -111,6 +130,7 @@ const App = () => (
                     <TooltipProvider>
                       <OfflineBanner />
                   <HashRouter>
+                    <HashPathRedirect />
                     <Routes>
                     {/* Public */}
                       <Route path="/" element={<Index />} />
