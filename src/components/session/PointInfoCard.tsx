@@ -11,7 +11,7 @@ export type PointInfo = {
 
 interface PointInfoCardProps {
   open: boolean;
-  anchor: { xPct: number; yPct: number } | null; // 0..1 within container
+  anchor: { xPct: number; yPct: number } | null;
   point: PointInfo | null;
   isActive: boolean;
   onClose: () => void;
@@ -23,8 +23,9 @@ function clamp(n: number, min: number, max: number) {
 }
 
 /**
- * Phase #001: In-container popover card.
- * Stays INSIDE the body-map box (no clipping on mobile).
+ * Phase #001: In-container popover card with edge detection.
+ * - Stays INSIDE the body-map box (no clipping).
+ * - Flips horizontally and vertically based on available space.
  */
 export function PointInfoCard({
   open,
@@ -35,31 +36,59 @@ export function PointInfoCard({
   containerRef,
 }: PointInfoCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+  const [style, setStyle] = useState<React.CSSProperties>({});
 
   useLayoutEffect(() => {
-    if (!open || !anchor || !point) return;
+    if (!open || !anchor || !point) {
+      setStyle({});
+      return;
+    }
+
     const container = containerRef.current;
     const card = cardRef.current;
     if (!container || !card) return;
 
-    const cr = container.getBoundingClientRect();
-    const pr = card.getBoundingClientRect();
+    const cw = container.clientWidth;
+    const ch = container.clientHeight;
+    const cardRect = card.getBoundingClientRect();
+    const pw = cardRect.width || 240;
+    const ph = cardRect.height || 140;
 
-    const margin = 10;
-    const ax = cr.width * anchor.xPct;
-    const ay = cr.height * anchor.yPct;
+    const ax = cw * anchor.xPct;
+    const ay = ch * anchor.yPct;
 
-    // Prefer right side unless too tight
-    const preferRight = ax < cr.width / 2;
-    const desiredLeft = preferRight ? ax + 14 : ax - 14 - pr.width;
-    const left = clamp(desiredLeft, margin, cr.width - margin - pr.width);
+    const margin = 8;
+    const gap = 12;
 
-    // Vertically center around anchor, clamp inside
-    const desiredTop = ay - pr.height / 2;
-    const top = clamp(desiredTop, margin, cr.height - margin - pr.height);
+    // Horizontal positioning with flip
+    const spaceRight = cw - ax - gap;
+    const spaceLeft = ax - gap;
+    const preferRight = spaceRight >= pw + margin || spaceRight > spaceLeft;
+    
+    let left: number;
+    if (preferRight) {
+      left = clamp(ax + gap, margin, cw - margin - pw);
+    } else {
+      left = clamp(ax - gap - pw, margin, cw - margin - pw);
+    }
 
-    setPos({ left, top });
+    // Vertical positioning with flip
+    const spaceBelow = ch - ay - gap;
+    const spaceAbove = ay - gap;
+    const preferBelow = spaceBelow >= ph + margin || spaceBelow > spaceAbove;
+
+    let top: number;
+    if (preferBelow) {
+      top = clamp(ay + gap, margin, ch - margin - ph);
+    } else {
+      top = clamp(ay - gap - ph, margin, ch - margin - ph);
+    }
+
+    // Final clamp to ensure fully inside
+    left = clamp(left, margin, cw - margin - pw);
+    top = clamp(top, margin, ch - margin - ph);
+
+    setStyle({ left, top });
   }, [open, anchor?.xPct, anchor?.yPct, point?.code, containerRef]);
 
   if (!open || !anchor || !point) return null;
@@ -75,10 +104,10 @@ export function PointInfoCard({
         dir="rtl"
         onPointerDown={(e) => e.stopPropagation()}
         className={cn(
-          'absolute w-[min(78vw,260px)] rounded-lg border border-border/50 bg-card/95 backdrop-blur-sm shadow-xl p-3',
+          'absolute w-[min(75%,260px)] rounded-lg border border-border bg-card shadow-xl p-3',
           'animate-in fade-in zoom-in-95 duration-200'
         )}
-        style={pos ? { left: pos.left, top: pos.top } : undefined}
+        style={style}
       >
         <div className="space-y-2.5">
           <div className="flex items-center justify-between">

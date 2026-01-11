@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { SessionPointMarker } from './SessionPointMarker';
 import { PointInfoCard } from './PointInfoCard';
 
-import bodyFigureFront from '@/assets/body-figures/body_front_zen.png';
+import bodyFigureFront from '@/assets/body-figures/adult_front_clinical.png';
 
 /**
  * Phase #001: Primary acupuncture points with SVG coordinates (200x400 viewBox)
@@ -29,36 +29,36 @@ const PRIMARY_POINTS: Point[] = [
     code: 'ST40',
     label: 'Fenglong (Abundant Bulge)',
     hebrewLabel: 'פנג לונג',
-    function: 'מפזר ליחה, מבהיר את הראש',
-    x: 76,
-    y: 318,
+    function: 'התמרת ליחה, ניקוז לחות.',
+    x: 82,
+    y: 310,
     protocols: ['slippery'],
   },
   {
     code: 'SP9',
     label: 'Yinlingquan (Yin Mound Spring)',
     hebrewLabel: 'ין לינג צ׳ואן',
-    function: 'מייבש רטיבות, מחזק את הטחול',
-    x: 86,
-    y: 270,
+    function: 'ניקוז לחות מהמחמם התחתון.',
+    x: 115,
+    y: 272,
     protocols: ['slippery'],
   },
   {
     code: 'LV3',
     label: 'Taichong (Supreme Rush)',
     hebrewLabel: 'טאי צ׳ונג',
-    function: 'מרגיע את הכבד, מסדיר את זרימת הצ׳י',
-    x: 128,
-    y: 365,
+    function: 'הנעת צ׳י הכבד, הרגעת נפש, ויסות מחזור.',
+    x: 115,
+    y: 385,
     protocols: [],
   },
   {
     code: 'LI4',
     label: 'Hegu (Union Valley)',
     hebrewLabel: 'הא גו',
-    function: 'משחרר את החיצוני, מרגיע כאב',
-    x: 168,
-    y: 220,
+    function: 'שחרור רוח, כאבי ראש, ויסות מעי גס.',
+    x: 28,
+    y: 260,
     protocols: [],
   },
 ];
