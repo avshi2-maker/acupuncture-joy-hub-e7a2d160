@@ -2,71 +2,40 @@ import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Droplets } from 'lucide-react';
+import { MapPin, Droplets, User, Ear, Languages } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SessionPointMarker } from './SessionPointMarker';
 import { PointInfoPopover } from './PointInfoPopover';
+import { 
+  CLINICAL_POINTS, 
+  ClinicalPoint, 
+  ViewType, 
+  getPointsForView, 
+  getDefaultAssetForView 
+} from '@/data/clinicalMapData';
 
-import bodyFigureFront from '@/assets/body-figures/body_main.png';
+// Import body figure assets
+import chestImg from '@/assets/body-figures/chest.png';
+import tongueImg from '@/assets/body-figures/tongue.png';
+import earImg from '@/assets/body-figures/ear.png';
+import abdomenFemaleImg from '@/assets/body-figures/abdomen_female.png';
+import handDorsumImg from '@/assets/body-figures/hand_dorsum.png';
+import lowerLegImg from '@/assets/body-figures/lower_leg.png';
+import footTopImg from '@/assets/body-figures/foot_top.png';
 
-/**
- * Phase #001: Primary acupuncture points with SVG coordinates (200x400 viewBox)
- */
-type Point = {
-  code: 'ST40' | 'SP9' | 'LV3' | 'LI4';
-  label: string;
-  hebrewLabel: string;
-  function?: string;
-  x: number;
-  y: number;
-  protocols: string[];
+// Asset mapping
+const ASSET_MAP: Record<string, string> = {
+  'chest.png': chestImg,
+  'tongue.png': tongueImg,
+  'ear.png': earImg,
+  'abdomen_female.png': abdomenFemaleImg,
+  'hand_dorsum.png': handDorsumImg,
+  'lower_leg.png': lowerLegImg,
+  'foot_top.png': footTopImg,
 };
 
-type PointCode = Point['code'];
-
-const PRIMARY_POINTS: Point[] = [
-  {
-    code: 'ST40',
-    label: 'Fenglong (Abundant Bulge)',
-    hebrewLabel: 'פנג לונג',
-    function: 'התמרת ליחה, ניקוז לחות.',
-    x: 86,
-    y: 312,
-    protocols: ['slippery'],
-  },
-  {
-    code: 'SP9',
-    label: 'Yinlingquan (Yin Mound Spring)',
-    hebrewLabel: 'ין לינג צ׳ואן',
-    function: 'ניקוז לחות מהמחמם התחתון.',
-    x: 114,
-    y: 270,
-    protocols: ['slippery'],
-  },
-  {
-    code: 'LV3',
-    label: 'Taichong (Supreme Rush)',
-    hebrewLabel: 'טאי צ׳ונג',
-    function: "הנעת צ'י הכבד",
-    // calibrated for body_main.png (foot dorsum)
-    x: 90,
-    y: 382,
-    protocols: [],
-  },
-  {
-    code: 'LI4',
-    label: 'Hegu (Union Valley)',
-    hebrewLabel: 'הא גו',
-    function: 'שחרור רוח',
-    // calibrated for body_main.png (hand dorsum)
-    x: 40,
-    y: 252,
-    protocols: [],
-  },
-];
-
 type PopoverState = {
-  code: PointCode;
+  point: ClinicalPoint;
   anchorRect: DOMRect;
 } | null;
 
@@ -76,19 +45,28 @@ interface BodyMapCoreProps {
 }
 
 /**
- * Phase #001: Core Body Map Component
- * - Uses clinic assets (png) for the body figure
- * - Uses an SVG overlay for point visuals
- * - Uses a portal popover to prevent clipping on mobile
+ * Clinical Body Map Component
+ * - Uses chest.png as default view
+ * - Supports Body/Tongue/Ear view toggle
+ * - Displays Hebrew clinical functions
  */
 export function BodyMapCore({ className, onPointSelect }: BodyMapCoreProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [activePoints, setActivePoints] = useState<Set<PointCode>>(new Set());
-  const [activeProtocol, setActiveProtocol] = useState<string | null>(null);
+  const [activePoints, setActivePoints] = useState<Set<string>>(new Set());
+  const [currentView, setCurrentView] = useState<ViewType>('body');
+  const [currentAsset, setCurrentAsset] = useState<string>('chest.png');
   const [popover, setPopover] = useState<PopoverState>(null);
 
   const [containerSize, setContainerSize] = useState<{ w: number; h: number } | null>(null);
   const [imgNatural, setImgNatural] = useState<{ w: number; h: number } | null>(null);
+
+  // Get current image source
+  const currentImageSrc = ASSET_MAP[currentAsset] || chestImg;
+
+  // Get points for current asset
+  const currentPoints = useMemo(() => {
+    return CLINICAL_POINTS.filter(p => p.assetFileName === currentAsset);
+  }, [currentAsset]);
 
   useLayoutEffect(() => {
     const el = containerRef.current;
@@ -104,7 +82,7 @@ export function BodyMapCore({ className, onPointSelect }: BodyMapCoreProps) {
     return () => ro.disconnect();
   }, []);
 
-  // Compute the rendered "object-contain" box so SVG/buttons align to the real image pixels.
+  // Compute the rendered "object-contain" box
   const containBox = useMemo(() => {
     if (!containerSize || !imgNatural) return null;
 
@@ -118,65 +96,36 @@ export function BodyMapCore({ className, onPointSelect }: BodyMapCoreProps) {
   }, [containerSize, imgNatural]);
 
   const togglePoint = useCallback(
-    (code: PointCode) => {
+    (code: string) => {
       setActivePoints((prev) => {
         const next = new Set(prev);
         const isNowActive = !next.has(code);
         if (isNowActive) next.add(code);
         else next.delete(code);
 
-        // Avoid render-phase updates in parent
         setTimeout(() => onPointSelect?.(code, isNowActive), 0);
         return next;
       });
-      setActiveProtocol(null);
     },
     [onPointSelect]
   );
 
   const handlePointTap = useCallback(
-    (code: PointCode, anchorRect: DOMRect) => {
-      setPopover((prev) => (prev?.code === code ? null : { code, anchorRect }));
-      togglePoint(code);
+    (point: ClinicalPoint, anchorRect: DOMRect) => {
+      setPopover((prev) => (prev?.point.pointCode === point.pointCode ? null : { point, anchorRect }));
+      togglePoint(point.pointCode);
     },
     [togglePoint]
   );
 
-  const activateSlipperyProtocol = useCallback(() => {
-    const slipperyPoints = PRIMARY_POINTS.filter((p) => p.protocols.includes('slippery'));
-
-    if (activeProtocol === 'slippery') {
-      setActiveProtocol(null);
-      setActivePoints((prev) => {
-        const next = new Set(prev);
-        slipperyPoints.forEach((p) => next.delete(p.code));
-        return next;
-      });
-      slipperyPoints.forEach((p) => setTimeout(() => onPointSelect?.(p.code, false), 0));
-    } else {
-      setActiveProtocol('slippery');
-      setActivePoints((prev) => {
-        const next = new Set(prev);
-        slipperyPoints.forEach((p) => next.add(p.code));
-        return next;
-      });
-      slipperyPoints.forEach((p) => setTimeout(() => onPointSelect?.(p.code, true), 0));
-    }
-  }, [activeProtocol, onPointSelect]);
+  const handleViewChange = useCallback((view: ViewType) => {
+    setCurrentView(view);
+    setCurrentAsset(getDefaultAssetForView(view));
+    setPopover(null);
+    setImgNatural(null); // Reset for new image
+  }, []);
 
   const activeCount = activePoints.size;
-
-  const popoverPoint = useMemo(() => {
-    if (!popover) return null;
-    return PRIMARY_POINTS.find((p) => p.code === popover.code) ?? null;
-  }, [popover]);
-
-  const svgPos = (x: number, y: number) => ({
-    xPct: x / 200,
-    yPct: y / 400,
-    left: `${(x / 200) * 100}%`,
-    top: `${(y / 400) * 100}%`,
-  });
 
   return (
     <Card className={cn('relative z-10', className)}>
@@ -193,16 +142,34 @@ export function BodyMapCore({ className, onPointSelect }: BodyMapCoreProps) {
           )}
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        {/* View Toggle: Body / Tongue / Ear */}
+        <div className="flex flex-wrap gap-2">
           <Button
-            variant={activeProtocol === 'slippery' ? 'default' : 'outline'}
+            variant={currentView === 'body' ? 'default' : 'outline'}
             size="sm"
-            onClick={activateSlipperyProtocol}
-            className="gap-2.5 font-medium tracking-wide px-4 py-2 h-auto rounded-full transition-all duration-300 hover:shadow-md"
+            onClick={() => handleViewChange('body')}
+            className="gap-2 rounded-full"
           >
-            <Droplets className="h-4 w-4" />
-            <span>דופק חלקלק</span>
-            <span className="text-xs opacity-70">(Slippery)</span>
+            <User className="h-4 w-4" />
+            <span>גוף</span>
+          </Button>
+          <Button
+            variant={currentView === 'tongue' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => handleViewChange('tongue')}
+            className="gap-2 rounded-full"
+          >
+            <Languages className="h-4 w-4" />
+            <span>לשון</span>
+          </Button>
+          <Button
+            variant={currentView === 'ear' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => handleViewChange('ear')}
+            className="gap-2 rounded-full"
+          >
+            <Ear className="h-4 w-4" />
+            <span>אוזן</span>
           </Button>
         </div>
       </CardHeader>
@@ -212,7 +179,7 @@ export function BodyMapCore({ className, onPointSelect }: BodyMapCoreProps) {
           ref={containerRef}
           className="relative w-full max-w-xs mx-auto aspect-[1/2] min-h-[320px] overflow-hidden rounded-md"
         >
-          {/* Rendered image box (matches object-contain) */}
+          {/* Rendered image box */}
           <div
             className="absolute"
             style={
@@ -223,7 +190,7 @@ export function BodyMapCore({ className, onPointSelect }: BodyMapCoreProps) {
           >
             {/* Body figure asset */}
             <img
-              src={bodyFigureFront}
+              src={currentImageSrc}
               alt="איור גוף רפואי"
               className="absolute inset-0 w-full h-full object-contain select-none"
               draggable={false}
@@ -236,65 +203,93 @@ export function BodyMapCore({ className, onPointSelect }: BodyMapCoreProps) {
               }
             />
 
-            {/* SVG overlay for point visuals (non-interactive) */}
+            {/* SVG overlay for point visuals */}
             <svg
-              viewBox="0 0 200 400"
+              viewBox="0 0 100 100"
               className="absolute inset-0 w-full h-full pointer-events-none"
               xmlns="http://www.w3.org/2000/svg"
+              preserveAspectRatio="none"
             >
-              {PRIMARY_POINTS.map((p) => (
-                <SessionPointMarker key={p.code} code={p.code} x={p.x} y={p.y} isActive={activePoints.has(p.code)} />
+              {currentPoints.map((p) => (
+                <SessionPointMarker 
+                  key={p.pointCode} 
+                  code={p.pointCode} 
+                  x={p.xPercentage} 
+                  y={p.yPercentage} 
+                  isActive={activePoints.has(p.pointCode)} 
+                />
               ))}
             </svg>
 
             {/* HTML tap targets */}
-            {PRIMARY_POINTS.map((p) => {
-              const pos = svgPos(p.x, p.y);
-              return (
-                <button
-                  key={`hit-${p.code}`}
-                  type="button"
-                  className={cn(
-                    'absolute w-9 h-9 -translate-x-1/2 -translate-y-1/2 rounded-full z-10',
-                    'bg-transparent hover:bg-primary/10 transition-colors'
-                  )}
-                  style={{ left: pos.left, top: pos.top }}
-                  onClick={(e) => handlePointTap(p.code, e.currentTarget.getBoundingClientRect())}
-                  aria-label={`${p.code} - ${p.hebrewLabel}`}
-                />
-              );
-            })}
+            {currentPoints.map((p) => (
+              <button
+                key={`hit-${p.pointCode}`}
+                type="button"
+                className={cn(
+                  'absolute w-10 h-10 -translate-x-1/2 -translate-y-1/2 rounded-full z-10',
+                  'bg-transparent hover:bg-primary/10 transition-colors',
+                  activePoints.has(p.pointCode) && 'ring-2 ring-primary ring-offset-2'
+                )}
+                style={{ 
+                  left: `${p.xPercentage}%`, 
+                  top: `${p.yPercentage}%` 
+                }}
+                onClick={(e) => handlePointTap(p, e.currentTarget.getBoundingClientRect())}
+                aria-label={`${p.pointCode} - ${p.hebrewName}`}
+              />
+            ))}
           </div>
 
           <PointInfoPopover
-            open={!!popover && !!popoverPoint}
+            open={!!popover}
             anchorRect={popover?.anchorRect ?? null}
-            point={popoverPoint}
-            isActive={popoverPoint ? activePoints.has(popoverPoint.code) : false}
+            point={popover?.point ? {
+              code: popover.point.pointCode,
+              label: popover.point.hebrewName,
+              hebrewLabel: popover.point.hebrewName,
+              function: popover.point.clinicalFunction,
+            } : null}
+            isActive={popover?.point ? activePoints.has(popover.point.pointCode) : false}
             onClose={() => setPopover(null)}
           />
         </div>
 
-        {/* Active Points Legend */}
+        {/* Active Points Legend with Hebrew Clinical Functions */}
         <div className="mt-6 flex flex-wrap gap-2 justify-center">
-          {PRIMARY_POINTS.map((p) => (
+          {currentPoints.map((p) => (
             <button
-              key={p.code}
+              key={p.pointCode}
               type="button"
-              onClick={() => togglePoint(p.code)}
+              onClick={() => togglePoint(p.pointCode)}
               className={cn(
                 'px-3.5 py-2 rounded-full text-sm font-medium transition-all duration-300',
-                activePoints.has(p.code)
+                activePoints.has(p.pointCode)
                   ? 'bg-primary text-primary-foreground shadow-md animate-pulse'
                   : 'bg-muted/50 text-muted-foreground hover:bg-muted border border-border/50'
               )}
             >
-              <span className="font-bold">{p.code}</span>
+              <span className="font-bold">{p.pointCode}</span>
               <span className="mx-1.5 opacity-50">•</span>
-              <span>{p.hebrewLabel}</span>
+              <span>{p.hebrewName}</span>
             </button>
           ))}
         </div>
+
+        {/* Clinical Function Display */}
+        {currentPoints.length > 0 && (
+          <div className="mt-4 p-3 bg-muted/30 rounded-lg border border-border/50">
+            <p className="text-xs text-muted-foreground mb-2 text-center">פונקציה קלינית:</p>
+            <div className="space-y-1">
+              {currentPoints.map(p => (
+                <p key={p.pointCode} className="text-sm text-center">
+                  <span className="font-semibold text-primary">{p.pointCode}:</span>{' '}
+                  <span className="text-foreground">{p.clinicalFunction}</span>
+                </p>
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
