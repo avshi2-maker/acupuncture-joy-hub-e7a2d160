@@ -65,9 +65,11 @@ interface SessionNotesProps {
   visitId?: string;
   onPlanUpdate?: (planText: string) => void;
   initialPlanText?: string;
+  onPatternChange?: (pattern: string) => void;
+  onNotesUpdate?: (notes: Partial<SessionNotesData>) => void;
 }
 
-export function SessionNotes({ patientId, visitId, onPlanUpdate, initialPlanText }: SessionNotesProps) {
+export function SessionNotes({ patientId, visitId, onPlanUpdate, initialPlanText, onPatternChange, onNotesUpdate }: SessionNotesProps) {
   const { user } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
