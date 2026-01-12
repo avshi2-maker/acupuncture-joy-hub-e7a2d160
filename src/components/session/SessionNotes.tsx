@@ -48,6 +48,8 @@ const TCM_PATTERNS = [
 
 interface SessionNotesData {
   chiefComplaint: string;
+  medicalBackground: string;
+  currentMedications: string;
   pulseFindings: string[];
   tongueFindings: string[];
   otherObjective: string;
@@ -85,6 +87,8 @@ export function SessionNotes({ patientId, visitId, onPlanUpdate, initialPlanText
 
   const [notes, setNotes] = useState<SessionNotesData>({
     chiefComplaint: '',
+    medicalBackground: '',
+    currentMedications: '',
     pulseFindings: [],
     tongueFindings: [],
     otherObjective: '',
@@ -110,45 +114,128 @@ export function SessionNotes({ patientId, visitId, onPlanUpdate, initialPlanText
     }
   }, [initialPlanText]);
 
-  // Load patient data and existing visit on mount
+  // Load patient data and existing visit on mount - INTELLIGENT PRE-FILLING
   useEffect(() => {
     async function loadData() {
-      // Load patient's chief complaint if available
+      // Load patient's data including medical history and medications
       const { data: patient } = await supabase
         .from('patients')
-        .select('chief_complaint, pulse_notes, tongue_notes')
+        .select('chief_complaint, pulse_notes, tongue_notes, medical_history, medications, allergies')
         .eq('id', patientId)
         .single();
       
-      if (patient) {
-        setNotes(prev => ({
-          ...prev,
-          chiefComplaint: patient.chief_complaint || prev.chiefComplaint
-        }));
-      }
+      // Load latest patient assessment/questionnaire for intelligent pre-filling
+      const { data: latestAssessment } = await supabase
+        .from('patient_assessments')
+        .select('details, assessment_type, created_at')
+        .eq('patient_id', patientId)
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
       // Load existing visit data if visitId provided
+      let visitData = null;
       if (visitId) {
         const { data: visit } = await supabase
           .from('visits')
           .select('*')
           .eq('id', visitId)
           .single();
-        
-        if (visit) {
-          setNotes({
-            chiefComplaint: visit.chief_complaint || '',
-            pulseFindings: visit.pulse_diagnosis ? visit.pulse_diagnosis.split(', ') : [],
-            tongueFindings: visit.tongue_diagnosis ? visit.tongue_diagnosis.split(', ') : [],
-            otherObjective: '',
-            tcmPattern: visit.tcm_pattern || '',
-            assessmentNotes: visit.notes || '',
-            treatmentPrinciple: visit.treatment_principle || '',
-            planNotes: visit.notes || '',
-            selectedPoints: visit.points_used || [],
-            herbsPrescribed: visit.herbs_prescribed || '',
-            followUpRecommended: visit.follow_up_recommended || ''
-          });
+        visitData = visit;
+      }
+
+      // Build the pre-filled notes
+      if (visitData) {
+        // If we have an existing visit, load from that
+        setNotes({
+          chiefComplaint: visitData.chief_complaint || '',
+          medicalBackground: patient?.medical_history || '',
+          currentMedications: patient?.medications || '',
+          pulseFindings: visitData.pulse_diagnosis ? visitData.pulse_diagnosis.split(', ') : [],
+          tongueFindings: visitData.tongue_diagnosis ? visitData.tongue_diagnosis.split(', ') : [],
+          otherObjective: '',
+          tcmPattern: visitData.tcm_pattern || '',
+          assessmentNotes: visitData.notes || '',
+          treatmentPrinciple: visitData.treatment_principle || '',
+          planNotes: visitData.notes || '',
+          selectedPoints: visitData.points_used || [],
+          herbsPrescribed: visitData.herbs_prescribed || '',
+          followUpRecommended: visitData.follow_up_recommended || ''
+        });
+      } else {
+        // New session - intelligent pre-filling from patient data & assessments
+        let chiefComplaint = patient?.chief_complaint || '';
+        let medicalBackground = patient?.medical_history || '';
+        let currentMedications = patient?.medications || '';
+
+        // Extract data from latest questionnaire if available
+        if (latestAssessment?.details) {
+          const details = latestAssessment.details as { answers?: Array<{ questionId: number; answer: string | null; title?: string }> };
+          
+          if (details.answers && Array.isArray(details.answers)) {
+            // Find chief complaint from questionnaire (usually question 1 - main challenge)
+            const mainChallengeAnswer = details.answers.find(a => a.questionId === 1);
+            if (mainChallengeAnswer?.answer && typeof mainChallengeAnswer.answer === 'string') {
+              chiefComplaint = chiefComplaint 
+                ? `${chiefComplaint}\n\n--- From Intake (${new Date(latestAssessment.created_at).toLocaleDateString()}) ---\n${mainChallengeAnswer.answer}`
+                : mainChallengeAnswer.answer;
+            }
+
+            // Find goal/improvement priority (usually question 15)
+            const goalAnswer = details.answers.find(a => a.questionId === 15);
+            if (goalAnswer?.answer && typeof goalAnswer.answer === 'string') {
+              chiefComplaint = chiefComplaint 
+                ? `${chiefComplaint}\n\nPatient Goal: ${goalAnswer.answer}`
+                : `Patient Goal: ${goalAnswer.answer}`;
+            }
+
+            // Build a summary of other relevant answers for background
+            const emotionalAnswers = details.answers.filter(a => 
+              [2, 3, 4].includes(a.questionId) && a.answer
+            );
+            const physicalAnswers = details.answers.filter(a => 
+              [5, 6, 7, 8, 9, 10].includes(a.questionId) && a.answer
+            );
+            
+            if (emotionalAnswers.length > 0 || physicalAnswers.length > 0) {
+              let intakeSummary = `\n\n--- Intake Summary ---`;
+              
+              if (emotionalAnswers.length > 0) {
+                intakeSummary += `\nEmotional: ${emotionalAnswers.map(a => `${a.title || ''}: ${a.answer}`).join('; ')}`;
+              }
+              if (physicalAnswers.length > 0) {
+                intakeSummary += `\nPhysical: ${physicalAnswers.map(a => `${a.title || ''}: ${a.answer}`).join('; ')}`;
+              }
+              
+              medicalBackground = medicalBackground 
+                ? `${medicalBackground}${intakeSummary}`
+                : intakeSummary.trim();
+            }
+          }
+        }
+
+        // Add allergies to medical background if available
+        if (patient?.allergies) {
+          medicalBackground = medicalBackground 
+            ? `${medicalBackground}\n\nAllergies: ${patient.allergies}`
+            : `Allergies: ${patient.allergies}`;
+        }
+
+        setNotes(prev => ({
+          ...prev,
+          chiefComplaint: chiefComplaint || prev.chiefComplaint,
+          medicalBackground: medicalBackground || prev.medicalBackground,
+          currentMedications: currentMedications || prev.currentMedications
+        }));
+
+        // Mark intake as reviewed when session starts (if it was pending_review)
+        if (latestAssessment) {
+          await supabase
+            .from('patients')
+            .update({ intake_status: 'reviewed' })
+            .eq('id', patientId)
+            .eq('intake_status', 'pending_review');
         }
       }
     }
@@ -327,13 +414,53 @@ export function SessionNotes({ patientId, visitId, onPlanUpdate, initialPlanText
                 <ChevronDown className={cn("h-4 w-4 text-rose-500 transition-transform", expandedSections.subjective && "rotate-180")} />
               </div>
             </CollapsibleTrigger>
-            <CollapsibleContent className="pt-3 px-1">
-              <Textarea
-                placeholder="Patient's main complaint and symptoms (auto-filled from intake if available)..."
-                value={notes.chiefComplaint}
-                onChange={(e) => updateNotes({ chiefComplaint: e.target.value })}
-                className="min-h-[100px] resize-none"
-              />
+            <CollapsibleContent className="pt-3 px-1 space-y-4">
+              {/* Chief Complaint */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Chief Complaint
+                  {notes.chiefComplaint.includes('From Intake') && (
+                    <Badge variant="secondary" className="ml-2 text-xs bg-emerald-100 text-emerald-700">
+                      Auto-filled from intake
+                    </Badge>
+                  )}
+                </label>
+                <Textarea
+                  placeholder="Patient's main complaint and symptoms..."
+                  value={notes.chiefComplaint}
+                  onChange={(e) => updateNotes({ chiefComplaint: e.target.value })}
+                  className="min-h-[100px] resize-none"
+                />
+              </div>
+
+              {/* Medical Background */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Medical Background
+                  {notes.medicalBackground && (
+                    <span className="text-xs text-muted-foreground ml-2">(from patient record)</span>
+                  )}
+                </label>
+                <Textarea
+                  placeholder="Medical history, allergies, relevant conditions..."
+                  value={notes.medicalBackground}
+                  onChange={(e) => updateNotes({ medicalBackground: e.target.value })}
+                  className="min-h-[60px] resize-none"
+                />
+              </div>
+
+              {/* Current Medications */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Current Medications
+                </label>
+                <Textarea
+                  placeholder="Current medications and supplements..."
+                  value={notes.currentMedications}
+                  onChange={(e) => updateNotes({ currentMedications: e.target.value })}
+                  className="min-h-[60px] resize-none"
+                />
+              </div>
             </CollapsibleContent>
           </Collapsible>
 
