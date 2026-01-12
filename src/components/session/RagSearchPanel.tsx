@@ -13,13 +13,16 @@ import {
   Clock,
   ClipboardPlus,
   Database,
-  RefreshCw
+  RefreshCw,
+  Mic,
+  MicOff
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useHaptic } from '@/hooks/useHaptic';
+import { useVoiceInput } from '@/hooks/useVoiceInput';
 
 interface SearchMessage {
   id: string;
@@ -52,6 +55,61 @@ export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelPro
   const pullOpacity = useTransform(pullDistance, [0, PULL_THRESHOLD], [0, 1]);
   const pullRotation = useTransform(pullDistance, [0, PULL_THRESHOLD], [0, 180]);
   const { lightTap, successTap } = useHaptic();
+
+  // Voice input hook
+  const {
+    isListening,
+    isSupported: isVoiceSupported,
+    transcript,
+    interimTranscript,
+    error: voiceError,
+    startListening,
+    stopListening,
+  } = useVoiceInput({
+    language: 'en-US',
+    continuous: false,
+    interimResults: true,
+    onResult: (text, isFinal) => {
+      if (isFinal && text) {
+        setQuery(text);
+        successTap();
+        toast.success('Voice captured! Review and send.');
+      }
+    },
+    onError: (error) => {
+      toast.error(error);
+    },
+    onEnd: () => {
+      // Speech recognition ended naturally (silence detected)
+      if (transcript) {
+        setQuery(transcript);
+      }
+    },
+  });
+
+  // Update query with interim transcript while listening
+  useEffect(() => {
+    if (isListening && interimTranscript) {
+      setQuery(interimTranscript);
+    }
+  }, [isListening, interimTranscript]);
+
+  // Handle voice error toast
+  useEffect(() => {
+    if (voiceError) {
+      toast.error(voiceError);
+    }
+  }, [voiceError]);
+
+  // Toggle voice input
+  const handleVoiceToggle = () => {
+    lightTap();
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  };
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -487,6 +545,67 @@ export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelPro
       {/* Input Area */}
       <div className="p-4 border-t border-border/50 bg-card/80 backdrop-blur-sm">
         <div className="flex items-center gap-2">
+          {/* Microphone Button - Large for mobile (44px+) */}
+          {isVoiceSupported && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <motion.button
+                    onClick={handleVoiceToggle}
+                    disabled={isSearching}
+                    className={cn(
+                      "relative h-11 w-11 md:h-11 md:w-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-colors",
+                      isListening
+                        ? "bg-red-500 text-white"
+                        : "bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground"
+                    )}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {/* Pulsing ring animation when listening */}
+                    {isListening && (
+                      <>
+                        <motion.span
+                          className="absolute inset-0 rounded-full bg-red-500"
+                          animate={{
+                            scale: [1, 1.4, 1],
+                            opacity: [0.7, 0, 0.7],
+                          }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                          }}
+                        />
+                        <motion.span
+                          className="absolute inset-0 rounded-full bg-red-400"
+                          animate={{
+                            scale: [1, 1.2, 1],
+                            opacity: [0.5, 0, 0.5],
+                          }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                            delay: 0.2,
+                          }}
+                        />
+                      </>
+                    )}
+                    {isListening ? (
+                      <MicOff className="h-5 w-5 relative z-10" />
+                    ) : (
+                      <Mic className="h-5 w-5" />
+                    )}
+                  </motion.button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isListening ? 'Stop listening' : 'Voice input (Push to Talk)'}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
+          {/* Search Input */}
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -494,15 +613,30 @@ export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelPro
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask the TCM Brain..."
-              className="pl-10 pr-4 h-11 bg-background border-muted-foreground/20 focus:border-violet-500"
+              placeholder={isListening ? "Listening..." : "Ask the TCM Brain..."}
+              className={cn(
+                "pl-10 pr-4 h-11 bg-background border-muted-foreground/20 focus:border-violet-500",
+                isListening && "border-red-500 focus:border-red-500"
+              )}
               disabled={isSearching}
             />
+            {/* Listening indicator */}
+            {isListening && (
+              <motion.div
+                className="absolute right-3 top-1/2 -translate-y-1/2"
+                animate={{ opacity: [1, 0.3, 1] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              >
+                <span className="text-xs text-red-500 font-medium">●</span>
+              </motion.div>
+            )}
           </div>
+
+          {/* Send Button */}
           <Button
             onClick={handleSearch}
             disabled={!query.trim() || isSearching}
-            className="h-11 w-11 p-0 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700"
+            className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700"
           >
             {isSearching ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -512,7 +646,9 @@ export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelPro
           </Button>
         </div>
         <p className="text-xs text-muted-foreground mt-2 text-center">
-          Press Enter to search • Powered by Hybrid RAG
+          {isListening 
+            ? "🎤 Speak now... Tap mic to stop" 
+            : "Press Enter to search • Tap 🎤 for voice"}
         </p>
       </div>
     </div>
