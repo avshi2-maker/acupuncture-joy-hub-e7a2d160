@@ -300,8 +300,9 @@ export function BodyMapWorkspace({
               patientId={patientId} 
               onPlanUpdate={onPlanUpdate}
               initialPlanText={initialPlanText}
+              onPatternChange={handlePatternChange}
+              onNotesUpdate={handleNotesUpdate}
             />
-          </TabsContent>
           </TabsContent>
         </div>
       </Tabs>
