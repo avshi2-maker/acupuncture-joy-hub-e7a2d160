@@ -11,7 +11,9 @@ import {
   Save, 
   X,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Brain,
+  User
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -32,6 +34,8 @@ interface SessionNotesState {
   followUpRecommended: string;
 }
 
+type MobileTab = 'brain' | 'body';
+
 export function SessionLayout() {
   const { patientId } = useParams<{ patientId: string }>();
   const navigate = useNavigate();
@@ -41,6 +45,7 @@ export function SessionLayout() {
   const [elapsed, setElapsed] = useState(0);
   const [leftPanelExpanded, setLeftPanelExpanded] = useState(false);
   const [planText, setPlanText] = useState('');
+  const [activeMobileTab, setActiveMobileTab] = useState<MobileTab>('body');
   const [sessionNotes, setSessionNotes] = useState<SessionNotesState>({
     chiefComplaint: '',
     pulseFindings: [],
@@ -117,56 +122,65 @@ export function SessionLayout() {
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
       {/* Session Header */}
-      <header className="h-14 border-b border-border/50 bg-card/95 backdrop-blur-sm flex items-center justify-between px-4 shrink-0">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/crm')} className="gap-2">
+      <header className="h-14 border-b border-border/50 bg-card/95 backdrop-blur-sm flex items-center justify-between px-2 md:px-4 shrink-0">
+        <div className="flex items-center gap-2 md:gap-4">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/crm')} className="gap-1 md:gap-2 px-2 md:px-3">
             <ArrowLeft className="h-4 w-4" />
-            Back to CRM
+            <span className="hidden sm:inline">Back to CRM</span>
           </Button>
-          <div className="h-6 w-px bg-border" />
+          <div className="hidden md:block h-6 w-px bg-border" />
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-jade-400 to-jade-600 flex items-center justify-center text-white text-sm font-semibold">
+            <div className="h-7 w-7 md:h-8 md:w-8 rounded-full bg-gradient-to-br from-jade-400 to-jade-600 flex items-center justify-center text-white text-xs md:text-sm font-semibold">
               {patient?.full_name?.charAt(0)?.toUpperCase() || 'P'}
             </div>
-            <div>
+            <div className="hidden sm:block">
               <p className="text-sm font-medium">{isLoading ? 'Loading...' : patient?.full_name || 'Unknown Patient'}</p>
               <p className="text-xs text-muted-foreground">Active Session</p>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
-            <Clock className="h-4 w-4" />
-            <span className="font-mono text-sm font-medium">{formatTime(elapsed)}</span>
+        <div className="flex items-center gap-2 md:gap-3">
+          <div className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
+            <Clock className="h-3 w-3 md:h-4 md:w-4" />
+            <span className="font-mono text-xs md:text-sm font-medium">{formatTime(elapsed)}</span>
           </div>
-          <PrintSessionButton 
-            sessionData={{
-              patientName: patient?.full_name || 'Unknown Patient',
-              patientId: patientId,
-              sessionDate: sessionStartTime,
-              chiefComplaint: sessionNotes.chiefComplaint,
-              pulseFindings: sessionNotes.pulseFindings,
-              tongueFindings: sessionNotes.tongueFindings,
-              tcmPattern: sessionNotes.tcmPattern,
-              treatmentPrinciple: sessionNotes.treatmentPrinciple,
-              planNotes: sessionNotes.planNotes,
-              herbsPrescribed: sessionNotes.herbsPrescribed,
-              selectedPoints: sessionNotes.selectedPoints,
-              followUpRecommended: sessionNotes.followUpRecommended
-            }}
-          />
-          <Button variant="outline" size="sm" onClick={handleSaveSession} className="gap-2">
-            <Save className="h-4 w-4" />Save
-          </Button>
-          <Button variant="destructive" size="sm" onClick={handleEndSession} className="gap-2">
-            <X className="h-4 w-4" />End Session
+          <div className="hidden md:flex items-center gap-2">
+            <PrintSessionButton 
+              sessionData={{
+                patientName: patient?.full_name || 'Unknown Patient',
+                patientId: patientId,
+                sessionDate: sessionStartTime,
+                chiefComplaint: sessionNotes.chiefComplaint,
+                pulseFindings: sessionNotes.pulseFindings,
+                tongueFindings: sessionNotes.tongueFindings,
+                tcmPattern: sessionNotes.tcmPattern,
+                treatmentPrinciple: sessionNotes.treatmentPrinciple,
+                planNotes: sessionNotes.planNotes,
+                herbsPrescribed: sessionNotes.herbsPrescribed,
+                selectedPoints: sessionNotes.selectedPoints,
+                followUpRecommended: sessionNotes.followUpRecommended
+              }}
+            />
+            <Button variant="outline" size="sm" onClick={handleSaveSession} className="gap-2">
+              <Save className="h-4 w-4" />Save
+            </Button>
+          </div>
+          <Button variant="destructive" size="sm" onClick={handleEndSession} className="gap-1 md:gap-2 px-2 md:px-3">
+            <X className="h-4 w-4" />
+            <span className="hidden sm:inline">End Session</span>
           </Button>
         </div>
       </header>
 
-      {/* Main Split Content */}
-      <main className="flex-1 flex overflow-hidden">
-        <aside className={cn("border-r border-border/30 transition-all duration-300 ease-in-out flex flex-col", leftPanelExpanded ? "w-1/2" : "w-[40%]")}>
+      {/* Main Split Content - Desktop: side-by-side, Mobile: tabs */}
+      <main className="flex-1 flex overflow-hidden pb-16 md:pb-0">
+        {/* Left Panel (TCM Brain) - Hidden on mobile unless active */}
+        <aside className={cn(
+          "border-r border-border/30 transition-all duration-300 ease-in-out flex flex-col",
+          // Desktop: always visible with variable width
+          "hidden md:flex",
+          leftPanelExpanded ? "md:w-1/2" : "md:w-[40%]"
+        )}>
           <div className="flex items-center justify-end p-1 border-b border-border/30 bg-muted/30">
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setLeftPanelExpanded(!leftPanelExpanded)}>
               {leftPanelExpanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
@@ -176,7 +190,22 @@ export function SessionLayout() {
             <RagSearchPanel patientId={patientId} onInsertToNotes={handleInsertToNotes} />
           </div>
         </aside>
-        <section className={cn("transition-all duration-300 ease-in-out overflow-hidden", leftPanelExpanded ? "w-1/2" : "w-[60%]")}>
+
+        {/* Mobile: TCM Brain Panel */}
+        <div className={cn(
+          "w-full h-full md:hidden",
+          activeMobileTab === 'brain' ? 'block' : 'hidden'
+        )}>
+          <RagSearchPanel patientId={patientId} onInsertToNotes={handleInsertToNotes} />
+        </div>
+
+        {/* Right Panel (Body Map) - Hidden on mobile unless active */}
+        <section className={cn(
+          "transition-all duration-300 ease-in-out overflow-hidden",
+          // Desktop: always visible with variable width
+          "hidden md:block",
+          leftPanelExpanded ? "md:w-1/2" : "md:w-[60%]"
+        )}>
           <BodyMapWorkspace 
             patientId={patientId} 
             patientName={patient?.full_name} 
@@ -184,9 +213,52 @@ export function SessionLayout() {
             onNotesChange={setSessionNotes}
           />
         </section>
+
+        {/* Mobile: Body Map Panel */}
+        <div className={cn(
+          "w-full h-full md:hidden",
+          activeMobileTab === 'body' ? 'block' : 'hidden'
+        )}>
+          <BodyMapWorkspace 
+            patientId={patientId} 
+            patientName={patient?.full_name} 
+            initialPlanText={planText}
+            onNotesChange={setSessionNotes}
+          />
+        </div>
       </main>
 
-      <footer className="h-12 border-t border-border/50 bg-card/95 backdrop-blur-sm flex items-center justify-center px-4 shrink-0">
+      {/* Mobile Bottom Navigation - Fixed toggle bar */}
+      <nav className="fixed bottom-0 left-0 right-0 h-16 border-t border-border bg-card/95 backdrop-blur-sm flex md:hidden z-50">
+        <button
+          onClick={() => setActiveMobileTab('brain')}
+          className={cn(
+            "flex-1 flex flex-col items-center justify-center gap-1 transition-colors",
+            activeMobileTab === 'brain' 
+              ? "text-jade-600 dark:text-jade-400 bg-jade-50 dark:bg-jade-900/20" 
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          )}
+        >
+          <Brain className="h-5 w-5" />
+          <span className="text-xs font-medium">TCM Brain</span>
+        </button>
+        <div className="w-px bg-border" />
+        <button
+          onClick={() => setActiveMobileTab('body')}
+          className={cn(
+            "flex-1 flex flex-col items-center justify-center gap-1 transition-colors",
+            activeMobileTab === 'body' 
+              ? "text-jade-600 dark:text-jade-400 bg-jade-50 dark:bg-jade-900/20" 
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          )}
+        >
+          <User className="h-5 w-5" />
+          <span className="text-xs font-medium">Body Map</span>
+        </button>
+      </nav>
+
+      {/* Desktop Footer - hidden on mobile */}
+      <footer className="hidden md:flex h-12 border-t border-border/50 bg-card/95 backdrop-blur-sm items-center justify-center px-4 shrink-0">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span>Session started at {sessionStartTime.toLocaleTimeString()}</span>
           <span className="mx-2">•</span>
