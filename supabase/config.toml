@@ -125,3 +125,6 @@ verify_jwt = false
 
 [functions.apply-priority-scores]
 verify_jwt = false
+
+[functions.ask-tcm-brain]
+verify_jwt = false
