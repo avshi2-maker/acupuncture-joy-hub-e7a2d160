@@ -16,12 +16,8 @@ import { DashboardGuide, useDashboardGuide } from '@/components/dashboard/Dashbo
 import { GoldenPathGuide, useGoldenPathGuide } from '@/components/dashboard/GoldenPathGuide';
 import { ActiveSessionWidget } from '@/components/dashboard/ActiveSessionWidget';
 import { HelpFAB } from '@/components/dashboard/HelpFAB';
-import { ClinicalNexusCard } from '@/components/dashboard/ClinicalNexusCard';
-import { ClinicWalletCard } from '@/components/wallet/ClinicWalletCard';
-import { UsageWidget } from '@/components/usage/UnifiedUsageMeter';
 import { VagusStimulationDialog } from '@/components/clinical';
 import { useGlobalSessionOptional } from '@/contexts/GlobalSessionContext';
-import roiWidgetBg from '@/assets/roi-widget-bg.png';
 
 interface DashboardStats {
   totalPatients: number;
@@ -251,28 +247,10 @@ export default function Dashboard() {
               hasAppointmentWithConsent={stats.hasAppointmentWithConsent}
             />
 
-            {/* Secondary Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Onboarding Progress */}
-              <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
-                <h3 className="text-lg font-semibold mb-4">התקדמות</h3>
-                <OnboardingProgress />
-              </div>
-
-              {/* Clinical NEXUS */}
-              <div className="bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700">
-                <ClinicalNexusCard />
-              </div>
-
-              {/* Wallet & Usage */}
-              <div className="space-y-4">
-                <div className="bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700">
-                  <ClinicWalletCard />
-                </div>
-                <div className="bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700">
-                  <UsageWidget backgroundImage={roiWidgetBg} />
-                </div>
-              </div>
+            {/* Onboarding Progress */}
+            <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-700 max-w-md">
+              <h3 className="text-lg font-semibold mb-4">התקדמות</h3>
+              <OnboardingProgress />
             </div>
 
             {/* Upgrade CTA for non-premium */}
