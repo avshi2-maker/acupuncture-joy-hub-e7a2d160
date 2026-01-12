@@ -10,6 +10,10 @@ import { toast } from 'sonner';
 import { KnowledgeBaseCard } from '@/components/dashboard/KnowledgeBaseCard';
 import { AssetInventoryCard } from '@/components/dashboard/AssetInventoryCard';
 import { HebrewQuestionsCard } from '@/components/dashboard/HebrewQuestionsCard';
+import { ClinicalNexusCard } from '@/components/dashboard/ClinicalNexusCard';
+import { ClinicWalletCard } from '@/components/wallet/ClinicWalletCard';
+import { UsageWidget } from '@/components/usage/UnifiedUsageMeter';
+import roiWidgetBg from '@/assets/roi-widget-bg.png';
 
 const DEVELOPER_PASSWORD = 'sapir2024dev'; // Internal password - change as needed
 
@@ -132,6 +136,17 @@ export default function PrivateDeveloper() {
       {/* Developer Tools Grid */}
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         
+        {/* Moved from Dashboard - Clinical NEXUS */}
+        <div className="col-span-1 lg:col-span-2">
+          <ClinicalNexusCard />
+        </div>
+
+        {/* Moved from Dashboard - Wallet & Usage */}
+        <div className="col-span-1 space-y-4">
+          <ClinicWalletCard />
+          <UsageWidget backgroundImage={roiWidgetBg} />
+        </div>
+
         {/* Knowledge Base Management */}
         <div className="col-span-1">
           <KnowledgeBaseCard />
