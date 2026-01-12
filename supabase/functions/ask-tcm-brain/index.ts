@@ -79,11 +79,11 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Get API keys
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    if (!GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY is not configured');
     }
 
     // Step 1: Try to generate embedding for hybrid search
@@ -170,22 +170,25 @@ serve(async (req) => {
       ? `\n\nRelevant Knowledge Base Context (${searchMethod} search):\n${contextParts.join('\n')}`
       : '\n\nNo specific context found in knowledge base. Answer based on general TCM knowledge.';
 
-    // Step 4: Call Lovable AI (Gemini) for response generation with streaming
-    console.log('[ask-tcm-brain] Calling Lovable AI for response...');
+    // Step 4: Call Gemini API directly for response generation with streaming
+    console.log('[ask-tcm-brain] Calling Gemini 2.0 Flash for response...');
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
-        messages: [
-          { role: 'system', content: TCM_SYSTEM_PROMPT },
-          { role: 'user', content: `${query}${contextString}` }
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: `${TCM_SYSTEM_PROMPT}\n\nUser Question: ${query}${contextString}` }]
+          }
         ],
-        stream: true,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 2048,
+        }
       }),
     });
 
@@ -196,20 +199,15 @@ serve(async (req) => {
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-      if (aiResponse.status === 402) {
-        return new Response(
-          JSON.stringify({ error: 'AI credits exhausted. Please add funds to continue.', sources }),
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
       const errorText = await aiResponse.text();
-      console.error('[ask-tcm-brain] AI error:', aiResponse.status, errorText);
-      throw new Error(`AI gateway error: ${aiResponse.status}`);
+      console.error('[ask-tcm-brain] Gemini API error:', aiResponse.status, errorText);
+      throw new Error(`Gemini API error: ${aiResponse.status}`);
     }
 
-    // Create a transform stream to inject sources and search metadata at the end
+    // Transform Gemini SSE format to our expected format
     const originalBody = aiResponse.body!;
     const reader = originalBody.getReader();
+    const decoder = new TextDecoder();
     
     const stream = new ReadableStream({
       async start(controller) {
@@ -227,7 +225,28 @@ serve(async (req) => {
           controller.close();
           return;
         }
-        controller.enqueue(value);
+        
+        // Parse Gemini SSE and extract text
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+                const text = data.candidates[0].content.parts[0].text;
+                // Send as OpenAI-compatible format for frontend
+                const openAIFormat = {
+                  choices: [{ delta: { content: text } }]
+                };
+                controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(openAIFormat)}\n\n`));
+              }
+            } catch (e) {
+              // Skip malformed JSON
+            }
+          }
+        }
       },
       cancel() {
         reader.cancel();
