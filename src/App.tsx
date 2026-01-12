@@ -133,7 +133,9 @@ const App = () => (
                   <HashRouter>
                     <HashPathRedirect />
                     <Routes>
-                    {/* Public */}
+                    {/* ============================================= */}
+                    {/* PUBLIC ROUTES - No authentication required    */}
+                    {/* ============================================= */}
                       <Route path="/" element={<Index />} />
                       <Route path="/therapist-register" element={<Navigate to="/therapist-intake" replace />} />
                       <Route path="/pricing" element={<Pricing />} />
@@ -147,16 +149,18 @@ const App = () => (
                       <Route path="/therapist-disclaimer" element={<TherapistDisclaimer />} />
                       <Route path="/therapist-intake" element={<TherapistIntake />} />
                       <Route path="/retreat-quiz" element={<RetreatQuiz />} />
-                      <Route path="/brain-assessment" element={<BrainHealthAssessment />} />
-                      <Route path="/full-body-assessment" element={<FullBodyAssessment />} />
-                      <Route path="/patient-360" element={<RequireTier><Patient360 /></RequireTier>} />
                       <Route path="/invite" element={<ProfessionalInvite />} />
 
-                      {/* Dashboard - open access */}
+                    {/* ============================================= */}
+                    {/* AUTHENTICATED DEFAULT - Redirect to CRM       */}
+                    {/* ============================================= */}
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/video-session" element={<RequireTier><VideoSession /></RequireTier>} />
                       <Route path="/tcm-brain" element={<RequireTier><TcmBrain /></RequireTier>} />
 
+                    {/* ============================================= */}
+                    {/* CRM ROUTES - Clinic Management System         */}
+                    {/* ============================================= */}
                       <Route path="/crm" element={<RequireTier><CRMErrorBoundary><CRMDashboard /></CRMErrorBoundary></RequireTier>} />
                       <Route path="/crm/dashboard" element={<RequireTier><CRMErrorBoundary><CRMDashboard /></CRMErrorBoundary></RequireTier>} />
                       <Route path="/crm/calendar" element={<RequireTier><CRMErrorBoundary><CRMCalendar /></CRMErrorBoundary></RequireTier>} />
@@ -171,36 +175,67 @@ const App = () => (
                       <Route path="/crm/patients/:patientId/consent" element={<RequireTier><CRMErrorBoundary><PatientConsentForm /></CRMErrorBoundary></RequireTier>} />
                       <Route path="/patient/:id/timeline" element={<RequireTier><CRMErrorBoundary><PatientTimeline /></CRMErrorBoundary></RequireTier>} />
 
+                    {/* ============================================= */}
+                    {/* CLINICAL TOOLS - Grouped under /clinical-tools */}
+                    {/* ============================================= */}
+                      <Route path="/clinical-tools/bazi" element={<RequireTier><BaziCalculator /></RequireTier>} />
+                      <Route path="/clinical-tools/pulse-gallery" element={<RequireTier><PulseGallery /></RequireTier>} />
+                      <Route path="/clinical-tools/tongue-gallery" element={<RequireTier><TongueGallery /></RequireTier>} />
+                      <Route path="/clinical-tools/symptom-checker" element={<RequireTier><SymptomChecker /></RequireTier>} />
+                      <Route path="/clinical-tools/brain-assessment" element={<BrainHealthAssessment />} />
+                      <Route path="/clinical-tools/full-body" element={<FullBodyAssessment />} />
+                      <Route path="/clinical-tools/combined-diagnosis" element={<RequireTier><CombinedDiagnosis /></RequireTier>} />
+                      <Route path="/clinical-tools/treatment-planner" element={<RequireTier><TreatmentPlanner /></RequireTier>} />
+                      <Route path="/clinical-tools/clinical-navigator" element={<RequireTier><ClinicalNavigator /></RequireTier>} />
+                      <Route path="/clinical-tools/health-compass" element={<HealthCompass />} />
+                      <Route path="/clinical-tools/patient-360" element={<RequireTier><Patient360 /></RequireTier>} />
+                      <Route path="/clinical-tools/patient-valuator" element={<RequireTier><PatientValuator /></RequireTier>} />
+                      <Route path="/clinical-tools/caf-browser" element={<RequireTier><CAFBrowser /></RequireTier>} />
+                      <Route path="/clinical-tools/clinical-trials" element={<RequireTier><ClinicalTrialsBrowser /></RequireTier>} />
+                      
+                      {/* Legacy routes - redirect to new clinical-tools paths */}
+                      <Route path="/bazi-calculator" element={<Navigate to="/clinical-tools/bazi" replace />} />
+                      <Route path="/pulse-gallery" element={<Navigate to="/clinical-tools/pulse-gallery" replace />} />
+                      <Route path="/tongue-gallery" element={<Navigate to="/clinical-tools/tongue-gallery" replace />} />
+                      <Route path="/symptom-checker" element={<Navigate to="/clinical-tools/symptom-checker" replace />} />
+                      <Route path="/brain-assessment" element={<Navigate to="/clinical-tools/brain-assessment" replace />} />
+                      <Route path="/full-body-assessment" element={<Navigate to="/clinical-tools/full-body" replace />} />
+                      <Route path="/combined-diagnosis" element={<Navigate to="/clinical-tools/combined-diagnosis" replace />} />
+                      <Route path="/treatment-planner" element={<Navigate to="/clinical-tools/treatment-planner" replace />} />
+                      <Route path="/clinical-navigator" element={<Navigate to="/clinical-tools/clinical-navigator" replace />} />
+                      <Route path="/health-compass" element={<Navigate to="/clinical-tools/health-compass" replace />} />
+                      <Route path="/patient-360" element={<Navigate to="/clinical-tools/patient-360" replace />} />
+                      <Route path="/patient-valuator" element={<Navigate to="/clinical-tools/patient-valuator" replace />} />
+                      <Route path="/caf-browser" element={<Navigate to="/clinical-tools/caf-browser" replace />} />
+                      <Route path="/clinical-trials" element={<Navigate to="/clinical-tools/clinical-trials" replace />} />
+
+                    {/* ============================================= */}
+                    {/* THERAPIST PROFILE                             */}
+                    {/* ============================================= */}
                       <Route path="/therapist-profile" element={<RequireTier><TherapistProfile /></RequireTier>} />
                       <Route path="/therapist-profile/edit" element={<RequireTier><TherapistProfileEdit /></RequireTier>} />
 
+                    {/* ============================================= */}
+                    {/* ADMIN ROUTES                                  */}
+                    {/* ============================================= */}
                       <Route path="/admin" element={<RequireTier><Admin /></RequireTier>} />
                       <Route path="/admin/feedback" element={<RequireTier><AdminFeedback /></RequireTier>} />
-                      {/* Knowledge Registry is protected by email/password auth inside the page (not tier-gated) */}
                       <Route path="/admin/knowledge" element={<KnowledgeRegistry />} />
                       <Route path="/admin/disclaimers" element={<RequireTier><AdminDisclaimers /></RequireTier>} />
                       <Route path="/admin/passwords" element={<RequireTier><AdminPasswordGenerator /></RequireTier>} />
                       <Route path="/admin/legal-audit" element={<RequireTier><AdminLegalAudit /></RequireTier>} />
 
-                      <Route path="/knowledge-registry" element={<KnowledgeRegistry />} />
-                      <Route path="/bazi-calculator" element={<RequireTier><BaziCalculator /></RequireTier>} />
-                      <Route path="/legal-report" element={<RequireTier><LegalReport /></RequireTier>} />
-                      <Route path="/symptom-checker" element={<RequireTier><SymptomChecker /></RequireTier>} />
-                      <Route path="/treatment-planner" element={<RequireTier><TreatmentPlanner /></RequireTier>} />
-                      <Route path="/qa-testing" element={<RequireTier><QATesting /></RequireTier>} />
+                    {/* ============================================= */}
+                    {/* ENCYCLOPEDIA & KNOWLEDGE                      */}
+                    {/* ============================================= */}
                       <Route path="/encyclopedia" element={<RequireTier><EncyclopediaLanding /></RequireTier>} />
-                      <Route path="/developers" element={<RequireTier><Developers /></RequireTier>} />
-                      <Route path="/scenarios" element={<RequireTier><ScenariosDashboard /></RequireTier>} />
-                      <Route path="/caf-browser" element={<RequireTier><CAFBrowser /></RequireTier>} />
+                      <Route path="/knowledge-registry" element={<KnowledgeRegistry />} />
                       <Route path="/cm-brain-questions" element={<RequireTier><CMBrainQuestions /></RequireTier>} />
-                      <Route path="/clinical-trials" element={<RequireTier><ClinicalTrialsBrowser /></RequireTier>} />
-                      <Route path="/patient-valuator" element={<RequireTier><PatientValuator /></RequireTier>} />
-                      <Route path="/roi-simulator" element={<ROISimulator />} />
-                      <Route path="/ui-smoke-test" element={<UISmokeTest />} />
-                      <Route path="/therapist-roi" element={<TherapistROICalculator />} />
-                      <Route path="/simulation-calculators" element={<SimulationCalculators />} />
-                      <Route path="/clinical-navigator" element={<RequireTier><ClinicalNavigator /></RequireTier>} />
-                      <Route path="/health-compass" element={<HealthCompass />} />
+
+                    {/* ============================================= */}
+                    {/* QUESTIONNAIRES                                */}
+                    {/* ============================================= */}
+                      <Route path="/questionnaire-hub" element={<QuestionnaireHub />} />
                       <Route path="/patient-questionnaire" element={<PatientQuestionnaire />} />
                       <Route path="/internal-climate" element={<InternalClimateQuestionnaire />} />
                       <Route path="/vitality-longevity" element={<VitalityLongevityQuestionnaire />} />
@@ -214,16 +249,32 @@ const App = () => (
                       <Route path="/zang-fu-syndromes" element={<ZangFuSyndromesQuestionnaire />} />
                       <Route path="/pulse-tongue-diagnosis" element={<PulseTongueDiagnosisQuestionnaire />} />
                       <Route path="/acupuncture-points" element={<AcupuncturePointsQuestionnaire />} />
-                      <Route path="/questionnaire-hub" element={<QuestionnaireHub />} />
-                      <Route path="/tongue-gallery" element={<RequireTier><TongueGallery /></RequireTier>} />
-                      <Route path="/pulse-gallery" element={<RequireTier><PulseGallery /></RequireTier>} />
-                      <Route path="/combined-diagnosis" element={<RequireTier><CombinedDiagnosis /></RequireTier>} />
+
+                    {/* ============================================= */}
+                    {/* TOOLS & UTILITIES                             */}
+                    {/* ============================================= */}
+                      <Route path="/legal-report" element={<RequireTier><LegalReport /></RequireTier>} />
+                      <Route path="/qa-testing" element={<RequireTier><QATesting /></RequireTier>} />
+                      <Route path="/developers" element={<RequireTier><Developers /></RequireTier>} />
+                      <Route path="/scenarios" element={<RequireTier><ScenariosDashboard /></RequireTier>} />
+                      <Route path="/roi-simulator" element={<ROISimulator />} />
+                      <Route path="/therapist-roi" element={<TherapistROICalculator />} />
+                      <Route path="/simulation-calculators" element={<SimulationCalculators />} />
                       <Route path="/rag-hebrew-report" element={<RequireTier><RAGHebrewReport /></RequireTier>} />
                       <Route path="/hebrew-questions-report" element={<RequireTier><HebrewQuestionsReport /></RequireTier>} />
                       <Route path="/asset-inventory" element={<RequireTier><AssetInventory /></RequireTier>} />
+
+                    {/* ============================================= */}
+                    {/* DEV & TESTING                                 */}
+                    {/* ============================================= */}
+                      <Route path="/ui-smoke-test" element={<UISmokeTest />} />
                       <Route path="/music-test" element={<MusicPlayerTest />} />
                       <Route path="/private-developer" element={<PrivateDeveloper />} />
                       <Route path="/standard-session" element={<StandardSession />} />
+
+                    {/* ============================================= */}
+                    {/* CATCH-ALL                                     */}
+                    {/* ============================================= */}
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                     
