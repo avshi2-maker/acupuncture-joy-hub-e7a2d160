@@ -15,7 +15,9 @@ import {
   Database,
   RefreshCw,
   Mic,
-  MicOff
+  MicOff,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
@@ -23,6 +25,7 @@ import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useHaptic } from '@/hooks/useHaptic';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
+import { useSpeechSynthesis, extractSpeakableContent } from '@/hooks/useSpeechSynthesis';
 
 interface SearchMessage {
   id: string;
@@ -41,6 +44,8 @@ interface RagSearchPanelProps {
 
 // Pull-to-refresh threshold in pixels
 const PULL_THRESHOLD = 80;
+// Auto-submit countdown in seconds
+const AUTO_SUBMIT_DELAY = 3;
 
 export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelProps) {
   const [query, setQuery] = useState('');
@@ -48,13 +53,33 @@ export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelPro
   const [messages, setMessages] = useState<SearchMessage[]>([]);
   const [isPulling, setIsPulling] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [voiceModeEnabled, setVoiceModeEnabled] = useState(false);
+  const [autoSubmitCountdown, setAutoSubmitCountdown] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const pullStartY = useRef<number | null>(null);
   const pullDistance = useMotionValue(0);
   const pullOpacity = useTransform(pullDistance, [0, PULL_THRESHOLD], [0, 1]);
   const pullRotation = useTransform(pullDistance, [0, PULL_THRESHOLD], [0, 180]);
+  const autoSubmitTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const { lightTap, successTap } = useHaptic();
+
+  // Text-to-speech hook
+  const { 
+    isSupported: isTTSSupported, 
+    isSpeaking, 
+    speak, 
+    cancel: cancelSpeech 
+  } = useSpeechSynthesis({
+    rate: 1,
+    onEnd: () => {
+      // Speech finished
+    },
+    onError: (error) => {
+      console.warn('TTS error:', error);
+    },
+  });
 
   // Voice input hook
   const {
@@ -73,7 +98,8 @@ export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelPro
       if (isFinal && text) {
         setQuery(text);
         successTap();
-        toast.success('Voice captured! Review and send.');
+        // Start auto-submit countdown
+        startAutoSubmitCountdown();
       }
     },
     onError: (error) => {
@@ -83,9 +109,61 @@ export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelPro
       // Speech recognition ended naturally (silence detected)
       if (transcript) {
         setQuery(transcript);
+        // Start auto-submit countdown when voice input ends
+        startAutoSubmitCountdown();
       }
     },
   });
+
+  // Auto-submit countdown logic
+  const startAutoSubmitCountdown = useCallback(() => {
+    // Clear any existing timers
+    if (autoSubmitTimerRef.current) clearTimeout(autoSubmitTimerRef.current);
+    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+
+    setAutoSubmitCountdown(AUTO_SUBMIT_DELAY);
+
+    // Countdown interval
+    countdownIntervalRef.current = setInterval(() => {
+      setAutoSubmitCountdown(prev => {
+        if (prev === null || prev <= 1) {
+          return prev;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    // Auto-submit timer
+    autoSubmitTimerRef.current = setTimeout(() => {
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+      setAutoSubmitCountdown(null);
+      // Trigger search
+      handleSearchFromVoice();
+    }, AUTO_SUBMIT_DELAY * 1000);
+  }, []);
+
+  // Cancel auto-submit (panic button)
+  const cancelAutoSubmit = useCallback(() => {
+    if (autoSubmitTimerRef.current) {
+      clearTimeout(autoSubmitTimerRef.current);
+      autoSubmitTimerRef.current = null;
+    }
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+    setAutoSubmitCountdown(null);
+    lightTap();
+    toast.info('Auto-send cancelled. Edit your message.');
+  }, [lightTap]);
+
+  // Clean up timers on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSubmitTimerRef.current) clearTimeout(autoSubmitTimerRef.current);
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+    };
+  }, []);
 
   // Update query with interim transcript while listening
   useEffect(() => {
@@ -218,8 +296,13 @@ export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelPro
     return { content: fullContent, sources, searchMethod };
   }, [patientId]);
 
-  const handleSearch = async () => {
+  const handleSearch = async (fromVoice = false) => {
     if (!query.trim() || isSearching) return;
+
+    // Cancel any ongoing speech when starting new search
+    if (isSpeaking) {
+      cancelSpeech();
+    }
 
     const userMessage: SearchMessage = {
       id: `q-${Date.now()}`,
@@ -234,7 +317,16 @@ export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelPro
     setIsSearching(true);
 
     try {
-      await streamResponse(searchQuery);
+      const result = await streamResponse(searchQuery);
+      
+      // If voice mode is enabled and search was from voice, speak the response
+      if (voiceModeEnabled && fromVoice && result.content) {
+        const speakableContent = extractSpeakableContent(result.content);
+        if (speakableContent) {
+          // Small delay to let UI update
+          setTimeout(() => speak(speakableContent), 500);
+        }
+      }
     } catch (error) {
       console.error('Search error:', error);
       
@@ -262,10 +354,15 @@ export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelPro
     }
   };
 
+  // Voice-triggered search (used by auto-submit)
+  const handleSearchFromVoice = () => {
+    handleSearch(true);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSearch();
+      handleSearch(false);
     }
   };
 
@@ -326,7 +423,7 @@ export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelPro
   };
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-b from-background to-muted/20">
+    <div className="h-full flex flex-col bg-gradient-to-b from-background to-muted/20 relative">
       {/* Header */}
       <div className="px-4 py-3 border-b border-border/50 bg-card/80 backdrop-blur-sm">
         <div className="flex items-center gap-3">
@@ -337,12 +434,51 @@ export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelPro
             <h3 className="font-semibold text-foreground">TCM Brain</h3>
             <p className="text-xs text-muted-foreground">AI-powered clinical knowledge search</p>
           </div>
+          
+          {/* Voice Mode Toggle (TTS) */}
+          {isTTSSupported && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "h-8 w-8",
+                      voiceModeEnabled && "text-violet-600 bg-violet-100 dark:bg-violet-900/30"
+                    )}
+                    onClick={() => {
+                      setVoiceModeEnabled(!voiceModeEnabled);
+                      lightTap();
+                      if (!voiceModeEnabled) {
+                        toast.success('🔊 Voice Mode ON - Brain will speak responses');
+                      } else {
+                        cancelSpeech();
+                        toast.info('🔇 Voice Mode OFF');
+                      }
+                    }}
+                  >
+                    {voiceModeEnabled ? (
+                      <Volume2 className="h-4 w-4" />
+                    ) : (
+                      <VolumeX className="h-4 w-4" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {voiceModeEnabled ? 'Voice Mode: ON (tap to mute)' : 'Voice Mode: OFF (tap to enable)'}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          
           {messages.length > 0 && (
             <Button
               variant="ghost"
               size="sm"
               onClick={() => {
                 setMessages([]);
+                cancelSpeech();
                 lightTap();
                 toast.success('🧠 Brain Cleared');
               }}
@@ -353,6 +489,37 @@ export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelPro
             </Button>
           )}
         </div>
+        
+        {/* Speaking indicator */}
+        <AnimatePresence>
+          {isSpeaking && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="mt-2 flex items-center gap-2 text-xs text-violet-600 dark:text-violet-400"
+            >
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.5, repeat: Infinity }}
+              >
+                <Volume2 className="h-3 w-3" />
+              </motion.div>
+              <span>Speaking...</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-5 px-2 text-xs"
+                onClick={() => {
+                  cancelSpeech();
+                  lightTap();
+                }}
+              >
+                Stop
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Pull-to-refresh indicator */}
@@ -634,7 +801,7 @@ export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelPro
 
           {/* Send Button */}
           <Button
-            onClick={handleSearch}
+            onClick={() => handleSearch(false)}
             disabled={!query.trim() || isSearching}
             className="h-11 w-11 min-w-[44px] min-h-[44px] p-0 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700"
           >
@@ -651,6 +818,74 @@ export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelPro
             : "Press Enter to search • Tap 🎤 for voice"}
         </p>
       </div>
+
+      {/* Auto-Submit Countdown Overlay */}
+      <AnimatePresence>
+        {autoSubmitCountdown !== null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center"
+            onClick={cancelAutoSubmit}
+          >
+            <motion.div
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.8 }}
+              className="text-center p-8"
+            >
+              {/* Circular countdown */}
+              <div className="relative w-32 h-32 mx-auto mb-4">
+                <svg className="w-32 h-32 transform -rotate-90">
+                  <circle
+                    cx="64"
+                    cy="64"
+                    r="58"
+                    stroke="currentColor"
+                    strokeWidth="8"
+                    fill="none"
+                    className="text-muted/30"
+                  />
+                  <motion.circle
+                    cx="64"
+                    cy="64"
+                    r="58"
+                    stroke="currentColor"
+                    strokeWidth="8"
+                    fill="none"
+                    className="text-violet-500"
+                    strokeLinecap="round"
+                    initial={{ pathLength: 1 }}
+                    animate={{ pathLength: 0 }}
+                    transition={{ duration: AUTO_SUBMIT_DELAY, ease: "linear" }}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-4xl font-bold text-violet-500">
+                    {autoSubmitCountdown}
+                  </span>
+                </div>
+              </div>
+              
+              <p className="text-lg font-semibold mb-2">Sending in {autoSubmitCountdown}...</p>
+              <p className="text-sm text-muted-foreground mb-4">Tap anywhere to cancel</p>
+              
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  cancelAutoSubmit();
+                }}
+                className="gap-2"
+              >
+                ✋ Cancel & Edit
+              </Button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
