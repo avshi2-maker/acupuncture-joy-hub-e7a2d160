@@ -1175,6 +1175,7 @@ export type Database = {
           gender: string | null
           id: string
           id_number: string | null
+          intake_status: string | null
           is_pregnant: boolean | null
           lifestyle_notes: string | null
           medical_history: string | null
@@ -1214,6 +1215,7 @@ export type Database = {
           gender?: string | null
           id?: string
           id_number?: string | null
+          intake_status?: string | null
           is_pregnant?: boolean | null
           lifestyle_notes?: string | null
           medical_history?: string | null
@@ -1253,6 +1255,7 @@ export type Database = {
           gender?: string | null
           id?: string
           id_number?: string | null
+          intake_status?: string | null
           is_pregnant?: boolean | null
           lifestyle_notes?: string | null
           medical_history?: string | null

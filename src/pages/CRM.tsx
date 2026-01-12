@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useTier } from '@/hooks/useTier';
 import { useAuth } from '@/hooks/useAuth';
@@ -63,6 +64,7 @@ interface Patient {
   medications: string | null;
   notes: string | null;
   created_at: string;
+  intake_status: string | null;
 }
 
 interface Visit {
@@ -977,11 +979,23 @@ export default function CRM() {
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 bg-jade-light rounded-full flex items-center justify-center shrink-0">
-                          <User className="h-5 w-5 text-jade" />
+                        <div className="relative">
+                          <div className="w-10 h-10 bg-jade-light rounded-full flex items-center justify-center shrink-0">
+                            <User className="h-5 w-5 text-jade" />
+                          </div>
+                          {patient.intake_status === 'pending_review' && (
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full animate-pulse" />
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{patient.full_name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium truncate">{patient.full_name}</p>
+                            {patient.intake_status === 'pending_review' && (
+                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 shrink-0">
+                                לסקירה
+                              </Badge>
+                            )}
+                          </div>
                           {patient.phone && (
                             <p className="text-sm text-muted-foreground flex items-center gap-1">
                               <Phone className="h-3 w-3" />

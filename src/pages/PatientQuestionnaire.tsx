@@ -288,8 +288,21 @@ export default function PatientQuestionnaire() {
 
       if (error) throw error;
 
+      // Update patient's intake_status to 'pending_review' so therapist knows to review
+      const { error: updateError } = await supabase
+        .from('patients')
+        .update({ 
+          intake_status: 'pending_review',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedPatientId);
+
+      if (updateError) {
+        console.error('Error updating patient status:', updateError);
+      }
+
       setSavedAssessmentId(data.id);
-      toast.success('השאלון נשמר בהצלחה!');
+      toast.success('השאלון נשמר בהצלחה! המטפל יקבל התראה.');
     } catch (error) {
       console.error('Error saving assessment:', error);
       toast.error('שגיאה בשמירת השאלון');
