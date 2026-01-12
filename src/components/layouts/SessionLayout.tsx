@@ -8,6 +8,7 @@ import { MobileQuickActions } from '@/components/session/MobileQuickActions';
 import { supabase } from '@/integrations/supabase/client';
 import { PrintSessionButton } from '@/components/session/PrintSessionButton';
 import { toast } from 'sonner';
+import { useHaptic } from '@/hooks/useHaptic';
 import { 
   ArrowLeft, 
   Clock, 
@@ -54,6 +55,7 @@ export function SessionLayout() {
   const [activeMobileTab, setActiveMobileTab] = useState<MobileTab>('body');
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
   const printButtonRef = useRef<HTMLButtonElement>(null);
+  const { lightTap, successTap } = useHaptic();
   const [sessionNotes, setSessionNotes] = useState<SessionNotesState>({
     chiefComplaint: '',
     pulseFindings: [],
@@ -122,12 +124,13 @@ export function SessionLayout() {
     setPlanText(text);
   };
 
-  // Swipe gesture handler
+  // Swipe gesture handler with haptic feedback
   const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const { offset, velocity } = info;
     
     // Check if swipe is significant enough
     if (Math.abs(offset.x) > SWIPE_THRESHOLD || Math.abs(velocity.x) > 500) {
+      lightTap(); // Haptic feedback on successful swipe
       if (offset.x > 0) {
         // Swipe right -> TCM Brain
         setSwipeDirection('right');
@@ -138,6 +141,13 @@ export function SessionLayout() {
         setActiveMobileTab('body');
       }
     }
+  };
+
+  // Tab switch handler with haptic feedback
+  const handleTabSwitch = (tab: MobileTab, direction: 'left' | 'right') => {
+    lightTap();
+    setSwipeDirection(direction);
+    setActiveMobileTab(tab);
   };
 
   // Slide animation variants
@@ -307,10 +317,7 @@ export function SessionLayout() {
       {/* Mobile Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 h-16 border-t border-border bg-card/95 backdrop-blur-sm flex md:hidden z-50">
         <button
-          onClick={() => {
-            setSwipeDirection('right');
-            setActiveMobileTab('brain');
-          }}
+          onClick={() => handleTabSwitch('brain', 'right')}
           className={cn(
             "flex-1 flex flex-col items-center justify-center gap-1 transition-colors",
             activeMobileTab === 'brain' 
@@ -323,10 +330,7 @@ export function SessionLayout() {
         </button>
         <div className="w-px bg-border" />
         <button
-          onClick={() => {
-            setSwipeDirection('left');
-            setActiveMobileTab('body');
-          }}
+          onClick={() => handleTabSwitch('body', 'left')}
           className={cn(
             "flex-1 flex flex-col items-center justify-center gap-1 transition-colors",
             activeMobileTab === 'body' 

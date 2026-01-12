@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, X, Save, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useHaptic } from '@/hooks/useHaptic';
 
 interface MobileQuickActionsProps {
   onSave: () => void;
@@ -10,19 +11,27 @@ interface MobileQuickActionsProps {
 
 export function MobileQuickActions({ onSave, onPrint }: MobileQuickActionsProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const { lightTap, successTap } = useHaptic();
+
+  const handleToggle = () => {
+    lightTap();
+    setIsOpen(!isOpen);
+  };
 
   const handleSave = () => {
+    successTap();
     onSave();
     setIsOpen(false);
   };
 
   const handlePrint = () => {
+    lightTap();
     onPrint();
     setIsOpen(false);
   };
 
   return (
-    <div className="fixed bottom-20 right-4 z-50 flex flex-col-reverse items-center gap-3 md:hidden">
+    <div className="fixed bottom-20 right-4 z-[60] flex flex-col-reverse items-center gap-3 md:hidden">
       {/* Action Buttons - appear when FAB is open */}
       <AnimatePresence>
         {isOpen && (
@@ -66,7 +75,7 @@ export function MobileQuickActions({ onSave, onPrint }: MobileQuickActionsProps)
 
       {/* Main FAB Button */}
       <motion.button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggle}
         animate={{ rotate: isOpen ? 45 : 0 }}
         transition={{ duration: 0.2 }}
         className={cn(

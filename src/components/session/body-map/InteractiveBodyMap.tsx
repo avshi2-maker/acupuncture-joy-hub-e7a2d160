@@ -6,11 +6,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   ZoomIn, 
   ZoomOut, 
-  RotateCcw, 
-  User,
+  RotateCcw,
   ChevronRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useHaptic } from '@/hooks/useHaptic';
 
 // Body zone definitions with acupuncture points
 const BODY_ZONES = {
@@ -98,12 +98,15 @@ export function InteractiveBodyMap({ onPointSelect, selectedPoints = [] }: Inter
   const [hoveredZone, setHoveredZone] = useState<string | null>(null);
   const [hoveredPoint, setHoveredPoint] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
+  const { lightTap, successTap } = useHaptic();
 
   const handleZoneClick = (zoneId: string) => {
+    lightTap();
     setActiveZone(activeZone === zoneId ? null : zoneId);
   };
 
   const handlePointClick = (point: { code: string; name: string }) => {
+    successTap(); // Stronger feedback for point selection
     onPointSelect?.(point);
   };
 
