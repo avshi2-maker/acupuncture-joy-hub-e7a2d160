@@ -302,12 +302,11 @@ export default function Gate() {
     const redirect = params.get('redirect');
     const question = params.get('question');
     
-    // Since intake is completed BEFORE password entry in the new flow,
-    // we can go directly to dashboard or profile
-    const hasProfile = localStorage.getItem('therapist_profile');
-    const defaultRedirect = hasProfile ? '/dashboard' : '/therapist-profile';
+    // CRM is now the home for logged-in therapists
+    // Only use redirect param if it's explicitly set and not /dashboard
+    const sanitizedRedirect = redirect && redirect !== '/dashboard' ? redirect : '/crm';
 
-    const url = new URL(redirect || defaultRedirect, window.location.origin);
+    const url = new URL(sanitizedRedirect, window.location.origin);
     if (question) url.searchParams.set('question', question);
 
     return `${url.pathname}${url.search}${url.hash}`;
