@@ -1,11 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/hooks/useAuth";
-import { TierProvider } from "@/hooks/useTier";
+import { TierProvider, useTier } from "@/hooks/useTier";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { SessionLockProvider } from "@/contexts/SessionLockContext";
@@ -15,6 +15,7 @@ import RequireTier from "@/components/auth/RequireTier";
 import { OfflineBanner } from "@/components/ui/OfflineBanner";
 import { AccessibilityPanel } from "@/components/ui/AccessibilityPanel";
 import { CRMErrorBoundary } from "@/components/crm/CRMErrorBoundary";
+import { SplashScreen } from "@/components/ui/SplashScreen";
 
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -120,6 +121,27 @@ function HashPathRedirect() {
   return null;
 }
 
+// Splash screen wrapper that shows on initial mount
+function AppWithSplash({ children }: { children: React.ReactNode }) {
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    // Show splash for minimum 800ms to ensure smooth entry
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <>
+      <SplashScreen isVisible={showSplash} />
+      {children}
+    </>
+  );
+}
+
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
@@ -131,9 +153,10 @@ const App = () => (
                 <SessionLockProvider>
                   <GlobalSessionProvider>
                     <TooltipProvider>
-                      <OfflineBanner />
-                  <HashRouter>
-                    <HashPathRedirect />
+                      <AppWithSplash>
+                        <OfflineBanner />
+                        <HashRouter>
+                          <HashPathRedirect />
                     <Routes>
                     {/* ============================================= */}
                     {/* PUBLIC ROUTES - No authentication required    */}
@@ -282,20 +305,21 @@ const App = () => (
                     {/* CATCH-ALL                                     */}
                     {/* ============================================= */}
                       <Route path="*" element={<NotFound />} />
-                    </Routes>
-                    
-                    <AccessibilityPanel />
-                  </HashRouter>
+                        </Routes>
+                        
+                        <AccessibilityPanel />
+                      </HashRouter>
+                    </AppWithSplash>
                   </TooltipProvider>
-                  </GlobalSessionProvider>
-                </SessionLockProvider>
-              </TierProvider>
-            </AuthProvider>
-          </LanguageProvider>
-        </AccessibilityProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
-  </HelmetProvider>
+                </GlobalSessionProvider>
+              </SessionLockProvider>
+            </TierProvider>
+          </AuthProvider>
+        </LanguageProvider>
+      </AccessibilityProvider>
+    </ThemeProvider>
+  </QueryClientProvider>
+</HelmetProvider>
 );
 
 export default App;

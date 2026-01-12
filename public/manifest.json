@@ -91,10 +91,10 @@
   ],
   "shortcuts": [
     {
-      "name": "לוח בקרה",
-      "short_name": "דאשבורד",
-      "description": "Open the main dashboard",
-      "url": "/dashboard",
+      "name": "ניהול קליניקה",
+      "short_name": "CRM",
+      "description": "Open the clinic management dashboard",
+      "url": "/#/crm",
       "icons": [{ "src": "/pwa-icons/icon-192x192.png", "sizes": "192x192" }]
     },
     {
