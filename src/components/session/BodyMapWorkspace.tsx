@@ -13,14 +13,17 @@ import {
   Trash2
 } from 'lucide-react';
 import { InteractiveBodyMap } from '@/components/session/body-map/InteractiveBodyMap';
+import { SessionNotes } from '@/components/session/SessionNotes';
 import { cn } from '@/lib/utils';
 
 interface BodyMapWorkspaceProps {
   patientId: string;
   patientName?: string;
+  onPlanUpdate?: (text: string) => void;
+  initialPlanText?: string;
 }
 
-export function BodyMapWorkspace({ patientId, patientName }: BodyMapWorkspaceProps) {
+export function BodyMapWorkspace({ patientId, patientName, onPlanUpdate, initialPlanText }: BodyMapWorkspaceProps) {
   const [activeTab, setActiveTab] = useState('bodymap');
   const [selectedPoints, setSelectedPoints] = useState<Array<{ code: string; name: string }>>([]);
 
@@ -236,16 +239,12 @@ export function BodyMapWorkspace({ patientId, patientName }: BodyMapWorkspacePro
             </div>
           </TabsContent>
 
-          <TabsContent value="notes" className="h-full m-0 p-4">
-            <div className="h-full rounded-xl border-2 border-dashed border-muted-foreground/20 flex flex-col items-center justify-center bg-muted/5">
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-950 dark:to-indigo-950 mb-4">
-                <FileText className="h-12 w-12 text-blue-600 dark:text-blue-400" />
-              </div>
-              <h4 className="text-lg font-semibold mb-2">Session Notes</h4>
-              <p className="text-sm text-muted-foreground text-center max-w-[300px]">
-                Document observations, diagnosis, and treatment plan
-              </p>
-            </div>
+          <TabsContent value="notes" className="h-full m-0">
+            <SessionNotes 
+              patientId={patientId} 
+              onPlanUpdate={onPlanUpdate}
+              initialPlanText={initialPlanText}
+            />
           </TabsContent>
         </div>
       </Tabs>
