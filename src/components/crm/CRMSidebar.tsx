@@ -43,6 +43,7 @@ import newLogo from '@/assets/new-logo.png';
 import { useNavigate, Link } from 'react-router-dom';
 import { TierBadge } from '@/components/layout/TierBadge';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { SessionStartDialog } from '@/components/crm/SessionStartDialog';
 
 // Primary navigation - Core CRM features
 const primaryNavItems = [
@@ -72,6 +73,7 @@ export function CRMSidebar() {
   const { state, toggleSidebar, isMobile, setOpenMobile } = useSidebar();
   const isCollapsed = state === 'collapsed';
   const [clinicalToolkitOpen, setClinicalToolkitOpen] = useState(false);
+  const [sessionDialogOpen, setSessionDialogOpen] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem('therapist_tier');
@@ -86,8 +88,7 @@ export function CRMSidebar() {
   };
 
   const handleNewSession = () => {
-    navigate('/crm/session-manager');
-    handleNavClick();
+    setSessionDialogOpen(true);
   };
 
   return (
@@ -267,6 +268,12 @@ export function CRMSidebar() {
           </div>
         </div>
       </SidebarFooter>
+
+      {/* Session Start Dialog */}
+      <SessionStartDialog 
+        open={sessionDialogOpen} 
+        onOpenChange={setSessionDialogOpen} 
+      />
     </Sidebar>
   );
 }
