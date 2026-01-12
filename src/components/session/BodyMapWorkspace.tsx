@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -14,18 +14,50 @@ import {
 } from 'lucide-react';
 import { InteractiveBodyMap } from '@/components/session/body-map/InteractiveBodyMap';
 import { SessionNotes } from '@/components/session/SessionNotes';
+import { HerbalFormulaPanel } from '@/components/session/HerbalFormulaPanel';
 import { cn } from '@/lib/utils';
+
+interface SessionNotesState {
+  chiefComplaint: string;
+  pulseFindings: string[];
+  tongueFindings: string[];
+  tcmPattern: string;
+  treatmentPrinciple: string;
+  planNotes: string;
+  herbsPrescribed: string;
+  selectedPoints: string[];
+  followUpRecommended: string;
+}
 
 interface BodyMapWorkspaceProps {
   patientId: string;
   patientName?: string;
   onPlanUpdate?: (text: string) => void;
   initialPlanText?: string;
+  onNotesChange?: (notes: SessionNotesState) => void;
 }
 
-export function BodyMapWorkspace({ patientId, patientName, onPlanUpdate, initialPlanText }: BodyMapWorkspaceProps) {
+export function BodyMapWorkspace({ 
+  patientId, 
+  patientName, 
+  onPlanUpdate, 
+  initialPlanText,
+  onNotesChange 
+}: BodyMapWorkspaceProps) {
   const [activeTab, setActiveTab] = useState('bodymap');
   const [selectedPoints, setSelectedPoints] = useState<Array<{ code: string; name: string }>>([]);
+  const [tcmPattern, setTcmPattern] = useState('');
+  const [sessionNotes, setSessionNotes] = useState<SessionNotesState>({
+    chiefComplaint: '',
+    pulseFindings: [],
+    tongueFindings: [],
+    tcmPattern: '',
+    treatmentPrinciple: '',
+    planNotes: '',
+    herbsPrescribed: '',
+    selectedPoints: [],
+    followUpRecommended: ''
+  });
 
   const handlePointSelect = (point: { code: string; name: string }) => {
     setSelectedPoints(prev => {
@@ -47,6 +79,34 @@ export function BodyMapWorkspace({ patientId, patientName, onPlanUpdate, initial
 
   const selectedPointCodes = selectedPoints.map(p => p.code);
 
+  // Handler for when herbs are added to plan
+  const handleAddHerbsToPlan = useCallback((formulaText: string) => {
+    const newHerbs = sessionNotes.herbsPrescribed 
+      ? `${sessionNotes.herbsPrescribed}\n\n${formulaText}`
+      : formulaText;
+    
+    setSessionNotes(prev => ({ ...prev, herbsPrescribed: newHerbs }));
+    onPlanUpdate?.(formulaText);
+    onNotesChange?.({ ...sessionNotes, herbsPrescribed: newHerbs });
+  }, [sessionNotes, onPlanUpdate, onNotesChange]);
+
+  // Handler for pattern changes from SessionNotes
+  const handlePatternChange = useCallback((pattern: string) => {
+    setTcmPattern(pattern);
+    setSessionNotes(prev => ({ ...prev, tcmPattern: pattern }));
+    onNotesChange?.({ ...sessionNotes, tcmPattern: pattern });
+  }, [sessionNotes, onNotesChange]);
+
+  // Handler for notes changes
+  const handleNotesUpdate = useCallback((notes: Partial<SessionNotesState>) => {
+    const updated = { ...sessionNotes, ...notes };
+    setSessionNotes(updated);
+    if (notes.tcmPattern !== undefined) {
+      setTcmPattern(notes.tcmPattern);
+    }
+    onNotesChange?.(updated);
+  }, [sessionNotes, onNotesChange]);
+
   return (
     <div className="h-full flex flex-col bg-background">
       {/* Patient Header Bar */}
@@ -65,10 +125,11 @@ export function BodyMapWorkspace({ patientId, patientName, onPlanUpdate, initial
               </p>
             </div>
           </div>
-          <Button size="sm" variant="outline" className="gap-2">
-            <FileText className="h-4 w-4" />
-            Session Notes
-          </Button>
+          {tcmPattern && (
+            <Badge variant="secondary" className="bg-amber-100 dark:bg-amber-900/40 text-amber-700">
+              {tcmPattern}
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -227,16 +288,11 @@ export function BodyMapWorkspace({ patientId, patientName, onPlanUpdate, initial
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="herbs" className="h-full m-0 p-4">
-            <div className="h-full rounded-xl border-2 border-dashed border-muted-foreground/20 flex flex-col items-center justify-center bg-muted/5">
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-950 dark:to-orange-950 mb-4">
-                <Pill className="h-12 w-12 text-amber-600 dark:text-amber-400" />
-              </div>
-              <h4 className="text-lg font-semibold mb-2">Herbal Prescriptions</h4>
-              <p className="text-sm text-muted-foreground text-center max-w-[300px]">
-                Search and prescribe herbal formulas based on pattern diagnosis
-              </p>
-            </div>
+          <TabsContent value="herbs" className="h-full m-0">
+            <HerbalFormulaPanel 
+              selectedPattern={tcmPattern}
+              onAddToPlan={handleAddHerbsToPlan}
+            />
           </TabsContent>
 
           <TabsContent value="notes" className="h-full m-0">
@@ -245,6 +301,7 @@ export function BodyMapWorkspace({ patientId, patientName, onPlanUpdate, initial
               onPlanUpdate={onPlanUpdate}
               initialPlanText={initialPlanText}
             />
+          </TabsContent>
           </TabsContent>
         </div>
       </Tabs>
