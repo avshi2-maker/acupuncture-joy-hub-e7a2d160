@@ -11,26 +11,31 @@ import {
   BookOpen,
   Lightbulb,
   Clock,
-  AlertCircle
+  AlertCircle,
+  ClipboardPlus,
+  Database
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface SearchMessage {
   id: string;
   type: 'query' | 'response';
   content: string;
   timestamp: Date;
-  sources?: Array<{ name: string; confidence: string }>;
+  sources?: Array<{ name: string; confidence: string; score?: number }>;
   isStreaming?: boolean;
+  searchMethod?: string;
 }
 
 interface RagSearchPanelProps {
   patientId?: string;
+  onInsertToNotes?: (text: string) => void;
 }
 
-export function RagSearchPanel({ patientId }: RagSearchPanelProps) {
+export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelProps) {
   const [query, setQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [messages, setMessages] = useState<SearchMessage[]>([]);
@@ -73,7 +78,8 @@ export function RagSearchPanel({ patientId }: RagSearchPanelProps) {
     const decoder = new TextDecoder();
     let textBuffer = '';
     let fullContent = '';
-    let sources: Array<{ name: string; confidence: string }> = [];
+    let sources: Array<{ name: string; confidence: string; score?: number }> = [];
+    let searchMethod = 'unknown';
 
     // Create initial streaming message
     const responseId = `r-${Date.now()}`;
@@ -108,9 +114,10 @@ export function RagSearchPanel({ patientId }: RagSearchPanelProps) {
         try {
           const parsed = JSON.parse(jsonStr);
           
-          // Check if this is our custom sources event
+          // Check if this is our custom metadata event
           if (parsed.sources) {
             sources = parsed.sources;
+            searchMethod = parsed.searchMethod || 'keyword';
             continue;
           }
 
@@ -135,11 +142,11 @@ export function RagSearchPanel({ patientId }: RagSearchPanelProps) {
     // Finalize message
     setMessages(prev => prev.map(m => 
       m.id === responseId 
-        ? { ...m, isStreaming: false, sources }
+        ? { ...m, isStreaming: false, sources, searchMethod }
         : m
     ));
 
-    return { content: fullContent, sources };
+    return { content: fullContent, sources, searchMethod };
   }, [patientId]);
 
   const handleSearch = async () => {
@@ -190,6 +197,17 @@ export function RagSearchPanel({ patientId }: RagSearchPanelProps) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSearch();
+    }
+  };
+
+  const handleInsertToNotes = (content: string) => {
+    if (onInsertToNotes) {
+      onInsertToNotes(content);
+      toast.success('Inserted into Plan section');
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(content);
+      toast.success('Copied to clipboard');
     }
   };
 
@@ -270,13 +288,58 @@ export function RagSearchPanel({ patientId }: RagSearchPanelProps) {
                     )}
                   >
                     {message.type === 'response' && (
-                      <div className="flex items-center gap-2 mb-2 pb-2 border-b border-border/30">
-                        <Brain className="h-4 w-4 text-violet-500" />
-                        <span className="text-xs font-medium text-violet-600 dark:text-violet-400">
-                          TCM Brain
-                        </span>
-                        {message.isStreaming && (
-                          <Loader2 className="h-3 w-3 animate-spin text-violet-500" />
+                      <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-border/30">
+                        <div className="flex items-center gap-2">
+                          <Brain className="h-4 w-4 text-violet-500" />
+                          <span className="text-xs font-medium text-violet-600 dark:text-violet-400">
+                            TCM Brain
+                          </span>
+                          {message.searchMethod && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <span className={cn(
+                                    "text-xs px-1.5 py-0.5 rounded",
+                                    message.searchMethod === 'hybrid' 
+                                      ? "bg-green-100 dark:bg-green-900/30 text-green-600" 
+                                      : "bg-blue-100 dark:bg-blue-900/30 text-blue-600"
+                                  )}>
+                                    <Database className="h-3 w-3 inline mr-0.5" />
+                                    {message.searchMethod}
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  {message.searchMethod === 'hybrid' 
+                                    ? 'Vector + Keyword semantic search' 
+                                    : 'Keyword-based search'}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                          {message.isStreaming && (
+                            <Loader2 className="h-3 w-3 animate-spin text-violet-500" />
+                          )}
+                        </div>
+                        
+                        {/* Insert to Notes Button */}
+                        {!message.isStreaming && message.content && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 text-jade-600 hover:text-jade-700 hover:bg-jade-100 dark:hover:bg-jade-900/30"
+                                  onClick={() => handleInsertToNotes(message.content)}
+                                >
+                                  <ClipboardPlus className="h-3.5 w-3.5" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                Insert into Session Notes
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         )}
                       </div>
                     )}
@@ -290,17 +353,28 @@ export function RagSearchPanel({ patientId }: RagSearchPanelProps) {
                         </p>
                         <div className="flex flex-wrap gap-1">
                           {message.sources.map((source, idx) => (
-                            <span
-                              key={idx}
-                              className={cn(
-                                "text-xs px-2 py-0.5 rounded-full",
-                                source.confidence === 'high' 
-                                  ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
-                                  : "bg-muted text-muted-foreground"
-                              )}
-                            >
-                              {source.name}
-                            </span>
+                            <TooltipProvider key={idx}>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <span
+                                    className={cn(
+                                      "text-xs px-2 py-0.5 rounded-full cursor-help",
+                                      source.confidence === 'high' || source.confidence === 'very_high'
+                                        ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+                                        : source.confidence === 'medium'
+                                        ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300"
+                                        : "bg-muted text-muted-foreground"
+                                    )}
+                                  >
+                                    {source.name}
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  Confidence: {source.confidence}
+                                  {source.score && ` (${(source.score * 100).toFixed(0)}%)`}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           ))}
                         </div>
                       </div>
@@ -347,7 +421,7 @@ export function RagSearchPanel({ patientId }: RagSearchPanelProps) {
           </Button>
         </div>
         <p className="text-xs text-muted-foreground mt-2 text-center">
-          Press Enter to search • Powered by Gemini RAG
+          Press Enter to search • Powered by Hybrid RAG
         </p>
       </div>
     </div>

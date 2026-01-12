@@ -23,6 +23,38 @@ Guidelines:
 
 You have access to a curated knowledge base of TCM literature. Base your answers primarily on the provided context.`;
 
+const EMBEDDING_MODEL = 'text-embedding-3-small';
+
+/**
+ * Generate embedding for query text using OpenAI (for hybrid search)
+ */
+async function generateQueryEmbedding(text: string, apiKey: string): Promise<number[] | null> {
+  try {
+    const response = await fetch('https://api.openai.com/v1/embeddings', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: EMBEDDING_MODEL,
+        input: text.substring(0, 8000),
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('[ask-tcm-brain] Embedding API error:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    return data.data[0].embedding;
+  } catch (error) {
+    console.error('[ask-tcm-brain] Embedding generation failed:', error);
+    return null;
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -46,45 +78,96 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Step 1: Generate embedding for the query using Lovable AI
+    // Get API keys
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    // Step 2: Search knowledge base using keyword search (fallback without embedding)
-    console.log('[ask-tcm-brain] Searching knowledge base...');
+    // Step 1: Try to generate embedding for hybrid search
+    let queryEmbedding: number[] | null = null;
+    let searchMethod = 'keyword';
     
-    const { data: searchResults, error: searchError } = await supabase.rpc('keyword_search', {
-      query_text: query,
-      match_count: 8,
-      match_threshold: 0.15,
-      language_filter: null
-    });
+    if (OPENAI_API_KEY) {
+      console.log('[ask-tcm-brain] Generating query embedding for hybrid search...');
+      queryEmbedding = await generateQueryEmbedding(query, OPENAI_API_KEY);
+      if (queryEmbedding) {
+        searchMethod = 'hybrid';
+        console.log('[ask-tcm-brain] Embedding generated successfully');
+      }
+    } else {
+      console.log('[ask-tcm-brain] No OpenAI API key, falling back to keyword search');
+    }
+
+    // Step 2: Search knowledge base
+    console.log(`[ask-tcm-brain] Searching knowledge base (${searchMethod})...`);
+    
+    let searchResults: any[] = [];
+    let searchError: any = null;
+    
+    if (searchMethod === 'hybrid' && queryEmbedding) {
+      // Use hybrid search with vector + keyword
+      const embeddingString = `[${queryEmbedding.join(',')}]`;
+      
+      const { data, error } = await supabase.rpc('hybrid_search', {
+        query_text: query,
+        query_embedding: embeddingString,
+        match_count: 8,
+        match_threshold: 0.15,
+        language_filter: null
+      });
+      
+      searchResults = data || [];
+      searchError = error;
+      
+      if (error) {
+        console.error('[ask-tcm-brain] Hybrid search error:', error);
+        // Fallback to keyword search
+        searchMethod = 'keyword (fallback)';
+      }
+    }
+    
+    // Fallback to keyword search if hybrid failed or no embedding
+    if (searchResults.length === 0 || searchMethod.includes('fallback')) {
+      const { data, error } = await supabase.rpc('keyword_search', {
+        query_text: query,
+        match_count: 8,
+        match_threshold: 0.15,
+        language_filter: null
+      });
+      
+      searchResults = data || [];
+      searchError = error;
+    }
 
     if (searchError) {
       console.error('[ask-tcm-brain] Search error:', searchError);
     }
 
     const relevantChunks = searchResults || [];
-    console.log(`[ask-tcm-brain] Found ${relevantChunks.length} relevant chunks`);
+    console.log(`[ask-tcm-brain] Found ${relevantChunks.length} relevant chunks (${searchMethod})`);
 
     // Step 3: Build context from search results
     const contextParts: string[] = [];
-    const sources: Array<{ name: string; confidence: string }> = [];
+    const sources: Array<{ name: string; confidence: string; score?: number }> = [];
 
     for (const chunk of relevantChunks.slice(0, 6)) {
-      contextParts.push(`---\nSource: ${chunk.original_name || chunk.file_name}\n${chunk.content}\n`);
-      if (!sources.find(s => s.name === (chunk.original_name || chunk.file_name))) {
+      const sourceName = chunk.original_name || chunk.file_name;
+      contextParts.push(`---\nSource: ${sourceName}\n${chunk.content}\n`);
+      
+      if (!sources.find(s => s.name === sourceName)) {
         sources.push({
-          name: chunk.original_name || chunk.file_name,
-          confidence: chunk.confidence || 'medium'
+          name: sourceName,
+          confidence: chunk.confidence || 'medium',
+          score: chunk.ferrari_score || chunk.combined_score || chunk.keyword_score
         });
       }
     }
 
     const contextString = contextParts.length > 0 
-      ? `\n\nRelevant Knowledge Base Context:\n${contextParts.join('\n')}`
+      ? `\n\nRelevant Knowledge Base Context (${searchMethod} search):\n${contextParts.join('\n')}`
       : '\n\nNo specific context found in knowledge base. Answer based on general TCM knowledge.';
 
     // Step 4: Call Lovable AI (Gemini) for response generation with streaming
@@ -124,15 +207,19 @@ serve(async (req) => {
       throw new Error(`AI gateway error: ${aiResponse.status}`);
     }
 
-    // Create a transform stream to inject sources at the end
+    // Create a transform stream to inject sources and search metadata at the end
     const originalBody = aiResponse.body!;
     const reader = originalBody.getReader();
     
     const stream = new ReadableStream({
       async start(controller) {
-        // First, send sources as a custom event
-        const sourcesEvent = `data: ${JSON.stringify({ sources })}\n\n`;
-        controller.enqueue(new TextEncoder().encode(sourcesEvent));
+        // First, send sources and search metadata as a custom event
+        const metadataEvent = `data: ${JSON.stringify({ 
+          sources,
+          searchMethod,
+          chunksFound: relevantChunks.length
+        })}\n\n`;
+        controller.enqueue(new TextEncoder().encode(metadataEvent));
       },
       async pull(controller) {
         const { done, value } = await reader.read();
