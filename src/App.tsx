@@ -156,7 +156,7 @@ const App = () => (
                     {/* ============================================= */}
                     {/* AUTHENTICATED DEFAULT - Redirect to CRM       */}
                     {/* ============================================= */}
-                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/dashboard" element={<RequireTier><Navigate to="/crm" replace /></RequireTier>} />
                       <Route path="/video-session" element={<RequireTier><VideoSession /></RequireTier>} />
                       <Route path="/tcm-brain" element={<RequireTier><TcmBrain /></RequireTier>} />
 

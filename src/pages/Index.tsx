@@ -230,14 +230,14 @@ const Index = () => {
             <span>WhatsApp</span>
           </button>
           
-          {/* Therapist Login Button with pulsing animation */}
+          {/* Therapist Login Button with pulsing animation - goes to CRM, RequireTier will bounce to gate if needed */}
           <Button 
             asChild 
             variant="outline" 
             size="sm" 
             className="border-gold bg-foreground/80 text-gold hover:bg-gold hover:text-foreground font-bold text-sm shadow-lg hover:shadow-xl transition-all hover:scale-110 animate-[pulse_2s_ease-in-out_infinite]"
           >
-            <Link to="/gate">{t("therapistLogin")}</Link>
+            <Link to="/crm">{t("therapistLogin")}</Link>
           </Button>
         </nav>
 
