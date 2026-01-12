@@ -98,6 +98,8 @@ import PatientTimeline from "./pages/PatientTimeline";
 import AssetInventory from "./pages/AssetInventory";
 import PrivateDeveloper from "./pages/PrivateDeveloper";
 import StandardSession from "./pages/StandardSession";
+import { SessionLayout } from "./components/layouts/SessionLayout";
+
 const queryClient = new QueryClient();
 
 function HashPathRedirect() {
@@ -176,6 +178,10 @@ const App = () => (
                       <Route path="/patient/:id/timeline" element={<RequireTier><CRMErrorBoundary><PatientTimeline /></CRMErrorBoundary></RequireTier>} />
 
                     {/* ============================================= */}
+                    {/* SESSION MODE - Active clinical session        */}
+                    {/* ============================================= */}
+                      <Route path="/session/:patientId" element={<RequireTier><SessionLayout /></RequireTier>} />
+
                     {/* CLINICAL TOOLS - Grouped under /clinical-tools */}
                     {/* ============================================= */}
                       <Route path="/clinical-tools/bazi" element={<RequireTier><BaziCalculator /></RequireTier>} />
