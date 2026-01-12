@@ -11,14 +11,15 @@ import {
   BookOpen,
   Lightbulb,
   Clock,
-  AlertCircle,
   ClipboardPlus,
-  Database
+  Database,
+  RefreshCw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useHaptic } from '@/hooks/useHaptic';
 
 interface SearchMessage {
   id: string;
@@ -35,12 +36,22 @@ interface RagSearchPanelProps {
   onInsertToNotes?: (text: string) => void;
 }
 
+// Pull-to-refresh threshold in pixels
+const PULL_THRESHOLD = 80;
+
 export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelProps) {
   const [query, setQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [messages, setMessages] = useState<SearchMessage[]>([]);
+  const [isPulling, setIsPulling] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const pullStartY = useRef<number | null>(null);
+  const pullDistance = useMotionValue(0);
+  const pullOpacity = useTransform(pullDistance, [0, PULL_THRESHOLD], [0, 1]);
+  const pullRotation = useTransform(pullDistance, [0, PULL_THRESHOLD], [0, 180]);
+  const { lightTap, successTap } = useHaptic();
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -217,6 +228,45 @@ export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelPro
     'Tongue diagnosis for Spleen Qi deficiency',
   ];
 
+  // Pull-to-refresh handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (scrollRef.current && scrollRef.current.scrollTop === 0) {
+      pullStartY.current = e.touches[0].clientY;
+      setIsPulling(true);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isPulling || pullStartY.current === null) return;
+    
+    const currentY = e.touches[0].clientY;
+    const distance = Math.max(0, currentY - pullStartY.current);
+    pullDistance.set(Math.min(distance, PULL_THRESHOLD * 1.5));
+  };
+
+  const handleTouchEnd = async () => {
+    if (!isPulling) return;
+    
+    const distance = pullDistance.get();
+    
+    if (distance >= PULL_THRESHOLD) {
+      setIsRefreshing(true);
+      lightTap();
+      
+      // Clear conversation
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setMessages([]);
+      successTap();
+      toast.success('🧠 Brain Cleared - Fresh Start!');
+      
+      setIsRefreshing(false);
+    }
+    
+    pullDistance.set(0);
+    pullStartY.current = null;
+    setIsPulling(false);
+  };
+
   return (
     <div className="h-full flex flex-col bg-gradient-to-b from-background to-muted/20">
       {/* Header */}
@@ -225,15 +275,56 @@ export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelPro
           <div className="p-2 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg">
             <Brain className="h-5 w-5" />
           </div>
-          <div>
+          <div className="flex-1">
             <h3 className="font-semibold text-foreground">TCM Brain</h3>
             <p className="text-xs text-muted-foreground">AI-powered clinical knowledge search</p>
           </div>
+          {messages.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setMessages([]);
+                lightTap();
+                toast.success('🧠 Brain Cleared');
+              }}
+              className="text-xs gap-1"
+            >
+              <RefreshCw className="h-3 w-3" />
+              Clear
+            </Button>
+          )}
         </div>
       </div>
 
+      {/* Pull-to-refresh indicator */}
+      <motion.div 
+        className="flex items-center justify-center py-2 overflow-hidden md:hidden"
+        style={{ 
+          height: pullDistance,
+          opacity: pullOpacity,
+        }}
+      >
+        <motion.div style={{ rotate: pullRotation }}>
+          {isRefreshing ? (
+            <Loader2 className="h-5 w-5 text-violet-500 animate-spin" />
+          ) : (
+            <RefreshCw className="h-5 w-5 text-violet-500" />
+          )}
+        </motion.div>
+        <span className="ml-2 text-xs text-muted-foreground">
+          {isRefreshing ? 'Refreshing...' : 'Pull to clear chat'}
+        </span>
+      </motion.div>
+
       {/* Chat Area */}
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+      <ScrollArea 
+        className="flex-1 p-4" 
+        ref={scrollRef}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         <AnimatePresence mode="popLayout">
           {messages.length === 0 ? (
             <motion.div
