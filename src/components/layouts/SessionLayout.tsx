@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { RagSearchPanel } from '@/components/session/RagSearchPanel';
 import { BodyMapWorkspace } from '@/components/session/BodyMapWorkspace';
+import { MobileQuickActions } from '@/components/session/MobileQuickActions';
 import { supabase } from '@/integrations/supabase/client';
 import { PrintSessionButton } from '@/components/session/PrintSessionButton';
+import { toast } from 'sonner';
 import { 
   ArrowLeft, 
   Clock, 
@@ -36,6 +39,9 @@ interface SessionNotesState {
 
 type MobileTab = 'brain' | 'body';
 
+// Swipe threshold in pixels
+const SWIPE_THRESHOLD = 50;
+
 export function SessionLayout() {
   const { patientId } = useParams<{ patientId: string }>();
   const navigate = useNavigate();
@@ -46,6 +52,8 @@ export function SessionLayout() {
   const [leftPanelExpanded, setLeftPanelExpanded] = useState(false);
   const [planText, setPlanText] = useState('');
   const [activeMobileTab, setActiveMobileTab] = useState<MobileTab>('body');
+  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
+  const printButtonRef = useRef<HTMLButtonElement>(null);
   const [sessionNotes, setSessionNotes] = useState<SessionNotesState>({
     chiefComplaint: '',
     pulseFindings: [],
@@ -100,12 +108,52 @@ export function SessionLayout() {
   };
 
   const handleSaveSession = () => {
-    console.log('Saving session...');
+    console.log('Saving session...', sessionNotes);
+    toast.success('Session notes saved!');
+  };
+
+  const handlePrintSession = () => {
+    // Trigger the PrintSessionButton click programmatically
+    printButtonRef.current?.click();
   };
 
   // Handler for inserting AI suggestions into notes
   const handleInsertToNotes = (text: string) => {
     setPlanText(text);
+  };
+
+  // Swipe gesture handler
+  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    const { offset, velocity } = info;
+    
+    // Check if swipe is significant enough
+    if (Math.abs(offset.x) > SWIPE_THRESHOLD || Math.abs(velocity.x) > 500) {
+      if (offset.x > 0) {
+        // Swipe right -> TCM Brain
+        setSwipeDirection('right');
+        setActiveMobileTab('brain');
+      } else {
+        // Swipe left -> Body Map
+        setSwipeDirection('left');
+        setActiveMobileTab('body');
+      }
+    }
+  };
+
+  // Slide animation variants
+  const slideVariants = {
+    enter: (direction: 'left' | 'right' | null) => ({
+      x: direction === 'left' ? '100%' : '-100%',
+      opacity: 0
+    }),
+    center: {
+      x: 0,
+      opacity: 1
+    },
+    exit: (direction: 'left' | 'right' | null) => ({
+      x: direction === 'left' ? '-100%' : '100%',
+      opacity: 0
+    })
   };
 
   if (!patientId) {
@@ -146,6 +194,7 @@ export function SessionLayout() {
           </div>
           <div className="hidden md:flex items-center gap-2">
             <PrintSessionButton 
+              ref={printButtonRef}
               sessionData={{
                 patientName: patient?.full_name || 'Unknown Patient',
                 patientId: patientId,
@@ -172,12 +221,11 @@ export function SessionLayout() {
         </div>
       </header>
 
-      {/* Main Split Content - Desktop: side-by-side, Mobile: tabs */}
+      {/* Main Split Content - Desktop: side-by-side, Mobile: tabs with swipe */}
       <main className="flex-1 flex overflow-hidden pb-16 md:pb-0">
-        {/* Left Panel (TCM Brain) - Hidden on mobile unless active */}
+        {/* Desktop Layout - Side by Side */}
         <aside className={cn(
           "border-r border-border/30 transition-all duration-300 ease-in-out flex flex-col",
-          // Desktop: always visible with variable width
           "hidden md:flex",
           leftPanelExpanded ? "md:w-1/2" : "md:w-[40%]"
         )}>
@@ -191,18 +239,8 @@ export function SessionLayout() {
           </div>
         </aside>
 
-        {/* Mobile: TCM Brain Panel */}
-        <div className={cn(
-          "w-full h-full md:hidden",
-          activeMobileTab === 'brain' ? 'block' : 'hidden'
-        )}>
-          <RagSearchPanel patientId={patientId} onInsertToNotes={handleInsertToNotes} />
-        </div>
-
-        {/* Right Panel (Body Map) - Hidden on mobile unless active */}
         <section className={cn(
           "transition-all duration-300 ease-in-out overflow-hidden",
-          // Desktop: always visible with variable width
           "hidden md:block",
           leftPanelExpanded ? "md:w-1/2" : "md:w-[60%]"
         )}>
@@ -214,24 +252,65 @@ export function SessionLayout() {
           />
         </section>
 
-        {/* Mobile: Body Map Panel */}
-        <div className={cn(
-          "w-full h-full md:hidden",
-          activeMobileTab === 'body' ? 'block' : 'hidden'
-        )}>
-          <BodyMapWorkspace 
-            patientId={patientId} 
-            patientName={patient?.full_name} 
-            initialPlanText={planText}
-            onNotesChange={setSessionNotes}
-          />
-        </div>
+        {/* Mobile Layout - Swipeable Tabs */}
+        <motion.div 
+          className="w-full h-full md:hidden relative overflow-hidden"
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.2}
+          onDragEnd={handleDragEnd}
+        >
+          <AnimatePresence initial={false} custom={swipeDirection} mode="wait">
+            {activeMobileTab === 'brain' && (
+              <motion.div
+                key="brain"
+                custom={swipeDirection}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="absolute inset-0"
+              >
+                <RagSearchPanel patientId={patientId} onInsertToNotes={handleInsertToNotes} />
+              </motion.div>
+            )}
+            {activeMobileTab === 'body' && (
+              <motion.div
+                key="body"
+                custom={swipeDirection}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="absolute inset-0"
+              >
+                <BodyMapWorkspace 
+                  patientId={patientId} 
+                  patientName={patient?.full_name} 
+                  initialPlanText={planText}
+                  onNotesChange={setSessionNotes}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </main>
 
-      {/* Mobile Bottom Navigation - Fixed toggle bar */}
+      {/* Mobile Quick Actions FAB */}
+      <MobileQuickActions 
+        onSave={handleSaveSession}
+        onPrint={handlePrintSession}
+      />
+
+      {/* Mobile Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 h-16 border-t border-border bg-card/95 backdrop-blur-sm flex md:hidden z-50">
         <button
-          onClick={() => setActiveMobileTab('brain')}
+          onClick={() => {
+            setSwipeDirection('right');
+            setActiveMobileTab('brain');
+          }}
           className={cn(
             "flex-1 flex flex-col items-center justify-center gap-1 transition-colors",
             activeMobileTab === 'brain' 
@@ -244,7 +323,10 @@ export function SessionLayout() {
         </button>
         <div className="w-px bg-border" />
         <button
-          onClick={() => setActiveMobileTab('body')}
+          onClick={() => {
+            setSwipeDirection('left');
+            setActiveMobileTab('body');
+          }}
           className={cn(
             "flex-1 flex flex-col items-center justify-center gap-1 transition-colors",
             activeMobileTab === 'body' 
@@ -257,7 +339,7 @@ export function SessionLayout() {
         </button>
       </nav>
 
-      {/* Desktop Footer - hidden on mobile */}
+      {/* Desktop Footer */}
       <footer className="hidden md:flex h-12 border-t border-border/50 bg-card/95 backdrop-blur-sm items-center justify-center px-4 shrink-0">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span>Session started at {sessionStartTime.toLocaleTimeString()}</span>

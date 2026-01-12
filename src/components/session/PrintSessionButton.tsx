@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, forwardRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   DropdownMenu, 
@@ -6,7 +6,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { Printer, FileText, Loader2, Download } from 'lucide-react';
+import { Printer, FileText, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -33,11 +33,12 @@ interface PrintSessionButtonProps {
   therapistName?: string;
 }
 
-export function PrintSessionButton({ 
-  sessionData, 
-  clinicName = 'TCM Clinic',
-  therapistName = 'Practitioner'
-}: PrintSessionButtonProps) {
+export const PrintSessionButton = forwardRef<HTMLButtonElement, PrintSessionButtonProps>(
+  function PrintSessionButton({ 
+    sessionData, 
+    clinicName = 'TCM Clinic',
+    therapistName = 'Practitioner'
+  }, ref) {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const generatePDF = async () => {
@@ -221,7 +222,7 @@ export function PrintSessionButton({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2" disabled={isGenerating}>
+        <Button ref={ref} variant="outline" size="sm" className="gap-2" disabled={isGenerating}>
           {isGenerating ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
@@ -247,4 +248,4 @@ export function PrintSessionButton({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+});
