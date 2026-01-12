@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { RagSearchPanel } from '@/components/session/RagSearchPanel';
 import { BodyMapWorkspace } from '@/components/session/BodyMapWorkspace';
 import { supabase } from '@/integrations/supabase/client';
+import { PrintSessionButton } from '@/components/session/PrintSessionButton';
 import { 
   ArrowLeft, 
   Clock, 
@@ -19,6 +20,18 @@ interface Patient {
   full_name: string;
 }
 
+interface SessionNotesState {
+  chiefComplaint: string;
+  pulseFindings: string[];
+  tongueFindings: string[];
+  tcmPattern: string;
+  treatmentPrinciple: string;
+  planNotes: string;
+  herbsPrescribed: string;
+  selectedPoints: string[];
+  followUpRecommended: string;
+}
+
 export function SessionLayout() {
   const { patientId } = useParams<{ patientId: string }>();
   const navigate = useNavigate();
@@ -28,6 +41,17 @@ export function SessionLayout() {
   const [elapsed, setElapsed] = useState(0);
   const [leftPanelExpanded, setLeftPanelExpanded] = useState(false);
   const [planText, setPlanText] = useState('');
+  const [sessionNotes, setSessionNotes] = useState<SessionNotesState>({
+    chiefComplaint: '',
+    pulseFindings: [],
+    tongueFindings: [],
+    tcmPattern: '',
+    treatmentPrinciple: '',
+    planNotes: '',
+    herbsPrescribed: '',
+    selectedPoints: [],
+    followUpRecommended: ''
+  });
 
   // Fetch patient data
   useEffect(() => {
@@ -115,6 +139,22 @@ export function SessionLayout() {
             <Clock className="h-4 w-4" />
             <span className="font-mono text-sm font-medium">{formatTime(elapsed)}</span>
           </div>
+          <PrintSessionButton 
+            sessionData={{
+              patientName: patient?.full_name || 'Unknown Patient',
+              patientId: patientId,
+              sessionDate: sessionStartTime,
+              chiefComplaint: sessionNotes.chiefComplaint,
+              pulseFindings: sessionNotes.pulseFindings,
+              tongueFindings: sessionNotes.tongueFindings,
+              tcmPattern: sessionNotes.tcmPattern,
+              treatmentPrinciple: sessionNotes.treatmentPrinciple,
+              planNotes: sessionNotes.planNotes,
+              herbsPrescribed: sessionNotes.herbsPrescribed,
+              selectedPoints: sessionNotes.selectedPoints,
+              followUpRecommended: sessionNotes.followUpRecommended
+            }}
+          />
           <Button variant="outline" size="sm" onClick={handleSaveSession} className="gap-2">
             <Save className="h-4 w-4" />Save
           </Button>
@@ -137,7 +177,12 @@ export function SessionLayout() {
           </div>
         </aside>
         <section className={cn("transition-all duration-300 ease-in-out overflow-hidden", leftPanelExpanded ? "w-1/2" : "w-[60%]")}>
-          <BodyMapWorkspace patientId={patientId} patientName={patient?.full_name} initialPlanText={planText} />
+          <BodyMapWorkspace 
+            patientId={patientId} 
+            patientName={patient?.full_name} 
+            initialPlanText={planText}
+            onNotesChange={setSessionNotes}
+          />
         </section>
       </main>
 
