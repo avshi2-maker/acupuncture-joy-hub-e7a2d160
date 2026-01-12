@@ -159,7 +159,7 @@ export function SessionLayout() {
             </Button>
           </div>
           <div className="flex-1 overflow-hidden">
-            <RagSearchPanel />
+            <RagSearchPanel patientId={patientId} />
           </div>
         </aside>
 

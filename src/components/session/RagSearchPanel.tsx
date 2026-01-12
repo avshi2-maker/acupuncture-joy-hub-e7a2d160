@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -10,20 +10,27 @@ import {
   Sparkles,
   BookOpen,
   Lightbulb,
-  Clock
+  Clock,
+  AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 
 interface SearchMessage {
   id: string;
   type: 'query' | 'response';
   content: string;
   timestamp: Date;
-  sources?: string[];
+  sources?: Array<{ name: string; confidence: string }>;
+  isStreaming?: boolean;
 }
 
-export function RagSearchPanel() {
+interface RagSearchPanelProps {
+  patientId?: string;
+}
+
+export function RagSearchPanel({ patientId }: RagSearchPanelProps) {
   const [query, setQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [messages, setMessages] = useState<SearchMessage[]>([]);
@@ -37,6 +44,104 @@ export function RagSearchPanel() {
     }
   }, [messages]);
 
+  const streamResponse = useCallback(async (userQuery: string) => {
+    const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ask-tcm-brain`;
+    
+    const response = await fetch(CHAT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      },
+      body: JSON.stringify({ 
+        query: userQuery,
+        patientId,
+        language: 'en'
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Request failed: ${response.status}`);
+    }
+
+    if (!response.body) {
+      throw new Error('No response body');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let textBuffer = '';
+    let fullContent = '';
+    let sources: Array<{ name: string; confidence: string }> = [];
+
+    // Create initial streaming message
+    const responseId = `r-${Date.now()}`;
+    setMessages(prev => [...prev, {
+      id: responseId,
+      type: 'response',
+      content: '',
+      timestamp: new Date(),
+      sources: [],
+      isStreaming: true,
+    }]);
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      textBuffer += decoder.decode(value, { stream: true });
+
+      // Process line-by-line
+      let newlineIndex: number;
+      while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
+        let line = textBuffer.slice(0, newlineIndex);
+        textBuffer = textBuffer.slice(newlineIndex + 1);
+
+        if (line.endsWith('\r')) line = line.slice(0, -1);
+        if (line.startsWith(':') || line.trim() === '') continue;
+        if (!line.startsWith('data: ')) continue;
+
+        const jsonStr = line.slice(6).trim();
+        if (jsonStr === '[DONE]') continue;
+
+        try {
+          const parsed = JSON.parse(jsonStr);
+          
+          // Check if this is our custom sources event
+          if (parsed.sources) {
+            sources = parsed.sources;
+            continue;
+          }
+
+          // Standard OpenAI-style delta
+          const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+          if (content) {
+            fullContent += content;
+            setMessages(prev => prev.map(m => 
+              m.id === responseId 
+                ? { ...m, content: fullContent }
+                : m
+            ));
+          }
+        } catch {
+          // Incomplete JSON, put back and wait
+          textBuffer = line + '\n' + textBuffer;
+          break;
+        }
+      }
+    }
+
+    // Finalize message
+    setMessages(prev => prev.map(m => 
+      m.id === responseId 
+        ? { ...m, isStreaming: false, sources }
+        : m
+    ));
+
+    return { content: fullContent, sources };
+  }, [patientId]);
+
   const handleSearch = async () => {
     if (!query.trim() || isSearching) return;
 
@@ -48,23 +153,37 @@ export function RagSearchPanel() {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const searchQuery = query;
     setQuery('');
     setIsSearching(true);
 
-    // Simulate API delay (replace with actual Gemini RAG call later)
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      await streamResponse(searchQuery);
+    } catch (error) {
+      console.error('Search error:', error);
+      
+      // Add error message
+      setMessages(prev => [...prev, {
+        id: `e-${Date.now()}`,
+        type: 'response',
+        content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`,
+        timestamp: new Date(),
+        sources: [],
+      }]);
 
-    const responseMessage: SearchMessage = {
-      id: `r-${Date.now()}`,
-      type: 'response',
-      content: `Based on the TCM knowledge base, here's what I found regarding "${userMessage.content}":\n\n• This is a placeholder response that will be replaced with actual RAG results.\n• The system will search through acupuncture points, herbal formulas, and clinical patterns.\n• Results will include source citations and confidence scores.`,
-      timestamp: new Date(),
-      sources: ['Deadman - Manual of Acupuncture', 'Bensky - Materia Medica', 'Maciocia - Diagnosis'],
-    };
-
-    setMessages(prev => [...prev, responseMessage]);
-    setIsSearching(false);
-    inputRef.current?.focus();
+      if (error instanceof Error) {
+        if (error.message.includes('Rate limit')) {
+          toast.error('Rate limit exceeded. Please wait a moment.');
+        } else if (error.message.includes('credits')) {
+          toast.error('AI credits exhausted. Please add funds.');
+        } else {
+          toast.error('Failed to get response. Please try again.');
+        }
+      }
+    } finally {
+      setIsSearching(false);
+      inputRef.current?.focus();
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -156,12 +275,15 @@ export function RagSearchPanel() {
                         <span className="text-xs font-medium text-violet-600 dark:text-violet-400">
                           TCM Brain
                         </span>
+                        {message.isStreaming && (
+                          <Loader2 className="h-3 w-3 animate-spin text-violet-500" />
+                        )}
                       </div>
                     )}
                     <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                      {message.content}
+                      {message.content || (message.isStreaming ? '...' : '')}
                     </p>
-                    {message.sources && message.sources.length > 0 && (
+                    {message.sources && message.sources.length > 0 && !message.isStreaming && (
                       <div className="mt-3 pt-2 border-t border-border/30">
                         <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
                           <BookOpen className="h-3 w-3" /> Sources:
@@ -170,9 +292,14 @@ export function RagSearchPanel() {
                           {message.sources.map((source, idx) => (
                             <span
                               key={idx}
-                              className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground"
+                              className={cn(
+                                "text-xs px-2 py-0.5 rounded-full",
+                                source.confidence === 'high' 
+                                  ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+                                  : "bg-muted text-muted-foreground"
+                              )}
                             >
-                              {source}
+                              {source.name}
                             </span>
                           ))}
                         </div>
@@ -187,30 +314,6 @@ export function RagSearchPanel() {
                   </div>
                 </motion.div>
               ))}
-
-              {/* Loading indicator */}
-              {isSearching && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex justify-start"
-                >
-                  <div className="bg-card border border-border/50 rounded-2xl rounded-bl-sm px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <Brain className="h-5 w-5 text-violet-500" />
-                        <Loader2 className="h-3 w-3 absolute -bottom-1 -right-1 animate-spin text-violet-600" />
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium">Searching Knowledge Base...</p>
-                        <p className="text-xs text-muted-foreground">
-                          Analyzing TCM literature and clinical patterns
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
             </div>
           )}
         </AnimatePresence>
