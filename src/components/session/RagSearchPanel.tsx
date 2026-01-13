@@ -235,7 +235,7 @@ export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelPro
   ];
 
   return (
-    <div className="h-full flex flex-col bg-white relative rounded-xl shadow-md border border-slate-200">
+    <div className="w-full h-full flex flex-col bg-white relative overflow-hidden">
       {/* METRICS BAR - Top Right Corner */}
       <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
         <Badge variant="outline" className="text-xs font-medium bg-blue-50 text-blue-700 border-blue-200">
