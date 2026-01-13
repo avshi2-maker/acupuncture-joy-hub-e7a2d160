@@ -47,85 +47,84 @@ interface UseRagChatOptions {
   includePatientHistory?: boolean;
 }
 
-// 1. THE EXPANDED SYMPTOM DICTIONARY (70+ clinical keywords + Hebrew)
+// THE MASTER DICTIONARY (English + Hebrew)
 const POINT_RULES: Record<string, string> = {
-  // --- 1. CORE COMMAND POINTS (The Big Shots) ---
-  'hegu': 'LI4', 'union valley': 'LI4', 'li 4': 'LI4', 'li4': 'LI4',
-  'zusanli': 'ST36', 'leg three miles': 'ST36', 'st 36': 'ST36', 'st36': 'ST36',
-  'sanyinjiao': 'SP6', 'sp 6': 'SP6', 'sp6': 'SP6',
-  'taichong': 'LR3', 'great surge': 'LR3', 'lr 3': 'LR3', 'lr3': 'LR3',
-  'neiguan': 'PC6', 'inner pass': 'PC6', 'pc 6': 'PC6', 'pc6': 'PC6',
-  'shenmen': 'HT7', 'spirit gate': 'HT7', 'ht 7': 'HT7', 'ht7': 'HT7',
-  'baihui': 'GV20', 'hundred meetings': 'GV20', 'gv 20': 'GV20',
-  'yintang': 'Yintang', 'hall of impression': 'Yintang',
-
-  // --- 2. PAIN & ORTHOPEDICS ---
-  'headache': 'LI4', 'migraine': 'GB20', 'neck pain': 'GB20', 'stiff neck': 'LU7',
-  'back pain': 'BL40', 'lower back': 'BL23', 'lumbar': 'BL23', 'sciatica': 'GB30',
-  'knee pain': 'ST35', 'knee': 'GB34', 'leg pain': 'GB31',
-  'shoulder pain': 'LI15', 'frozen shoulder': 'ST38',
-  'elbow pain': 'LI11', 'tennis elbow': 'LI11',
-  'wrist pain': 'SJ4', 'carpal tunnel': 'PC7',
-  'hip pain': 'GB30',
-  'toothache': 'ST44', 'jaw pain': 'ST6',
-
-  // --- 3. DIGESTION & METABOLISM ---
-  'stomach pain': 'ST36', 'gastritis': 'PC6', 'bloating': 'ST25',
-  'nausea': 'PC6', 'vomiting': 'PC6', 'acid reflux': 'CV12',
-  'constipation': 'ST25', 'diarrhea': 'ST36',
-  'weight loss': 'SP6', 'obesity': 'ST40', 'phlegm': 'ST40',
-
-  // --- 4. EMOTIONAL & MENTAL ---
-  'anxiety': 'Yintang', 'stress': 'LR3', 'depression': 'LR3',
-  'insomnia': 'HT7', 'sleep': 'Anmian', 'dream disturbed': 'BL15',
-  'anger': 'LR2', 'grief': 'LU7', 'fear': 'KI3', 'panic': 'HT7',
-  'memory': 'GV20', 'foggy mind': 'ST40',
-
-  // --- 5. RESPIRATORY & IMMUNE ---
-  'cold': 'GB20', 'flu': 'LI4', 'fever': 'GV14', 'sore throat': 'LU11',
-  'cough': 'LU7', 'asthma': 'LU9', 'short breath': 'CV17',
-  'immunity': 'ST36', 'allergies': 'LI20', 'sinus': 'LI20',
-
-  // --- 6. WOMEN'S HEALTH & HORMONES ---
-  'menstrual': 'SP6', 'cramps': 'SP6', 'pms': 'LR3',
-  'fertility': 'CV4', 'hot flash': 'KI6', 'menopause': 'SP6',
-
-  // --- 7. SPECIAL AREAS ---
-  'tongue': 'Tongue_Tip', 'pulse': 'LU9', 'ear': 'Ear_Shenmen',
-  'face': 'LI4', 'eye': 'BL1', 'vision': 'GB37',
-  'tinnitus': 'SJ3', 'dizziness': 'GV20', 'vertigo': 'PC6',
+  // --- 🇬🇧 CORE ENGLISH MAPPINGS ---
+  'hegu': 'LI4', 'li4': 'LI4', 'headache': 'LI4',
+  'zusanli': 'ST36', 'st36': 'ST36', 'energy': 'ST36',
+  'shenmen': 'HT7', 'ht7': 'HT7', 'insomnia': 'HT7',
+  'sanyinjiao': 'SP6', 'sp6': 'SP6',
+  'taichong': 'LR3', 'lr3': 'LR3', 'stress': 'LR3',
+  'neiguan': 'PC6', 'pc6': 'PC6', 'nausea': 'PC6',
+  'baihui': 'GV20', 'gv20': 'GV20', 'dizziness': 'GV20',
 
   // --- 🇮🇱 HEBREW / RTL MAPPINGS ---
-  // Pain & General
-  'כאב': 'LI4', 'כאבים': 'LI4',
-  'כאב ראש': 'LI4', 'מיגרנה': 'GB20',
-  'כאב גב': 'BL40', 'גב תחתון': 'BL23', 'סיאטיקה': 'GB30',
-  'כאב בטן': 'ST36', 'קיבה': 'ST36',
-  'כאב ברכיים': 'ST35', 'ברך': 'ST35',
-  'צוואר': 'GB20', 'כתף': 'LI15',
 
-  // Digestive
-  'בחילה': 'PC6', 'הקאות': 'PC6',
-  'עצירות': 'ST25', 'שלשול': 'ST36',
-  'נפיחות': 'ST25', 'גזים': 'ST25',
+  // 🔴 PAIN (Ke'ev)
+  'כאב': 'LI4',
+  'כאבים': 'LI4',
+  'כאב ראש': 'LI4',         // Headache
+  'מיגרנה': 'GB20',         // Migraine
+  'כאב גב': 'BL40',         // Back Pain
+  'גב תחתון': 'BL23',       // Lower Back
+  'סיאטיקה': 'GB30',        // Sciatica
+  'צוואר': 'GB20',          // Neck
+  'כתף': 'LI15',            // Shoulder
+  'ברך': 'ST35',            // Knee
+  'כאב ברכיים': 'ST35',     // Knee pain
+  'שיניים': 'ST44',         // Toothache
 
-  // Mental & Emotional
-  'חרדה': 'Yintang', 'לחץ': 'LR3', 'סטרס': 'LR3',
-  'דיכאון': 'LR3', 'עצב': 'LU7',
-  'נדודי שינה': 'HT7', 'שינה': 'HT7', 'אינסומניה': 'HT7',
+  // 🤢 DIGESTION (Ikul)
+  'בטן': 'ST36',            // Stomach
+  'כאב בטן': 'ST36',        // Stomach ache
+  'בחילה': 'PC6',           // Nausea
+  'הקאות': 'PC6',           // Vomiting
+  'עצירות': 'ST25',         // Constipation
+  'שלשול': 'ST36',          // Diarrhea
+  'נפיחות': 'ST25',         // Bloating
+  'גזים': 'ST25',           // Gas
+  'צרבת': 'CV12',           // Reflux/Heartburn
 
-  // Respiratory & Immune
-  'שיעול': 'LU7', 'צינון': 'GB20', 'שפעת': 'LI4',
-  'חום': 'GV14', 'מערכת חיסון': 'ST36',
-  'אלרגיה': 'LI20', 'סינוסים': 'LI20',
+  // 🧠 MENTAL (Nefesh)
+  'חרדה': 'Yintang',        // Anxiety
+  'לחץ': 'LR3',             // Stress
+  'סטרס': 'LR3',            // Stress
+  'דיכאון': 'LR3',          // Depression
+  'עצב': 'LU7',             // Grief
+  'כעס': 'LR2',             // Anger
+  'שינה': 'HT7',            // Sleep
+  'נדודי שינה': 'HT7',      // Insomnia
+  'עייפות': 'ST36',         // Fatigue (New!)
+  'תשישות': 'ST36',         // Exhaustion
 
-  // Women's Health
-  'מחזור': 'SP6', 'כאבי מחזור': 'SP6', 'פוריות': 'CV4',
-  'גיל המעבר': 'KI6', 'גלי חום': 'KI6',
+  // 🌬️ RESPIRATORY & IMMUNE (Neshima)
+  'שיעול': 'LU7',           // Cough
+  'צינון': 'GB20',          // Cold
+  'שפעת': 'LI4',            // Flu
+  'חום': 'GV14',            // Fever
+  'מערכת חיסון': 'ST36',    // Immune System
+  'אלרגיה': 'LI20',         // Allergy
+  'סינוסים': 'LI20',        // Sinus
+  'גרון': 'LU11',           // Throat
 
-  // Organ Names
-  'לשון': 'Tongue_Tip', 'דופק': 'LU9',
-  'לב': 'HT7', 'כבד': 'LR3', 'טחול': 'SP6', 'כליות': 'KI3'
+  // 🌸 WOMEN (Nashim)
+  'מחזור': 'SP6',           // Menstruation
+  'כאבי מחזור': 'SP6',      // Cramps
+  'פוריות': 'CV4',          // Fertility
+  'גיל המעבר': 'KI6',       // Menopause
+  'גלי חום': 'KI6',         // Hot flashes
+
+  // 🧴 SKIN & GENERAL (Or)
+  'פריחה': 'LI11',          // Rash (New!)
+  'גרד': 'LI11',            // Itch
+  'אקנה': 'LI4',            // Acne
+  'סחרחורת': 'GV20',        // Dizziness (New!)
+  'ורטיגו': 'PC6',          // Vertigo
+  
+  // 🫀 ORGANS (Eivarim)
+  'לשון': 'Tongue_Tip',     // Tongue
+  'דופק': 'LU9',            // Pulse
+  'אוזן': 'Ear_Shenmen'     // Ear
 };
 
 // Helper: Detect if text is primarily Hebrew
@@ -142,6 +141,7 @@ export const useRagChat = (options?: UseRagChatOptions) => {
   const [lastAIResponse, setLastAIResponse] = useState<string>('');
   const [debugData, setDebugData] = useState<RagDebugData | null>(null);
   const [searchMethod, setSearchMethod] = useState<string>('hybrid');
+  const [translatedQuery, setTranslatedQuery] = useState<string | null>(null);
 
   // 2. THE PARSER FUNCTION
   const parsePointReferences = useCallback((text: string) => {
@@ -232,7 +232,7 @@ export const useRagChat = (options?: UseRagChatOptions) => {
           try {
             const data = JSON.parse(jsonStr);
             
-            // First event contains metadata (sources, debug info)
+            // First event contains metadata (sources, debug info, translation)
             if (!metadataReceived && data.sources) {
               metadataReceived = true;
               console.log('[useRagChat] Received metadata:', data);
@@ -240,6 +240,16 @@ export const useRagChat = (options?: UseRagChatOptions) => {
               // Update search method and debug data
               if (data.searchMethod) setSearchMethod(data.searchMethod);
               if (data.debug) setDebugData(data.debug);
+              
+              // 🇮🇱 TRANSLATION DEBUG: Log and store translated query
+              if (data.translatedQuery) {
+                setTranslatedQuery(data.translatedQuery);
+                console.log(`🌐 STEALTH TRANSLATION ACTIVE:`);
+                console.log(`   Original (Hebrew): "${data.originalQuery}"`);
+                console.log(`   Searched (English): "${data.translatedQuery}"`);
+              } else {
+                setTranslatedQuery(null);
+              }
               continue;
             }
 
@@ -292,6 +302,7 @@ export const useRagChat = (options?: UseRagChatOptions) => {
     setHighlightedPoints([]);
     setLastAIResponse('');
     setDebugData(null);
+    setTranslatedQuery(null);
   }, []);
 
   return {
@@ -311,5 +322,8 @@ export const useRagChat = (options?: UseRagChatOptions) => {
     // Debug/metrics
     debugData,
     searchMethod,
+    
+    // Translation info
+    translatedQuery,
   };
 };

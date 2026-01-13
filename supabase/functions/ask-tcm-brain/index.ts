@@ -378,7 +378,11 @@ serve(async (req) => {
           sources,
           searchMethod,
           chunksFound: relevantChunks.length,
-          debug: debugMetadata
+          debug: debugMetadata,
+          // NEW: Include translation info for UI debugging
+          originalQuery: query,
+          translatedQuery: queryIsHebrew ? searchQuery : null,
+          queryLanguage: queryIsHebrew ? 'he' : 'en'
         })}\n\n`;
         controller.enqueue(new TextEncoder().encode(metadataEvent));
       },
