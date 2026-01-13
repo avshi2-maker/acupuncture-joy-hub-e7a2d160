@@ -51,6 +51,34 @@ export interface RagStats {
   tokensUsed?: number;
 }
 
+// Unified Debug Metadata Interface (shared with useRagChat)
+export interface DebugMetadata {
+  tokenBudget: {
+    used: number;
+    max: number;
+    percentage: number;
+  };
+  chunks: {
+    found: number;
+    included: number;
+    dropped: number;
+    budgetReached: boolean;
+  };
+  topChunks: Array<{
+    index: number;
+    sourceName: string;
+    ferrariScore: number;
+    keywordScore: number;
+    questionBoost: boolean;
+    included: boolean;
+    reason: string;
+  }>;
+  thresholds: {
+    clinicalStandard: number;
+    minHighConfidence: number;
+  };
+}
+
 export interface ChainedWorkflow {
   isActive: boolean;
   currentPhase: 'idle' | 'symptoms' | 'diagnosis' | 'treatment' | 'complete';
@@ -111,6 +139,10 @@ export function useTcmBrainState() {
     auditLoggedAt: null,
     tokensUsed: 0,
   });
+  
+  // Debug metadata for unified algorithm transparency
+  const [debugData, setDebugData] = useState<DebugMetadata | null>(null);
+  const [searchMethod, setSearchMethod] = useState<string>('hybrid');
 
   // External AI fallback (only offered when proprietary KB has 0 matches)
   const [externalFallbackQuery, setExternalFallbackQuery] = useState<string | null>(null);
@@ -388,6 +420,12 @@ export function useTcmBrainState() {
           auditLoggedAt: null,
           tokensUsed: 0,
         });
+
+        // Extract debug metadata for algorithm transparency (Ferrari Score, Token Budget)
+        if (data?.debug) {
+          setDebugData(data.debug);
+          setSearchMethod(data.searchMethod || 'hybrid');
+        }
 
         if (!isExternal && chunksFound === 0) {
           setExternalFallbackQuery(userMessage);
@@ -997,5 +1035,9 @@ Provide a complete treatment protocol:
     // Search depth mode
     searchDepth,
     setSearchDepth,
+    
+    // Debug data for algorithm transparency (unified with useRagChat)
+    debugData,
+    searchMethod,
   };
 }
