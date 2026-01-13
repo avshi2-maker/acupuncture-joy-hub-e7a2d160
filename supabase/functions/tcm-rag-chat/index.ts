@@ -753,7 +753,7 @@ async function translateQueryToEnglish(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-lite',
+        model: 'google/gemini-3-flash-preview',
         messages: [
           {
             role: 'system',
@@ -2214,19 +2214,53 @@ Generate your response ENTIRELY in ${responseLanguageInstruction}, including:
       }
     };
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-pro',
-        messages: chatMessages,
-        stream: true,
-        temperature: 0, // CLOSED LOOP: Zero temperature for deterministic, context-only responses
-      }),
-    });
+    // Use retry logic for network resilience
+    let aiResponse: Response | null = null;
+    let lastError: Error | null = null;
+    
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-3-flash-preview', // Faster model for better reliability
+            messages: chatMessages,
+            stream: true,
+            temperature: 0, // CLOSED LOOP: Zero temperature for deterministic, context-only responses
+          }),
+        });
+        
+        if (aiResponse.ok) break;
+        
+        // If rate limited or payment required, don't retry
+        if (aiResponse.status === 429 || aiResponse.status === 402) break;
+        
+        console.warn(`AI gateway attempt ${attempt + 1} failed with status ${aiResponse.status}`);
+      } catch (fetchError) {
+        lastError = fetchError instanceof Error ? fetchError : new Error(String(fetchError));
+        console.warn(`AI gateway attempt ${attempt + 1} network error:`, lastError.message);
+        
+        // Wait before retry (exponential backoff)
+        if (attempt < 2) {
+          await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+        }
+      }
+    }
+    
+    if (!aiResponse) {
+      console.error('All AI gateway attempts failed:', lastError?.message);
+      return new Response(JSON.stringify({ 
+        error: 'AI service temporarily unavailable. Please try again.',
+        details: lastError?.message 
+      }), {
+        status: 503,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     if (!aiResponse.ok) {
       if (aiResponse.status === 429) {
