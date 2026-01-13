@@ -426,7 +426,99 @@ export const PROMPT_MAPPINGS: PromptMapping[] = [
     voiceText: 'נקודות אסורות לדיקור בזמן הריון. זהירות היא ערך עליון כאן.'
   },
 
-  // === SECTION 4: SYSTEM & MANAGEMENT (15 items) ===
+  // === SECTION 4: FIVE ELEMENTS CATEGORY (10 items) ===
+  {
+    id: 'fe_wood',
+    hebrewLabel: 'יסוד העץ',
+    ragPriorityContext: 'RAG PRIORITY: Wood Element. Liver and Gallbladder, spring, growth, anger.',
+    role: 'Five Elements',
+    icon: '🌳',
+    fullAiPrompt: 'RAG PRIORITY: Wood Element analysis. Liver and Gallbladder organs, spring season, growth and planning, anger emotion. KEY POINTS: LV3, LV14, GB34, GB20.',
+    voiceText: 'יסוד העץ שולט בכבד ובמרה. עונת האביב, צמיחה ותכנון, רגש הכעס.'
+  },
+  {
+    id: 'fe_fire',
+    hebrewLabel: 'יסוד האש',
+    ragPriorityContext: 'RAG PRIORITY: Fire Element. Heart and Small Intestine, summer, joy.',
+    role: 'Five Elements',
+    icon: '🔥',
+    fullAiPrompt: 'RAG PRIORITY: Fire Element analysis. Heart and Small Intestine organs, summer season, maturation, joy and overstimulation. KEY POINTS: HT7, HT5, SI3, PC6.',
+    voiceText: 'יסוד האש שולט בלב ובמעי הדק. עונת הקיץ, הבשלה ושמחה.'
+  },
+  {
+    id: 'fe_earth',
+    hebrewLabel: 'יסוד האדמה',
+    ragPriorityContext: 'RAG PRIORITY: Earth Element. Spleen and Stomach, late summer, worry.',
+    role: 'Five Elements',
+    icon: '🏔️',
+    fullAiPrompt: 'RAG PRIORITY: Earth Element analysis. Spleen and Stomach organs, late summer, transformation, worry and overthinking. KEY POINTS: ST36, SP6, SP3, CV12.',
+    voiceText: 'יסוד האדמה שולט בטחול ובקיבה. סוף הקיץ, התמרה ודאגה.'
+  },
+  {
+    id: 'fe_metal',
+    hebrewLabel: 'יסוד המתכת',
+    ragPriorityContext: 'RAG PRIORITY: Metal Element. Lung and Large Intestine, autumn, grief.',
+    role: 'Five Elements',
+    icon: '⚔️',
+    fullAiPrompt: 'RAG PRIORITY: Metal Element analysis. Lung and Large Intestine organs, autumn season, letting go, grief and sadness. KEY POINTS: LU7, LU9, LI4, LI11.',
+    voiceText: 'יסוד המתכת שולט בריאות ובמעי הגס. עונת הסתיו, שחרור ועצב.'
+  },
+  {
+    id: 'fe_water',
+    hebrewLabel: 'יסוד המים',
+    ragPriorityContext: 'RAG PRIORITY: Water Element. Kidney and Bladder, winter, fear.',
+    role: 'Five Elements',
+    icon: '💧',
+    fullAiPrompt: 'RAG PRIORITY: Water Element analysis. Kidney and Bladder organs, winter season, storage and willpower, fear emotion. KEY POINTS: KI3, KI6, BL23, BL60.',
+    voiceText: 'יסוד המים שולט בכליות ובשלפוחית. עונת החורף, אחסון ופחד.'
+  },
+  {
+    id: 'fe_sheng_cycle',
+    hebrewLabel: 'מעגל היצירה',
+    ragPriorityContext: 'RAG PRIORITY: Sheng (Generating) Cycle. Mother-child nourishing relationships.',
+    role: 'Five Elements',
+    icon: '🔄',
+    fullAiPrompt: 'RAG PRIORITY: Sheng Cycle analysis. Wood feeds Fire, Fire creates Earth, Earth bears Metal, Metal collects Water, Water nourishes Wood. Use for tonification strategies.',
+    voiceText: 'מעגל היצירה: עץ מזין אש, אש יוצרת אדמה, אדמה נושאת מתכת, מתכת אוספת מים, מים מזינים עץ.'
+  },
+  {
+    id: 'fe_ke_cycle',
+    hebrewLabel: 'מעגל השליטה',
+    ragPriorityContext: 'RAG PRIORITY: Ke (Controlling) Cycle. Grandmother-grandchild controlling relationships.',
+    role: 'Five Elements',
+    icon: '⚖️',
+    fullAiPrompt: 'RAG PRIORITY: Ke Cycle analysis. Wood parts Earth, Earth dams Water, Water quenches Fire, Fire melts Metal, Metal chops Wood. Use for sedation and control strategies.',
+    voiceText: 'מעגל השליטה: עץ מפרק אדמה, אדמה סוכרת מים, מים מכבים אש, אש מתיכה מתכת, מתכת חותכת עץ.'
+  },
+  {
+    id: 'fe_constitutional',
+    hebrewLabel: 'טיפוס יסודי',
+    ragPriorityContext: 'RAG PRIORITY: Five Element constitutional type. Identify dominant element.',
+    role: 'Five Elements',
+    icon: '🧬',
+    fullAiPrompt: 'RAG PRIORITY: Constitutional Five Element type. Identify patient dominant element type based on body shape, voice, color, emotion, and preferences.',
+    voiceText: 'זיהוי הטיפוס היסודי של המטופל לפי מבנה גוף, קול, צבע, רגש והעדפות.'
+  },
+  {
+    id: 'fe_emotion_organ',
+    hebrewLabel: 'רגש ואיבר',
+    ragPriorityContext: 'RAG PRIORITY: Emotion-Organ relationships. Each element governs specific emotions.',
+    role: 'Five Elements',
+    icon: '💚',
+    fullAiPrompt: 'RAG PRIORITY: Five Element emotion-organ analysis. Anger-Liver, Joy-Heart, Worry-Spleen, Grief-Lung, Fear-Kidney. Treat emotional imbalances through organ systems.',
+    voiceText: 'קשרי רגש-איבר: כעס-כבד, שמחה-לב, דאגה-טחול, עצב-ריאות, פחד-כליות.'
+  },
+  {
+    id: 'fe_seasonal',
+    hebrewLabel: 'טיפול עונתי',
+    ragPriorityContext: 'RAG PRIORITY: Seasonal Five Element treatment. Align treatment with seasons.',
+    role: 'Five Elements',
+    icon: '🌸',
+    fullAiPrompt: 'RAG PRIORITY: Seasonal treatment strategy. Spring-treat Liver, Summer-treat Heart, Late Summer-treat Spleen, Autumn-treat Lung, Winter-treat Kidney.',
+    voiceText: 'טיפול עונתי: אביב-כבד, קיץ-לב, סוף קיץ-טחול, סתיו-ריאות, חורף-כליות.'
+  },
+
+  // === SECTION 5: SYSTEM & MANAGEMENT (15 items) ===
   {
     id: 'sys_stack',
     hebrewLabel: 'סל הניתוח',

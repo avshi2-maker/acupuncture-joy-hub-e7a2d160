@@ -60,15 +60,16 @@ const ACCORDION_GROUPS = [
     ]
   },
   {
-    id: 'tongue-diagnosis',
-    title: 'לשון ודופק',
-    titleEn: 'Tongue & Pulse',
+    id: 'five-elements',
+    title: 'חמשת היסודות',
+    titleEn: 'Five Elements',
     icon: Sparkles,
-    color: 'text-teal-600',
-    bgColor: 'bg-teal-500/10',
-    borderColor: 'border-teal-500/30',
+    color: 'text-emerald-600',
+    bgColor: 'bg-emerald-500/10',
+    borderColor: 'border-emerald-500/30',
     mappingIds: [
-      'yy_yin_def_face', 'yy_symptom_sort', 'yy_yin_organs', 'yy_liver_yang', 'yy_kidney_balance'
+      'fe_wood', 'fe_fire', 'fe_earth', 'fe_metal', 'fe_water',
+      'fe_sheng_cycle', 'fe_ke_cycle', 'fe_constitutional', 'fe_emotion_organ', 'fe_seasonal'
     ]
   }
 ];
