@@ -11,23 +11,16 @@ import { PromptMapping } from '@/data/tcm-prompt-mapping';
 import { Message } from '@/hooks/useTcmBrainState';
 
 interface IntelligenceHubProps {
-  // Stacked queries
   stackedQueries: PromptMapping[];
   onRemoveFromStack: (mappingId: string) => void;
   onClearStack: () => void;
   onExecuteSynthesis: () => void;
   isAnalyzing: boolean;
-  
-  // Chat state
   messages: Message[];
   isLoading: boolean;
   onSendMessage: (message: string) => void;
   onClear: () => void;
-  
-  // Body map state
   highlightedPoints?: string[];
-  
-  // Optional
   onViewBodyMap?: (points: string[]) => void;
   externalInput?: string;
   onExternalInputHandled?: () => void;
@@ -52,7 +45,6 @@ export function IntelligenceHub({
 }: IntelligenceHubProps) {
   const [selectedQuestion, setSelectedQuestion] = useState('');
 
-  // Handle external input
   useEffect(() => {
     if (!externalInput) return;
     setSelectedQuestion(externalInput);
@@ -67,8 +59,8 @@ export function IntelligenceHub({
   const hasStackedQueries = stackedQueries.length > 0;
 
   return (
-    <div className="h-[calc(100vh-4rem)] w-full bg-slate-50 flex flex-col overflow-hidden" dir="ltr">
-      {/* STACKING BAR (Top) - Only shows when queries are stacked */}
+    <div className="h-[calc(100vh-4rem)] w-full bg-slate-50 flex flex-col overflow-hidden">
+      {/* STACKING BAR (Top) */}
       <AnimatePresence>
         {hasStackedQueries && (
           <motion.div
@@ -119,7 +111,6 @@ export function IntelligenceHub({
                 </div>
               </div>
               
-              {/* Stacked Query Icons */}
               <div className="flex flex-wrap gap-1.5">
                 {stackedQueries.map((q) => (
                   <Badge
@@ -143,11 +134,11 @@ export function IntelligenceHub({
         )}
       </AnimatePresence>
 
-      {/* THE FLEXBOX FRAME: 3 Columns - Fixed LTR layout to prevent RTL flip */}
-      <div className="flex flex-row flex-1 min-h-0 gap-4 p-4">
+      {/* 3-COLUMN FLEXBOX - RTL Safe */}
+      <div className="flex flex-1 min-h-0 gap-4 p-4">
         
-        {/* COLUMN 1: The Library (Left Side - Fixed Width) */}
-        <aside className="w-80 min-w-[320px] shrink-0 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        {/* COLUMN 1: Library (START side - Right in RTL) */}
+        <aside className="w-80 min-w-[320px] shrink-0 flex flex-col bg-white rounded-xl shadow-sm border-s border-slate-200 overflow-hidden order-first">
           <div className="p-4 border-b border-slate-100">
             <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
               📚 Clinical Library
@@ -161,25 +152,24 @@ export function IntelligenceHub({
           </div>
         </aside>
 
-        {/* COLUMN 2: The Main Stage (Center - Fluid Width) */}
-        <main className="flex-1 min-w-[400px] flex flex-col bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
+        {/* COLUMN 2: Main Search (CENTER - Fluid) */}
+        <main className="flex-1 min-w-[500px] flex flex-col bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
           <RagSearchPanel />
         </main>
 
-        {/* COLUMN 3: The Body Map (Right Side - Fixed Width) */}
-        <aside className="w-96 min-w-[380px] shrink-0 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        {/* COLUMN 3: Body Map (END side - Left in RTL) */}
+        <aside className="w-96 min-w-[380px] shrink-0 flex flex-col bg-white rounded-xl shadow-sm border-e border-slate-200 overflow-hidden order-last">
           <div className="p-4 border-b border-slate-100">
             <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
               📍 Body Reference
               {highlightedPoints.length > 0 && (
-                <Badge variant="secondary" className="text-xs ml-2">
+                <Badge variant="secondary" className="text-xs ms-2">
                   {highlightedPoints.length} נקודות
                 </Badge>
               )}
             </h2>
           </div>
           
-          {/* Body Map Container - Scrollable */}
           <div className="flex-1 overflow-y-auto p-4">
             <BodyMapCore 
               className="w-full"
@@ -187,7 +177,6 @@ export function IntelligenceHub({
             />
           </div>
           
-          {/* Highlighted Points Display */}
           {highlightedPoints.length > 0 && (
             <div className="p-4 border-t border-slate-200 shrink-0">
               <p className="text-xs font-medium text-slate-500 mb-2">Active Points:</p>
