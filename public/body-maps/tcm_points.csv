@@ -1,1 +1,25 @@
+code,name,pinyin,image_file,x_percent,y_percent,tags
+LI4,Hegu,Hegu,hand_dorsum.png,35,45,headache;face;toothache;pain;immune;cold
+ST36,Zusanli,Zusanli,leg_outer.png,40,30,stomach;energy;immunity;digestion;weakness
+SP6,Sanyinjiao,Sanyinjiao,leg_inner.png,45,60,gynecology;insomnia;digestion;spleen;menstrual
+LR3,Taichong,Taichong,foot_top.png,55,40,stress;anger;liver;headache;detox
+HT7,Shenmen,Shenmen,arm_inner.png,70,80,insomnia;anxiety;heart;calm;spirit
+PC6,Neiguan,Neiguan,arm_inner.png,50,60,nausea;heart;palpitations;vomiting;anxiety
+LU7,Lieque,Lieque,arm_outer.png,20,40,cough;neck;headache;lungs;asthma
+LU9,Taiyuan,Taiyuan,arm_inner.png,80,85,pulse;cough;phlegm;lungs
+LI11,Quchi,Quchi,arm_outer.png,50,50,fever;skin;heat;arm pain;immune
+GB20,Fengchi,Fengchi,head_side.png,75,50,migraine;neck;wind;cold;headache
+BL40,Weizhong,Weizhong,body_back.png,50,50,back pain;lumbar;heat;skin
+GV20,Baihui,Baihui,head_face.png,50,5,dizziness;prolapse;memory;stroke;headache
+Yintang,Yintang,Yintang,head_face.png,50,30,anxiety;calm;sinus;insomnia;stress
+GB30,Huantiao,Huantiao,body_back.png,25,55,sciatica;hip;leg pain
+KI3,Taixi,Taixi,leg_inner.png,60,85,kidney;back;asthma;tinnitus;aging
+GV14,Dazhui,Dazhui,body_back.png,50,15,fever;cold;immunity;neck
+Ear_Shenmen,Ear Shenmen,Shenmen,ear.png,45,20,stress;pain;detox;addiction;calm
+Tongue_Tip,Heart Area,Xin,tongue.png,50,80,heart;sleep;anxiety;tongue
+Tongue_Center,Stomach Area,PiWei,tongue.png,50,50,digestion;stomach;spleen
+Baby_General,Baby/Infant,Baby,body_baby.png,50,50,baby;pediatric;infant;colic;fever
+Child_General,Child/Youth,Child,body_child.png,50,50,child;pediatric;growth;adhd
+GB34,Yanglingquan,Yanglingquan,leg_outer.png,45,35,tendons;knees;liver;gallbladder
+ST44,Neiting,Neiting,foot_top.png,40,80,toothache;stomach fire;face pain
 
