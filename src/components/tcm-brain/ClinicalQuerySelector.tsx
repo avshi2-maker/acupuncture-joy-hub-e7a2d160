@@ -15,45 +15,61 @@ interface ClinicalQuerySelectorProps {
   disabled?: boolean;
 }
 
-// Group mappings into 3 accordion categories
+// Group mappings into 4 accordion categories with CORRECT IDs from tcm-prompt-mapping.ts
 const ACCORDION_GROUPS = [
   {
     id: 'yin-yang',
-    title: 'יין-יאנג ודפוסים קליניים',
-    titleEn: 'Yin-Yang & Clinical Patterns',
+    title: 'דפוסים קליניים',
+    titleEn: 'Clinical Patterns',
     icon: Layers,
     color: 'text-violet-600',
     bgColor: 'bg-violet-500/10',
     borderColor: 'border-violet-500/30',
     mappingIds: [
-      'yy_kidney', 'yy_liver', 'yy_spleen_damp', 'yy_shen_ear', 'yy_ke_cycle',
-      'yy_lung_kidney', 'yy_wei_qi', 'yy_pulse_blood', 'yy_tongue_spleen', 'yy_sanjiao',
-      'yy_zong_yuan', 'yy_ext_wind', 'yy_heart_sweat', 'yy_stomach_cold', 'yy_treasures'
+      'yy_balance', 'yy_yin_organs', 'yy_yin_def_face', 'yy_yin_def_treat', 'yy_yang_strengthen',
+      'yy_exercise', 'yy_insomnia', 'yy_depression', 'yy_five_elements', 'yy_kidney_balance',
+      'yy_liver_yang', 'yy_yang_type', 'yy_symptom_sort', 'yy_constitutional', 'yy_western_integration'
     ]
   },
   {
-    id: 'five-elements',
-    title: 'חמשת היסודות',
-    titleEn: 'Five Elements',
-    icon: Sparkles,
+    id: 'orthopedic',
+    title: 'אורתופדיה וכאב',
+    titleEn: 'Orthopedic & Pain',
+    icon: Zap,
     color: 'text-amber-600',
     bgColor: 'bg-amber-500/10',
     borderColor: 'border-amber-500/30',
     mappingIds: [
-      'fe_wood', 'fe_fire', 'fe_earth', 'fe_metal', 'fe_water',
-      'fe_sheng_cycle', 'fe_ke_cycle', 'fe_wood_fire', 'fe_fire_earth', 'fe_earth_metal',
-      'fe_metal_water', 'fe_water_wood', 'fe_constitutional', 'fe_emotion_organs', 'fe_seasonal_treatment'
+      'ortho_wind', 'ortho_cold', 'ortho_damp', 'ortho_heat', 'ortho_back_trauma',
+      'ortho_neck', 'ortho_tennis_elbow', 'ortho_sciatica', 'ortho_cartilage', 'ortho_carpal',
+      'ortho_shoulder', 'ortho_fibromyalgia', 'ortho_heel_spur', 'ortho_gout', 'ortho_ankle_sprain'
     ]
   },
   {
-    id: 'specialty',
-    title: 'התמחויות קליניות',
-    titleEn: 'Clinical Specialties',
+    id: 'gynecology',
+    title: 'נשים ופוריות',
+    titleEn: 'Women & Fertility',
     icon: Heart,
     color: 'text-rose-600',
     bgColor: 'bg-rose-500/10',
     borderColor: 'border-rose-500/30',
-    mappingIds: [] // Placeholder for future musculoskeletal/gynecology mappings
+    mappingIds: [
+      'gyn_late_period', 'gyn_early_period', 'gyn_irregular', 'gyn_dysmenorrhea', 'gyn_amenorrhea',
+      'gyn_fertility_cold', 'gyn_fertility_yin', 'gyn_pcos', 'gyn_endometriosis', 'gyn_pms',
+      'gyn_menopause', 'gyn_postpartum', 'gyn_threatened_miscarriage', 'gyn_morning_sickness', 'gyn_pregnancy_forbidden'
+    ]
+  },
+  {
+    id: 'tongue-diagnosis',
+    title: 'לשון ודופק',
+    titleEn: 'Tongue & Pulse',
+    icon: Sparkles,
+    color: 'text-teal-600',
+    bgColor: 'bg-teal-500/10',
+    borderColor: 'border-teal-500/30',
+    mappingIds: [
+      'yy_yin_def_face', 'yy_symptom_sort', 'yy_yin_organs', 'yy_liver_yang', 'yy_kidney_balance'
+    ]
   }
 ];
 
