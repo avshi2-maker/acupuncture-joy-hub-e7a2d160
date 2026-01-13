@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Brain, Maximize2, Minimize2, Activity } from 'lucide-react';
+import { MapPin, Brain, Maximize2, Minimize2, Activity, Library } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { BodyFigureSelector } from '@/components/acupuncture/BodyFigureSelector';
+import { QuickPromptDropdown } from '@/components/tcm-brain/QuickPromptDropdown';
 
 interface BodyMapSidebarProps {
   highlightedPoints: string[];
@@ -13,6 +14,7 @@ interface BodyMapSidebarProps {
   onGenerateProtocol?: (points: string[]) => void;
   onOpenPulseGallery?: () => void;
   showPulseGallery?: boolean;
+  onSelectQuestion?: (question: string) => void;
   className?: string;
 }
 
@@ -22,14 +24,15 @@ export function BodyMapSidebar({
   onGenerateProtocol,
   onOpenPulseGallery,
   showPulseGallery = false,
+  onSelectQuestion,
   className
 }: BodyMapSidebarProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <div className={cn(
-      'h-full flex flex-col bg-card/50 border-r',
-      'shrink-0', // CRITICAL: Prevent sidebar from shrinking when center resizes
+      'h-full flex flex-col bg-white border-r',
+      'shrink-0',
       className
     )}>
       {/* Header */}
@@ -59,12 +62,22 @@ export function BodyMapSidebar({
             </Button>
           </div>
         </div>
-        <p className="text-[10px] text-muted-foreground mt-1">
-          Visual reference for point selection
-        </p>
       </div>
 
-      {/* Pulse Gallery Trigger - 💓 Button in Left Column */}
+      {/* 📚 CLINICAL LIBRARY - Full Width Dropdown */}
+      <div className="p-3 border-b bg-slate-50 shrink-0">
+        <div className="flex items-center gap-2 mb-2">
+          <Library className="h-4 w-4 text-violet-600" />
+          <span className="text-xs font-bold text-slate-700">📚 ספריית שאלות</span>
+        </div>
+        <QuickPromptDropdown
+          onSelectQuestion={(question) => onSelectQuestion?.(question)}
+          placeholder="בחר שאלה מהמאגר..."
+          className="w-full"
+        />
+      </div>
+
+      {/* Pulse Gallery Trigger */}
       {onOpenPulseGallery && (
         <div className="p-2 border-b shrink-0">
           <Button

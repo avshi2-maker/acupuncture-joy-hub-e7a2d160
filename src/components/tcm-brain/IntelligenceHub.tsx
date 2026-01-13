@@ -1,14 +1,12 @@
-import { useState, useEffect, RefObject } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Zap, Loader2, ArrowRight, Trash2, Send } from 'lucide-react';
+import { Sparkles, Zap, Loader2, Trash2, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { BrowserVoiceInput } from '@/components/ui/BrowserVoiceInput';
 import { AIResponseDisplay } from '@/components/tcm/AIResponseDisplay';
-import { QuickPromptDropdown } from '@/components/tcm-brain/QuickPromptDropdown';
 import { PromptMapping } from '@/data/tcm-prompt-mapping';
 import { Message } from '@/hooks/useTcmBrainState';
 
@@ -147,96 +145,92 @@ export function IntelligenceHub({
         )}
       </AnimatePresence>
 
-      {/* SECTION 2: Main Input Box (Middle) */}
-      <div className="p-4 border-b bg-card shrink-0 space-y-2">
-        {/* Quick Prompt Dropdown - Database Questions */}
-        <QuickPromptDropdown
-          onSelectQuestion={(question) => {
-            setInput(question);
-          }}
-          disabled={isLoading}
-          placeholder="📚 שאלות מוכנות מהמאגר"
-          className="w-full"
-        />
-        
-        <div className="flex gap-2">
-          <Input
-            placeholder="תאר תסמינים או שאל שאלה קלינית..."
+      {/* SECTION 2: Main Input Box - BIG & SPACIOUS */}
+      <div className="p-6 border-b bg-white shadow-sm shrink-0">
+        <div className="flex flex-col gap-3">
+          {/* Big Textarea - Centered and Spacious */}
+          <Textarea
+            placeholder="תאר תסמינים או שאל שאלה קלינית...&#10;&#10;לדוגמה: מהן נקודות הדיקור המומלצות לכאבי ראש עם דפוס של עליית יאנג כבד?"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && input.trim() && !isLoading) {
+              if (e.key === 'Enter' && !e.shiftKey && input.trim() && !isLoading) {
                 e.preventDefault();
                 handleSend();
               }
             }}
             disabled={isLoading}
-            className="flex-1"
+            className="min-h-[120px] resize-none bg-slate-50 border-slate-200 text-slate-800 placeholder:text-slate-400 focus:ring-jade text-base leading-relaxed"
             dir="rtl"
           />
-          <div className="flex items-center gap-1">
-            <Button
-              type="button"
-              variant={voiceLanguage === 'he-IL' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setVoiceLanguage('he-IL')}
-              className="h-10 px-2 text-xs"
-              disabled={isLoading}
-            >
-              עב
-            </Button>
-            <Button
-              type="button"
-              variant={voiceLanguage === 'en-US' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setVoiceLanguage('en-US')}
-              className="h-10 px-2 text-xs"
-              disabled={isLoading}
-            >
-              EN
-            </Button>
-            <BrowserVoiceInput
-              onTranscription={(text) => {
-                setInput(input ? `${input} ${text}` : text);
-              }}
-              disabled={isLoading}
-              language={voiceLanguage}
-              size="md"
-              variant="outline"
-          />
+          
+          {/* Action Row */}
+          <div className="flex items-center justify-between gap-3">
+            {/* Left: Voice + Language */}
+            <div className="flex items-center gap-1">
+              <Button
+                type="button"
+                variant={voiceLanguage === 'he-IL' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setVoiceLanguage('he-IL')}
+                className="h-9 px-3 text-xs"
+                disabled={isLoading}
+              >
+                עברית
+              </Button>
+              <Button
+                type="button"
+                variant={voiceLanguage === 'en-US' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setVoiceLanguage('en-US')}
+                className="h-9 px-3 text-xs"
+                disabled={isLoading}
+              >
+                English
+              </Button>
+              <BrowserVoiceInput
+                onTranscription={(text) => {
+                  setInput(input ? `${input} ${text}` : text);
+                }}
+                disabled={isLoading}
+                language={voiceLanguage}
+                size="md"
+                variant="outline"
+              />
+            </div>
+            
+            {/* Right: Send + Clear */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onClear}
+                disabled={messages.length === 0}
+                className={cn(
+                  "gap-1.5 h-9 transition-colors",
+                  messages.length > 0 
+                    ? "text-destructive border-destructive/30 hover:bg-destructive/10" 
+                    : "text-muted-foreground"
+                )}
+              >
+                <Trash2 className="h-4 w-4" />
+                <span className="text-xs">נקה</span>
+              </Button>
+              <Button
+                onClick={handleSend}
+                disabled={!input.trim() || isLoading}
+                className="bg-jade hover:bg-jade/90 text-white gap-2 h-9 px-6"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+                <span className="text-sm">שלח</span>
+              </Button>
+            </div>
           </div>
-          <Button
-            onClick={handleSend}
-            disabled={!input.trim() || isLoading}
-            className="bg-jade hover:bg-jade/90 text-white gap-2"
-          >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onClear}
-            disabled={messages.length === 0}
-            className={cn(
-              "gap-1.5 shrink-0 transition-colors",
-              messages.length > 0 
-                ? "text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive" 
-                : "text-muted-foreground"
-            )}
-            title="Clear conversation"
-          >
-            <Trash2 className="h-4 w-4" />
-            <span className="hidden sm:inline text-xs">נקה</span>
-          </Button>
         </div>
-        
-        <p className="text-[10px] text-muted-foreground text-center mt-2">
-          💡 בחר דפוסים מהעמודה הימנית או הקלד שאלה חופשית
-        </p>
       </div>
 
       {/* SECTION 3: RAG Output Container (Bottom) - GLASSMORPHISM */}
