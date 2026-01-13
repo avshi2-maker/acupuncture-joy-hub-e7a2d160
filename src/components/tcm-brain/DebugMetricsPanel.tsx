@@ -1,14 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Bug, ChevronDown, ChevronUp, Rocket, CheckCircle, XCircle, AlertTriangle, Keyboard, BookOpen, Cloud } from 'lucide-react';
+import { Bug, ChevronDown, ChevronUp, Rocket, CheckCircle, XCircle, AlertTriangle, Keyboard, BookOpen, Cloud, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import { ConfidenceGauge } from './ConfidenceGauge';
+import { toast } from 'sonner';
 
 interface ChunkDebugInfo {
   index: number;
   sourceName: string;
+  sourceId?: string;
   ferrariScore: number;
   keywordScore: number;
   questionBoost: boolean;
@@ -38,9 +41,11 @@ interface DebugMetadata {
 interface DebugMetricsPanelProps {
   debugData: DebugMetadata | null;
   searchMethod?: string;
+  query?: string;
+  response?: string;
 }
 
-export function DebugMetricsPanel({ debugData, searchMethod }: DebugMetricsPanelProps) {
+export function DebugMetricsPanel({ debugData, searchMethod, query, response }: DebugMetricsPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   // Keyboard shortcut: Ctrl+D / Cmd+D to toggle debug panel
@@ -101,6 +106,59 @@ export function DebugMetricsPanel({ debugData, searchMethod }: DebugMetricsPanel
       ? 'bg-amber-500' 
       : 'bg-emerald-500';
 
+  // Download report function
+  const handleDownloadReport = () => {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const report = {
+      timestamp: new Date().toISOString(),
+      query: query || 'Unknown Query',
+      tokenUsage: {
+        used: tokenBudget.used,
+        max: tokenBudget.max,
+        percentage: tokenBudget.percentage,
+        estimatedTokens: Math.round(tokenBudget.used / 4)
+      },
+      source: isLocalRag ? 'Local RAG' : 'External AI Fallback',
+      confidence: {
+        percentage: confidencePercent,
+        level: confidenceLabel
+      },
+      chunks: {
+        found: chunks.found,
+        included: chunks.included,
+        dropped: chunks.dropped,
+        budgetReached: chunks.budgetReached
+      },
+      topChunks: topChunks.slice(0, 5).map(chunk => ({
+        index: chunk.index,
+        sourceName: chunk.sourceName,
+        sourceId: chunk.sourceId || 'N/A',
+        ferrariScore: chunk.ferrariScore,
+        keywordScore: chunk.keywordScore,
+        questionBoost: chunk.questionBoost,
+        included: chunk.included,
+        reason: chunk.reason
+      })),
+      response: response || 'No response captured',
+      thresholds: thresholds,
+      searchMethod: searchMethod || 'hybrid'
+    };
+
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `brain_log_${timestamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast.success('Report downloaded', {
+      description: `brain_log_${timestamp}.json`
+    });
+  };
+
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="border-t">
       <CollapsibleTrigger asChild>
@@ -127,45 +185,45 @@ export function DebugMetricsPanel({ debugData, searchMethod }: DebugMetricsPanel
       </CollapsibleTrigger>
       
       <CollapsibleContent className="px-4 pb-3 space-y-3">
-        {/* Source Indicator - TOP OF PANEL */}
-        <div className={cn(
-          "flex items-center gap-2 px-3 py-2 rounded-md border font-medium text-sm",
-          sourceColor
-        )}>
-          {isLocalRag ? (
-            <BookOpen className="h-4 w-4" />
-          ) : (
-            <Cloud className="h-4 w-4" />
-          )}
-          <span>{sourceLabel}</span>
-          
-          {/* Confidence Percentage */}
+        {/* Source + Confidence Gauge Row */}
+        <div className="flex items-center gap-4">
+          {/* Radial Confidence Gauge */}
           {isLocalRag && includedChunks.length > 0 && (
-            <span className={cn("font-bold", confidenceColor)}>
-              ({confidencePercent}% Confidence)
-            </span>
+            <ConfidenceGauge percentage={confidencePercent} size={64} strokeWidth={6} />
           )}
           
-          <div className="ml-auto flex items-center gap-2">
-            {isLocalRag && includedChunks.length > 0 && (
-              <Badge 
-                variant="outline" 
-                className={cn(
-                  "text-[10px]",
-                  confidencePercent >= 85 && "bg-emerald-500/20 border-emerald-400 text-emerald-700",
-                  confidencePercent >= 70 && confidencePercent < 85 && "bg-amber-500/20 border-amber-400 text-amber-700",
-                  confidencePercent < 70 && "bg-destructive/20 border-destructive text-destructive"
-                )}
-              >
-                {confidenceLabel}
-              </Badge>
+          {/* Source Indicator */}
+          <div className={cn(
+            "flex-1 flex items-center gap-2 px-3 py-2 rounded-md border font-medium text-sm",
+            sourceColor
+          )}>
+            {isLocalRag ? (
+              <BookOpen className="h-4 w-4" />
+            ) : (
+              <Cloud className="h-4 w-4" />
             )}
-            {isLocalRag && (
-              <Badge variant="outline" className="text-[10px] bg-emerald-500/20 border-emerald-400">
-                {chunks.found} RAG hits
-              </Badge>
-            )}
+            <span>{sourceLabel}</span>
+            
+            <div className="ml-auto flex items-center gap-2">
+              {isLocalRag && (
+                <Badge variant="outline" className="text-[10px] bg-emerald-500/20 border-emerald-400">
+                  {chunks.found} RAG hits
+                </Badge>
+              )}
+            </div>
           </div>
+          
+          {/* Download Report Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadReport}
+            className="flex items-center gap-1.5 text-xs h-8"
+          >
+            <Download className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Download</span>
+            <span className="sm:hidden">📥</span>
+          </Button>
         </div>
 
         {/* Token Budget Bar */}

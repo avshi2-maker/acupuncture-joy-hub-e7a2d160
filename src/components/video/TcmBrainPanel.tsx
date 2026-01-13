@@ -223,7 +223,12 @@ export function TcmBrainPanel({
         </ScrollArea>
 
         {/* Debug Metrics Panel - Shows Token Budget + Ferrari Scores */}
-        <DebugMetricsPanel debugData={debugData} searchMethod={searchMethod} />
+        <DebugMetricsPanel 
+          debugData={debugData} 
+          searchMethod={searchMethod}
+          query={messages.filter(m => m.role === 'user').slice(-1)[0]?.content}
+          response={messages.filter(m => m.role === 'assistant').slice(-1)[0]?.content}
+        />
 
         {/* Input */}
         <div className="p-4 border-t bg-background/80">
