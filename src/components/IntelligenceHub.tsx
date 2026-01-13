@@ -1,9 +1,9 @@
 import React from "react";
-import { RagSearchPanel } from "./RagSearchPanel";
-import { QuickPromptDropdown } from "./QuickPromptDropdown";
+import { RagSearchPanel } from "@/components/session/RagSearchPanel";
+import { QuickPromptDropdown } from "@/components/tcm-brain/QuickPromptDropdown";
 import { BodyMap } from "./BodyMap";
 import { useRagChat } from "@/hooks/useRagChat";
-import { AiStatus } from "./AiStatus"; 
+import { AiStatus } from "@/components/ui/AiStatus";
 // Note: If you have a 'ClinicalPatterns' component, uncomment the import below
 // import { ClinicalPatterns } from "./ClinicalPatterns";
 
@@ -31,7 +31,9 @@ export const IntelligenceHub = () => {
         
         {/* The Dropdown (Your 195 Questions) */}
         <div className="w-full">
-            <QuickPromptDropdown />
+            <QuickPromptDropdown 
+              onSelectQuestion={(q) => console.log('Selected:', q)}
+            />
         </div>
 
         <div className="my-2 border-t border-slate-100"></div>

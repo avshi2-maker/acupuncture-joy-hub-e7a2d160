@@ -54,12 +54,7 @@ export function TcmBrainPanel({
     highlightedPoints,
     lastAIResponse,
     sendMessage 
-  } = useRagChat({
-    patientId,
-    patientName,
-    sessionNotes,
-    includePatientHistory: !!patientId
-  });
+  } = useRagChat();
 
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return;
