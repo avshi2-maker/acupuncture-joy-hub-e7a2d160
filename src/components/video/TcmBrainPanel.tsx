@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,11 +8,11 @@ import { Brain, Send, Loader2, Sparkles, MapPin, ChevronDown, ChevronUp } from '
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import { RAGBodyFigureDisplay } from '@/components/acupuncture/RAGBodyFigureDisplay';
-import { parsePointReferences } from '@/components/acupuncture/BodyFigureSelector';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { HebrewQADropdowns } from '@/components/tcm-brain/HebrewQADropdowns';
 import { DebugMetricsPanel } from '@/components/tcm-brain/DebugMetricsPanel';
 import { AIErrorBoundary } from '@/components/tcm-brain/AIErrorBoundary';
+import { AiStatus } from '@/components/ui/AiStatus';
 import { useRagChat } from '@/hooks/useRagChat';
 
 interface TcmBrainPanelProps {
@@ -44,11 +44,14 @@ export function TcmBrainPanel({
   const [showBodyMap, setShowBodyMap] = useState(true);
 
   // UNIFIED HOOK: Same algorithm as TcmBrain.tsx
+  // Now includes highlightedPoints extraction built-in
   const { 
     messages, 
     isLoading, 
     debugData, 
     searchMethod, 
+    highlightedPoints,
+    lastAIResponse,
     sendMessage 
   } = useRagChat({
     patientId,
@@ -56,16 +59,6 @@ export function TcmBrainPanel({
     sessionNotes,
     includePatientHistory: !!patientId
   });
-
-  // Extract highlighted points from the last assistant message
-  const { highlightedPoints, lastAIResponse } = useMemo(() => {
-    const lastAssistantMsg = [...messages].reverse().find(m => m.role === 'assistant');
-    if (lastAssistantMsg) {
-      const points = parsePointReferences(lastAssistantMsg.content);
-      return { highlightedPoints: points, lastAIResponse: lastAssistantMsg.content };
-    }
-    return { highlightedPoints: [], lastAIResponse: '' };
-  }, [messages]);
 
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return;
@@ -266,6 +259,9 @@ export function TcmBrainPanel({
             </Button>
           </div>
         </div>
+        
+        {/* AI Status Indicator */}
+        <AiStatus className="bottom-20 left-2" />
       </SheetContent>
     </Sheet>
   );
