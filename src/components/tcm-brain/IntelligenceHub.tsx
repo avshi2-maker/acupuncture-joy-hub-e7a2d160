@@ -192,7 +192,7 @@ export function IntelligenceHub({
               language={voiceLanguage}
               size="md"
               variant="outline"
-            />
+          />
           </div>
           <Button
             onClick={handleSend}
@@ -205,17 +205,22 @@ export function IntelligenceHub({
               <Send className="h-4 w-4" />
             )}
           </Button>
-          {messages.length > 0 && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClear}
-              className="text-muted-foreground hover:text-destructive shrink-0"
-              title="Clear conversation"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onClear}
+            disabled={messages.length === 0}
+            className={cn(
+              "gap-1.5 shrink-0 transition-colors",
+              messages.length > 0 
+                ? "text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive" 
+                : "text-muted-foreground"
+            )}
+            title="Clear conversation"
+          >
+            <Trash2 className="h-4 w-4" />
+            <span className="hidden sm:inline text-xs">נקה</span>
+          </Button>
         </div>
         
         <p className="text-[10px] text-muted-foreground text-center mt-2">
