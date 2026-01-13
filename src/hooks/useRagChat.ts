@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 // Message type for chat interface
 export interface ChatMessage {
@@ -46,7 +47,7 @@ interface UseRagChatOptions {
   includePatientHistory?: boolean;
 }
 
-// 1. THE EXPANDED SYMPTOM DICTIONARY (50+ clinical keywords)
+// 1. THE EXPANDED SYMPTOM DICTIONARY (70+ clinical keywords + Hebrew)
 const POINT_RULES: Record<string, string> = {
   // --- 1. CORE COMMAND POINTS (The Big Shots) ---
   'hegu': 'LI4', 'union valley': 'LI4', 'li 4': 'LI4', 'li4': 'LI4',
@@ -92,7 +93,46 @@ const POINT_RULES: Record<string, string> = {
   // --- 7. SPECIAL AREAS ---
   'tongue': 'Tongue_Tip', 'pulse': 'LU9', 'ear': 'Ear_Shenmen',
   'face': 'LI4', 'eye': 'BL1', 'vision': 'GB37',
-  'tinnitus': 'SJ3', 'dizziness': 'GV20', 'vertigo': 'PC6'
+  'tinnitus': 'SJ3', 'dizziness': 'GV20', 'vertigo': 'PC6',
+
+  // --- 🇮🇱 HEBREW / RTL MAPPINGS ---
+  // Pain & General
+  'כאב': 'LI4', 'כאבים': 'LI4',
+  'כאב ראש': 'LI4', 'מיגרנה': 'GB20',
+  'כאב גב': 'BL40', 'גב תחתון': 'BL23', 'סיאטיקה': 'GB30',
+  'כאב בטן': 'ST36', 'קיבה': 'ST36',
+  'כאב ברכיים': 'ST35', 'ברך': 'ST35',
+  'צוואר': 'GB20', 'כתף': 'LI15',
+
+  // Digestive
+  'בחילה': 'PC6', 'הקאות': 'PC6',
+  'עצירות': 'ST25', 'שלשול': 'ST36',
+  'נפיחות': 'ST25', 'גזים': 'ST25',
+
+  // Mental & Emotional
+  'חרדה': 'Yintang', 'לחץ': 'LR3', 'סטרס': 'LR3',
+  'דיכאון': 'LR3', 'עצב': 'LU7',
+  'נדודי שינה': 'HT7', 'שינה': 'HT7', 'אינסומניה': 'HT7',
+
+  // Respiratory & Immune
+  'שיעול': 'LU7', 'צינון': 'GB20', 'שפעת': 'LI4',
+  'חום': 'GV14', 'מערכת חיסון': 'ST36',
+  'אלרגיה': 'LI20', 'סינוסים': 'LI20',
+
+  // Women's Health
+  'מחזור': 'SP6', 'כאבי מחזור': 'SP6', 'פוריות': 'CV4',
+  'גיל המעבר': 'KI6', 'גלי חום': 'KI6',
+
+  // Organ Names
+  'לשון': 'Tongue_Tip', 'דופק': 'LU9',
+  'לב': 'HT7', 'כבד': 'LR3', 'טחול': 'SP6', 'כליות': 'KI3'
+};
+
+// Helper: Detect if text is primarily Hebrew
+const isHebrew = (text: string): boolean => {
+  const hebrewPattern = /[\u0590-\u05FF]/;
+  const hebrewChars = (text.match(/[\u0590-\u05FF]/g) || []).length;
+  return hebrewPattern.test(text) && hebrewChars > text.length * 0.3;
 };
 
 export const useRagChat = (options?: UseRagChatOptions) => {
@@ -132,7 +172,7 @@ export const useRagChat = (options?: UseRagChatOptions) => {
     return resultArray;
   }, []);
 
-  // 3. SEND MESSAGE FUNCTION
+  // 3. SEND MESSAGE FUNCTION - Now calls the real ask-tcm-brain edge function
   const sendMessage = useCallback(async (message: string) => {
     if (!message.trim()) return;
 
@@ -141,59 +181,104 @@ export const useRagChat = (options?: UseRagChatOptions) => {
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
 
+    // IMMEDIATE visual feedback: Parse points from user query
+    parsePointReferences(message);
+
     try {
-      // Parse points from user query
-      parsePointReferences(message);
-
-      // TODO: Integrate with actual RAG backend
-      // For now, simulate a response
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('[useRagChat] Sending query to ask-tcm-brain:', message.slice(0, 50));
       
-      const mockResponse = `Based on your query about "${message.substring(0, 50)}...", here are some relevant TCM insights:
-
-For this condition, consider the following acupuncture points:
-- **LI4 (Hegu)** - Command point for face and head
-- **ST36 (Zusanli)** - Tonifies Qi and Blood
-- **SP6 (Sanyinjiao)** - Nourishes Yin, calms the mind
-
-These points can be combined for a synergistic effect.`;
-
-      const assistantMessage: ChatMessage = { role: 'assistant', content: mockResponse };
-      setMessages(prev => [...prev, assistantMessage]);
-      setLastAIResponse(mockResponse);
-
-      // Parse points from AI response
-      parsePointReferences(mockResponse);
-
-      // Update debug data - matches DebugMetadata interface
-      setDebugData({
-        tokenBudget: {
-          used: 150,
-          max: 4000,
-          percentage: 3.75
-        },
-        chunks: {
-          found: 5,
-          included: 3,
-          dropped: 2,
-          budgetReached: false
-        },
-        topChunks: [
-          { index: 0, sourceName: 'TCM Points DB', ferrariScore: 0.92, keywordScore: 0.85, questionBoost: true, included: true, reason: 'High relevance' },
-          { index: 1, sourceName: 'Clinical Patterns', ferrariScore: 0.88, keywordScore: 0.72, questionBoost: false, included: true, reason: 'Pattern match' },
-          { index: 2, sourceName: 'Herbs Reference', ferrariScore: 0.75, keywordScore: 0.68, questionBoost: false, included: true, reason: 'Keyword match' }
-        ],
-        thresholds: {
-          clinicalStandard: 0.7,
-          minHighConfidence: 0.85
+      // Call the actual edge function with streaming
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ask-tcm-brain`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            query: message,
+            language: isHebrew(message) ? 'he' : 'en',
+          }),
         }
-      });
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Request failed: ${response.status}`);
+      }
+
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('No response body');
+
+      const decoder = new TextDecoder();
+      let fullResponse = '';
+      let metadataReceived = false;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === '[DONE]') continue;
+
+          try {
+            const data = JSON.parse(jsonStr);
+            
+            // First event contains metadata (sources, debug info)
+            if (!metadataReceived && data.sources) {
+              metadataReceived = true;
+              console.log('[useRagChat] Received metadata:', data);
+              
+              // Update search method and debug data
+              if (data.searchMethod) setSearchMethod(data.searchMethod);
+              if (data.debug) setDebugData(data.debug);
+              continue;
+            }
+
+            // Subsequent events contain response content
+            if (data.choices?.[0]?.delta?.content) {
+              fullResponse += data.choices[0].delta.content;
+              
+              // Update message in real-time
+              setMessages(prev => {
+                const last = prev[prev.length - 1];
+                if (last?.role === 'assistant') {
+                  return prev.map((m, i) => 
+                    i === prev.length - 1 ? { ...m, content: fullResponse } : m
+                  );
+                }
+                return [...prev, { role: 'assistant', content: fullResponse }];
+              });
+            }
+          } catch {
+            // Skip malformed JSON
+          }
+        }
+      }
+
+      // Final update
+      setLastAIResponse(fullResponse);
+      
+      // Parse points from AI response for Body Map
+      parsePointReferences(fullResponse);
+      
+      console.log('[useRagChat] Response complete:', fullResponse.slice(0, 100));
 
     } catch (error) {
-      console.error('RAG Chat Error:', error);
+      console.error('[useRagChat] Error:', error);
       const errorMessage: ChatMessage = { 
         role: 'assistant', 
-        content: 'Sorry, I encountered an error processing your request. Please try again.' 
+        content: error instanceof Error 
+          ? `שגיאה: ${error.message}` 
+          : 'מצטער, אירעה שגיאה בעיבוד הבקשה. נסה שוב.'
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
