@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
-  Activity, Zap, Shield, AlertTriangle, Gauge, Database, 
-  BookCheck, ExternalLink, Eye, Volume2, VolumeX
+  Activity, Zap, Shield, AlertTriangle, Database, 
+  BookCheck, ExternalLink, Volume2, VolumeX
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -11,6 +11,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useTurboDashboardAudio } from '@/hooks/useTurboDashboardAudio';
+import { Switch } from '@/components/ui/switch';
 
 export type SearchDepthMode = 'quick' | 'deep';
 
@@ -42,6 +43,61 @@ interface TcmTurboDashboardProps {
   onSearchDepthChange?: (mode: SearchDepthMode) => void;
 }
 
+// Confidence Gauge Component - Radial Ring
+function ConfidenceGauge({ score, size = 44 }: { score: number; size?: number }) {
+  const percentage = Math.round(score);
+  const circumference = 2 * Math.PI * 16;
+  const strokeDashoffset = circumference * (1 - score / 100);
+  
+  const getColor = () => {
+    if (percentage >= 80) return 'text-green-500';
+    if (percentage >= 60) return 'text-amber-500';
+    if (percentage >= 30) return 'text-orange-500';
+    return 'text-red-400';
+  };
+
+  const getBgColor = () => {
+    if (percentage >= 80) return 'text-green-100';
+    if (percentage >= 60) return 'text-amber-100';
+    if (percentage >= 30) return 'text-orange-100';
+    return 'text-red-100';
+  };
+
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg viewBox="0 0 40 40" className="w-full h-full transform -rotate-90">
+        <circle
+          cx="20"
+          cy="20"
+          r="16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3"
+          className={getBgColor()}
+        />
+        <circle
+          cx="20"
+          cy="20"
+          r="16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+          className={getColor()}
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          style={{ transition: 'stroke-dashoffset 0.5s ease-out' }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className={cn("text-[11px] font-bold", getColor())}>
+          {percentage}%
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export function TcmTurboDashboard({
   status,
   meta,
@@ -53,9 +109,8 @@ export function TcmTurboDashboard({
   onSearchDepthChange
 }: TcmTurboDashboardProps) {
   const [displayTokens, setDisplayTokens] = useState(0);
-  const [rpmProgress, setRpmProgress] = useState(0);
+  const [confidenceScore, setConfidenceScore] = useState(0);
   const [audioEnabled, setAudioEnabled] = useState(enableAudio);
-  const animationRef = useRef<number | null>(null);
   const tokenIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const prevStatusRef = useRef<TurboDashboardStatus>(status);
   
@@ -75,7 +130,6 @@ export function TcmTurboDashboard({
     if (prevStatus !== status) {
       if (status === 'scanning' && prevStatus === 'standby') {
         playScanStart();
-        // Play engine revving after a short delay
         setTimeout(() => playEngineRevving(), 150);
       } else if (status === 'locked') {
         playSourceLocked();
@@ -92,53 +146,30 @@ export function TcmTurboDashboard({
   // Animate tokens when processing
   useEffect(() => {
     if (isProcessing) {
-      // Start token counting animation (throttled to reduce UI jitter)
       tokenIntervalRef.current = setInterval(() => {
         setDisplayTokens(prev => prev + Math.floor(Math.random() * 120));
       }, 250);
-
-      // Animate RPM gauge (throttled to reduce UI jitter)
-      let lastUpdate = 0;
-      const animateRpm = (t: number) => {
-        if (t - lastUpdate > 120) {
-          lastUpdate = t;
-          setRpmProgress(prev => {
-            const next = prev + Math.random() * 12;
-            return next > 95 ? 90 : next;
-          });
-        }
-        animationRef.current = requestAnimationFrame(animateRpm);
-      };
-      animationRef.current = requestAnimationFrame(animateRpm);
-
     } else {
-      // Stop animations and set final values
       if (tokenIntervalRef.current) {
         clearInterval(tokenIntervalRef.current);
         tokenIntervalRef.current = null;
       }
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = null;
-      }
       
-      // Set final values from meta (fallback to 0 to avoid "random huge" numbers)
       setDisplayTokens(meta?.tokensUsed ?? 0);
 
       if (meta?.scorePercent !== undefined) {
-        setRpmProgress(meta.scorePercent);
+        setConfidenceScore(meta.scorePercent);
       } else if (meta?.hybridScore) {
-        setRpmProgress(meta.hybridScore.combinedScore * 100);
+        setConfidenceScore(meta.hybridScore.combinedScore * 100);
       } else if (status === 'locked') {
-        setRpmProgress(100);
+        setConfidenceScore(100);
       } else if (status === 'external' || status === 'fail') {
-        setRpmProgress(0);
+        setConfidenceScore(0);
       }
     }
 
     return () => {
       if (tokenIntervalRef.current) clearInterval(tokenIntervalRef.current);
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
   }, [isProcessing, meta, status]);
 
@@ -146,300 +177,213 @@ export function TcmTurboDashboard({
   useEffect(() => {
     if (status === 'standby') {
       setDisplayTokens(0);
-      setRpmProgress(0);
+      setConfidenceScore(0);
     }
   }, [status]);
 
   const statusConfig = {
     standby: {
-      label: 'STANDBY',
-      labelHe: 'המתנה',
-      color: 'text-slate-400',
-      bgColor: 'bg-slate-500/20',
-      borderColor: 'border-slate-500/30',
-      lightColor: 'bg-slate-400',
+      label: 'Ready',
+      color: 'text-slate-500',
+      bgColor: 'bg-slate-100',
+      borderColor: 'border-slate-200',
+      dotColor: 'bg-slate-400',
       pulse: false
     },
     scanning: {
-      label: 'SCANNING BIBLES...',
-      labelHe: 'סורק מאגר...',
-      color: 'text-amber-400',
-      bgColor: 'bg-amber-500/20',
-      borderColor: 'border-amber-500/50',
-      lightColor: 'bg-amber-400',
+      label: 'Scanning...',
+      color: 'text-amber-600',
+      bgColor: 'bg-amber-50',
+      borderColor: 'border-amber-200',
+      dotColor: 'bg-amber-500',
       pulse: true
     },
     locked: {
-      label: 'SOURCE LOCKED: 100%',
-      labelHe: 'מקור מאומת: 100%',
-      color: 'text-green-400',
-      bgColor: 'bg-green-500/20',
-      borderColor: 'border-green-500/50',
-      lightColor: 'bg-green-500',
+      label: 'Verified',
+      color: 'text-green-600',
+      bgColor: 'bg-green-50',
+      borderColor: 'border-green-200',
+      dotColor: 'bg-green-500',
       pulse: false
     },
     external: {
-      label: 'EXTERNAL DATA',
-      labelHe: 'מידע חיצוני',
-      color: 'text-purple-400',
-      bgColor: 'bg-purple-500/20',
-      borderColor: 'border-purple-500/50',
-      lightColor: 'bg-purple-500',
+      label: 'External AI',
+      color: 'text-violet-600',
+      bgColor: 'bg-violet-50',
+      borderColor: 'border-violet-200',
+      dotColor: 'bg-violet-500',
       pulse: false
     },
     fail: {
-      label: 'NO KB MATCH',
-      labelHe: 'אין התאמה',
-      color: 'text-red-400',
-      bgColor: 'bg-red-500/20',
-      borderColor: 'border-red-500/50',
-      lightColor: 'bg-red-500',
+      label: 'No Match',
+      color: 'text-red-500',
+      bgColor: 'bg-red-50',
+      borderColor: 'border-red-200',
+      dotColor: 'bg-red-500',
       pulse: false
     }
   };
 
   const config = statusConfig[status];
-
-  // RPM Gauge color based on progress
-  const getRpmColor = () => {
-    if (rpmProgress < 30) return 'from-red-500 to-red-600';
-    if (rpmProgress < 60) return 'from-amber-500 to-amber-600';
-    if (rpmProgress < 80) return 'from-emerald-500 to-emerald-600';
-    return 'from-green-400 to-green-600';
-  };
-
   const isCompact = variant === 'compact';
-  const isVideo = variant === 'video';
 
   return (
     <TooltipProvider>
+      {/* CLINIC THEME: Light beige/white background */}
       <div 
         className={cn(
           "rounded-xl border backdrop-blur-sm transition-all duration-300",
-          isVideo 
-            ? "bg-black/80 border-slate-700/50" 
-            : "bg-gradient-to-br from-slate-900/95 to-slate-800/95 border-slate-700/30",
-          isCompact ? "p-2" : "p-3",
+          "bg-white/95 border-slate-200/60 shadow-sm",
+          isCompact ? "px-3 py-2" : "px-4 py-3",
           className
         )}
       >
         <div className={cn(
-          "flex gap-3",
-          isCompact ? "flex-row items-center" : "flex-col sm:flex-row sm:items-center"
+          "flex items-center gap-3",
+          isCompact ? "flex-row" : "flex-row flex-wrap"
         )}>
-          {/* RPM Gauge - Search Depth */}
+          {/* LEFT: Status Indicator */}
           <Tooltip>
             <TooltipTrigger asChild>
               <div className={cn(
-                "flex flex-col",
-                isCompact ? "min-w-[80px]" : "min-w-[100px]"
-              )}>
-                <div className="flex items-center gap-1.5 mb-1">
-                  <Gauge className={cn("text-slate-400", isCompact ? "w-3 h-3" : "w-3.5 h-3.5")} />
-                  <span className={cn(
-                    "font-medium text-slate-400 uppercase tracking-wider",
-                    isCompact ? "text-[8px]" : "text-[9px]"
-                  )}>
-                    Search Depth
-                  </span>
-                </div>
-                <div className="relative h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700/50">
-                  <div
-                    className={cn("absolute inset-y-0 left-0 rounded-full bg-gradient-to-r transition-all duration-300", getRpmColor())}
-                    style={{ width: `${rpmProgress}%` }}
-                  />
-                  {/* Tick marks */}
-                  <div className="absolute inset-0 flex justify-between px-0.5">
-                    {[...Array(10)].map((_, i) => (
-                      <div key={i} className="w-px h-full bg-slate-600/30" />
-                    ))}
-                  </div>
-                </div>
-                <div className="flex justify-between mt-0.5">
-                  <span className="text-[8px] text-slate-500">0</span>
-                  <span className={cn(
-                    "text-[10px] font-bold",
-                    rpmProgress >= 78 ? "text-green-400" : "text-slate-300"
-                  )}>
-                    {rpmProgress.toFixed(0)}%
-                  </span>
-                  <span className="text-[8px] text-slate-500">100</span>
-                </div>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="bg-slate-900 border-slate-700">
-              <p className="text-xs">Vector similarity score - measures how well the query matches knowledge base content</p>
-            </TooltipContent>
-          </Tooltip>
-
-          {/* Token Counter */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className={cn(
-                "flex flex-col items-center justify-center rounded-lg border border-slate-700/50",
-                isCompact ? "px-2 py-1 min-w-[60px]" : "px-3 py-2 min-w-[80px]",
-                "bg-slate-800/50"
-              )}>
-                <div className="flex items-center gap-1 mb-0.5">
-                  <Zap className={cn("text-amber-400", isCompact ? "w-2.5 h-2.5" : "w-3 h-3")} />
-                  <span className={cn(
-                    "font-medium text-slate-400 uppercase tracking-wider",
-                    isCompact ? "text-[7px]" : "text-[8px]"
-                  )}>
-                    Tokens
-                  </span>
-                </div>
-              <span 
-                  className={cn(
-                    "font-mono font-bold text-amber-400",
-                    isCompact ? "text-sm" : "text-lg"
-                  )}
-                >
-                  {displayTokens.toString().padStart(4, '0')}
-                </span>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="bg-slate-900 border-slate-700">
-              <p className="text-xs">Total tokens consumed for this query (input + output)</p>
-            </TooltipContent>
-          </Tooltip>
-
-          {/* Truth Indicator Light */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className={cn(
-                "flex items-center gap-2 rounded-lg border transition-all duration-500",
+                "flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all duration-300",
                 config.bgColor,
-                config.borderColor,
-                isCompact ? "px-2 py-1.5" : "px-3 py-2"
+                config.borderColor
               )}>
-              {/* LED Light */}
+                {/* Pulsing Dot */}
                 <div className="relative">
                   <div
                     className={cn(
-                      "rounded-full",
-                      config.lightColor,
-                      isCompact ? "w-3 h-3" : "w-4 h-4"
+                      "w-2.5 h-2.5 rounded-full",
+                      config.dotColor,
+                      config.pulse && "animate-pulse"
                     )}
                   />
-                  {/* Glow effect */}
                   {status === 'locked' && (
-                    <div className="absolute inset-0 rounded-full bg-green-400 blur-md opacity-50" />
+                    <div className="absolute inset-0 rounded-full bg-green-400 blur-sm opacity-50" />
                   )}
                 </div>
                 
                 {/* Status Text */}
-                <div className="flex flex-col">
-                  <span className={cn(
-                    "font-bold uppercase tracking-wide",
-                    config.color,
-                    isCompact ? "text-[9px]" : "text-[10px]"
-                  )}>
-                    {config.label}
-                  </span>
-                  {meta?.chunksFound !== undefined && status !== 'standby' && !isCompact && (
-                    <span className="text-[8px] text-slate-500">
-                      {meta.chunksFound} chunks • {meta.documentsSearched || 0} docs
-                    </span>
-                  )}
-                </div>
+                <span className={cn(
+                  "text-xs font-semibold",
+                  config.color
+                )}>
+                  {config.label}
+                </span>
 
                 {/* Icon */}
-                {status === 'locked' && <Shield className="w-4 h-4 text-green-400 ml-1" />}
-                {status === 'external' && <ExternalLink className="w-4 h-4 text-purple-400 ml-1" />}
-                {status === 'fail' && <AlertTriangle className="w-4 h-4 text-red-400 ml-1" />}
-                {status === 'scanning' && <Activity className="w-4 h-4 text-amber-400 ml-1" />}
+                {status === 'locked' && <Shield className="w-3.5 h-3.5 text-green-500" />}
+                {status === 'external' && <ExternalLink className="w-3.5 h-3.5 text-violet-500" />}
+                {status === 'fail' && <AlertTriangle className="w-3.5 h-3.5 text-red-500" />}
+                {status === 'scanning' && <Activity className="w-3.5 h-3.5 text-amber-500 animate-pulse" />}
               </div>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="bg-slate-900 border-slate-700 max-w-[250px]">
+            <TooltipContent side="bottom" className="max-w-[250px]">
               <div className="space-y-1">
-                <p className="text-xs font-medium">Truth Verification Status</p>
-                <p className="text-[10px] text-slate-400">
-                  {status === 'locked' && "✅ Answer sourced 100% from verified TCM knowledge base"}
+                <p className="text-xs font-medium">Search Status</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {status === 'locked' && "✅ Answer sourced from verified TCM knowledge base"}
                   {status === 'external' && "⚠️ Answer includes external AI interpretation"}
                   {status === 'fail' && "❌ No matching content found in knowledge base"}
                   {status === 'scanning' && "🔍 Searching knowledge base..."}
                   {status === 'standby' && "⏸️ Ready to process queries"}
                 </p>
+                {meta?.chunksFound !== undefined && status !== 'standby' && (
+                  <p className="text-[10px] text-muted-foreground">
+                    {meta.chunksFound} chunks • {meta.documentsSearched || 0} docs
+                  </p>
+                )}
               </div>
             </TooltipContent>
           </Tooltip>
 
-          
-          {/* Search Depth Toggle */}
+          {/* CENTER: Deep/Quick Toggle */}
           {onSearchDepthChange && !isCompact && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <button
-                  onClick={() => onSearchDepthChange(searchDepth === 'quick' ? 'deep' : 'quick')}
-                  disabled={isProcessing}
-                  className={cn(
-                    "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all duration-200",
-                    searchDepth === 'deep'
-                      ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25"
-                      : "bg-amber-500/15 border-amber-500/40 text-amber-400 hover:bg-amber-500/25",
-                    isProcessing && "opacity-50 cursor-not-allowed"
-                  )}
-                >
-                  <Database className="w-3 h-3" />
-                  <span className="text-[9px] font-bold uppercase tracking-wide">
-                    {searchDepth === 'deep' ? 'DEEP' : 'QUICK'}
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={searchDepth === 'deep'}
+                    onCheckedChange={(checked) => onSearchDepthChange(checked ? 'deep' : 'quick')}
+                    disabled={isProcessing}
+                    className="data-[state=checked]:bg-jade h-5 w-9"
+                  />
+                  <span className={cn(
+                    "text-xs font-medium",
+                    searchDepth === 'deep' ? "text-jade" : "text-amber-600"
+                  )}>
+                    {searchDepth === 'deep' ? 'Deep' : 'Fast'}
                   </span>
-                </button>
+                </div>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="bg-slate-900 border-slate-700 max-w-[220px]">
+              <TooltipContent side="bottom" className="max-w-[220px]">
                 <div className="space-y-1">
-                  <p className="text-xs font-medium">Search Depth Mode</p>
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-xs font-medium">Search Mode</p>
+                  <p className="text-[10px] text-muted-foreground">
                     {searchDepth === 'deep' 
-                      ? "🔬 Deep: 5 chunks/pillar, comprehensive multi-condition answers (~15-20K tokens)"
-                      : "⚡ Quick: 2 chunks/pillar, faster responses for simple queries (~5K tokens)"}
+                      ? "🔬 Deep: More thorough, comprehensive answers"
+                      : "⚡ Fast: Quick responses for simple queries"}
                   </p>
-                  <p className="text-[9px] text-slate-500 mt-1">Click to switch</p>
                 </div>
               </TooltipContent>
             </Tooltip>
           )}
 
-          {/* Audit Badge (if logged) */}
-          {meta?.auditLogId && !isCompact && (
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* RIGHT: Confidence Gauge */}
+          {(status !== 'standby' || confidenceScore > 0) && (
             <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-500/10 border border-blue-500/30">
-                  <BookCheck className="w-3 h-3 text-blue-400" />
-                  <span className="text-[9px] text-blue-400 font-medium">LOGGED</span>
-                </div>
+              <TooltipTrigger>
+                <ConfidenceGauge score={confidenceScore} size={isCompact ? 36 : 44} />
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="bg-slate-900 border-slate-700">
-                <p className="text-xs">Query logged to audit trail: {meta.auditLogId.slice(0, 8)}...</p>
+              <TooltipContent side="bottom">
+                <p className="text-xs">Confidence: {confidenceScore.toFixed(0)}%</p>
               </TooltipContent>
             </Tooltip>
           )}
-          
+
           {/* Audio Toggle */}
           <Tooltip>
             <TooltipTrigger asChild>
               <button
                 onClick={() => setAudioEnabled(!audioEnabled)}
                 className={cn(
-                  "flex items-center justify-center rounded-md border transition-all duration-200",
-                  isCompact ? "w-6 h-6" : "w-7 h-7",
+                  "flex items-center justify-center rounded-lg border transition-all duration-200",
+                  isCompact ? "w-7 h-7" : "w-8 h-8",
                   audioEnabled 
-                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20" 
-                    : "bg-slate-500/10 border-slate-500/30 text-slate-500 hover:bg-slate-500/20"
+                    ? "bg-jade/10 border-jade/30 text-jade hover:bg-jade/20" 
+                    : "bg-slate-100 border-slate-200 text-slate-400 hover:bg-slate-200"
                 )}
               >
                 {audioEnabled ? (
-                  <Volume2 className={cn(isCompact ? "w-3 h-3" : "w-3.5 h-3.5")} />
+                  <Volume2 className="w-4 h-4" />
                 ) : (
-                  <VolumeX className={cn(isCompact ? "w-3 h-3" : "w-3.5 h-3.5")} />
+                  <VolumeX className="w-4 h-4" />
                 )}
               </button>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="bg-slate-900 border-slate-700">
-              <p className="text-xs">{audioEnabled ? 'Mute audio feedback' : 'Enable audio feedback'}</p>
+            <TooltipContent side="bottom">
+              <p className="text-xs">{audioEnabled ? 'Mute audio' : 'Enable audio'}</p>
             </TooltipContent>
           </Tooltip>
+
+          {/* Audit Badge (if logged) */}
+          {meta?.auditLogId && !isCompact && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-50 border border-blue-200">
+                  <BookCheck className="w-3 h-3 text-blue-500" />
+                  <span className="text-[9px] text-blue-600 font-medium">Logged</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p className="text-xs">Query logged: {meta.auditLogId.slice(0, 8)}...</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
       </div>
     </TooltipProvider>
@@ -470,22 +414,23 @@ export function useTurboDashboard() {
   }) => {
     setIsProcessing(false);
     
-    if (result.success && result.isVerified) {
-      setStatus('locked');
-    } else if (result.isExternal) {
+    if (result.isExternal) {
       setStatus('external');
-    } else {
+    } else if (result.success && result.isVerified) {
+      setStatus('locked');
+    } else if (!result.success) {
       setStatus('fail');
+    } else {
+      setStatus('standby');
     }
-
+    
     setMeta({
       tokensUsed: result.tokensUsed,
-      verified: result.isVerified,
       scorePercent: result.scorePercent,
       chunksFound: result.chunksFound,
       documentsSearched: result.documentsSearched,
       isExternal: result.isExternal,
-      auditLogId: result.auditLogId
+      auditLogId: result.auditLogId,
     });
   };
 
@@ -501,6 +446,8 @@ export function useTurboDashboard() {
     isProcessing,
     startProcessing,
     stopProcessing,
-    reset
+    reset,
+    setStatus,
+    setMeta,
   };
 }
