@@ -46,30 +46,53 @@ interface UseRagChatOptions {
   includePatientHistory?: boolean;
 }
 
-// 1. THE HARDCODED RULEBOOK
-// This maps loose terms to specific Acupuncture Point Codes
+// 1. THE EXPANDED SYMPTOM DICTIONARY (50+ clinical keywords)
 const POINT_RULES: Record<string, string> = {
-  // English Names & Pinyin
-  'hegu': 'LI4', 'union valley': 'LI4', 'li 4': 'LI4', 'li-4': 'LI4',
-  'zusanli': 'ST36', 'st 36': 'ST36', 'leg three miles': 'ST36',
-  'sanyinjiao': 'SP6', 'sp 6': 'SP6',
-  'neiguan': 'PC6', 'pc 6': 'PC6', 'inner pass': 'PC6',
-  'taichong': 'LR3', 'lr 3': 'LR3', 'great surge': 'LR3',
-  'baihui': 'GV20', 'gv 20': 'GV20',
-  'shenmen': 'HT7', 'ht 7': 'HT7', 'spirit gate': 'HT7',
+  // --- 1. CORE COMMAND POINTS (The Big Shots) ---
+  'hegu': 'LI4', 'union valley': 'LI4', 'li 4': 'LI4', 'li4': 'LI4',
+  'zusanli': 'ST36', 'leg three miles': 'ST36', 'st 36': 'ST36', 'st36': 'ST36',
+  'sanyinjiao': 'SP6', 'sp 6': 'SP6', 'sp6': 'SP6',
+  'taichong': 'LR3', 'great surge': 'LR3', 'lr 3': 'LR3', 'lr3': 'LR3',
+  'neiguan': 'PC6', 'inner pass': 'PC6', 'pc 6': 'PC6', 'pc6': 'PC6',
+  'shenmen': 'HT7', 'spirit gate': 'HT7', 'ht 7': 'HT7', 'ht7': 'HT7',
+  'baihui': 'GV20', 'hundred meetings': 'GV20', 'gv 20': 'GV20',
+  'yintang': 'Yintang', 'hall of impression': 'Yintang',
 
-  // Symptoms -> Primary Point Mapping
-  'tongue': 'HT7',      // Heart opens to tongue
-  'pulse': 'LU9',       // Pulse gathering point
-  'headache': 'LI4',    // Face/Head command point
-  'migraine': 'GB20',   // Wind pool (Shaoyang)
-  'nausea': 'PC6',      // Vomiting/Stomach
-  'back pain': 'BL40',  // Command point for back
-  'sciatica': 'GB30',   // Hip/Sciatica
-  'insomnia': 'HT7',    // Calm Spirit
-  'anxiety': 'Yintang', // Calm Mind
-  'fever': 'GV14',      // Clear Heat
-  'cough': 'LU7'        // Command point for neck/lungs
+  // --- 2. PAIN & ORTHOPEDICS ---
+  'headache': 'LI4', 'migraine': 'GB20', 'neck pain': 'GB20', 'stiff neck': 'LU7',
+  'back pain': 'BL40', 'lower back': 'BL23', 'lumbar': 'BL23', 'sciatica': 'GB30',
+  'knee pain': 'ST35', 'knee': 'GB34', 'leg pain': 'GB31',
+  'shoulder pain': 'LI15', 'frozen shoulder': 'ST38',
+  'elbow pain': 'LI11', 'tennis elbow': 'LI11',
+  'wrist pain': 'SJ4', 'carpal tunnel': 'PC7',
+  'hip pain': 'GB30',
+  'toothache': 'ST44', 'jaw pain': 'ST6',
+
+  // --- 3. DIGESTION & METABOLISM ---
+  'stomach pain': 'ST36', 'gastritis': 'PC6', 'bloating': 'ST25',
+  'nausea': 'PC6', 'vomiting': 'PC6', 'acid reflux': 'CV12',
+  'constipation': 'ST25', 'diarrhea': 'ST36',
+  'weight loss': 'SP6', 'obesity': 'ST40', 'phlegm': 'ST40',
+
+  // --- 4. EMOTIONAL & MENTAL ---
+  'anxiety': 'Yintang', 'stress': 'LR3', 'depression': 'LR3',
+  'insomnia': 'HT7', 'sleep': 'Anmian', 'dream disturbed': 'BL15',
+  'anger': 'LR2', 'grief': 'LU7', 'fear': 'KI3', 'panic': 'HT7',
+  'memory': 'GV20', 'foggy mind': 'ST40',
+
+  // --- 5. RESPIRATORY & IMMUNE ---
+  'cold': 'GB20', 'flu': 'LI4', 'fever': 'GV14', 'sore throat': 'LU11',
+  'cough': 'LU7', 'asthma': 'LU9', 'short breath': 'CV17',
+  'immunity': 'ST36', 'allergies': 'LI20', 'sinus': 'LI20',
+
+  // --- 6. WOMEN'S HEALTH & HORMONES ---
+  'menstrual': 'SP6', 'cramps': 'SP6', 'pms': 'LR3',
+  'fertility': 'CV4', 'hot flash': 'KI6', 'menopause': 'SP6',
+
+  // --- 7. SPECIAL AREAS ---
+  'tongue': 'Tongue_Tip', 'pulse': 'LU9', 'ear': 'Ear_Shenmen',
+  'face': 'LI4', 'eye': 'BL1', 'vision': 'GB37',
+  'tinnitus': 'SJ3', 'dizziness': 'GV20', 'vertigo': 'PC6'
 };
 
 export const useRagChat = (options?: UseRagChatOptions) => {
