@@ -67,7 +67,7 @@ export function IntelligenceHub({
   const hasStackedQueries = stackedQueries.length > 0;
 
   return (
-    <div className="h-[calc(100vh-4rem)] w-full p-4 bg-slate-50 overflow-hidden flex flex-col">
+    <div className="h-[calc(100vh-4rem)] w-full bg-slate-50 flex flex-col overflow-hidden" dir="ltr">
       {/* STACKING BAR (Top) - Only shows when queries are stacked */}
       <AnimatePresence>
         {hasStackedQueries && (
@@ -77,7 +77,7 @@ export function IntelligenceHub({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="mb-4 border rounded-xl bg-gradient-to-r from-violet-500/10 via-jade/5 to-amber-500/10 shrink-0"
+            className="mx-4 mt-4 border rounded-xl bg-gradient-to-r from-violet-500/10 via-jade/5 to-amber-500/10 shrink-0"
           >
             <div className="p-3">
               <div className="flex items-center justify-between mb-2">
@@ -143,49 +143,53 @@ export function IntelligenceHub({
         )}
       </AnimatePresence>
 
-      {/* THE FLEXBOX FRAME: 3 Columns with Fixed Sidebars */}
-      <div className="flex flex-row gap-4 flex-1 min-h-0">
+      {/* THE FLEXBOX FRAME: 3 Columns - Fixed LTR layout to prevent RTL flip */}
+      <div className="flex flex-row flex-1 min-h-0 gap-4 p-4">
         
-        {/* LEFT SIDEBAR: The Library (Fixed Width 280px) */}
-        <div className="w-[280px] shrink-0 flex flex-col gap-4 bg-white rounded-xl shadow-sm border border-slate-200 p-4 overflow-y-auto">
-          <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-            📚 Clinical Library
-          </h2>
-          <QuickPromptDropdown onSelectQuestion={handleQuestionSelect} />
-          <div className="mt-auto">
+        {/* COLUMN 1: The Library (Left Side - Fixed Width) */}
+        <aside className="w-80 min-w-[320px] shrink-0 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="p-4 border-b border-slate-100">
+            <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+              📚 Clinical Library
+            </h2>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4">
+            <QuickPromptDropdown onSelectQuestion={handleQuestionSelect} />
+          </div>
+          <div className="p-4 border-t border-slate-100 mt-auto">
             <AiStatus />
           </div>
-        </div>
+        </aside>
 
-        {/* CENTER: The Main Stage (Fluid - Takes Remaining Space) */}
-        <div className="flex-1 min-w-0 flex flex-col">
-          <div className="flex-1 bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
-            <RagSearchPanel />
+        {/* COLUMN 2: The Main Stage (Center - Fluid Width) */}
+        <main className="flex-1 min-w-[400px] flex flex-col bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
+          <RagSearchPanel />
+        </main>
+
+        {/* COLUMN 3: The Body Map (Right Side - Fixed Width) */}
+        <aside className="w-96 min-w-[380px] shrink-0 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="p-4 border-b border-slate-100">
+            <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+              📍 Body Reference
+              {highlightedPoints.length > 0 && (
+                <Badge variant="secondary" className="text-xs ml-2">
+                  {highlightedPoints.length} נקודות
+                </Badge>
+              )}
+            </h2>
           </div>
-        </div>
-
-        {/* RIGHT SIDEBAR: The Body Map (Fixed Width 300px) */}
-        <div className="w-[300px] shrink-0 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 p-4 overflow-hidden">
-          <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-            📍 Body Reference
-            {highlightedPoints.length > 0 && (
-              <Badge variant="secondary" className="text-xs ml-2">
-                {highlightedPoints.length} נקודות
-              </Badge>
-            )}
-          </h2>
           
-          {/* Body Map Container */}
-          <div className="flex-1 relative min-h-0 overflow-hidden">
+          {/* Body Map Container - Scrollable */}
+          <div className="flex-1 overflow-y-auto p-4">
             <BodyMapCore 
-              className="w-full h-full"
+              className="w-full"
               onPointSelect={(point) => console.log('Point selected:', point)}
             />
           </div>
           
           {/* Highlighted Points Display */}
           {highlightedPoints.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-slate-200 shrink-0">
+            <div className="p-4 border-t border-slate-200 shrink-0">
               <p className="text-xs font-medium text-slate-500 mb-2">Active Points:</p>
               <div className="flex flex-wrap gap-1">
                 {highlightedPoints.map((point) => (
@@ -199,7 +203,7 @@ export function IntelligenceHub({
               </div>
             </div>
           )}
-        </div>
+        </aside>
       </div>
     </div>
   );
