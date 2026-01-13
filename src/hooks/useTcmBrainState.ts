@@ -359,14 +359,19 @@ export function useTcmBrainState() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Accept: 'text/event-stream',
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           query: userMessage,
+          message: userMessage, // backward compatibility
+          stream: true,
           messages: [...messages, userMsg],
           includeChunkDetails: true,
           ageGroup: ageGroupInfo?.group,
-          patientContext: selectedPatient ? `Patient: ${selectedPatient.name}${ageGroupInfo ? `, Age Group: ${ageGroupInfo.label}` : ''}` : undefined,
+          patientContext: selectedPatient
+            ? `Patient: ${selectedPatient.name}${ageGroupInfo ? `, Age Group: ${ageGroupInfo.label}` : ''}`
+            : undefined,
           searchDepth: searchDepth, // Pass depth mode to backend
         }),
       });
