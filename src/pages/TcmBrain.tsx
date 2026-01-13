@@ -759,7 +759,12 @@ export default function TcmBrain() {
         {/* Debug Metrics Panel - Unified Algorithm Transparency */}
         {/* Uses same data as Video Session for Twin Test parity */}
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t">
-          <DebugMetricsPanel debugData={debugData} searchMethod={searchMethod} />
+          <DebugMetricsPanel 
+            debugData={debugData} 
+            searchMethod={searchMethod}
+            query={messages.filter(m => m.role === 'user').slice(-1)[0]?.content}
+            response={messages.filter(m => m.role === 'assistant').slice(-1)[0]?.content}
+          />
         </div>
         
         {/* Therapist Teleprompter - Guided Tour */}
