@@ -1465,26 +1465,33 @@ serve(async (req) => {
   }
 
   try {
-    // Parse body first to check for health check (allows unauthenticated pings)
-    const bodyClone = req.clone();
+    // Parse body early so we can support unauthenticated health checks
     let bodyData: any = {};
     try {
-      bodyData = await bodyClone.json();
+      bodyData = await req.json();
     } catch {
-      // Empty or invalid body - continue with auth check
+      // Empty/invalid body
     }
 
     // Health check bypass - responds immediately without auth
     if (bodyData.healthCheck === true || bodyData.message === '__health_check__') {
-      return new Response(JSON.stringify({ 
-        status: 'ok', 
-        timestamp: new Date().toISOString(),
-        service: 'tcm-rag-chat'
-      }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return new Response(
+        JSON.stringify({
+          status: 'ok',
+          timestamp: new Date().toISOString(),
+          service: 'tcm-rag-chat',
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
+
+    // Streaming is opt-in to keep supabase.functions.invoke() reliable.
+    const wantsStream =
+      bodyData.stream === true ||
+      (req.headers.get('accept') ?? '').includes('text/event-stream');
 
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
@@ -1500,7 +1507,10 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseClient.auth.getUser();
     if (authError || !user) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
@@ -1508,8 +1518,22 @@ serve(async (req) => {
       });
     }
 
-    const { query, messages, useExternalAI, includeChunkDetails, ageGroup, patientContext, language, liteMode, searchDepth } = await req.json();
-    const searchQuery = query || messages?.[messages.length - 1]?.content || '';
+    const {
+      query,
+      message,
+      messages,
+      useExternalAI,
+      includeChunkDetails,
+      ageGroup,
+      patientContext,
+      language,
+      liteMode,
+      searchDepth,
+    } = bodyData;
+
+    const searchQuery =
+      query || message || messages?.[messages.length - 1]?.content || '';
+
     
     // ========================================================================
     // TOKEN OPTIMIZATION: Balanced approach for cost vs quality
@@ -2093,7 +2117,9 @@ Generate your response ENTIRELY in ${responseLanguageInstruction}, including:
 
     const chatMessages = [
       { role: 'system', content: systemMessage },
-      ...(messages || [{ role: 'user', content: query }])
+      ...((messages && Array.isArray(messages) && messages.length > 0)
+        ? messages
+        : [{ role: 'user', content: searchQuery }])
     ];
 
     // Call Lovable AI Gateway with streaming
@@ -2227,10 +2253,10 @@ Generate your response ENTIRELY in ${responseLanguageInstruction}, including:
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'google/gemini-3-flash-preview', // Faster model for better reliability
+            model: 'google/gemini-2.5-flash',
             messages: chatMessages,
-            stream: true,
-            temperature: 0, // CLOSED LOOP: Zero temperature for deterministic, context-only responses
+            stream: wantsStream,
+            temperature: 0, // CLOSED LOOP: deterministic responses
           }),
         });
         
@@ -2280,7 +2306,81 @@ Generate your response ENTIRELY in ${responseLanguageInstruction}, including:
       throw new Error('AI service error');
     }
 
-    // Create a TransformStream to process the SSE and add metadata
+    // Non-streaming mode (default): return JSON for compatibility and stability.
+    if (!wantsStream) {
+      const aiJson = await aiResponse.json().catch(() => ({} as any));
+      const content: string =
+        aiJson?.choices?.[0]?.message?.content ??
+        aiJson?.choices?.[0]?.text ??
+        aiJson?.response ??
+        '';
+
+      const usage = aiJson?.usage ?? {};
+      const tokenUsage = {
+        inputTokens: Number(usage.prompt_tokens ?? 0),
+        outputTokens: Number(usage.completion_tokens ?? 0),
+        totalTokens: Number(usage.total_tokens ?? 0),
+      };
+
+      // Best-effort audit log (does not block response)
+      let auditLogId: string | null = null;
+      let auditLoggedAt: string | null = null;
+      try {
+        const serviceClient = createClient(
+          Deno.env.get('SUPABASE_URL') ?? '',
+          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+        );
+
+        const { data: logRow } = await serviceClient
+          .from('rag_query_logs')
+          .insert({
+            user_id: user.id,
+            query_text: searchQuery,
+            search_terms: searchTerms,
+            chunks_found: sources.length,
+            chunks_matched: chunksMatched,
+            sources_used: useExternalAI
+              ? [{ type: 'external_ai', liability_waived: true }]
+              : sources.map((s) => ({
+                  fileName: s.fileName,
+                  category: s.category,
+                  chunkIndex: s.chunkIndex,
+                  pillar: s.pillar,
+                })),
+            response_preview: String(content).substring(0, 500),
+            ai_model: 'google/gemini-2.5-flash',
+          })
+          .select('id, created_at')
+          .single();
+
+        auditLogId = logRow?.id ?? null;
+        auditLoggedAt = logRow?.created_at ?? null;
+      } catch (logErr) {
+        console.error('Failed to log query:', logErr);
+      }
+
+      return new Response(
+        JSON.stringify({
+          response: content || 'No response generated.',
+          metadata,
+          debug: metadata.debug,
+          searchMethod: metadata.searchMethod,
+          chunksFound: metadata.chunksFound,
+          documentsSearched: metadata.documentsSearched,
+          searchTermsUsed: metadata.searchTermsUsed,
+          isExternal: metadata.isExternal,
+          auditLogId,
+          auditLoggedAt,
+          tokenUsage,
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // Streaming mode: SSE for the main TCM Brain UI
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
     let fullResponse = '';
