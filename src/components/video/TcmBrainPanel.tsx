@@ -12,6 +12,7 @@ import { parsePointReferences } from '@/components/acupuncture/BodyFigureSelecto
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { HebrewQADropdowns } from '@/components/tcm-brain/HebrewQADropdowns';
 import { DebugMetricsPanel } from '@/components/tcm-brain/DebugMetricsPanel';
+import { AIErrorBoundary } from '@/components/tcm-brain/AIErrorBoundary';
 import { useRagChat } from '@/hooks/useRagChat';
 
 interface TcmBrainPanelProps {
@@ -223,12 +224,17 @@ export function TcmBrainPanel({
         </ScrollArea>
 
         {/* Debug Metrics Panel - Shows Token Budget + Ferrari Scores */}
-        <DebugMetricsPanel 
-          debugData={debugData} 
-          searchMethod={searchMethod}
-          query={messages.filter(m => m.role === 'user').slice(-1)[0]?.content}
-          response={messages.filter(m => m.role === 'assistant').slice(-1)[0]?.content}
-        />
+        <AIErrorBoundary 
+          fallbackTitle="Debug Offline" 
+          fallbackDescription="⚠️ Brain Offline - Check Console"
+        >
+          <DebugMetricsPanel 
+            debugData={debugData} 
+            searchMethod={searchMethod}
+            query={messages.filter(m => m.role === 'user').slice(-1)[0]?.content}
+            response={messages.filter(m => m.role === 'assistant').slice(-1)[0]?.content}
+          />
+        </AIErrorBoundary>
 
         {/* Input */}
         <div className="p-4 border-t bg-background/80">

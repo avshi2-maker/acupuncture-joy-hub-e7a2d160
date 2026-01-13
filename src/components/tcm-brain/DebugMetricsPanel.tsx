@@ -43,10 +43,30 @@ interface DebugMetricsPanelProps {
   searchMethod?: string;
   query?: string;
   response?: string;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function DebugMetricsPanel({ debugData, searchMethod, query, response }: DebugMetricsPanelProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function DebugMetricsPanel({ 
+  debugData, 
+  searchMethod, 
+  query, 
+  response,
+  isOpen: controlledIsOpen,
+  onOpenChange 
+}: DebugMetricsPanelProps) {
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  
+  // Support both controlled and uncontrolled modes
+  const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
+  const setIsOpen = (value: boolean | ((prev: boolean) => boolean)) => {
+    const newValue = typeof value === 'function' ? value(isOpen) : value;
+    if (onOpenChange) {
+      onOpenChange(newValue);
+    } else {
+      setInternalIsOpen(newValue);
+    }
+  };
 
   // Keyboard shortcut: Ctrl+D / Cmd+D to toggle debug panel
   // Uses capture phase to work even when focused in input boxes
@@ -54,9 +74,9 @@ export function DebugMetricsPanel({ debugData, searchMethod, query, response }: 
     if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
       e.preventDefault();
       e.stopPropagation();
-      setIsOpen(prev => !prev);
+      setIsOpen((prev: boolean) => !prev);
     }
-  }, []);
+  }, [onOpenChange]);
 
   useEffect(() => {
     // Use capture phase to intercept before input elements consume the event
