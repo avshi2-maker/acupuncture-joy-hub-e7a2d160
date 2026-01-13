@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { BrowserVoiceInput } from '@/components/ui/BrowserVoiceInput';
 import { AIResponseDisplay } from '@/components/tcm/AIResponseDisplay';
+import { QuickPromptDropdown } from '@/components/tcm-brain/QuickPromptDropdown';
 import { PromptMapping } from '@/data/tcm-prompt-mapping';
 import { Message } from '@/hooks/useTcmBrainState';
 
@@ -147,7 +148,17 @@ export function IntelligenceHub({
       </AnimatePresence>
 
       {/* SECTION 2: Main Input Box (Middle) */}
-      <div className="p-4 border-b bg-card shrink-0">
+      <div className="p-4 border-b bg-card shrink-0 space-y-2">
+        {/* Quick Prompt Dropdown - Database Questions */}
+        <QuickPromptDropdown
+          onSelectQuestion={(question) => {
+            setInput(question);
+          }}
+          disabled={isLoading}
+          placeholder="📚 שאלות מוכנות מהמאגר"
+          className="w-full"
+        />
+        
         <div className="flex gap-2">
           <Input
             placeholder="תאר תסמינים או שאל שאלה קלינית..."

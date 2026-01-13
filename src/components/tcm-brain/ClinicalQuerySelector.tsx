@@ -86,20 +86,9 @@ function AccordionGroup({
   const stackedCount = mappings.filter(m => isInStack(m.id)).length;
   const Icon = group.icon;
 
+  // Hide empty groups instead of showing "Coming Soon"
   if (mappings.length === 0) {
-    return (
-      <div className={cn(
-        'rounded-lg border p-3 opacity-50',
-        group.borderColor,
-        group.bgColor
-      )}>
-        <div className="flex items-center gap-2">
-          <Icon className={cn('h-4 w-4', group.color)} />
-          <span className="text-sm font-medium" dir="rtl">{group.title}</span>
-          <Badge variant="secondary" className="text-[10px] ml-auto">בקרוב</Badge>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (

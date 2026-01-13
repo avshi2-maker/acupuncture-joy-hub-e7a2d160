@@ -10,6 +10,7 @@ import ReactMarkdown from 'react-markdown';
 import { RAGBodyFigureDisplay } from '@/components/acupuncture/RAGBodyFigureDisplay';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { HebrewQADropdowns } from '@/components/tcm-brain/HebrewQADropdowns';
+import { QuickPromptDropdown } from '@/components/tcm-brain/QuickPromptDropdown';
 import { DebugMetricsPanel } from '@/components/tcm-brain/DebugMetricsPanel';
 import { AIErrorBoundary } from '@/components/tcm-brain/AIErrorBoundary';
 import { AiStatus } from '@/components/ui/AiStatus';
@@ -123,18 +124,23 @@ export function TcmBrainPanel({
           ))}
         </div>
 
-        {/* Hebrew Q&A Dropdowns */}
+        {/* Quick Prompt Dropdown - Database Questions */}
+        <div className="px-4 py-2 border-b">
+          <QuickPromptDropdown
+            onSelectQuestion={(question) => {
+              setInput(question);
+            }}
+            disabled={isLoading}
+            placeholder="📚 שאלות מהמאגר"
+            className="w-full"
+          />
+        </div>
+
+        {/* Hebrew Q&A Dropdowns (hardcoded Yin-Yang + Five Elements) */}
         <div className="px-4 py-2 border-b">
           <HebrewQADropdowns
             onSelectQuestion={(question) => {
               setInput(question);
-              // Auto-submit after setting input
-              setTimeout(() => {
-                const submitBtn = document.querySelector('[data-tcm-submit]') as HTMLButtonElement;
-                if (submitBtn && !submitBtn.disabled) {
-                  submitBtn.click();
-                }
-              }, 50);
             }}
             disabled={isLoading}
           />

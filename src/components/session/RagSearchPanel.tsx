@@ -26,6 +26,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useHaptic } from '@/hooks/useHaptic';
 import { useVoiceInput } from '@/hooks/useVoiceInput';
 import { useSpeechSynthesis, extractSpeakableContent } from '@/hooks/useSpeechSynthesis';
+import { QuickPromptDropdown } from '@/components/tcm-brain/QuickPromptDropdown';
 
 interface SearchMessage {
   id: string;
@@ -710,7 +711,15 @@ export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelPro
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="p-4 border-t border-border/50 bg-card/80 backdrop-blur-sm">
+      <div className="p-4 border-t border-border/50 bg-card/80 backdrop-blur-sm space-y-2">
+        {/* Quick Prompt Dropdown */}
+        <QuickPromptDropdown
+          onSelectQuestion={(question) => setQuery(question)}
+          disabled={isSearching}
+          placeholder="📚 שאלות מהמאגר"
+          className="w-full"
+        />
+        
         <div className="flex items-center gap-2">
           {/* Microphone Button - Large for mobile (44px+) */}
           {isVoiceSupported && (
