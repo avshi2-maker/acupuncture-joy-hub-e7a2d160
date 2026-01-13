@@ -1465,6 +1465,27 @@ serve(async (req) => {
   }
 
   try {
+    // Parse body first to check for health check (allows unauthenticated pings)
+    const bodyClone = req.clone();
+    let bodyData: any = {};
+    try {
+      bodyData = await bodyClone.json();
+    } catch {
+      // Empty or invalid body - continue with auth check
+    }
+
+    // Health check bypass - responds immediately without auth
+    if (bodyData.healthCheck === true || bodyData.message === '__health_check__') {
+      return new Response(JSON.stringify({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        service: 'tcm-rag-chat'
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
