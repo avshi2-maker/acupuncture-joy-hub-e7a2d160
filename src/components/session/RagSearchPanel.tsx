@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useHaptic } from '@/hooks/useHaptic';
 import { Switch } from '@/components/ui/switch';
+import { useRagChat } from '@/hooks/useRagChat';
 
 interface SearchMessage {
   id: string;
@@ -36,6 +37,7 @@ interface SearchMessage {
 interface RagSearchPanelProps {
   patientId?: string;
   onInsertToNotes?: (text: string) => void;
+  onParsePoints?: (text: string) => string[]; // 🔌 Callback to update Body Map
 }
 
 // Confidence Gauge - Radial Ring
@@ -70,7 +72,7 @@ function ConfidenceGauge({ score, size = 40 }: { score: number | null; size?: nu
   );
 }
 
-export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelProps) {
+export function RagSearchPanel({ patientId, onInsertToNotes, onParsePoints }: RagSearchPanelProps) {
   const [query, setQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [messages, setMessages] = useState<SearchMessage[]>([]);
@@ -82,6 +84,10 @@ export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelPro
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { lightTap, successTap } = useHaptic();
+
+  // 🔌 Use local parser OR the one passed from parent (for shared state)
+  const { parsePointReferences: localParser, highlightedPoints } = useRagChat();
+  const parsePoints = onParsePoints || localParser;
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -179,6 +185,11 @@ export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelPro
 
   const handleSearch = async () => {
     if (!query.trim() || isSearching) return;
+    
+    // 🎯 IMMEDIATE VISUAL FEEDBACK - Parse user query for points BEFORE API call
+    console.log('🔍 SEARCH TRIGGERED:', query);
+    parsePoints(query);
+    
     const userMessage: SearchMessage = { id: `q-${Date.now()}`, type: 'query', content: query, timestamp: new Date() };
     setMessages(prev => [...prev, userMessage]);
     const searchQuery = query;
@@ -186,7 +197,14 @@ export function RagSearchPanel({ patientId, onInsertToNotes }: RagSearchPanelPro
     setIsSearching(true);
 
     try {
-      await streamResponse(searchQuery);
+      const result = await streamResponse(searchQuery);
+      
+      // 🎯 UPDATE MAP WITH AI's ANSWER - Parse the response for mentioned points
+      if (result.content) {
+        console.log('🤖 AI RESPONSE - Parsing for points...');
+        parsePoints(result.content);
+      }
+      
       successTap();
     } catch (error) {
       console.error('Search error:', error);

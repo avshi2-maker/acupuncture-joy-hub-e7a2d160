@@ -8,8 +8,8 @@ import { AiStatus } from "@/components/ui/AiStatus";
 // import { ClinicalPatterns } from "./ClinicalPatterns";
 
 export const IntelligenceHub = () => {
-  // 1. Hook into the Brain (get the highlighting data)
-  const { highlightedPoints } = useRagChat();
+  // 1. Hook into the Brain (get the highlighting data) - SINGLE SOURCE OF TRUTH
+  const { highlightedPoints, parsePointReferences } = useRagChat();
 
   return (
     // MAIN CONTAINER: Flexbox layout handling RTL automatically
@@ -32,7 +32,10 @@ export const IntelligenceHub = () => {
         {/* The Dropdown (Your 195 Questions) */}
         <div className="w-full">
             <QuickPromptDropdown 
-              onSelectQuestion={(q) => console.log('Selected:', q)}
+              onSelectQuestion={(q) => {
+                console.log('Selected:', q);
+                parsePointReferences(q); // Parse dropdown selection too!
+              }}
             />
         </div>
 
@@ -64,7 +67,8 @@ export const IntelligenceHub = () => {
            <div className="w-full bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden relative min-h-[400px] flex flex-col">
               {/* Ensure RagSearchPanel takes full height */}
               <div className="flex-1">
-                  <RagSearchPanel />
+                  {/* 🔌 PASS THE PARSER TO RAGSEARCHPANEL */}
+                  <RagSearchPanel onParsePoints={parsePointReferences} />
               </div>
            </div>
 
