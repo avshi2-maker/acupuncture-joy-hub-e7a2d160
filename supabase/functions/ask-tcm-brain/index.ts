@@ -158,12 +158,33 @@ serve(async (req) => {
     const sources: Array<{ name: string; confidence: string; score?: number }> = [];
     let currentLength = 0;
     let chunksIncluded = 0;
+    let chunksDropped = 0;
+    let budgetReached = false;
+    
+    // Debug: Track all chunks with their status
+    interface ChunkDebugInfo {
+      index: number;
+      sourceName: string;
+      ferrariScore: number;
+      keywordScore: number;
+      questionBoost: boolean;
+      included: boolean;
+      reason: string;
+    }
+    const chunkDebugInfo: ChunkDebugInfo[] = [];
     
     for (let i = 0; i < relevantChunks.length; i++) {
       const chunk = relevantChunks[i];
       const sourceName = chunk.original_name || chunk.file_name;
       const chunkText = `---\nSource: ${sourceName}\n${chunk.content}\n`;
       const chunkLength = chunkText.length;
+      
+      // Detect question boost: if keyword_score is higher than base would suggest
+      // The SQL boosts keyword_score by 1.5x when question matches
+      // We approximate boost detection: if keyword_score > 0.25 and is high relative to vector
+      const keywordScore = chunk.keyword_score || 0;
+      const vectorScore = chunk.vector_score || 0;
+      const questionBoost = keywordScore > 0.25 && keywordScore > vectorScore * 0.5;
       
       // Dynamic selection logic:
       // - Always include top 3 chunks (high confidence)
@@ -173,32 +194,71 @@ serve(async (req) => {
       const isHighConfidence = i < MIN_HIGH_CONFIDENCE_CHUNKS;
       const isClinicalStandard = (chunk.ferrari_score || 0) >= CLINICAL_STANDARD_THRESHOLD;
       
-      // For chunks beyond top 3, require clinical standard quality
-      if (!isHighConfidence && !isClinicalStandard) {
-        console.log(`[ask-tcm-brain] Skipping chunk ${i + 1}: ferrari_score ${chunk.ferrari_score?.toFixed(3)} < ${CLINICAL_STANDARD_THRESHOLD}`);
-        continue;
-      }
+      let included = false;
+      let reason = '';
       
-      // Token budget check (with buffer for system prompt)
+      // Token budget check first (with buffer for system prompt)
       if (currentLength + chunkLength > TOKEN_BUDGET_CHARS) {
+        reason = `Budget exceeded (${currentLength}/${TOKEN_BUDGET_CHARS})`;
+        budgetReached = true;
         console.log(`[ask-tcm-brain] Token budget reached at chunk ${i + 1}: ${currentLength}/${TOKEN_BUDGET_CHARS} chars`);
-        break;
+      } else if (!isHighConfidence && !isClinicalStandard) {
+        // For chunks beyond top 3, require clinical standard quality
+        reason = `Below threshold (${(chunk.ferrari_score || 0).toFixed(3)} < ${CLINICAL_STANDARD_THRESHOLD})`;
+        chunksDropped++;
+        console.log(`[ask-tcm-brain] Skipping chunk ${i + 1}: ferrari_score ${chunk.ferrari_score?.toFixed(3)} < ${CLINICAL_STANDARD_THRESHOLD}`);
+      } else {
+        // Include this chunk
+        included = true;
+        reason = isHighConfidence ? 'Top 3 (High Confidence)' : 'Clinical Standard';
+        contextParts.push(chunkText);
+        currentLength += chunkLength;
+        chunksIncluded++;
+        
+        if (!sources.find(s => s.name === sourceName)) {
+          sources.push({
+            name: sourceName,
+            confidence: chunk.confidence || 'medium',
+            score: chunk.ferrari_score || chunk.combined_score || chunk.keyword_score
+          });
+        }
       }
       
-      contextParts.push(chunkText);
-      currentLength += chunkLength;
-      chunksIncluded++;
+      chunkDebugInfo.push({
+        index: i + 1,
+        sourceName: sourceName.slice(0, 30),
+        ferrariScore: chunk.ferrari_score || 0,
+        keywordScore: keywordScore,
+        questionBoost,
+        included,
+        reason
+      });
       
-      if (!sources.find(s => s.name === sourceName)) {
-        sources.push({
-          name: sourceName,
-          confidence: chunk.confidence || 'medium',
-          score: chunk.ferrari_score || chunk.combined_score || chunk.keyword_score
-        });
-      }
+      if (budgetReached) break;
     }
     
     console.log(`[ask-tcm-brain] Context built: ${chunksIncluded} chunks, ${currentLength} chars (~${Math.round(currentLength / 4)} tokens)`);
+    console.log(`[ask-tcm-brain] Dropped ${chunksDropped} chunks due to low ferrari_score`);
+
+    // Build debug metadata for frontend
+    const debugMetadata = {
+      tokenBudget: {
+        used: currentLength,
+        max: TOKEN_BUDGET_CHARS,
+        percentage: Math.round((currentLength / TOKEN_BUDGET_CHARS) * 100)
+      },
+      chunks: {
+        found: relevantChunks.length,
+        included: chunksIncluded,
+        dropped: chunksDropped,
+        budgetReached
+      },
+      topChunks: chunkDebugInfo.slice(0, 8), // Send first 8 for debugging
+      thresholds: {
+        clinicalStandard: CLINICAL_STANDARD_THRESHOLD,
+        minHighConfidence: MIN_HIGH_CONFIDENCE_CHUNKS
+      }
+    };
 
     const contextString = contextParts.length > 0 
       ? `\n\nRelevant Knowledge Base Context (${searchMethod} search, ${chunksIncluded} sources):\n${contextParts.join('\n')}`
@@ -245,11 +305,12 @@ serve(async (req) => {
     
     const stream = new ReadableStream({
       async start(controller) {
-        // First, send sources and search metadata as a custom event
+        // First, send sources, search metadata, and debug info as a custom event
         const metadataEvent = `data: ${JSON.stringify({ 
           sources,
           searchMethod,
-          chunksFound: relevantChunks.length
+          chunksFound: relevantChunks.length,
+          debug: debugMetadata
         })}\n\n`;
         controller.enqueue(new TextEncoder().encode(metadataEvent));
       },

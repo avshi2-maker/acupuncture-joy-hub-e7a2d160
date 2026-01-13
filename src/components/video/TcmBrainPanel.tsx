@@ -13,7 +13,34 @@ import { RAGBodyFigureDisplay } from '@/components/acupuncture/RAGBodyFigureDisp
 import { parsePointReferences } from '@/components/acupuncture/BodyFigureSelector';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { HebrewQADropdowns } from '@/components/tcm-brain/HebrewQADropdowns';
+import { DebugMetricsPanel } from '@/components/tcm-brain/DebugMetricsPanel';
 
+interface DebugMetadata {
+  tokenBudget: {
+    used: number;
+    max: number;
+    percentage: number;
+  };
+  chunks: {
+    found: number;
+    included: number;
+    dropped: number;
+    budgetReached: boolean;
+  };
+  topChunks: Array<{
+    index: number;
+    sourceName: string;
+    ferrariScore: number;
+    keywordScore: number;
+    questionBoost: boolean;
+    included: boolean;
+    reason: string;
+  }>;
+  thresholds: {
+    clinicalStandard: number;
+    minHighConfidence: number;
+  };
+}
 interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -38,6 +65,8 @@ export function TcmBrainPanel({
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showBodyMap, setShowBodyMap] = useState(true);
+  const [debugData, setDebugData] = useState<DebugMetadata | null>(null);
+  const [searchMethod, setSearchMethod] = useState<string>('');
 
   // Extract highlighted points from the last assistant message
   const { highlightedPoints, lastAIResponse } = useMemo(() => {
@@ -78,6 +107,13 @@ export function TcmBrainPanel({
       if (error) throw error;
 
       const assistantMessage = data?.response || data?.message || 'No response received';
+      
+      // Extract debug metadata if available
+      if (data?.debug) {
+        setDebugData(data.debug);
+        setSearchMethod(data.searchMethod || 'unknown');
+      }
+      
       setMessages(prev => [...prev, { role: 'assistant', content: assistantMessage }]);
     } catch (error: any) {
       console.error('TCM Brain error:', error);
@@ -226,6 +262,9 @@ export function TcmBrainPanel({
             </div>
           )}
         </ScrollArea>
+
+        {/* Debug Metrics Panel */}
+        <DebugMetricsPanel debugData={debugData} searchMethod={searchMethod} />
 
         {/* Input */}
         <div className="p-4 border-t bg-background/80">

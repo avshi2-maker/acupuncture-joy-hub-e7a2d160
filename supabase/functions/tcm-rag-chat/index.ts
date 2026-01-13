@@ -2095,6 +2095,34 @@ Generate your response ENTIRELY in ${responseLanguageInstruction}, including:
       documentsMatched: useExternalAI ? 0 : uniqueDocuments.length,
       searchTermsUsed: searchTerms,
       isExternal: useExternalAI || false,
+      searchMethod: hybridSearchResult.searchType || 'hybrid',
+      // DEBUG METRICS PANEL DATA - For "Under the Hood" transparency
+      debug: {
+        tokenBudget: {
+          used: Math.round(sources.reduce((acc, s) => acc + (s.preview?.length || 0), 0)),
+          max: 6000,
+          percentage: Math.round((sources.reduce((acc, s) => acc + (s.preview?.length || 0), 0) / 6000) * 100)
+        },
+        chunks: {
+          found: hybridSearchResult.chunks.length,
+          included: sources.length,
+          dropped: Math.max(0, hybridSearchResult.chunks.length - sources.length),
+          budgetReached: false
+        },
+        topChunks: hybridSearchResult.chunks.slice(0, 8).map((chunk: any, i: number) => ({
+          index: i + 1,
+          sourceName: (chunk.original_name || chunk.file_name || 'Unknown').slice(0, 30),
+          ferrariScore: chunk.ferrari_score || chunk.combined_score || 0,
+          keywordScore: chunk.keyword_score || 0,
+          questionBoost: (chunk.keyword_score || 0) > 0.25 && (chunk.keyword_score || 0) > (chunk.vector_score || 0) * 0.5,
+          included: i < sources.length,
+          reason: i < 3 ? 'Top 3 (High Confidence)' : ((chunk.ferrari_score || 0) >= 0.80 ? 'Clinical Standard' : 'Below threshold')
+        })),
+        thresholds: {
+          clinicalStandard: 0.80,
+          minHighConfidence: 3
+        }
+      },
       // HYBRID SEARCH CONFIDENCE METADATA
       hybridSearchConfidence: {
         overallConfidence: hybridSearchResult.overallConfidence,
