@@ -493,6 +493,7 @@ export default function TcmBrain() {
                   }}
                   onOpenPulseGallery={() => setShowPulseGallery(true)}
                   showPulseGallery={showPulseGallery}
+                  onSelectQuestion={(question) => setPendingQuestion(question)}
                 />
               </div>
 
