@@ -63,9 +63,29 @@ export function DebugMetricsPanel({ debugData, searchMethod }: DebugMetricsPanel
 
   const { tokenBudget, chunks, topChunks, thresholds } = debugData;
   
+  // Calculate confidence from average ferrari_score of included chunks
+  const includedChunks = topChunks.filter(c => c.included);
+  const avgFerrariScore = includedChunks.length > 0 
+    ? includedChunks.reduce((sum, c) => sum + c.ferrariScore, 0) / includedChunks.length 
+    : 0;
+  const confidencePercent = Math.round(avgFerrariScore * 100);
+  
+  // Color code confidence: >=85% Green, 70-84% Amber, <70% Red
+  const confidenceColor = confidencePercent >= 85 
+    ? 'text-emerald-600' 
+    : confidencePercent >= 70 
+      ? 'text-amber-600' 
+      : 'text-destructive';
+  
+  const confidenceLabel = confidencePercent >= 85 
+    ? 'Clinical Standard' 
+    : confidencePercent >= 70 
+      ? 'Moderate' 
+      : 'Low Confidence';
+  
   // Determine source type based on RAG hits
   const isLocalRag = chunks.found > 0;
-  const sourceLabel = isLocalRag ? '📚 Source: Local RAG' : '☁️ Source: External AI Fallback';
+  const sourceLabel = isLocalRag ? '📚 Local RAG' : '☁️ External AI Fallback';
   const sourceColor = isLocalRag ? 'bg-emerald-500/10 text-emerald-700 border-emerald-300' : 'bg-amber-500/10 text-amber-700 border-amber-300';
   
   // Determine budget status color
@@ -118,11 +138,34 @@ export function DebugMetricsPanel({ debugData, searchMethod }: DebugMetricsPanel
             <Cloud className="h-4 w-4" />
           )}
           <span>{sourceLabel}</span>
-          {isLocalRag && (
-            <Badge variant="outline" className="ml-auto text-[10px] bg-emerald-500/20 border-emerald-400">
-              {chunks.found} RAG hits
-            </Badge>
+          
+          {/* Confidence Percentage */}
+          {isLocalRag && includedChunks.length > 0 && (
+            <span className={cn("font-bold", confidenceColor)}>
+              ({confidencePercent}% Confidence)
+            </span>
           )}
+          
+          <div className="ml-auto flex items-center gap-2">
+            {isLocalRag && includedChunks.length > 0 && (
+              <Badge 
+                variant="outline" 
+                className={cn(
+                  "text-[10px]",
+                  confidencePercent >= 85 && "bg-emerald-500/20 border-emerald-400 text-emerald-700",
+                  confidencePercent >= 70 && confidencePercent < 85 && "bg-amber-500/20 border-amber-400 text-amber-700",
+                  confidencePercent < 70 && "bg-destructive/20 border-destructive text-destructive"
+                )}
+              >
+                {confidenceLabel}
+              </Badge>
+            )}
+            {isLocalRag && (
+              <Badge variant="outline" className="text-[10px] bg-emerald-500/20 border-emerald-400">
+                {chunks.found} RAG hits
+              </Badge>
+            )}
+          </div>
         </div>
 
         {/* Token Budget Bar */}
