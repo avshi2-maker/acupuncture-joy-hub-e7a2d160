@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Bug, ChevronDown, ChevronUp, Rocket, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Bug, ChevronDown, ChevronUp, Rocket, CheckCircle, XCircle, AlertTriangle, Keyboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +43,19 @@ interface DebugMetricsPanelProps {
 export function DebugMetricsPanel({ debugData, searchMethod }: DebugMetricsPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
 
+  // Keyboard shortcut: Ctrl+D / Cmd+D to toggle debug panel
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+      e.preventDefault();
+      setIsOpen(prev => !prev);
+    }
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
   if (!debugData) return null;
 
   const { tokenBudget, chunks, topChunks, thresholds } = debugData;
@@ -76,6 +89,10 @@ export function DebugMetricsPanel({ debugData, searchMethod }: DebugMetricsPanel
                 {chunks.dropped} filtered
               </Badge>
             )}
+            <Badge variant="outline" className="h-4 text-[10px] px-1 hidden sm:flex items-center gap-0.5">
+              <Keyboard className="h-2 w-2" />
+              <span>⌘D</span>
+            </Badge>
           </div>
           {isOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
         </Button>
