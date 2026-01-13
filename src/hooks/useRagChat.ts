@@ -6,62 +6,76 @@ import { supabase } from '@/integrations/supabase/client';
  * Maps keywords (symptoms, pinyin names, partial codes) to standardized point codes.
  */
 const POINT_RULES: Record<string, string> = {
-  // Pinyin Names
-  'hegu': 'LI4',
-  'union valley': 'LI4',
-  'zusanli': 'ST36',
-  'zu san li': 'ST36',
-  'leg three miles': 'ST36',
-  'sanyinjiao': 'SP6',
-  'san yin jiao': 'SP6',
-  'three yin intersection': 'SP6',
-  'taichong': 'LR3',
-  'tai chong': 'LR3',
-  'great surge': 'LR3',
-  'quchi': 'LI11',
-  'qu chi': 'LI11',
-  'pool at the bend': 'LI11',
-  'neiguan': 'PC6',
-  'nei guan': 'PC6',
-  'inner gate': 'PC6',
-  'baihui': 'GV20',
-  'bai hui': 'GV20',
-  'hundred meetings': 'GV20',
-  'yintang': 'EX-HN3',
-  'yin tang': 'EX-HN3',
-  'hall of impression': 'EX-HN3',
-  'fengchi': 'GB20',
-  'feng chi': 'GB20',
-  'wind pool': 'GB20',
+  // =====================
+  // COMMON ACUPOINTS (Pinyin + English + Partial Codes)
+  // =====================
+  'hegu': 'LI4', 'union valley': 'LI4', 'li 4': 'LI4',
+  'zusanli': 'ST36', 'zu san li': 'ST36', 'st 36': 'ST36', 'leg three miles': 'ST36',
+  'sanyinjiao': 'SP6', 'san yin jiao': 'SP6', 'sp 6': 'SP6', 'three yin intersection': 'SP6',
+  'neiguan': 'PC6', 'nei guan': 'PC6', 'pc 6': 'PC6', 'inner pass': 'PC6', 'inner gate': 'PC6',
+  'taichong': 'LR3', 'tai chong': 'LR3', 'lr 3': 'LR3', 'great surge': 'LR3',
+  'baihui': 'GV20', 'bai hui': 'GV20', 'gv 20': 'GV20', 'hundred meetings': 'GV20',
+  'shenmen': 'HT7', 'ht 7': 'HT7', 'spirit gate': 'HT7',
+  'quchi': 'LI11', 'qu chi': 'LI11', 'li 11': 'LI11', 'pool at the bend': 'LI11',
+  'yintang': 'EX-HN3', 'yin tang': 'EX-HN3', 'hall of impression': 'EX-HN3',
+  'fengchi': 'GB20', 'feng chi': 'GB20', 'gb 20': 'GB20', 'wind pool': 'GB20',
+  'lieque': 'LU7', 'lie que': 'LU7', 'lu 7': 'LU7', 'broken sequence': 'LU7',
+  'taiyuan': 'LU9', 'tai yuan': 'LU9', 'lu 9': 'LU9', 'great abyss': 'LU9',
+  'dazhui': 'GV14', 'da zhui': 'GV14', 'gv 14': 'GV14', 'great vertebra': 'GV14',
+  'huantiao': 'GB30', 'huan tiao': 'GB30', 'gb 30': 'GB30', 'jumping circle': 'GB30',
+  'weizhong': 'BL40', 'wei zhong': 'BL40', 'bl 40': 'BL40', 'bend middle': 'BL40',
+  'shenshu': 'BL23', 'shen shu': 'BL23', 'bl 23': 'BL23', 'kidney shu': 'BL23',
   
-  // Symptom-based mappings
-  'tongue': 'HT7',
-  'migraine': 'GB20',
-  'headache': 'LI4',
-  'insomnia': 'HT7',
-  'anxiety': 'PC6',
-  'nausea': 'PC6',
-  'back pain': 'BL40',
-  'lower back': 'BL23',
-  'knee pain': 'ST35',
-  'shoulder pain': 'LI15',
-  'neck pain': 'GB20',
-  'stress': 'LR3',
-  'fatigue': 'ST36',
-  'digestion': 'ST36',
-  'menstrual': 'SP6',
+  // =====================
+  // SYMPTOM MAPPINGS (The "Smart" Layer)
+  // =====================
+  'tongue': 'HT7',           // Heart opens to tongue
+  'pulse': 'LU9',            // Pulse gathering point
+  'headache': 'LI4',         // Face/Head command point
+  'migraine': 'GB20',        // Wind pool (Shaoyang)
+  'nausea': 'PC6',           // Vomiting/Stomach
+  'vomiting': 'PC6',         // Same as nausea
+  'back pain': 'BL40',       // Command point for back
+  'lower back': 'BL23',      // Kidney Shu for lower back
+  'sciatica': 'GB30',        // Hip/Sciatica
+  'insomnia': 'HT7',         // Calm Spirit
+  'sleep': 'HT7',            // Sleep issues
+  'anxiety': 'EX-HN3',       // Yintang - Calm Mind
+  'stress': 'LR3',           // Liver qi stagnation
+  'fever': 'GV14',           // Clear Heat
+  'cough': 'LU7',            // Command point for neck/lungs
+  'cold': 'LU7',             // Common cold
+  'fatigue': 'ST36',         // Tonify Qi
+  'digestion': 'ST36',       // Stomach/Spleen support
+  'diarrhea': 'ST36',        // Digestive issues
+  'constipation': 'ST25',    // Tianshu
+  'menstrual': 'SP6',        // Three Yin Intersection
+  'dysmenorrhea': 'SP6',     // Menstrual pain
+  'knee pain': 'ST35',       // Dubi - Calf's nose
+  'shoulder pain': 'LI15',   // Jianyu
+  'neck pain': 'GB20',       // Wind pool
+  'dizziness': 'GV20',       // Baihui
+  'depression': 'LR3',       // Liver qi regulation
+  'anger': 'LR3',            // Liver fire
+  'grief': 'LU1',            // Lung emotion
+  'fear': 'KI3',             // Kidney connection
+  'palpitations': 'PC6',     // Heart protector
+  'chest pain': 'PC6',       // Inner gate
+  'eye pain': 'GB1',         // Tongziliao
+  'tinnitus': 'TE17',        // Yifeng
+  'sore throat': 'LU11',     // Shaoshang
   
-  // Partial code matches
-  'li 4': 'LI4',
-  'st 36': 'ST36',
-  'sp 6': 'SP6',
-  'pc 6': 'PC6',
-  'gb 20': 'GB20',
-  'lr 3': 'LR3',
-  'ht 7': 'HT7',
-  'gv 20': 'GV20',
-  'bl 40': 'BL40',
-  'bl 23': 'BL23',
+  // =====================
+  // ADDITIONAL PARTIAL CODE MATCHES
+  // =====================
+  'st 25': 'ST25',
+  'st 35': 'ST35',
+  'li 15': 'LI15',
+  'ki 3': 'KI3',
+  'lu 1': 'LU1',
+  'lu 11': 'LU11',
+  'gb 1': 'GB1',
+  'te 17': 'TE17',
 };
 
 /**
