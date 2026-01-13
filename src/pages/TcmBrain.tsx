@@ -9,7 +9,7 @@ import {
   Database, ChevronDown, ChevronUp, MessageCircleQuestion, Play, Pause, 
   Square, RotateCcw, Printer, MessageCircle, Mail, ArrowRight, HelpCircle, 
   BookOpen, Heart, Mic, Baby, Sparkles, Apple, Activity, Wind, Leaf, Layers,
-  LayoutGrid
+  LayoutGrid, Bug
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { APIUsageMeter } from '@/components/tcm-brain/APIUsageMeter';
@@ -63,6 +63,7 @@ import { IntelligenceHub } from '@/components/tcm-brain/IntelligenceHub';
 import { TherapistTeleprompter } from '@/components/tcm-brain/TherapistTeleprompter';
 import { PulseGallerySheet } from '@/components/pulse';
 import { useClinicalNexus, type ClinicalNexusResult } from '@/hooks/useClinicalNexus';
+import { AIErrorBoundary } from '@/components/tcm-brain/AIErrorBoundary';
 
 
 export default function TcmBrain() {
@@ -122,6 +123,7 @@ export default function TcmBrain() {
   const [highContrast, setHighContrast] = useState(false);
   const [activeAiQuery, setActiveAiQuery] = useState<ToolbarItemId | null>(null);
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -360,6 +362,16 @@ export default function TcmBrain() {
                   <Play className="h-4 w-4" />
                   <span className="hidden sm:inline ml-1 text-xs">מדריך</span>
                 </Button>
+                {/* Debug Button - Mobile fallback for Ctrl+D */}
+                <Button
+                  variant={showDebugPanel ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setShowDebugPanel(!showDebugPanel)}
+                  className={`h-8 w-8 p-0 md:hidden ${showDebugPanel ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-600'}`}
+                  title="Toggle Debug Panel"
+                >
+                  <Bug className="h-4 w-4" />
+                </Button>
               </div>
 
               {/* Central Clock */}
@@ -383,6 +395,17 @@ export default function TcmBrain() {
                   </Badge>
                 )}
                 <div className="hidden md:flex items-center gap-2">
+                  {/* Debug Toggle Button - Manual Override for Ctrl+D */}
+                  <Button
+                    variant={showDebugPanel ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setShowDebugPanel(!showDebugPanel)}
+                    className={`h-8 px-2 gap-1 ${showDebugPanel ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-600'}`}
+                    title="Toggle Debug Panel (Ctrl+D)"
+                  >
+                    <Bug className="h-4 w-4" />
+                    <span className="text-xs hidden lg:inline">Debug</span>
+                  </Button>
                   <LanguageSwitcher variant="outline" isScrolled={true} />
                   <TierBadge />
                 </div>
@@ -758,14 +781,22 @@ export default function TcmBrain() {
         
         {/* Debug Metrics Panel - Unified Algorithm Transparency */}
         {/* Uses same data as Video Session for Twin Test parity */}
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t">
-          <DebugMetricsPanel 
-            debugData={debugData} 
-            searchMethod={searchMethod}
-            query={messages.filter(m => m.role === 'user').slice(-1)[0]?.content}
-            response={messages.filter(m => m.role === 'assistant').slice(-1)[0]?.content}
-          />
-        </div>
+        <AIErrorBoundary 
+          fallbackTitle="Debug Panel Offline" 
+          fallbackDescription="⚠️ Brain Offline - Check Console. Manual features still work."
+          onRetry={() => setShowDebugPanel(false)}
+        >
+          <div className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t">
+            <DebugMetricsPanel 
+              debugData={debugData} 
+              searchMethod={searchMethod}
+              query={messages.filter(m => m.role === 'user').slice(-1)[0]?.content}
+              response={messages.filter(m => m.role === 'assistant').slice(-1)[0]?.content}
+              isOpen={showDebugPanel}
+              onOpenChange={setShowDebugPanel}
+            />
+          </div>
+        </AIErrorBoundary>
         
         {/* Therapist Teleprompter - Guided Tour */}
         <TherapistTeleprompter 
