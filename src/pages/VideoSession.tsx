@@ -2337,6 +2337,7 @@ export default function VideoSession() {
         patientId={selectedPatientId || undefined}
         patientName={selectedPatientName || undefined}
         sessionNotes={sessionNotes}
+        mode="video"
       />
       
       {/* Session Brief Panel - Auto-generates on patient selection */}
