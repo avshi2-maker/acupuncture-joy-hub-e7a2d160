@@ -64,6 +64,7 @@ import { TherapistTeleprompter } from '@/components/tcm-brain/TherapistTelepromp
 import { PulseGallerySheet } from '@/components/pulse';
 import { useClinicalNexus, type ClinicalNexusResult } from '@/hooks/useClinicalNexus';
 import { AIErrorBoundary } from '@/components/tcm-brain/AIErrorBoundary';
+import { AiStatus } from '@/components/ui/AiStatus';
 
 
 export default function TcmBrain() {
@@ -825,6 +826,9 @@ export default function TcmBrain() {
             }
           }}
         />
+        
+        {/* AI Status Indicator - Floating bottom-left */}
+        <AiStatus />
       </div>
     </>
   );

@@ -1,5 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { parsePointReferences } from '@/components/acupuncture/BodyFigureSelector';
 
 export interface Message {
   role: 'user' | 'assistant';
@@ -47,6 +48,8 @@ export interface UseRagChatReturn {
   isLoading: boolean;
   debugData: DebugMetadata | null;
   searchMethod: string;
+  highlightedPoints: string[];
+  lastAIResponse: string;
   sendMessage: (message: string) => Promise<void>;
   clearMessages: () => void;
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
@@ -118,11 +121,23 @@ export function useRagChat(options: RagChatOptions = {}): UseRagChatReturn {
     setSearchMethod('');
   }, []);
 
+  // Extract highlighted points from the last assistant message
+  const { highlightedPoints, lastAIResponse } = useMemo(() => {
+    const lastAssistantMsg = [...messages].reverse().find(m => m.role === 'assistant');
+    if (lastAssistantMsg) {
+      const points = parsePointReferences(lastAssistantMsg.content);
+      return { highlightedPoints: points, lastAIResponse: lastAssistantMsg.content };
+    }
+    return { highlightedPoints: [], lastAIResponse: '' };
+  }, [messages]);
+
   return {
     messages,
     isLoading,
     debugData,
     searchMethod,
+    highlightedPoints,
+    lastAIResponse,
     sendMessage,
     clearMessages,
     setMessages,
