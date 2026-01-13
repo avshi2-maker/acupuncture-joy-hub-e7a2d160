@@ -509,6 +509,7 @@ export default function TcmBrain() {
                   isLoading={isLoading}
                   onSendMessage={streamChat}
                   onClear={clearChat}
+                  highlightedPoints={highlightedPoints}
                   onViewBodyMap={handleViewBodyMap}
                   externalInput={pendingQuestion || undefined}
                   onExternalInputHandled={() => setPendingQuestion(null)}
