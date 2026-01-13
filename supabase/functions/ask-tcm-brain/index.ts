@@ -149,13 +149,45 @@ serve(async (req) => {
     const relevantChunks = searchResults || [];
     console.log(`[ask-tcm-brain] Found ${relevantChunks.length} relevant chunks (${searchMethod})`);
 
-    // Step 3: Build context from search results
+    // Step 3: Build context with TOKEN BUDGETING and DYNAMIC SELECTION
+    const TOKEN_BUDGET_CHARS = 6000; // ~1,500 tokens
+    const MIN_HIGH_CONFIDENCE_CHUNKS = 3; // Always include top 3
+    const CLINICAL_STANDARD_THRESHOLD = 0.80; // ferrari_score threshold for chunks 4+
+    
     const contextParts: string[] = [];
     const sources: Array<{ name: string; confidence: string; score?: number }> = [];
-
-    for (const chunk of relevantChunks.slice(0, 6)) {
+    let currentLength = 0;
+    let chunksIncluded = 0;
+    
+    for (let i = 0; i < relevantChunks.length; i++) {
+      const chunk = relevantChunks[i];
       const sourceName = chunk.original_name || chunk.file_name;
-      contextParts.push(`---\nSource: ${sourceName}\n${chunk.content}\n`);
+      const chunkText = `---\nSource: ${sourceName}\n${chunk.content}\n`;
+      const chunkLength = chunkText.length;
+      
+      // Dynamic selection logic:
+      // - Always include top 3 chunks (high confidence)
+      // - Include chunks 4+ ONLY if ferrari_score >= 0.80 (clinical standard)
+      // - Stop if we hit the token budget
+      
+      const isHighConfidence = i < MIN_HIGH_CONFIDENCE_CHUNKS;
+      const isClinicalStandard = (chunk.ferrari_score || 0) >= CLINICAL_STANDARD_THRESHOLD;
+      
+      // For chunks beyond top 3, require clinical standard quality
+      if (!isHighConfidence && !isClinicalStandard) {
+        console.log(`[ask-tcm-brain] Skipping chunk ${i + 1}: ferrari_score ${chunk.ferrari_score?.toFixed(3)} < ${CLINICAL_STANDARD_THRESHOLD}`);
+        continue;
+      }
+      
+      // Token budget check (with buffer for system prompt)
+      if (currentLength + chunkLength > TOKEN_BUDGET_CHARS) {
+        console.log(`[ask-tcm-brain] Token budget reached at chunk ${i + 1}: ${currentLength}/${TOKEN_BUDGET_CHARS} chars`);
+        break;
+      }
+      
+      contextParts.push(chunkText);
+      currentLength += chunkLength;
+      chunksIncluded++;
       
       if (!sources.find(s => s.name === sourceName)) {
         sources.push({
@@ -165,9 +197,11 @@ serve(async (req) => {
         });
       }
     }
+    
+    console.log(`[ask-tcm-brain] Context built: ${chunksIncluded} chunks, ${currentLength} chars (~${Math.round(currentLength / 4)} tokens)`);
 
     const contextString = contextParts.length > 0 
-      ? `\n\nRelevant Knowledge Base Context (${searchMethod} search):\n${contextParts.join('\n')}`
+      ? `\n\nRelevant Knowledge Base Context (${searchMethod} search, ${chunksIncluded} sources):\n${contextParts.join('\n')}`
       : '\n\nNo specific context found in knowledge base. Answer based on general TCM knowledge.';
 
     // Step 4: Call Gemini API directly for response generation with streaming
