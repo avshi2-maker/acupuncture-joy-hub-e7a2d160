@@ -11,20 +11,29 @@ interface AiStatusProps {
   className?: string;
 }
 
+// -----------------------------------------------------------------------------
+// Global (module-level) throttling to prevent multiple AiStatus instances from
+// stampeding the backend with health-check requests (which can trigger 503
+// BOOT_ERROR under load).
+// -----------------------------------------------------------------------------
+const HEALTHCHECK_THROTTLE_MS = 15_000;
+let globalInFlight: Promise<boolean> | null = null;
+let globalLastResult: { ok: boolean; checkedAt: number } | null = null;
+
 /**
  * AiStatus - Floating AI Connection Indicator
- * 
+ *
  * Features:
  * - 🟢 'AI Online' with pulse animation when connected
  * - 🔴 'Connection Lost' with Retry button when offline
- * - Uses navigator.onLine + Edge Function ping for verification
+ * - Uses navigator.onLine + backend ping for verification
  */
 export function AiStatus({ className }: AiStatusProps) {
   const [status, setStatus] = useState<ConnectionStatus>('checking');
   const [lastCheckTime, setLastCheckTime] = useState<Date | null>(null);
   const [retryCount, setRetryCount] = useState(0);
 
-  // Ping the edge function to verify AI connectivity
+  // Ping the backend to verify AI connectivity (throttled globally)
   const checkConnection = useCallback(async () => {
     // First check browser online status
     if (!navigator.onLine) {
@@ -32,32 +41,50 @@ export function AiStatus({ className }: AiStatusProps) {
       return false;
     }
 
-    setStatus('checking');
-    
-    try {
-      // Simple health check ping to edge function
-      const { data, error } = await supabase.functions.invoke('tcm-rag-chat', {
-        body: { 
-          message: '__health_check__',
-          healthCheck: true 
+    const now = Date.now();
+
+    // Serve cached result if it's fresh
+    if (globalLastResult && now - globalLastResult.checkedAt < HEALTHCHECK_THROTTLE_MS) {
+      setStatus(globalLastResult.ok ? 'online' : 'offline');
+      if (globalLastResult.ok) setLastCheckTime(new Date(globalLastResult.checkedAt));
+      return globalLastResult.ok;
+    }
+
+    // Deduplicate concurrent checks across multiple AiStatus instances
+    if (!globalInFlight) {
+      setStatus('checking');
+
+      globalInFlight = (async () => {
+        try {
+          const { error } = await supabase.functions.invoke('tcm-rag-chat', {
+            body: {
+              message: '__health_check__',
+              healthCheck: true,
+            },
+          });
+
+          const ok = !error;
+          globalLastResult = { ok, checkedAt: Date.now() };
+          return ok;
+        } catch (err) {
+          console.warn('[AiStatus] Connection check error:', err);
+          globalLastResult = { ok: false, checkedAt: Date.now() };
+          return false;
+        } finally {
+          globalInFlight = null;
         }
-      });
+      })();
+    }
 
-      if (error) {
-        console.warn('[AiStatus] Health check failed:', error);
-        setStatus('offline');
-        return false;
-      }
+    const ok = await globalInFlight;
+    setStatus(ok ? 'online' : 'offline');
 
-      setStatus('online');
+    if (ok) {
       setLastCheckTime(new Date());
       setRetryCount(0);
-      return true;
-    } catch (err) {
-      console.warn('[AiStatus] Connection check error:', err);
-      setStatus('offline');
-      return false;
     }
+
+    return ok;
   }, []);
 
   // Handle retry click
@@ -86,12 +113,12 @@ export function AiStatus({ className }: AiStatusProps) {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Periodic health check every 30 seconds when online
+    // Periodic health check (throttled globally inside checkConnection)
     const intervalId = setInterval(() => {
-      if (navigator.onLine && status !== 'checking') {
+      if (navigator.onLine && status !== 'checking' && status !== 'reconnecting') {
         checkConnection();
       }
-    }, 30000);
+    }, 60000);
 
     return () => {
       window.removeEventListener('online', handleOnline);
