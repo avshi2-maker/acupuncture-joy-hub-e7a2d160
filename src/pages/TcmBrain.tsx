@@ -415,11 +415,8 @@ export default function TcmBrain() {
           </div>
         </header>
 
-        {/* AI TRUST HEADER */}
-        <AITrustHeader />
-
-        {/* TCM TURBO DASHBOARD - True Digital Indicator */}
-        <div className="px-4 py-2 border-b bg-gradient-to-r from-slate-900/5 to-transparent shrink-0">
+        {/* UNIFIED METRICS DASHBOARD - Single Row with ALL Parameters */}
+        <div className="px-4 py-2 border-b bg-white shadow-sm shrink-0">
           <TcmTurboDashboard 
             status={turboDashboardStatus}
             isProcessing={isLoading || isStreaming}

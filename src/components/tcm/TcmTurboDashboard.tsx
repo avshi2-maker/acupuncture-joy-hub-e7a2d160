@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { 
   Activity, Zap, Shield, AlertTriangle, Database, 
-  BookCheck, ExternalLink, Volume2, VolumeX
+  BookCheck, ExternalLink, Volume2, VolumeX, Coins
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -10,6 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
 import { useTurboDashboardAudio } from '@/hooks/useTurboDashboardAudio';
 import { Switch } from '@/components/ui/switch';
 
@@ -298,23 +299,46 @@ export function TcmTurboDashboard({
             </TooltipContent>
           </Tooltip>
 
-          {/* CENTER: Deep/Quick Toggle */}
+          {/* CENTER METRICS: Speed + Tokens + Deep Toggle */}
+          <div className="flex items-center gap-2">
+            {/* Speed Badge */}
+            <Badge variant="outline" className="text-xs font-medium bg-blue-50 text-blue-700 border-blue-200">
+              <Zap className="w-3 h-3 mr-1" />
+              {isProcessing ? '...' : displayTokens > 0 ? `${Math.round(displayTokens / 10)}ms` : '—'}
+            </Badge>
+
+            {/* Token Badge */}
+            <Badge variant="outline" className="text-xs font-medium bg-violet-50 text-violet-700 border-violet-200">
+              <Coins className="w-3 h-3 mr-1" />
+              {displayTokens > 0 ? displayTokens : '—'}
+            </Badge>
+
+            {/* Chunks Badge */}
+            {meta?.chunksFound !== undefined && meta.chunksFound > 0 && (
+              <Badge variant="outline" className="text-xs font-medium bg-emerald-50 text-emerald-700 border-emerald-200">
+                <Database className="w-3 h-3 mr-1" />
+                {meta.chunksFound}
+              </Badge>
+            )}
+          </div>
+
+          {/* Deep/Quick Toggle */}
           {onSearchDepthChange && !isCompact && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex items-center gap-2">
-                  <Switch
-                    checked={searchDepth === 'deep'}
-                    onCheckedChange={(checked) => onSearchDepthChange(checked ? 'deep' : 'quick')}
-                    disabled={isProcessing}
-                    className="data-[state=checked]:bg-jade h-5 w-9"
-                  />
+                <div className="flex items-center gap-2 bg-slate-50 px-2 py-1 rounded-md border border-slate-200">
                   <span className={cn(
                     "text-xs font-medium",
                     searchDepth === 'deep' ? "text-jade" : "text-amber-600"
                   )}>
                     {searchDepth === 'deep' ? 'Deep' : 'Fast'}
                   </span>
+                  <Switch
+                    checked={searchDepth === 'deep'}
+                    onCheckedChange={(checked) => onSearchDepthChange(checked ? 'deep' : 'quick')}
+                    disabled={isProcessing}
+                    className="data-[state=checked]:bg-jade h-4 w-7"
+                  />
                 </div>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="max-w-[220px]">
