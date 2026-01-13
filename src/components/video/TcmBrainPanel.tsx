@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,45 +6,13 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Brain, Send, Loader2, Sparkles, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import { RAGBodyFigureDisplay } from '@/components/acupuncture/RAGBodyFigureDisplay';
 import { parsePointReferences } from '@/components/acupuncture/BodyFigureSelector';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { HebrewQADropdowns } from '@/components/tcm-brain/HebrewQADropdowns';
 import { DebugMetricsPanel } from '@/components/tcm-brain/DebugMetricsPanel';
-
-interface DebugMetadata {
-  tokenBudget: {
-    used: number;
-    max: number;
-    percentage: number;
-  };
-  chunks: {
-    found: number;
-    included: number;
-    dropped: number;
-    budgetReached: boolean;
-  };
-  topChunks: Array<{
-    index: number;
-    sourceName: string;
-    ferrariScore: number;
-    keywordScore: number;
-    questionBoost: boolean;
-    included: boolean;
-    reason: string;
-  }>;
-  thresholds: {
-    clinicalStandard: number;
-    minHighConfidence: number;
-  };
-}
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
+import { useRagChat } from '@/hooks/useRagChat';
 
 interface TcmBrainPanelProps {
   open: boolean;
@@ -55,6 +23,14 @@ interface TcmBrainPanelProps {
   mode?: 'standard' | 'video';
 }
 
+/**
+ * TcmBrainPanel - Unified TCM Brain Chat Panel
+ * 
+ * CRITICAL: This component uses the shared useRagChat hook to ensure
+ * algorithm parity with TcmBrain.tsx (Token Budget + Ferrari Score + Question Boost)
+ * 
+ * Both Video Session and Standard Session MUST use the same logic engine.
+ */
 export function TcmBrainPanel({ 
   open, 
   onOpenChange, 
@@ -63,12 +39,22 @@ export function TcmBrainPanel({
   sessionNotes,
   mode = 'standard'
 }: TcmBrainPanelProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [showBodyMap, setShowBodyMap] = useState(true);
-  const [debugData, setDebugData] = useState<DebugMetadata | null>(null);
-  const [searchMethod, setSearchMethod] = useState<string>('');
+
+  // UNIFIED HOOK: Same algorithm as TcmBrain.tsx
+  const { 
+    messages, 
+    isLoading, 
+    debugData, 
+    searchMethod, 
+    sendMessage 
+  } = useRagChat({
+    patientId,
+    patientName,
+    sessionNotes,
+    includePatientHistory: !!patientId
+  });
 
   // Extract highlighted points from the last assistant message
   const { highlightedPoints, lastAIResponse } = useMemo(() => {
@@ -80,51 +66,12 @@ export function TcmBrainPanel({
     return { highlightedPoints: [], lastAIResponse: '' };
   }, [messages]);
 
-  const sendMessage = useCallback(async () => {
+  const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return;
-
-    const userMessage = input.trim();
+    const message = input.trim();
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
-    setIsLoading(true);
-
-    try {
-      // Include patient context if available
-      let contextPrefix = '';
-      if (patientName) {
-        contextPrefix = `Patient: ${patientName}. `;
-      }
-      if (sessionNotes) {
-        contextPrefix += `Session notes: ${sessionNotes.slice(0, 500)}... `;
-      }
-
-      const { data, error } = await supabase.functions.invoke('tcm-rag-chat', {
-        body: { 
-          message: contextPrefix + userMessage,
-          patientId,
-          includePatientHistory: !!patientId
-        }
-      });
-
-      if (error) throw error;
-
-      const assistantMessage = data?.response || data?.message || 'No response received';
-      
-      // Extract debug metadata if available
-      if (data?.debug) {
-        setDebugData(data.debug);
-        setSearchMethod(data.searchMethod || 'unknown');
-      }
-      
-      setMessages(prev => [...prev, { role: 'assistant', content: assistantMessage }]);
-    } catch (error: any) {
-      console.error('TCM Brain error:', error);
-      toast.error('Failed to get response');
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [input, isLoading, patientId, patientName, sessionNotes]);
+    await sendMessage(message);
+  };
 
   const quickPrompts = [
     { label: 'דפוס TCM', prompt: 'What TCM pattern fits these symptoms?' },
@@ -275,7 +222,7 @@ export function TcmBrainPanel({
           )}
         </ScrollArea>
 
-        {/* Debug Metrics Panel */}
+        {/* Debug Metrics Panel - Shows Token Budget + Ferrari Scores */}
         <DebugMetricsPanel debugData={debugData} searchMethod={searchMethod} />
 
         {/* Input */}
@@ -289,13 +236,13 @@ export function TcmBrainPanel({
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
-                  sendMessage();
+                  handleSendMessage();
                 }
               }}
               disabled={isLoading}
             />
             <Button
-              onClick={sendMessage}
+              onClick={handleSendMessage}
               disabled={!input.trim() || isLoading}
               className="h-auto bg-jade hover:bg-jade/90"
               data-tcm-submit

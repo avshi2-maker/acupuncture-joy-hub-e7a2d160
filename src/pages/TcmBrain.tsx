@@ -16,6 +16,7 @@ import { APIUsageMeter } from '@/components/tcm-brain/APIUsageMeter';
 import { AITrustHeader } from '@/components/tcm-brain/AITrustHeader';
 import { TcmTurboDashboard, TurboDashboardStatus } from '@/components/tcm/TcmTurboDashboard';
 import { useTcmBrainState } from '@/hooks/useTcmBrainState';
+import { DebugMetricsPanel } from '@/components/tcm-brain/DebugMetricsPanel';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { DiagnosticsTab } from '@/components/tcm-brain/DiagnosticsTab';
 import { SymptomsTab } from '@/components/tcm-brain/SymptomsTab';
@@ -136,6 +137,7 @@ export default function TcmBrain() {
     openGmailWithSession, openWhatsAppWithSession, externalFallbackQuery,
     dismissExternalFallback, runExternalAIFallback, lastRagStats, isStreaming,
     searchDepth, setSearchDepth,
+    debugData, searchMethod, // Unified algorithm debug data
   } = useTcmBrainState();
 
   // Turbo Dashboard status derived from RAG stats
@@ -336,7 +338,12 @@ export default function TcmBrain() {
                     <Brain className="h-4 w-4 md:h-5 md:w-5 text-emerald-600" />
                   </div>
                   <div className="hidden sm:block">
-                    <h1 className="font-display text-lg font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">CM BRAIN</h1>
+                    <div className="flex items-center gap-2">
+                      <h1 className="font-display text-lg font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">CM BRAIN</h1>
+                      <Badge className="text-[10px] px-1.5 py-0.5 bg-blue-500 hover:bg-blue-600">
+                        🏥 Clinic Session
+                      </Badge>
+                    </div>
                     <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Commander View</p>
                   </div>
                 </Link>
@@ -748,6 +755,12 @@ export default function TcmBrain() {
           stackedQueries={stackedQueries}
           isVisible={stackCount > 0 || sessionMetrics.tokensUsed > 0}
         />
+        
+        {/* Debug Metrics Panel - Unified Algorithm Transparency */}
+        {/* Uses same data as Video Session for Twin Test parity */}
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t">
+          <DebugMetricsPanel debugData={debugData} searchMethod={searchMethod} />
+        </div>
         
         {/* Therapist Teleprompter - Guided Tour */}
         <TherapistTeleprompter 
