@@ -52,6 +52,7 @@ interface TcmBrainPanelProps {
   patientId?: string;
   patientName?: string;
   sessionNotes?: string;
+  mode?: 'standard' | 'video';
 }
 
 export function TcmBrainPanel({ 
@@ -59,7 +60,8 @@ export function TcmBrainPanel({
   onOpenChange, 
   patientId, 
   patientName,
-  sessionNotes 
+  sessionNotes,
+  mode = 'standard'
 }: TcmBrainPanelProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -139,8 +141,18 @@ export function TcmBrainPanel({
             <SheetTitle className="flex items-center gap-2 text-jade">
               <Brain className="h-5 w-5" />
               TCM Brain
+              {/* Session Mode Badge */}
+              {mode === 'video' ? (
+                <Badge variant="destructive" className="ml-2 text-[10px] px-1.5 py-0.5">
+                  🎥 Video Session
+                </Badge>
+              ) : (
+                <Badge className="ml-2 text-[10px] px-1.5 py-0.5 bg-blue-500 hover:bg-blue-600">
+                  🏥 Clinic Session
+                </Badge>
+              )}
               {patientName && (
-                <Badge variant="outline" className="ml-2 text-xs">
+                <Badge variant="outline" className="ml-1 text-xs">
                   {patientName}
                 </Badge>
               )}

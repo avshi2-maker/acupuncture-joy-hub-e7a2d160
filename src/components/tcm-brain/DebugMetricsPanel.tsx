@@ -44,16 +44,19 @@ export function DebugMetricsPanel({ debugData, searchMethod }: DebugMetricsPanel
   const [isOpen, setIsOpen] = useState(false);
 
   // Keyboard shortcut: Ctrl+D / Cmd+D to toggle debug panel
+  // Uses capture phase to work even when focused in input boxes
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
       e.preventDefault();
+      e.stopPropagation();
       setIsOpen(prev => !prev);
     }
   }, []);
 
   useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    // Use capture phase to intercept before input elements consume the event
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
   }, [handleKeyDown]);
 
   if (!debugData) return null;
