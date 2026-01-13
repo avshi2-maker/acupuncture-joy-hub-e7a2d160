@@ -67,7 +67,7 @@ export function IntelligenceHub({
   const hasStackedQueries = stackedQueries.length > 0;
 
   return (
-    <div className="h-[calc(100vh-4rem)] w-full p-4 bg-slate-50 overflow-hidden">
+    <div className="h-[calc(100vh-4rem)] w-full p-4 bg-slate-50 overflow-hidden flex flex-col">
       {/* STACKING BAR (Top) - Only shows when queries are stacked */}
       <AnimatePresence>
         {hasStackedQueries && (
@@ -77,7 +77,7 @@ export function IntelligenceHub({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="mb-4 border rounded-xl bg-gradient-to-r from-violet-500/10 via-jade/5 to-amber-500/10"
+            className="mb-4 border rounded-xl bg-gradient-to-r from-violet-500/10 via-jade/5 to-amber-500/10 shrink-0"
           >
             <div className="p-3">
               <div className="flex items-center justify-between mb-2">
@@ -143,11 +143,11 @@ export function IntelligenceHub({
         )}
       </AnimatePresence>
 
-      {/* THE STEEL FRAME: 12-Column Grid */}
-      <div className="grid grid-cols-12 gap-6 h-full">
+      {/* THE FLEXBOX FRAME: 3 Columns with Fixed Sidebars */}
+      <div className="flex flex-row gap-4 flex-1 min-h-0">
         
-        {/* LEFT COLUMN: The Library (Span 3) */}
-        <div className="col-span-12 md:col-span-3 flex flex-col gap-4 bg-white rounded-xl shadow-sm border border-slate-200 p-4 h-full overflow-y-auto">
+        {/* LEFT SIDEBAR: The Library (Fixed Width 280px) */}
+        <div className="w-[280px] shrink-0 flex flex-col gap-4 bg-white rounded-xl shadow-sm border border-slate-200 p-4 overflow-y-auto">
           <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
             📚 Clinical Library
           </h2>
@@ -157,15 +157,15 @@ export function IntelligenceHub({
           </div>
         </div>
 
-        {/* MIDDLE COLUMN: The Main Stage (Span 6) */}
-        <div className="col-span-12 md:col-span-6 flex flex-col h-full">
+        {/* CENTER: The Main Stage (Fluid - Takes Remaining Space) */}
+        <div className="flex-1 min-w-0 flex flex-col">
           <div className="flex-1 bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
             <RagSearchPanel />
           </div>
         </div>
 
-        {/* RIGHT COLUMN: The Body Map (Span 3) */}
-        <div className="col-span-12 md:col-span-3 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 p-4 h-full">
+        {/* RIGHT SIDEBAR: The Body Map (Fixed Width 300px) */}
+        <div className="w-[300px] shrink-0 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 p-4 overflow-hidden">
           <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
             📍 Body Reference
             {highlightedPoints.length > 0 && (
@@ -185,7 +185,7 @@ export function IntelligenceHub({
           
           {/* Highlighted Points Display */}
           {highlightedPoints.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-slate-200">
+            <div className="mt-3 pt-3 border-t border-slate-200 shrink-0">
               <p className="text-xs font-medium text-slate-500 mb-2">Active Points:</p>
               <div className="flex flex-wrap gap-1">
                 {highlightedPoints.map((point) => (
