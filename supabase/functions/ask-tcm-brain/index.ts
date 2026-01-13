@@ -23,6 +23,55 @@ Guidelines:
 
 You have access to a curated knowledge base of TCM literature. Base your answers primarily on the provided context.`;
 
+// Helper: Detect if text is primarily Hebrew
+function isHebrew(text: string): boolean {
+  const hebrewPattern = /[\u0590-\u05FF]/;
+  const hebrewChars = (text.match(/[\u0590-\u05FF]/g) || []).length;
+  return hebrewPattern.test(text) && hebrewChars > text.length * 0.3;
+}
+
+// Stealth Translation: Translate Hebrew query to English for DB search
+async function translateToEnglish(query: string, apiKey: string): Promise<string> {
+  try {
+    console.log('[ask-tcm-brain] Stealth translating Hebrew query to English...');
+    
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a medical translator. Translate the following Hebrew medical query to English. Preserve medical terminology exactly. Return ONLY the English translation, nothing else.'
+          },
+          {
+            role: 'user',
+            content: query
+          }
+        ],
+        max_tokens: 200,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('[ask-tcm-brain] Translation API error:', response.status);
+      return query; // Return original on error
+    }
+
+    const data = await response.json();
+    const translated = data.choices?.[0]?.message?.content?.trim() || query;
+    console.log(`[ask-tcm-brain] Translated: "${query.slice(0, 50)}" -> "${translated.slice(0, 50)}"`);
+    return translated;
+  } catch (error) {
+    console.error('[ask-tcm-brain] Translation failed:', error);
+    return query;
+  }
+}
+
 const EMBEDDING_MODEL = 'text-embedding-3-small';
 
 /**
@@ -72,6 +121,18 @@ serve(async (req) => {
     }
 
     console.log(`[ask-tcm-brain] Query: "${query.slice(0, 100)}..." | PatientID: ${patientId || 'none'}`);
+    
+    // Get Lovable API key for translation
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    
+    // STEALTH TRANSLATION: If Hebrew, translate to English for DB search
+    const queryIsHebrew = isHebrew(query);
+    let searchQuery = query;
+    
+    if (queryIsHebrew && LOVABLE_API_KEY) {
+      searchQuery = await translateToEnglish(query, LOVABLE_API_KEY);
+      console.log(`[ask-tcm-brain] Using translated query for search: "${searchQuery.slice(0, 50)}"`);
+    }
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -92,7 +153,8 @@ serve(async (req) => {
     
     if (OPENAI_API_KEY) {
       console.log('[ask-tcm-brain] Generating query embedding for hybrid search...');
-      queryEmbedding = await generateQueryEmbedding(query, OPENAI_API_KEY);
+      // Use searchQuery (translated if Hebrew) for embedding
+      queryEmbedding = await generateQueryEmbedding(searchQuery, OPENAI_API_KEY);
       if (queryEmbedding) {
         searchMethod = 'hybrid';
         console.log('[ask-tcm-brain] Embedding generated successfully');
@@ -112,7 +174,7 @@ serve(async (req) => {
       const embeddingString = `[${queryEmbedding.join(',')}]`;
       
       const { data, error } = await supabase.rpc('hybrid_search', {
-        query_text: query,
+        query_text: searchQuery, // Use translated query for DB search
         query_embedding: embeddingString,
         match_count: 8,
         match_threshold: 0.15,
@@ -132,7 +194,7 @@ serve(async (req) => {
     // Fallback to keyword search if hybrid failed or no embedding
     if (searchResults.length === 0 || searchMethod.includes('fallback')) {
       const { data, error } = await supabase.rpc('keyword_search', {
-        query_text: query,
+        query_text: searchQuery, // Use translated query for DB search
         match_count: 8,
         match_threshold: 0.15,
         language_filter: null
@@ -266,6 +328,12 @@ serve(async (req) => {
 
     // Step 4: Call Gemini API directly for response generation with streaming
     console.log('[ask-tcm-brain] Calling Gemini 2.0 Flash for response...');
+    
+    // Build system prompt with language instruction
+    let systemPrompt = TCM_SYSTEM_PROMPT;
+    if (queryIsHebrew) {
+      systemPrompt += `\n\nIMPORTANT: The user asked in Hebrew. You MUST respond in Hebrew. Use the English clinical context provided to formulate your answer, but deliver it entirely in Hebrew.`;
+    }
 
     const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -276,7 +344,7 @@ serve(async (req) => {
         contents: [
           {
             role: 'user',
-            parts: [{ text: `${TCM_SYSTEM_PROMPT}\n\nUser Question: ${query}${contextString}` }]
+            parts: [{ text: `${systemPrompt}\n\nUser Question: ${query}${contextString}` }]
           }
         ],
         generationConfig: {
