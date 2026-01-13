@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Bug, ChevronDown, ChevronUp, Rocket, CheckCircle, XCircle, AlertTriangle, Keyboard } from 'lucide-react';
+import { Bug, ChevronDown, ChevronUp, Rocket, CheckCircle, XCircle, AlertTriangle, Keyboard, BookOpen, Cloud } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
@@ -63,6 +63,11 @@ export function DebugMetricsPanel({ debugData, searchMethod }: DebugMetricsPanel
 
   const { tokenBudget, chunks, topChunks, thresholds } = debugData;
   
+  // Determine source type based on RAG hits
+  const isLocalRag = chunks.found > 0;
+  const sourceLabel = isLocalRag ? '📚 Source: Local RAG' : '☁️ Source: External AI Fallback';
+  const sourceColor = isLocalRag ? 'bg-emerald-500/10 text-emerald-700 border-emerald-300' : 'bg-amber-500/10 text-amber-700 border-amber-300';
+  
   // Determine budget status color
   const budgetStatus = tokenBudget.percentage >= 90 
     ? 'destructive' 
@@ -102,6 +107,24 @@ export function DebugMetricsPanel({ debugData, searchMethod }: DebugMetricsPanel
       </CollapsibleTrigger>
       
       <CollapsibleContent className="px-4 pb-3 space-y-3">
+        {/* Source Indicator - TOP OF PANEL */}
+        <div className={cn(
+          "flex items-center gap-2 px-3 py-2 rounded-md border font-medium text-sm",
+          sourceColor
+        )}>
+          {isLocalRag ? (
+            <BookOpen className="h-4 w-4" />
+          ) : (
+            <Cloud className="h-4 w-4" />
+          )}
+          <span>{sourceLabel}</span>
+          {isLocalRag && (
+            <Badge variant="outline" className="ml-auto text-[10px] bg-emerald-500/20 border-emerald-400">
+              {chunks.found} RAG hits
+            </Badge>
+          )}
+        </div>
+
         {/* Token Budget Bar */}
         <div className="space-y-1">
           <div className="flex items-center justify-between text-xs">
