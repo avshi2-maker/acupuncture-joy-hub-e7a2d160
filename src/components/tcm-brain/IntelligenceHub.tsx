@@ -60,7 +60,7 @@ export function IntelligenceHub({
 
   return (
     <div className="h-[calc(100vh-4rem)] w-full bg-slate-50 flex flex-col overflow-hidden">
-      {/* STACKING BAR (Top) */}
+      {/* STACKING BAR (Top) - Shows stacked queries only, execute button is in header */}
       <AnimatePresence>
         {hasStackedQueries && (
           <motion.div
@@ -79,36 +79,14 @@ export function IntelligenceHub({
                     שאילתות נערמות ({stackedQueries.length})
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={onClearStack}
-                    className="h-7 text-xs text-muted-foreground"
-                  >
-                    נקה הכל
-                  </Button>
-                  <Button
-                    id="clinical-synthesis-btn"
-                    data-teleprompter="synthesis-btn"
-                    size="sm"
-                    onClick={onExecuteSynthesis}
-                    disabled={isAnalyzing || stackedQueries.length === 0}
-                    className="h-7 bg-gradient-to-r from-violet-600 to-jade text-white gap-1"
-                  >
-                    {isAnalyzing ? (
-                      <>
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        מעבד...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-3 w-3" />
-                        סינתזה קלינית
-                      </>
-                    )}
-                  </Button>
-                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={onClearStack}
+                  className="h-7 text-xs text-muted-foreground"
+                >
+                  נקה הכל
+                </Button>
               </div>
               
               <div className="flex flex-wrap gap-1.5">
