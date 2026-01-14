@@ -1,13 +1,18 @@
 import React from "react";
-import { RagSearchPanel } from "./RagSearchPanel";
-import { QuickPromptDropdown } from "./QuickPromptDropdown";
-import { BodyMap } from "./BodyMap";
+import { RagSearchPanel } from "@/components/session/RagSearchPanel";
+import { QuickPromptDropdown } from "@/components/tcm-brain/QuickPromptDropdown";
+import { BodyMap } from "@/components/BodyMap";
 import { useRagChat } from "@/hooks/useRagChat";
-import { AiStatus } from "./AiStatus"; 
-import { ClinicalPatterns } from "./ClinicalPatterns"; // We import it here to merge it!
+import { AiStatus } from "@/components/ui/AiStatus";
 
 export const IntelligenceHub = () => {
   const { highlightedPoints } = useRagChat();
+  const [selectedQuestion, setSelectedQuestion] = React.useState<string>('');
+
+  const handleQuestionSelect = (question: string) => {
+    setSelectedQuestion(question);
+    // Could trigger search or pass to RagSearchPanel
+  };
 
   return (
     // MAIN CONTAINER: Flexbox (Row). Fixed height. RTL Direction.
@@ -15,7 +20,7 @@ export const IntelligenceHub = () => {
 
       {/* =================================================================
          COLUMN 1 (RIGHT SIDE): THE UNIFIED LIBRARY
-         Contains: Questions Dropdown + Clinical Patterns List
+         Contains: Questions Dropdown
          Fixed Width: 320px. 
          ================================================================= */}
       <div className="w-[320px] min-w-[320px] shrink-0 flex flex-col gap-4 p-4 bg-white border-l border-slate-200 shadow-sm overflow-y-auto z-20">
@@ -27,16 +32,8 @@ export const IntelligenceHub = () => {
         </div>
         
         {/* 1. The Questions Dropdown */}
-        <div className="w-full">
-            <QuickPromptDropdown />
-        </div>
-
-        <div className="my-2 border-t border-slate-100"></div>
-
-        {/* 2. The Patterns List (MERGED HERE) */}
-        <div className="flex-1 overflow-y-auto">
-             <h3 className="text-sm font-semibold text-slate-500 mb-2">דפוסים קליניים</h3>
-             <ClinicalPatterns /> 
+        <div className="w-full flex-1">
+            <QuickPromptDropdown onSelectQuestion={handleQuestionSelect} />
         </div>
 
         {/* Footer */}
