@@ -9,7 +9,7 @@ import {
   Database, ChevronDown, ChevronUp, MessageCircleQuestion, Play, Pause, 
   Square, RotateCcw, Printer, MessageCircle, Mail, ArrowRight, HelpCircle, 
   BookOpen, Heart, Mic, Baby, Sparkles, Apple, Activity, Wind, Leaf, Layers,
-  LayoutGrid, Bug
+  LayoutGrid, Bug, Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { APIUsageMeter } from '@/components/tcm-brain/APIUsageMeter';
@@ -461,9 +461,29 @@ export default function TcmBrain() {
             </div>
             <div className="flex items-center gap-2">
               {stackCount > 0 && (
-                <Badge className="bg-violet-600 text-white text-xs">
-                  {stackCount} stacked
-                </Badge>
+                <>
+                  <Badge className="bg-violet-600 text-white text-xs">
+                    {stackCount} stacked
+                  </Badge>
+                  <Button
+                    size="sm"
+                    onClick={handleAnalyzeStackedQueries}
+                    disabled={isAnalyzing}
+                    className="h-7 bg-gradient-to-r from-violet-600 to-emerald-500 text-white text-xs gap-1"
+                  >
+                    {isAnalyzing ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        מעבד...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-3 w-3" />
+                        חפש
+                      </>
+                    )}
+                  </Button>
+                </>
               )}
               <PatientSelectorDropdown 
                 patients={patients} 
