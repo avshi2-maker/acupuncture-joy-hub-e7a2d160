@@ -9,7 +9,7 @@ import {
   Database, ChevronDown, ChevronUp, MessageCircleQuestion, Play, Pause, 
   Square, RotateCcw, Printer, MessageCircle, Mail, ArrowRight, HelpCircle, 
   BookOpen, Heart, Mic, Baby, Sparkles, Apple, Activity, Wind, Leaf, Layers,
-  LayoutGrid, Bug, Loader2
+  LayoutGrid, Bug, Loader2, Volume2, Download, Share2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { APIUsageMeter } from '@/components/tcm-brain/APIUsageMeter';
@@ -459,7 +459,7 @@ export default function TcmBrain() {
                 Classic
               </Button>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               {stackCount > 0 && (
                 <>
                   <Badge className="bg-violet-600 text-white text-xs">
@@ -483,6 +483,64 @@ export default function TcmBrain() {
                       </>
                     )}
                   </Button>
+                  
+                  {/* Action Toolbar */}
+                  <div className="flex items-center border border-slate-200 rounded-lg bg-white overflow-hidden ml-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2 text-xs text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-none border-r border-slate-200 gap-1"
+                      onClick={() => toast.info('Summary feature coming soon')}
+                    >
+                      <Sparkles className="h-3 w-3" />
+                      Summary
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2 text-xs text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-none border-r border-slate-200 gap-1"
+                      onClick={() => toast.info('MP3 export coming soon')}
+                    >
+                      <Volume2 className="h-3 w-3" />
+                      MP3
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2 text-xs text-emerald-600 hover:bg-emerald-50 rounded-none border-r border-slate-200 gap-1"
+                      onClick={() => toast.info('WhatsApp share coming soon')}
+                    >
+                      <MessageCircle className="h-3 w-3" />
+                      WhatsApp
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2 text-xs text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-none border-r border-slate-200 gap-1"
+                      onClick={() => toast.info('Save feature coming soon')}
+                    >
+                      <Save className="h-3 w-3" />
+                      Save
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2 text-xs text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-none border-r border-slate-200 gap-1"
+                      onClick={() => toast.info('Export feature coming soon')}
+                    >
+                      <Download className="h-3 w-3" />
+                      Export
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2 text-xs text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-none gap-1"
+                      onClick={() => window.print()}
+                    >
+                      <Printer className="h-3 w-3" />
+                      Print
+                    </Button>
+                  </div>
                 </>
               )}
               <PatientSelectorDropdown 
