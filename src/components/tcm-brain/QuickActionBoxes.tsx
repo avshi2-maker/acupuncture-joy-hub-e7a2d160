@@ -373,7 +373,10 @@ export function QuickActionBoxes({ onActionClick, isLoading }: QuickActionBoxesP
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setSelectedBoxIds(DEFAULT_BOXES)}
+                onClick={() => {
+                  setSelectedBoxIds([...DEFAULT_BOXES]);
+                  toast.success('Quick actions reset to default: Pattern ID, Protocol Gen, Auto Notes, Herbal Rx, Acu Points, Patient Handout');
+                }}
               >
                 Reset to Default
               </Button>
