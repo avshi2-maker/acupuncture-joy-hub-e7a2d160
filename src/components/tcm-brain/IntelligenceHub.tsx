@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Zap, Loader2 } from 'lucide-react';
+import { Sparkles, Zap, Loader2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { QuickPromptDropdown } from '@/components/tcm-brain/QuickPromptDropdown';
@@ -9,6 +9,7 @@ import { RagSearchPanel } from '@/components/session/RagSearchPanel';
 import { AiStatus } from '@/components/ui/AiStatus';
 import { PromptMapping } from '@/data/tcm-prompt-mapping';
 import { Message } from '@/hooks/useTcmBrainState';
+import { cn } from '@/lib/utils';
 
 interface IntelligenceHubProps {
   stackedQueries: PromptMapping[];
@@ -90,20 +91,29 @@ export function IntelligenceHub({
               </div>
               
               <div className="flex flex-wrap gap-1.5">
-                {stackedQueries.map((q) => (
+                {stackedQueries.map((q, index) => (
                   <Badge
                     key={q.id}
                     variant="secondary"
-                    className="gap-1 pl-2 pr-1 py-1 bg-background/80 hover:bg-destructive/10 cursor-pointer group"
-                    onClick={() => onRemoveFromStack(q.id)}
+                    className={cn(
+                      "gap-1 pl-2 pr-1 py-1 bg-background/80 hover:bg-destructive/10 cursor-pointer group transition-all",
+                      isAnalyzing && "animate-pulse border-2 border-violet-400"
+                    )}
+                    onClick={() => !isAnalyzing && onRemoveFromStack(q.id)}
                   >
-                    <span className="text-base">{q.icon}</span>
+                    {isAnalyzing ? (
+                      <Loader2 className="h-3 w-3 animate-spin text-violet-600" />
+                    ) : (
+                      <span className="text-base">{q.icon}</span>
+                    )}
                     <span className="text-[10px] max-w-[80px] truncate" dir="rtl">
                       {q.hebrewLabel}
                     </span>
-                    <span className="text-[10px] text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
-                      ✕
-                    </span>
+                    {!isAnalyzing && (
+                      <span className="text-[10px] text-destructive opacity-0 group-hover:opacity-100 transition-opacity">
+                        <X className="h-3 w-3" />
+                      </span>
+                    )}
                   </Badge>
                 ))}
               </div>
