@@ -989,15 +989,21 @@ export function HebrewTopicQuestionsDialog({
           variant="ghost"
           size="icon"
           className={cn(
-            "h-7 w-7 shrink-0 opacity-50 group-hover:opacity-100 transition-opacity",
-            starred && "opacity-100 text-yellow-500"
+            "h-8 w-8 shrink-0 transition-all",
+            starred 
+              ? "text-yellow-500 hover:text-yellow-600" 
+              : "text-muted-foreground/40 hover:text-yellow-500"
           )}
           onClick={(e) => {
             e.stopPropagation();
             toggleFavorite(categoryId, categoryName, question);
           }}
+          title={starred ? "הסר ממועדפים" : "הוסף למועדפים"}
         >
-          <Star className={cn("h-4 w-4", starred && "fill-yellow-500")} />
+          <Star className={cn(
+            "h-5 w-5 transition-all",
+            starred && "fill-yellow-500 scale-110"
+          )} />
         </Button>
         <Button
           variant="ghost"
