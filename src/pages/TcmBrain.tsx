@@ -310,14 +310,14 @@ export default function TcmBrain() {
         description: `${stackedQueries.length} queries analyzed in ${timeMs}ms`,
       });
       
-      clearStack();
+      // Keep queries visible - user must manually clear them
       setActiveTab('diagnostics');
     } catch (error) {
       toast.error('Analysis failed');
     } finally {
       setIsAnalyzing(false);
     }
-  }, [stackedQueries, buildCombinedPrompt, streamChat, updateMetrics, clearStack, setIsAnalyzing]);
+  }, [stackedQueries, buildCombinedPrompt, streamChat, updateMetrics, setIsAnalyzing]);
 
   return (
     <>
@@ -482,6 +482,15 @@ export default function TcmBrain() {
                         חפש
                       </>
                     )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={clearStack}
+                    className="h-7 px-2 text-xs text-slate-500 hover:text-red-600 hover:bg-red-50"
+                    title="Clear all stacked queries"
+                  >
+                    <RotateCcw className="h-3 w-3" />
                   </Button>
                   
                   {/* Action Toolbar */}
