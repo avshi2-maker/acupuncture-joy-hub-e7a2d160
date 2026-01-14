@@ -984,14 +984,14 @@ export function HebrewTopicQuestionsDialog({
   ) => {
     const starred = isFavorite(categoryId, question.id);
     return (
-      <div key={`${categoryId}-${question.id}`} className="flex items-center gap-1 group">
+      <div key={`${categoryId}-${question.id}`} className="flex items-center gap-2">
         <button
           type="button"
           className={cn(
-            "h-8 w-8 shrink-0 flex items-center justify-center rounded-md transition-all border-2",
+            "h-9 w-9 shrink-0 flex items-center justify-center rounded-lg transition-all border-2",
             starred 
-              ? "text-yellow-500 border-yellow-400 bg-yellow-50" 
-              : "text-yellow-400/60 border-yellow-300/50 hover:border-yellow-400 hover:text-yellow-500 hover:bg-yellow-50/50"
+              ? "text-yellow-500 border-yellow-500 bg-yellow-100 shadow-sm" 
+              : "text-amber-400 border-amber-300 bg-amber-50 hover:border-amber-400 hover:bg-amber-100 hover:text-amber-500"
           )}
           onClick={(e) => {
             e.stopPropagation();
@@ -1000,8 +1000,8 @@ export function HebrewTopicQuestionsDialog({
           title={starred ? "הסר ממועדפים" : "הוסף למועדפים"}
         >
           <Star className={cn(
-            "h-5 w-5 transition-all",
-            starred && "fill-yellow-500"
+            "h-5 w-5",
+            starred ? "fill-yellow-500" : "fill-transparent"
           )} />
         </button>
         <Button
