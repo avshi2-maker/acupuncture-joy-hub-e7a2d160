@@ -485,12 +485,13 @@ export default function TcmBrain() {
                   </Button>
                   <Button
                     size="sm"
-                    variant="ghost"
+                    variant="outline"
                     onClick={clearStack}
-                    className="h-7 px-2 text-xs text-slate-500 hover:text-red-600 hover:bg-red-50"
+                    className="h-7 px-2 text-xs text-red-500 border-red-200 hover:text-red-600 hover:bg-red-50 hover:border-red-300 gap-1"
                     title="Clear all stacked queries"
                   >
                     <RotateCcw className="h-3 w-3" />
+                    נקה
                   </Button>
                   
                   {/* Action Toolbar */}
