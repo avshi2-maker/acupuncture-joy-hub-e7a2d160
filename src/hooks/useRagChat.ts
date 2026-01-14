@@ -138,9 +138,10 @@ export const useRagChat = (options?: UseRagChatOptions) => {
   const [highlightedPoints, setHighlightedPoints] = useState<string[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // LOCK to prevent duplicate requests
   const [lastAIResponse, setLastAIResponse] = useState<string>('');
   const [debugData, setDebugData] = useState<RagDebugData | null>(null);
-  const [searchMethod, setSearchMethod] = useState<string>('hybrid');
+  const [searchMethod, setSearchMethod] = useState<string>('vector');
   const [translatedQuery, setTranslatedQuery] = useState<string | null>(null);
 
   // 2. THE PARSER FUNCTION
@@ -175,6 +176,13 @@ export const useRagChat = (options?: UseRagChatOptions) => {
   // 3. SEND MESSAGE FUNCTION - Now calls the real ask-tcm-brain edge function
   const sendMessage = useCallback(async (message: string) => {
     if (!message.trim()) return;
+    
+    // 🔒 SUBMISSION LOCK - Prevent duplicate requests
+    if (isSubmitting) {
+      console.log('[useRagChat] Request blocked - already submitting');
+      return;
+    }
+    setIsSubmitting(true);
 
     // Add user message
     const userMessage: ChatMessage = { role: 'user', content: message };
@@ -293,8 +301,9 @@ export const useRagChat = (options?: UseRagChatOptions) => {
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+      setIsSubmitting(false); // 🔓 RELEASE LOCK
     }
-  }, [parsePointReferences]);
+  }, [parsePointReferences, isSubmitting]);
 
   // 4. CLEAR MESSAGES
   const clearMessages = useCallback(() => {

@@ -147,65 +147,24 @@ serve(async (req) => {
       throw new Error('GEMINI_API_KEY is not configured');
     }
 
-    // Step 1: Try to generate embedding for hybrid search
-    let queryEmbedding: number[] | null = null;
+    // Step 1: BYPASS HYBRID SEARCH - Use keyword search directly to avoid timeouts
+    // Hybrid search was causing Statement Timeout errors on the database
+    // Vector/keyword search is faster and more reliable
     let searchMethod = 'keyword';
-    
-    if (OPENAI_API_KEY) {
-      console.log('[ask-tcm-brain] Generating query embedding for hybrid search...');
-      // Use searchQuery (translated if Hebrew) for embedding
-      queryEmbedding = await generateQueryEmbedding(searchQuery, OPENAI_API_KEY);
-      if (queryEmbedding) {
-        searchMethod = 'hybrid';
-        console.log('[ask-tcm-brain] Embedding generated successfully');
-      }
-    } else {
-      console.log('[ask-tcm-brain] No OpenAI API key, falling back to keyword search');
-    }
+    console.log('[ask-tcm-brain] Using fast keyword search (hybrid disabled due to timeouts)');
 
-    // Step 2: Search knowledge base
+    // Step 2: Search knowledge base using FAST keyword search
     console.log(`[ask-tcm-brain] Searching knowledge base (${searchMethod})...`);
     
-    let searchResults: any[] = [];
-    let searchError: any = null;
-    
-    if (searchMethod === 'hybrid' && queryEmbedding) {
-      // Use hybrid search with vector + keyword
-      const embeddingString = `[${queryEmbedding.join(',')}]`;
-      
-      const { data, error } = await supabase.rpc('hybrid_search', {
-        query_text: searchQuery, // Use translated query for DB search
-        query_embedding: embeddingString,
-        match_count: 8,
-        match_threshold: 0.15,
-        language_filter: null
-      });
-      
-      searchResults = data || [];
-      searchError = error;
-      
-      if (error) {
-        console.error('[ask-tcm-brain] Hybrid search error:', error);
-        // Fallback to keyword search
-        searchMethod = 'keyword (fallback)';
-      }
-    }
-    
-    // Fallback to keyword search if hybrid failed or no embedding
-    if (searchResults.length === 0 || searchMethod.includes('fallback')) {
-      const { data, error } = await supabase.rpc('keyword_search', {
-        query_text: searchQuery, // Use translated query for DB search
-        match_count: 8,
-        match_threshold: 0.15,
-        language_filter: null
-      });
-      
-      searchResults = data || [];
-      searchError = error;
-    }
+    const { data: searchResults, error: searchError } = await supabase.rpc('keyword_search', {
+      query_text: searchQuery, // Use translated query for DB search
+      match_count: 8,
+      match_threshold: 0.15,
+      language_filter: null
+    });
 
     if (searchError) {
-      console.error('[ask-tcm-brain] Search error:', searchError);
+      console.error('[ask-tcm-brain] Keyword search error:', searchError);
     }
 
     const relevantChunks = searchResults || [];
