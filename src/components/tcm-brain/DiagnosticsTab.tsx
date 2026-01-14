@@ -72,15 +72,6 @@ export function DiagnosticsTab({
 
   return (
     <div className="flex-1 p-4 space-y-4 overflow-y-auto">
-      {/* Quick Actions Bar */}
-      <QuickActionsBar
-        ref={quickActionsRef}
-        messages={messages}
-        sessionSeconds={sessionSeconds}
-        selectedPatient={selectedPatient || null}
-        questionsAsked={questionsAsked}
-        formatSessionTime={formatSessionTime}
-      />
 
       {/* Auto-Chain Workflow Card */}
       <Card className="bg-gradient-to-r from-jade/20 via-jade/10 to-primary/10 border-2 border-jade/40 shadow-lg">
