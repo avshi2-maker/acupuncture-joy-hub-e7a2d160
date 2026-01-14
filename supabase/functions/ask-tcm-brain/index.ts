@@ -147,51 +147,77 @@ serve(async (req) => {
       throw new Error('GEMINI_API_KEY is not configured');
     }
 
-    // Step 1: VECTOR SEARCH - Generate embedding and do semantic similarity
-    // This is FAST and SMART - understands concepts, not just exact keywords
+    // Step 1: VECTOR SEARCH - Search ALL documents, NO FILTERS
+    // Translation happens BEFORE this (line 133) - searchQuery is already English
+    console.log(`[ask-tcm-brain] ✓ Translation confirmed - searching with: "${searchQuery}"`);
+    
     let searchMethod = 'vector';
     let relevantChunks: any[] = [];
     
-    console.log(`[ask-tcm-brain] Translated query for search: "${searchQuery}"`);
-    
-    // Generate embedding for the (translated) query
+    // Generate embedding for the (translated) query - searches ALL indexed documents
     if (OPENAI_API_KEY) {
-      console.log('[ask-tcm-brain] Generating embedding for vector search...');
+      console.log('[ask-tcm-brain] Generating embedding for FULL library vector search...');
       const queryEmbedding = await generateQueryEmbedding(searchQuery, OPENAI_API_KEY);
       
       if (queryEmbedding) {
-        console.log('[ask-tcm-brain] Embedding generated, performing vector similarity search...');
+        console.log('[ask-tcm-brain] Embedding ready - scanning ALL documents (no filters)...');
         
-        // Direct vector similarity search using pgvector
+        // Direct vector similarity search - NO source/id restrictions
         const embeddingString = `[${queryEmbedding.join(',')}]`;
         
         const { data: vectorResults, error: vectorError } = await supabase
           .rpc('hybrid_search', {
             query_text: searchQuery,
             query_embedding: embeddingString,
-            match_count: 8,
-            match_threshold: 0.05, // Lower threshold for vector search
-            language_filter: null
+            match_count: 15, // Increased to get more variety from all sources
+            match_threshold: 0.03, // Very low threshold to capture all relevant docs
+            language_filter: null // NO language restriction
+            // NO metadata filters - searches EVERYTHING
           });
         
         if (vectorError) {
           console.error('[ask-tcm-brain] Vector search error:', vectorError);
         } else {
           relevantChunks = vectorResults || [];
-          console.log(`[ask-tcm-brain] Vector search found ${relevantChunks.length} chunks`);
+          
+          // PRIORITY SORT: Boost tcm_points and clinical sources to top
+          relevantChunks.sort((a, b) => {
+            const sourceA = (a.original_name || a.file_name || '').toLowerCase();
+            const sourceB = (b.original_name || b.file_name || '').toLowerCase();
+            
+            // Priority tiers:
+            // 1. tcm_points.csv (highest priority - point data)
+            // 2. clinical_* files (clinical protocols)
+            // 3. Everything else sorted by score
+            const getPriority = (source: string, chunk: any) => {
+              if (source.includes('tcm_points')) return 100;
+              if (source.includes('clinical')) return 80;
+              if (source.includes('acupoint')) return 70;
+              if (chunk.priority_score) return 50 + (chunk.priority_score * 10);
+              return chunk.ferrari_score || chunk.combined_score || 0;
+            };
+            
+            return getPriority(sourceB, b) - getPriority(sourceA, a);
+          });
+          
+          console.log(`[ask-tcm-brain] Vector search found ${relevantChunks.length} chunks from ALL sources`);
+          
+          // Log sources for debugging
+          const uniqueSources = [...new Set(relevantChunks.map(c => c.original_name || c.file_name))];
+          console.log(`[ask-tcm-brain] Sources: ${uniqueSources.slice(0, 5).join(', ')}${uniqueSources.length > 5 ? '...' : ''}`);
         }
       }
     }
     
     // Fallback to keyword search if vector search failed
     if (relevantChunks.length === 0) {
-      console.log('[ask-tcm-brain] Fallback to keyword search...');
+      console.log('[ask-tcm-brain] Fallback to keyword search (no filters)...');
       searchMethod = 'keyword (fallback)';
       
       const { data: keywordResults, error: keywordError } = await supabase.rpc('keyword_search', {
         query_text: searchQuery,
-        match_count: 8,
-        match_threshold: 0.15,
+        match_count: 15,
+        match_threshold: 0.10, // Lower threshold for broader results
         language_filter: null
       });
       
