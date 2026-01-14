@@ -8,6 +8,7 @@ import { SelectedPatient } from '@/components/crm/PatientSelectorDropdown';
 import { ExternalAIProvider } from '@/components/tcm/ExternalAIFallbackCard';
 import { parsePointReferences } from '@/components/acupuncture/BodyFigureSelector';
 import { detectAgeGroup } from '@/utils/ageGroupDetection';
+import { toast as uiToast } from '@/hooks/use-toast';
 import {
   herbsQuestions,
   conditionsQuestions,
@@ -19,7 +20,7 @@ import {
   sportsQuestions,
 } from '@/data/tcmBrainQuestions';
 
-// Silence all pop-up notices ("sonner" toasts) across TCM Brain flow
+// Silence all pop-up notices ("sonner" toasts) across TCM Brain flow.
 // We keep the same API surface but no-op everything.
 const toast = new Proxy(
   {},
@@ -32,6 +33,27 @@ const toast = new Proxy(
   info: (...args: unknown[]) => void;
   error: (...args: unknown[]) => void;
   warning: (...args: unknown[]) => void;
+};
+
+const showRenderErrorToast = (details: unknown) => {
+  const description =
+    details instanceof Error
+      ? details.message
+      : typeof details === 'string'
+        ? details
+        : (() => {
+            try {
+              return JSON.stringify(details);
+            } catch {
+              return String(details);
+            }
+          })();
+
+  uiToast({
+    variant: 'destructive',
+    title: 'Error displaying response',
+    description,
+  });
 };
 
 export interface Message {
@@ -479,16 +501,58 @@ export function useTcmBrainState() {
       let assistantContent = '';
       let metadata: any = null;
       let textBuffer = '';
+      let renderedFromJsonFallback = false;
 
       // Add empty assistant message that we'll update
       setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
       setIsStreaming(true);
+
+      const renderAssistantNow = (text: string) => {
+        assistantContent = text;
+        setMessages(prev => {
+          const updated = [...prev];
+          if (updated.length > 0 && updated[updated.length - 1].role === 'assistant') {
+            updated[updated.length - 1] = { role: 'assistant', content: assistantContent };
+          } else {
+            updated.push({ role: 'assistant', content: assistantContent });
+          }
+          return updated;
+        });
+      };
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
         textBuffer += decoder.decode(value, { stream: true });
+
+        // Fallback Render: sometimes the backend returns a full JSON object (not SSE)
+        // (e.g. headers claim SSE but body is JSON)
+        const trimmedWhole = textBuffer.trim();
+        if (!renderedFromJsonFallback && trimmedWhole.startsWith('{') && trimmedWhole.endsWith('}')) {
+          try {
+            const data = JSON.parse(trimmedWhole);
+            const fullText =
+              (typeof data?.response === 'string' && data.response.trim())
+                ? data.response
+                : (typeof data?.answer === 'string' && data.answer.trim())
+                  ? data.answer
+                  : null;
+
+            if (fullText) {
+              renderedFromJsonFallback = true;
+              renderAssistantNow(fullText);
+              try {
+                await reader.cancel();
+              } catch {
+                // ignore
+              }
+              break;
+            }
+          } catch {
+            // ignore - still streaming/partial
+          }
+        }
 
         // Process complete SSE lines
         let newlineIndex: number;
@@ -505,7 +569,8 @@ export function useTcmBrainState() {
 
           try {
             const parsed = JSON.parse(jsonStr);
-            
+
+            // Legacy “typed” SSE format
             if (parsed.type === 'metadata') {
               metadata = parsed;
               setLastRagStats({
@@ -520,10 +585,10 @@ export function useTcmBrainState() {
                 tokensUsed: 0,
               });
 
-              const alertType = parsed.isExternal 
-                ? 'external' 
-                : (parsed.chunksFound || 0) > 0 
-                  ? 'proprietary' 
+              const alertType = parsed.isExternal
+                ? 'external'
+                : (parsed.chunksFound || 0) > 0
+                  ? 'proprietary'
                   : 'no-match';
 
               if (alertType === 'no-match' && !parsed.isExternal) {
@@ -550,70 +615,101 @@ export function useTcmBrainState() {
               } else {
                 toast.info('0 matches in proprietary knowledge base. External AI option available.');
               }
-            } else if (parsed.type === 'delta' && parsed.content) {
+              continue;
+            }
+
+            // OpenAI-compatible streaming format (choices[].delta.content)
+            const openAiDelta = parsed?.choices?.[0]?.delta?.content;
+            if (typeof openAiDelta === 'string' && openAiDelta) {
+              assistantContent += openAiDelta;
+              renderAssistantNow(assistantContent);
+              continue;
+            }
+
+            // Current typed delta format
+            if (parsed.type === 'delta' && parsed.content) {
               assistantContent += parsed.content;
-              // Update the last assistant message with accumulated content
-              setMessages(prev => {
-                const updated = [...prev];
-                if (updated.length > 0 && updated[updated.length - 1].role === 'assistant') {
-                  updated[updated.length - 1] = { role: 'assistant', content: assistantContent };
-                }
-                return updated;
-              });
-            } else if (parsed.type === 'done') {
+              renderAssistantNow(assistantContent);
+              continue;
+            }
+
+            if (parsed.type === 'done') {
               const totalTokens =
                 typeof parsed?.tokenUsage?.totalTokens === 'number'
                   ? parsed.tokenUsage.totalTokens
                   : 0;
 
               // Update audit + token info
-              setLastRagStats(prev => prev ? {
-                ...prev,
-                auditLogged: !!parsed.auditLogId,
-                auditLogId: parsed.auditLogId ?? null,
-                auditLoggedAt: parsed.auditLoggedAt ?? null,
-                tokensUsed: totalTokens,
-              } : null);
+              setLastRagStats(prev =>
+                prev
+                  ? {
+                      ...prev,
+                      auditLogged: !!parsed.auditLogId,
+                      auditLogId: parsed.auditLogId ?? null,
+                      auditLoggedAt: parsed.auditLoggedAt ?? null,
+                      tokensUsed: totalTokens,
+                    }
+                  : null
+              );
               setSourceAlert(prev => ({
                 ...prev,
                 auditLogId: parsed.auditLogId ?? null,
               }));
+              continue;
+            }
+
+            // If the backend sends a bulk JSON event as a single SSE data frame
+            const bulkText =
+              (typeof parsed?.response === 'string' && parsed.response.trim())
+                ? parsed.response
+                : (typeof parsed?.answer === 'string' && parsed.answer.trim())
+                  ? parsed.answer
+                  : null;
+            if (bulkText) {
+              renderedFromJsonFallback = true;
+              renderAssistantNow(bulkText);
+              try {
+                await reader.cancel();
+              } catch {
+                // ignore
+              }
+              break;
             }
           } catch {
             // Ignore parse errors for partial chunks
           }
         }
+
+        if (renderedFromJsonFallback) break;
       }
 
-      // Final flush of any remaining buffer
-      if (textBuffer.trim()) {
-        const lines = textBuffer.split('\n');
-        for (let raw of lines) {
-          if (!raw) continue;
-          if (raw.endsWith('\r')) raw = raw.slice(0, -1);
-          if (raw.startsWith(':') || raw.trim() === '') continue;
-          if (!raw.startsWith('data: ')) continue;
-          const jsonStr = raw.slice(6).trim();
-          if (!jsonStr || jsonStr === '[DONE]') continue;
+      // Final safety: ensure we don't leave a blank assistant bubble
+      if (!assistantContent.trim() && textBuffer.trim()) {
+        const trimmed = textBuffer.trim();
+        if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
           try {
-            const parsed = JSON.parse(jsonStr);
-            if (parsed.type === 'delta' && parsed.content) {
-              assistantContent += parsed.content;
-              setMessages(prev => {
-                const updated = [...prev];
-                if (updated.length > 0 && updated[updated.length - 1].role === 'assistant') {
-                  updated[updated.length - 1] = { role: 'assistant', content: assistantContent };
-                }
-                return updated;
-              });
-            }
-          } catch { /* ignore */ }
+            const data = JSON.parse(trimmed);
+            const fullText =
+              (typeof data?.response === 'string' && data.response.trim())
+                ? data.response
+                : (typeof data?.answer === 'string' && data.answer.trim())
+                  ? data.answer
+                  : null;
+            if (fullText) assistantContent = fullText;
+          } catch {
+            // ignore
+          }
         }
+      }
+
+      if (assistantContent.trim()) {
+        renderAssistantNow(assistantContent);
       }
 
     } catch (error) {
       console.error('Chat error:', error);
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Chat error. Please try again.' }]);
+      showRenderErrorToast(error);
+      setMessages(prev => [...prev, { role: 'assistant', content: `Error displaying response: ${error instanceof Error ? error.message : String(error)}` }]);
     } finally {
       setIsLoading(false);
       setIsStreaming(false);

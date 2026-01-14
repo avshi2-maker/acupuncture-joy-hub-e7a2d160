@@ -131,6 +131,7 @@ serve(async (req) => {
     
     if (queryIsHebrew && LOVABLE_API_KEY) {
       searchQuery = await translateToEnglish(query, LOVABLE_API_KEY);
+      console.log('Translated Query for Search:', searchQuery);
       console.log(`[ask-tcm-brain] Using translated query for search: "${searchQuery.slice(0, 50)}"`);
     }
 
@@ -180,31 +181,62 @@ serve(async (req) => {
         } else {
           relevantChunks = vectorResults || [];
           
-          // PRIORITY SORT: Boost tcm_points and clinical sources to top
+          // PRIORITY BOOST + DIVERSITY (post-rank):
+          // - Weighted score: if metadata.priority exists => score * 1.5
+          // - Hard rule: tcm_points.csv / priority assets MUST rank before syllabus new.csv
+          // - Diversity: keep at most 1 chunk per source to avoid “Entry #42” dominance
+
+          const getSourceName = (c: any) =>
+            String(c?.metadata?.source || c?.original_name || c?.file_name || '').trim();
+
+          const getBaseScore = (c: any) => {
+            if (typeof c?.combined_score === 'number') return c.combined_score;
+            if (typeof c?.ferrari_score === 'number') return c.ferrari_score;
+            if (typeof c?.vector_score === 'number') return c.vector_score;
+            if (typeof c?.keyword_score === 'number') return c.keyword_score;
+            return 0;
+          };
+
+          const hasPriorityFlag = (c: any) => c?.metadata?.priority !== undefined && c?.metadata?.priority !== null;
+
+          const getSourceRank = (sourceLower: string, c: any) => {
+            if (sourceLower.includes('tcm_points')) return 0;
+            if (hasPriorityFlag(c) || c?.priority_score) return 1;
+            if (sourceLower.includes('syllabus new') || sourceLower.includes('syllabus') || sourceLower.includes('new.csv')) return 3;
+            return 2;
+          };
+
+          const getWeightedScore = (c: any) => {
+            const base = getBaseScore(c);
+            return hasPriorityFlag(c) ? base * 1.5 : base;
+          };
+
           relevantChunks.sort((a, b) => {
-            const sourceA = (a.original_name || a.file_name || '').toLowerCase();
-            const sourceB = (b.original_name || b.file_name || '').toLowerCase();
-            
-            // Priority tiers:
-            // 1. tcm_points.csv (highest priority - point data)
-            // 2. clinical_* files (clinical protocols)
-            // 3. Everything else sorted by score
-            const getPriority = (source: string, chunk: any) => {
-              if (source.includes('tcm_points')) return 100;
-              if (source.includes('clinical')) return 80;
-              if (source.includes('acupoint')) return 70;
-              if (chunk.priority_score) return 50 + (chunk.priority_score * 10);
-              return chunk.ferrari_score || chunk.combined_score || 0;
-            };
-            
-            return getPriority(sourceB, b) - getPriority(sourceA, a);
+            const sourceA = getSourceName(a).toLowerCase();
+            const sourceB = getSourceName(b).toLowerCase();
+
+            const rankA = getSourceRank(sourceA, a);
+            const rankB = getSourceRank(sourceB, b);
+            if (rankA !== rankB) return rankA - rankB;
+
+            return getWeightedScore(b) - getWeightedScore(a);
           });
-          
-          console.log(`[ask-tcm-brain] Vector search found ${relevantChunks.length} chunks from ALL sources`);
-          
+
+          // Diversity filter: keep only the best chunk per source
+          const seenSources = new Set<string>();
+          relevantChunks = (relevantChunks || []).filter((c) => {
+            const key = getSourceName(c) || String(c?.document_id || c?.id || '');
+            if (!key) return false;
+            if (seenSources.has(key)) return false;
+            seenSources.add(key);
+            return true;
+          });
+
+          console.log(`[ask-tcm-brain] Vector search found ${relevantChunks.length} diverse chunks (post-rank)`);
+
           // Log sources for debugging
-          const uniqueSources = [...new Set(relevantChunks.map(c => c.original_name || c.file_name))];
-          console.log(`[ask-tcm-brain] Sources: ${uniqueSources.slice(0, 5).join(', ')}${uniqueSources.length > 5 ? '...' : ''}`);
+          const uniqueSources = [...new Set(relevantChunks.map(c => getSourceName(c)).filter(Boolean))];
+          console.log(`[ask-tcm-brain] Sources (top): ${uniqueSources.slice(0, 8).join(', ')}${uniqueSources.length > 8 ? '...' : ''}`);
         }
       }
     }
