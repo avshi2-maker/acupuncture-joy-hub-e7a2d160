@@ -111,6 +111,7 @@ export function useTcmBrainState() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // 🔒 SUBMISSION LOCK - prevent duplicates
   const [isStreaming, setIsStreaming] = useState(false);
   const [loadingStartTime, setLoadingStartTime] = useState<number | null>(null);
   const [currentQuery, setCurrentQuery] = useState<string>('');
@@ -320,8 +321,15 @@ export function useTcmBrainState() {
     }, 2000);
   }, [voiceNotes, sessionStartTime, sessionSeconds, questionsAsked, messages, selectedPatient, activeTemplate, formatSessionTime, saveSession, exportSessionAsPDF]);
   
-  // Chat function
+  // Chat function with SUBMISSION LOCK to prevent duplicate requests
   const streamChat = useCallback(async (userMessage: string) => {
+    // 🔒 SUBMISSION LOCK - Prevent duplicate requests
+    if (isSubmitting) {
+      console.log('[useTcmBrainState] Request blocked - already submitting');
+      return;
+    }
+    setIsSubmitting(true);
+    
     const userMsg: Message = { role: 'user', content: userMessage };
     setMessages(prev => [...prev, userMsg]);
     setQuestionsAsked(prev => [...prev, userMessage]);
@@ -338,6 +346,7 @@ export function useTcmBrainState() {
       setMessages(prev => [...prev, { role: 'assistant', content: msg }]);
       setIsLoading(false);
       setLoadingStartTime(null);
+      setIsSubmitting(false); // 🔓 RELEASE LOCK on early return
       return;
     }
 
@@ -345,6 +354,7 @@ export function useTcmBrainState() {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Please log in to use AI.' }]);
       setIsLoading(false);
       setLoadingStartTime(null);
+      setIsSubmitting(false); // 🔓 RELEASE LOCK on early return
       return;
     }
 
@@ -608,8 +618,9 @@ export function useTcmBrainState() {
       setIsLoading(false);
       setIsStreaming(false);
       setLoadingStartTime(null);
+      setIsSubmitting(false); // 🔓 RELEASE LOCK
     }
-  }, [disclaimerStatus, session, messages, selectedPatient]);
+  }, [disclaimerStatus, session, messages, selectedPatient, isSubmitting]);
 
   const dismissExternalFallback = useCallback(() => {
     setExternalFallbackQuery(null);
