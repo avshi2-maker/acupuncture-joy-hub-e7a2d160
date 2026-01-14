@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Wifi, WifiOff, RefreshCw, Loader2 } from 'lucide-react';
+import { Wifi, WifiOff, RefreshCw, Loader2, ChevronUp, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
-
+import { TcmPointsIndexer } from '@/components/TcmPointsIndexer';
 type ConnectionStatus = 'online' | 'offline' | 'checking' | 'reconnecting';
 
 interface AiStatusProps {
@@ -32,7 +32,7 @@ export function AiStatus({ className }: AiStatusProps) {
   const [status, setStatus] = useState<ConnectionStatus>('checking');
   const [lastCheckTime, setLastCheckTime] = useState<Date | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-
+  const [showIndexer, setShowIndexer] = useState(false);
   // Ping the backend to verify AI connectivity (throttled globally)
   const checkConnection = useCallback(async () => {
     // First check browser online status
@@ -199,7 +199,31 @@ export function AiStatus({ className }: AiStatusProps) {
         className
       )}
     >
-      {renderContent()}
+      <div className="flex flex-col gap-2">
+        {/* Main status */}
+        <div className="flex items-center gap-2">
+          {renderContent()}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowIndexer(!showIndexer)}
+            className="h-6 w-6 p-0"
+            title="Toggle Indexer Panel"
+          >
+            {showIndexer ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+          </Button>
+        </div>
+
+        {/* Emergency Indexer Panel */}
+        {showIndexer && (
+          <div className="bg-background/95 backdrop-blur border rounded-lg p-3 shadow-lg">
+            <div className="text-xs font-medium text-muted-foreground mb-2">
+              Emergency Data Injection
+            </div>
+            <TcmPointsIndexer />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
