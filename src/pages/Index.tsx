@@ -6,7 +6,7 @@ import { IntelligenceHub } from "@/components/IntelligenceHub";
 // Keep your existing Header import. 
 // If it was 'import { Header } ...', keep it. 
 // If it was a custom header code, keep that component.
-import { Header } from "@/components/Header"; 
+import Header from "@/components/layout/Header"; 
 
 const Index = () => {
   return (
