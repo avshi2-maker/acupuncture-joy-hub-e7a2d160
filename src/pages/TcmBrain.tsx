@@ -777,6 +777,8 @@ export default function TcmBrain() {
           metrics={sessionMetrics}
           stackedQueries={stackedQueries}
           isVisible={stackCount > 0 || sessionMetrics.tokensUsed > 0}
+          onExecuteSynthesis={handleAnalyzeStackedQueries}
+          isAnalyzing={isAnalyzing}
         />
         
         {/* Debug Metrics Panel - Unified Algorithm Transparency */}

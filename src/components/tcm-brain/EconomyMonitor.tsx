@@ -1,19 +1,24 @@
 import React, { useState } from 'react';
 import { SessionMetrics } from '@/hooks/useClinicalSession';
 import { PromptMapping } from '@/data/tcm-prompt-mapping';
-import { Activity, Zap, Clock, DollarSign, Database, CheckCircle2, ChevronUp, ChevronDown } from 'lucide-react';
+import { Activity, Zap, Clock, DollarSign, Database, CheckCircle2, ChevronUp, ChevronDown, Sparkles, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 
 interface EconomyMonitorProps {
   metrics: SessionMetrics;
   stackedQueries: PromptMapping[];
   isVisible: boolean;
+  onExecuteSynthesis?: () => void;
+  isAnalyzing?: boolean;
 }
 
 export const EconomyMonitor: React.FC<EconomyMonitorProps> = ({
   metrics,
   stackedQueries,
-  isVisible
+  isVisible,
+  onExecuteSynthesis,
+  isAnalyzing = false
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -27,8 +32,37 @@ export const EconomyMonitor: React.FC<EconomyMonitorProps> = ({
       id="economy-monitor"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="fixed bottom-5 right-5 z-[10001]"
+      className="fixed bottom-5 right-5 z-[10001] flex flex-col items-end gap-2"
     >
+      {/* Execute Button - Always visible when queries are stacked */}
+      <AnimatePresence>
+        {hasQueries && onExecuteSynthesis && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+          >
+            <Button
+              onClick={onExecuteSynthesis}
+              disabled={isAnalyzing}
+              className="bg-gradient-to-r from-violet-600 to-emerald-500 hover:from-violet-700 hover:to-emerald-600 text-white font-bold px-4 py-2 rounded-full shadow-lg shadow-violet-500/30 gap-2"
+            >
+              {isAnalyzing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  מעבד...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  חפש {stackedQueries.length} שאילתות
+                </>
+              )}
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Collapsed State - Small Pill */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
