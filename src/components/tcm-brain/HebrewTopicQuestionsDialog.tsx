@@ -985,14 +985,13 @@ export function HebrewTopicQuestionsDialog({
     const starred = isFavorite(categoryId, question.id);
     return (
       <div key={`${categoryId}-${question.id}`} className="flex items-center gap-1 group">
-        <Button
-          variant="ghost"
-          size="icon"
+        <button
+          type="button"
           className={cn(
-            "h-8 w-8 shrink-0 transition-all",
+            "h-8 w-8 shrink-0 flex items-center justify-center rounded-md transition-all border-2",
             starred 
-              ? "text-yellow-500 hover:text-yellow-600" 
-              : "text-muted-foreground/40 hover:text-yellow-500"
+              ? "text-yellow-500 border-yellow-400 bg-yellow-50" 
+              : "text-yellow-400/60 border-yellow-300/50 hover:border-yellow-400 hover:text-yellow-500 hover:bg-yellow-50/50"
           )}
           onClick={(e) => {
             e.stopPropagation();
@@ -1002,9 +1001,9 @@ export function HebrewTopicQuestionsDialog({
         >
           <Star className={cn(
             "h-5 w-5 transition-all",
-            starred && "fill-yellow-500 scale-110"
+            starred && "fill-yellow-500"
           )} />
-        </Button>
+        </button>
         <Button
           variant="ghost"
           className="flex-1 justify-start text-right h-auto py-2 px-2 hover:bg-muted/50"
@@ -1183,8 +1182,8 @@ export function HebrewTopicQuestionsDialog({
             </div>
           </DialogHeader>
           
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'all' | 'favorites')} className="flex flex-col h-[60vh]">
-            <TabsList className="grid w-full grid-cols-2 mx-4 mt-2" style={{ width: 'calc(100% - 2rem)' }}>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'all' | 'favorites')} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <TabsList className="grid w-full grid-cols-2 mx-4 mt-2 shrink-0" style={{ width: 'calc(100% - 2rem)' }}>
               <TabsTrigger value="all" className="gap-2">
                 <BookOpen className="h-4 w-4" />
                 כל הנושאים ({questionnairesData.length})
@@ -1195,14 +1194,14 @@ export function HebrewTopicQuestionsDialog({
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="all" className="flex-1 mt-0">
-              <ScrollArea className="h-full">
+            <TabsContent value="all" className="flex-1 mt-0 min-h-0 overflow-hidden">
+              <ScrollArea className="h-[calc(85vh-180px)]">
                 {renderCategoriesContent()}
               </ScrollArea>
             </TabsContent>
             
-            <TabsContent value="favorites" className="flex-1 mt-0">
-              <ScrollArea className="h-full">
+            <TabsContent value="favorites" className="flex-1 mt-0 min-h-0 overflow-hidden">
+              <ScrollArea className="h-[calc(85vh-180px)]">
                 {renderFavoritesSection()}
               </ScrollArea>
             </TabsContent>
@@ -1259,8 +1258,8 @@ export function HebrewTopicQuestionsDialog({
           </div>
         </DialogHeader>
         
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'all' | 'favorites')} className="flex flex-col h-[60vh]">
-          <TabsList className="grid w-full grid-cols-2 mx-4 mt-2" style={{ width: 'calc(100% - 2rem)' }}>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'all' | 'favorites')} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <TabsList className="grid w-full grid-cols-2 mx-4 mt-2 shrink-0" style={{ width: 'calc(100% - 2rem)' }}>
             <TabsTrigger value="all" className="gap-2">
               <BookOpen className="h-4 w-4" />
               כל הנושאים ({questionnairesData.length})
@@ -1271,14 +1270,14 @@ export function HebrewTopicQuestionsDialog({
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="all" className="flex-1 mt-0">
-            <ScrollArea className="h-full">
+          <TabsContent value="all" className="flex-1 mt-0 min-h-0 overflow-hidden">
+            <ScrollArea className="h-[calc(85vh-180px)]">
               {renderCategoriesContent()}
             </ScrollArea>
           </TabsContent>
           
-          <TabsContent value="favorites" className="flex-1 mt-0">
-            <ScrollArea className="h-full">
+          <TabsContent value="favorites" className="flex-1 mt-0 min-h-0 overflow-hidden">
+            <ScrollArea className="h-[calc(85vh-180px)]">
               {renderFavoritesSection()}
             </ScrollArea>
           </TabsContent>
