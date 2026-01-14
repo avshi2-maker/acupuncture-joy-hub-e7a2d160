@@ -99,12 +99,12 @@ export const BodyMap: React.FC<BodyMapProps> = ({ highlightedPoints, className }
   // Active View with Point Highlight
   return (
     <div className={`relative h-full w-full flex items-center justify-center bg-white group ${className}`}>
-      {/* The Dynamic Body Part Image */}
+      {/* The Dynamic Body Part Image - CONSTRAINED SIZE */}
       {!imageError ? (
         <img
           src={`/body-maps/${activeView.image_file}`}
           alt={activeView.name}
-          className="max-h-full max-w-full object-contain shadow-sm rounded-lg"
+          className="w-full h-full object-contain max-h-[400px] p-2"
           onError={() => {
             console.warn(`Image not found: /body-maps/${activeView.image_file}`);
             setImageError(true);
