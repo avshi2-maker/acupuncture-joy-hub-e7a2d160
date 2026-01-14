@@ -147,27 +147,60 @@ serve(async (req) => {
       throw new Error('GEMINI_API_KEY is not configured');
     }
 
-    // Step 1: BYPASS HYBRID SEARCH - Use keyword search directly to avoid timeouts
-    // Hybrid search was causing Statement Timeout errors on the database
-    // Vector/keyword search is faster and more reliable
-    let searchMethod = 'keyword';
-    console.log('[ask-tcm-brain] Using fast keyword search (hybrid disabled due to timeouts)');
-
-    // Step 2: Search knowledge base using FAST keyword search
-    console.log(`[ask-tcm-brain] Searching knowledge base (${searchMethod})...`);
+    // Step 1: VECTOR SEARCH - Generate embedding and do semantic similarity
+    // This is FAST and SMART - understands concepts, not just exact keywords
+    let searchMethod = 'vector';
+    let relevantChunks: any[] = [];
     
-    const { data: searchResults, error: searchError } = await supabase.rpc('keyword_search', {
-      query_text: searchQuery, // Use translated query for DB search
-      match_count: 8,
-      match_threshold: 0.15,
-      language_filter: null
-    });
-
-    if (searchError) {
-      console.error('[ask-tcm-brain] Keyword search error:', searchError);
+    console.log(`[ask-tcm-brain] Translated query for search: "${searchQuery}"`);
+    
+    // Generate embedding for the (translated) query
+    if (OPENAI_API_KEY) {
+      console.log('[ask-tcm-brain] Generating embedding for vector search...');
+      const queryEmbedding = await generateQueryEmbedding(searchQuery, OPENAI_API_KEY);
+      
+      if (queryEmbedding) {
+        console.log('[ask-tcm-brain] Embedding generated, performing vector similarity search...');
+        
+        // Direct vector similarity search using pgvector
+        const embeddingString = `[${queryEmbedding.join(',')}]`;
+        
+        const { data: vectorResults, error: vectorError } = await supabase
+          .rpc('hybrid_search', {
+            query_text: searchQuery,
+            query_embedding: embeddingString,
+            match_count: 8,
+            match_threshold: 0.05, // Lower threshold for vector search
+            language_filter: null
+          });
+        
+        if (vectorError) {
+          console.error('[ask-tcm-brain] Vector search error:', vectorError);
+        } else {
+          relevantChunks = vectorResults || [];
+          console.log(`[ask-tcm-brain] Vector search found ${relevantChunks.length} chunks`);
+        }
+      }
     }
-
-    const relevantChunks = searchResults || [];
+    
+    // Fallback to keyword search if vector search failed
+    if (relevantChunks.length === 0) {
+      console.log('[ask-tcm-brain] Fallback to keyword search...');
+      searchMethod = 'keyword (fallback)';
+      
+      const { data: keywordResults, error: keywordError } = await supabase.rpc('keyword_search', {
+        query_text: searchQuery,
+        match_count: 8,
+        match_threshold: 0.15,
+        language_filter: null
+      });
+      
+      if (keywordError) {
+        console.error('[ask-tcm-brain] Keyword search error:', keywordError);
+      }
+      relevantChunks = keywordResults || [];
+    }
+    
     console.log(`[ask-tcm-brain] Found ${relevantChunks.length} relevant chunks (${searchMethod})`);
 
     // Step 3: Build context with TOKEN BUDGETING and DYNAMIC SELECTION
