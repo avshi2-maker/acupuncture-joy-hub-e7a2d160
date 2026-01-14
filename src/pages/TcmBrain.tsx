@@ -772,14 +772,6 @@ export default function TcmBrain() {
           isInStack={isInStack}
         />
         
-        {/* Economy Monitor - Fixed Position */}
-        <EconomyMonitor
-          metrics={sessionMetrics}
-          stackedQueries={stackedQueries}
-          isVisible={stackCount > 0 || sessionMetrics.tokensUsed > 0}
-          onExecuteSynthesis={handleAnalyzeStackedQueries}
-          isAnalyzing={isAnalyzing}
-        />
         
         {/* Debug Metrics Panel - Unified Algorithm Transparency */}
         {/* Uses same data as Video Session for Twin Test parity */}
