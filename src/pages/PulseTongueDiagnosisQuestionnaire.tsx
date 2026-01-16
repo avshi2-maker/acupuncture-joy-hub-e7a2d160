@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { ArrowRight, ArrowLeft, Check, Eye } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Check, Eye, Download } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { usePatients } from '@/hooks/usePatients';
 import { useCreateAssessment } from '@/hooks/usePatientAssessments';
@@ -199,6 +199,29 @@ export default function PulseTongueDiagnosisQuestionnaire() {
     }
   };
 
+  const handleDownloadQuestions = () => {
+    const BOM = '\uFEFF';
+    const headers = ['מספר', 'מזהה שאלה', 'שאלה בעברית', 'Question in English'];
+    const rows = questions.map((q, idx) => [
+      idx + 1,
+      q.id,
+      `"${q.textHe.replace(/"/g, '""')}"`,
+      `"${q.textEn.replace(/"/g, '""')}"`
+    ]);
+    
+    const csvContent = BOM + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `pulse_tongue_diagnosis_questions_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success(isRTL ? 'השאלות הורדו בהצלחה' : 'Questions downloaded successfully');
+  };
+
   const currentQ = questions[currentQuestion];
   const currentAnswer = answers[currentQ.id] || '';
 
@@ -216,6 +239,15 @@ export default function PulseTongueDiagnosisQuestionnaire() {
           <p className="text-muted-foreground">
             {isRTL ? 'אבחון חזותי ומישושי - שאלון מעמיק' : 'Visual & Tactile Diagnosis - In-depth Questionnaire'}
           </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadQuestions}
+            className="mt-2 gap-2"
+          >
+            <Download className="h-4 w-4" />
+            {isRTL ? `הורד ${questions.length} שאלות` : `Download ${questions.length} Questions`}
+          </Button>
         </div>
 
         {/* Patient Selection */}
