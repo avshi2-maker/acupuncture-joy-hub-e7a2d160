@@ -20,7 +20,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { User, Heart, Baby, Activity, Utensils, Moon, Brain, AlertTriangle, FileSignature, PenTool, CheckCircle2, XCircle, Loader2, Calendar, BrainCircuit, ChevronLeft, ChevronRight, FileText, Eye, Edit2, CircleDot, RotateCcw, Save, Clock, Sun, MoonIcon, SkipForward, Info } from 'lucide-react';
+import { User, Heart, Baby, Activity, Utensils, Moon, Brain, AlertTriangle, FileSignature, PenTool, CheckCircle2, XCircle, Loader2, Calendar, BrainCircuit, ChevronLeft, ChevronRight, FileText, Eye, Edit2, CircleDot, RotateCcw, Save, Clock, Sun, MoonIcon, SkipForward, Info, Download } from 'lucide-react';
+import { downloadPatientIntakeForm, getPatientIntakeFieldCount } from '@/utils/intakeFormsExport';
 import { SignaturePad } from './SignaturePad';
 import { MedicalDocumentUpload } from './MedicalDocumentUpload';
 import { DietNutritionSelect } from './DietNutritionSelect';
@@ -1042,13 +1043,28 @@ export function PatientIntakeForm({ patientId, onSuccess, returnTo, testMode = f
               <span className="text-muted-foreground">
                 Step {currentStep + 1} of {totalSteps}
               </span>
-              <span className="font-medium flex items-center gap-2">
-                {(() => {
-                  const StepIcon = stepTitles[currentStep].icon;
-                  return <StepIcon className="h-4 w-4 text-jade" />;
-                })()}
-                {stepTitles[currentStep].title}
-              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    downloadPatientIntakeForm();
+                    toast.success('Patient intake form downloaded successfully');
+                  }}
+                  className="gap-1 h-7 text-xs"
+                >
+                  <Download className="h-3 w-3" />
+                  Download Form ({getPatientIntakeFieldCount()})
+                </Button>
+                <span className="font-medium flex items-center gap-2">
+                  {(() => {
+                    const StepIcon = stepTitles[currentStep].icon;
+                    return <StepIcon className="h-4 w-4 text-jade" />;
+                  })()}
+                  {stepTitles[currentStep].title}
+                </span>
+              </div>
             </div>
             <Progress value={progress} className="h-2" />
             <div className={`flex justify-between gap-1 ${shakeErrors ? 'animate-shake' : ''}`}>

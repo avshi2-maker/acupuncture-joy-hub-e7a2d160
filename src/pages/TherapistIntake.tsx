@@ -17,8 +17,9 @@ import { toast } from 'sonner';
 import { 
   AlertTriangle, FileDown, CheckCircle2, Shield, User, Award, 
   ArrowLeft, ArrowRight, Loader2, Building2, Phone, Mail, 
-  GraduationCap, Briefcase, Calendar, Save, Trash2, CloudOff
+  GraduationCap, Briefcase, Calendar, Save, Trash2, CloudOff, Download
 } from 'lucide-react';
+import { downloadTherapistIntakeForm, getTherapistIntakeFieldCount } from '@/utils/intakeFormsExport';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -486,6 +487,19 @@ export default function TherapistIntake() {
                 נקה טופס
               </Button>
             )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                downloadTherapistIntakeForm();
+                toast.success('טופס קליטת מטפל הורד בהצלחה');
+              }}
+              className="gap-1"
+            >
+              <Download className="h-4 w-4" />
+              הורד טופס ({getTherapistIntakeFieldCount()})
+            </Button>
           </div>
         </div>
 
