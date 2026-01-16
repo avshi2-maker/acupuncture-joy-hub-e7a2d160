@@ -28,7 +28,8 @@ import {
   Download,
   Eye,
   Stethoscope,
-  MapPin
+  MapPin,
+  FileDown
 } from 'lucide-react';
 import { usePatientAssessments, AssessmentType } from '@/hooks/usePatientAssessments';
 import { usePatients } from '@/hooks/usePatients';
@@ -36,6 +37,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { getHebrewQuestionsData, downloadQuestionsAsCSV, getTotalQuestionCount } from '@/utils/hebrewQuestionsExport';
 
 interface QuestionnaireInfo {
   id: AssessmentType;
@@ -367,6 +369,20 @@ export default function QuestionnaireHub() {
           </div>
           
           <div className="flex items-center gap-3">
+            {/* Download 36×15 Hebrew Questions Button */}
+            <Button 
+              variant="outline" 
+              className="gap-2 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-emerald-500/30 hover:from-emerald-500/20 hover:to-teal-500/20"
+              onClick={() => {
+                downloadQuestionsAsCSV();
+                toast.success(`הורדת ${getTotalQuestionCount()} שאלות בעברית (36×15 מודולים)`);
+              }}
+            >
+              <FileDown className="h-4 w-4 text-emerald-600" />
+              <span className="hidden sm:inline">הורד 540 שאלות</span>
+              <Badge variant="secondary" className="text-[10px] px-1.5">36×15</Badge>
+            </Button>
+
             <Select value={selectedPatient} onValueChange={setSelectedPatient}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="בחר מטופל" />
