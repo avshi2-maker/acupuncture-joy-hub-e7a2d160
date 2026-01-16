@@ -564,26 +564,42 @@ export default function CRMDashboard() {
                     <span>Add Patient</span>
                   </Link>
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="h-14 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm touch-manipulation active:scale-[0.98]" 
-                  asChild
-                >
-                  <Link to="/crm/calendar">
+                <div className="relative h-14 md:h-20 rounded-md border border-input overflow-hidden hover:bg-accent hover:text-accent-foreground transition-colors">
+                  <Link to="/crm/calendar" className="absolute inset-0 flex flex-col items-center justify-center gap-1 md:gap-2 text-xs md:text-sm touch-manipulation active:scale-[0.98]">
                     <Calendar className="h-5 w-5 md:h-5 md:w-5" />
                     <span>Appointment</span>
                   </Link>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="h-14 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm touch-manipulation active:scale-[0.98]" 
-                  asChild
-                >
-                  <Link to="/video-session">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="absolute top-1 right-1 h-6 w-6 opacity-60 hover:opacity-100 z-10"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      toast.info('Appointment export coming soon');
+                    }}
+                  >
+                    <Download className="h-3 w-3" />
+                  </Button>
+                </div>
+                <div className="relative h-14 md:h-20 rounded-md border border-input overflow-hidden hover:bg-accent hover:text-accent-foreground transition-colors">
+                  <Link to="/video-session" className="absolute inset-0 flex flex-col items-center justify-center gap-1 md:gap-2 text-xs md:text-sm touch-manipulation active:scale-[0.98]">
                     <Video className="h-5 w-5 md:h-5 md:w-5 text-jade" />
                     <span>Video Session</span>
                   </Link>
-                </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="absolute top-1 right-1 h-6 w-6 opacity-60 hover:opacity-100 z-10"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      toast.info('Video Session export coming soon');
+                    }}
+                  >
+                    <Download className="h-3 w-3" />
+                  </Button>
+                </div>
                 <Button 
                   variant="outline" 
                   className="h-14 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm touch-manipulation active:scale-[0.98]" 
@@ -594,16 +610,24 @@ export default function CRMDashboard() {
                     <span>TCM Brain</span>
                   </Link>
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="h-14 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm touch-manipulation active:scale-[0.98]" 
-                  asChild
-                >
-                  <Link to="/caf-browser">
+                <div className="relative h-14 md:h-20 rounded-md border border-input overflow-hidden hover:bg-accent hover:text-accent-foreground transition-colors">
+                  <Link to="/caf-browser" className="absolute inset-0 flex flex-col items-center justify-center gap-1 md:gap-2 text-xs md:text-sm touch-manipulation active:scale-[0.98]">
                     <BookOpen className="h-5 w-5 md:h-5 md:w-5 text-jade" />
                     <span>CAF Studies</span>
                   </Link>
-                </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="absolute top-1 right-1 h-6 w-6 opacity-60 hover:opacity-100 z-10"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      toast.info('CAF Studies export coming soon');
+                    }}
+                  >
+                    <Download className="h-3 w-3" />
+                  </Button>
+                </div>
                 <Button 
                   variant="outline" 
                   className="h-14 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm touch-manipulation active:scale-[0.98]" 
@@ -614,28 +638,50 @@ export default function CRMDashboard() {
                     <span>Navigator</span>
                   </Link>
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="h-14 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm touch-manipulation active:scale-[0.98]" 
-                  asChild
-                >
-                  <Link to="/health-compass">
+                <div className="relative h-14 md:h-20 rounded-md border border-input overflow-hidden hover:bg-accent hover:text-accent-foreground transition-colors">
+                  <Link to="/health-compass" className="absolute inset-0 flex flex-col items-center justify-center gap-1 md:gap-2 text-xs md:text-sm touch-manipulation active:scale-[0.98]">
                     <Heart className="h-5 w-5 md:h-5 md:w-5 text-rose-500" />
                     <span>Health Compass</span>
                   </Link>
-                </Button>
-                <Link 
-                  to="/retreat-quiz"
-                  className="relative h-14 md:h-20 rounded-md border border-gold/30 overflow-hidden flex flex-col items-center justify-center gap-1 md:gap-2 text-xs md:text-sm touch-manipulation active:scale-[0.98] hover:border-gold/50 transition-all group"
-                >
-                  <div 
-                    className="absolute inset-0 bg-cover bg-center opacity-30 group-hover:opacity-40 transition-opacity"
-                    style={{ backgroundImage: `url('/src/assets/quiz-dashboard-bg.jpg')` }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-background/20" />
-                  <Leaf className="relative z-10 h-5 w-5 md:h-5 md:w-5 text-gold" />
-                  <span className="relative z-10 font-medium">שאלון ריטריט</span>
-                </Link>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="absolute top-1 right-1 h-6 w-6 opacity-60 hover:opacity-100 z-10"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      toast.info('Health Compass export coming soon');
+                    }}
+                  >
+                    <Download className="h-3 w-3" />
+                  </Button>
+                </div>
+                <div className="relative h-14 md:h-20 rounded-md border border-gold/30 overflow-hidden hover:border-gold/50 transition-all group">
+                  <Link 
+                    to="/retreat-quiz"
+                    className="absolute inset-0 flex flex-col items-center justify-center gap-1 md:gap-2 text-xs md:text-sm touch-manipulation active:scale-[0.98]"
+                  >
+                    <div 
+                      className="absolute inset-0 bg-cover bg-center opacity-30 group-hover:opacity-40 transition-opacity"
+                      style={{ backgroundImage: `url('/src/assets/quiz-dashboard-bg.jpg')` }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-background/20" />
+                    <Leaf className="relative z-10 h-5 w-5 md:h-5 md:w-5 text-gold" />
+                    <span className="relative z-10 font-medium">שאלון ריטריט</span>
+                  </Link>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="absolute top-1 right-1 h-6 w-6 opacity-60 hover:opacity-100 z-20"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      toast.info('Retreat Quiz export coming soon');
+                    }}
+                  >
+                    <Download className="h-3 w-3" />
+                  </Button>
+                </div>
                 <Button 
                   variant="outline" 
                   className="h-14 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm touch-manipulation active:scale-[0.98] border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:border-emerald-600 dark:hover:bg-emerald-950/50" 
