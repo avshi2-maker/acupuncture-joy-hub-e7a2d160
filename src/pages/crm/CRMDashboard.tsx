@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Users, Clock, TrendingUp, Plus, ArrowRight, Video, FileText, Trash2, BookOpen, Leaf, Volume2, VolumeX, Bell, BellOff, CheckCircle, XCircle, HelpCircle, Compass, Heart } from 'lucide-react';
+import { Calendar, Users, Clock, TrendingUp, Plus, ArrowRight, Video, FileText, Trash2, BookOpen, Leaf, Volume2, VolumeX, Bell, BellOff, CheckCircle, XCircle, HelpCircle, Compass, Heart, Download } from 'lucide-react';
 import { WhatsAppReminderButton } from '@/components/crm/WhatsAppReminderButton';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,6 +11,7 @@ import { PullToRefreshContainer } from '@/components/ui/PullToRefreshContainer';
 import { QuickPatientSearch } from '@/components/crm/QuickPatientSearch';
 import { toast } from 'sonner';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { downloadTherapistIntakeForm, downloadPatientIntakeForm, getTherapistIntakeFieldCount, getPatientIntakeFieldCount } from '@/utils/intakeFormsExport';
 
 interface DashboardStats {
   totalPatients: number;
@@ -635,6 +636,28 @@ export default function CRMDashboard() {
                   <Leaf className="relative z-10 h-5 w-5 md:h-5 md:w-5 text-gold" />
                   <span className="relative z-10 font-medium">שאלון ריטריט</span>
                 </Link>
+                <Button 
+                  variant="outline" 
+                  className="h-14 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm touch-manipulation active:scale-[0.98] border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:border-emerald-600 dark:hover:bg-emerald-950/50" 
+                  onClick={() => {
+                    downloadTherapistIntakeForm();
+                    toast.success(`Therapist Intake Form downloaded (${getTherapistIntakeFieldCount()} fields)`);
+                  }}
+                >
+                  <Download className="h-5 w-5 md:h-5 md:w-5 text-emerald-600" />
+                  <span>טופס מטפל ({getTherapistIntakeFieldCount()})</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-14 md:h-20 flex-col gap-1 md:gap-2 text-xs md:text-sm touch-manipulation active:scale-[0.98] border-blue-200 hover:border-blue-400 hover:bg-blue-50 dark:border-blue-800 dark:hover:border-blue-600 dark:hover:bg-blue-950/50" 
+                  onClick={() => {
+                    downloadPatientIntakeForm();
+                    toast.success(`Patient Intake Form downloaded (${getPatientIntakeFieldCount()} fields)`);
+                  }}
+                >
+                  <Download className="h-5 w-5 md:h-5 md:w-5 text-blue-600" />
+                  <span>טופס מטופל ({getPatientIntakeFieldCount()})</span>
+                </Button>
               </div>
             </CardContent>
           </Card>
