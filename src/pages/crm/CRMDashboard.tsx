@@ -12,6 +12,7 @@ import { QuickPatientSearch } from '@/components/crm/QuickPatientSearch';
 import { toast } from 'sonner';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { downloadTherapistIntakeForm, downloadPatientIntakeForm, getTherapistIntakeFieldCount, getPatientIntakeFieldCount } from '@/utils/intakeFormsExport';
+import { downloadCAFStudies } from '@/utils/cafStudiesExport';
 
 interface DashboardStats {
   totalPatients: number;
@@ -619,10 +620,18 @@ export default function CRMDashboard() {
                     variant="ghost" 
                     size="icon" 
                     className="absolute top-1 right-1 h-6 w-6 opacity-60 hover:opacity-100 z-10"
-                    onClick={(e) => {
+                    onClick={async (e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      toast.info('CAF Studies export coming soon');
+                      toast.loading('Exporting CAF Studies...');
+                      const result = await downloadCAFStudies();
+                      if (result.success) {
+                        toast.dismiss();
+                        toast.success(`Downloaded ${result.count} CAF studies`);
+                      } else {
+                        toast.dismiss();
+                        toast.error(result.error || 'Export failed');
+                      }
                     }}
                   >
                     <Download className="h-3 w-3" />
