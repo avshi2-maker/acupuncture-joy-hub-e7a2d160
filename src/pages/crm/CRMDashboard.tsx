@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { downloadTherapistIntakeForm, downloadPatientIntakeForm, getTherapistIntakeFieldCount, getPatientIntakeFieldCount } from '@/utils/intakeFormsExport';
 import { downloadCAFStudies } from '@/utils/cafStudiesExport';
+import { downloadCRMModule, getCRMModuleFileCount } from '@/utils/crmModuleExport';
 
 interface DashboardStats {
   totalPatients: number;
@@ -315,7 +316,26 @@ export default function CRMDashboard() {
                 Welcome back! Here's your clinic overview for {format(new Date(), 'EEEE, MMMM d')}
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex-1 sm:flex-none border-purple-200 hover:border-purple-400 hover:bg-purple-50 dark:border-purple-800 dark:hover:border-purple-600 dark:hover:bg-purple-950/50"
+                onClick={async () => {
+                  toast.loading('Preparing CRM module download...');
+                  try {
+                    await downloadCRMModule();
+                    toast.dismiss();
+                    toast.success(`CRM Module downloaded (${getCRMModuleFileCount()} files)`);
+                  } catch (error) {
+                    toast.dismiss();
+                    toast.error('Failed to download CRM module');
+                  }
+                }}
+              >
+                <Download className="h-4 w-4 mr-2 text-purple-600" />
+                <span className="hidden sm:inline">Download</span> CRM
+              </Button>
               <Button asChild variant="outline" size="sm" className="flex-1 sm:flex-none">
                 <Link to="/crm/patients/new">
                   <Plus className="h-4 w-4 mr-2" />
