@@ -44,6 +44,7 @@ import TherapistProfile from "./pages/TherapistProfile";
 import InstallApp from "./pages/InstallApp";
 import AdminFeedback from "./pages/AdminFeedback";
 import KnowledgeRegistry from "./pages/KnowledgeRegistry";
+import ModuleDownloads from "./pages/ModuleDownloads";
 import BaziCalculator from "./pages/BaziCalculator";
 import LegalReport from "./pages/LegalReport";
 import SymptomChecker from "./pages/SymptomChecker";
@@ -259,6 +260,7 @@ const App = () => (
                     {/* ============================================= */}
                       <Route path="/encyclopedia" element={<RequireTier><EncyclopediaLanding /></RequireTier>} />
                       <Route path="/knowledge-registry" element={<KnowledgeRegistry />} />
+                      <Route path="/module-downloads" element={<ModuleDownloads />} />
                       <Route path="/cm-brain-questions" element={<RequireTier><CMBrainQuestions /></RequireTier>} />
 
                     {/* ============================================= */}
