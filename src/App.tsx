@@ -176,6 +176,7 @@ const App = () => (
                       <Route path="/therapist-intake" element={<TherapistIntake />} />
                       <Route path="/retreat-quiz" element={<RetreatQuiz />} />
                       <Route path="/invite" element={<ProfessionalInvite />} />
+                      <Route path="/module-downloads" element={<ModuleDownloads />} />
 
                     {/* ============================================= */}
                     {/* AUTHENTICATED DEFAULT - Redirect to CRM       */}
@@ -260,7 +261,6 @@ const App = () => (
                     {/* ============================================= */}
                       <Route path="/encyclopedia" element={<RequireTier><EncyclopediaLanding /></RequireTier>} />
                       <Route path="/knowledge-registry" element={<KnowledgeRegistry />} />
-                      <Route path="/module-downloads" element={<ModuleDownloads />} />
                       <Route path="/cm-brain-questions" element={<RequireTier><CMBrainQuestions /></RequireTier>} />
 
                     {/* ============================================= */}
