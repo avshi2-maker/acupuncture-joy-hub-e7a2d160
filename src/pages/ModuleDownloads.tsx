@@ -7,7 +7,8 @@ import {
   Heart, Shield, Sparkles, Activity, Sun,
   Calculator, Smartphone, TestTube, Settings,
   Music, Code, Lock, Contact, TreePine,
-  Palette, Pill, Eye, Target, Leaf, ClipboardCheck
+  Palette, Pill, Eye, Target, Leaf, ClipboardCheck,
+  FileCode, Database, Folder
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,395 +16,390 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import JSZip from 'jszip';
 import { format } from 'date-fns';
+import { MODULE_FILE_MAPPINGS, getModuleFileCount, type ModuleFileMapping } from '@/utils/moduleFileMappings';
 
-// Module definitions from the Excel file
-const MODULES = [
-  // Clinical & Core Modules
-  { 
-    id: 'whole-gate', 
-    name: 'Whole Gate Module', 
-    nameHe: 'מודול שער מלא',
-    icon: TreePine, 
-    category: 'core',
-    description: 'Complete gate entry and navigation module',
-    color: 'emerald'
-  },
-  { 
-    id: 'pulse-gallery', 
-    name: 'Pulse Gallery', 
-    nameHe: 'גלריית דופק',
-    icon: Activity, 
-    category: 'clinical',
-    description: 'Pulse diagnosis image gallery and references',
-    color: 'rose'
-  },
-  { 
-    id: 'video-session', 
-    name: 'Video Session', 
-    nameHe: 'פגישת וידאו',
-    icon: Calendar, 
-    category: 'crm',
-    description: 'Video session recording and management',
-    color: 'blue'
-  },
-  { 
-    id: 'contact', 
-    name: 'Contact Module', 
-    nameHe: 'מודול יצירת קשר',
-    icon: Contact, 
-    category: 'core',
-    description: 'Contact forms and communication',
-    color: 'slate'
-  },
-  { 
-    id: 'retreat-quiz', 
-    name: 'Retreat Quiz', 
-    nameHe: 'שאלון ריטריט',
-    icon: ClipboardCheck, 
-    category: 'assessment',
-    description: 'Retreat assessment questionnaire',
-    color: 'amber'
-  },
-  { 
-    id: 'invite', 
-    name: 'Professional Invite', 
-    nameHe: 'הזמנה מקצועית',
-    icon: Users, 
-    category: 'core',
-    description: 'Professional invitation system',
-    color: 'indigo'
-  },
-  { 
-    id: 'caf-clinical-browser', 
-    name: 'CAF Clinical Browser', 
-    nameHe: 'דפדפן קליני CAF',
-    icon: Stethoscope, 
-    category: 'clinical',
-    description: 'Clinical assessment framework browser',
-    color: 'teal'
-  },
-  
-  // Questionnaires & Assessments
-  { 
-    id: 'vitality-longevity', 
-    name: 'Vitality & Longevity Assessment', 
-    nameHe: 'הערכת חיוניות ואריכות ימים',
-    icon: Heart, 
-    category: 'assessment',
-    description: 'Comprehensive vitality assessment questionnaire',
-    color: 'red'
-  },
-  { 
-    id: 'patient-questionnaire', 
-    name: 'Patient Questionnaire', 
-    nameHe: 'שאלון מטופל',
-    icon: ClipboardCheck, 
-    category: 'assessment',
-    description: 'General patient intake questionnaire',
-    color: 'cyan'
-  },
-  { 
-    id: 'admin', 
-    name: 'Admin Module', 
-    nameHe: 'מודול ניהול',
-    icon: Settings, 
-    category: 'admin',
-    description: 'Administration and management tools',
-    color: 'gray'
-  },
-  { 
-    id: 'encyclopedia', 
-    name: 'Encyclopedia', 
-    nameHe: 'אנציקלופדיה',
-    icon: BookOpen, 
-    category: 'knowledge',
-    description: 'TCM knowledge encyclopedia',
-    color: 'purple'
-  },
-  { 
-    id: 'internal-climate', 
-    name: 'Internal Climate Control', 
-    nameHe: 'שליטה באקלים פנימי',
-    icon: Sun, 
-    category: 'assessment',
-    description: 'Internal climate assessment questionnaire',
-    color: 'orange'
-  },
-  { 
-    id: 'balance-strengthening', 
-    name: 'Balance & Strengthening', 
-    nameHe: 'איזון וחיזוק',
-    icon: Shield, 
-    category: 'assessment',
-    description: 'Balance and strengthening assessment',
-    color: 'green'
-  },
-  { 
-    id: 'golden-age-vitality', 
-    name: 'Golden Age Vitality', 
-    nameHe: 'חיוניות גיל הזהב',
-    icon: Sparkles, 
-    category: 'assessment',
-    description: 'Senior vitality assessment questionnaire',
-    color: 'yellow'
-  },
-  { 
-    id: 'longevity-dignity', 
-    name: 'Longevity & Dignity', 
-    nameHe: 'אריכות ימים וכבוד',
-    icon: Heart, 
-    category: 'assessment',
-    description: 'Longevity and quality of life assessment',
-    color: 'pink'
-  },
-  { 
-    id: 'nourishing-life', 
-    name: 'Nourishing Life', 
-    nameHe: 'הזנת חיים',
-    icon: Leaf, 
-    category: 'assessment',
-    description: 'Yang Sheng lifestyle assessment',
-    color: 'lime'
-  },
-  { 
-    id: 'mental-clarity', 
-    name: 'Mental Clarity', 
-    nameHe: 'בהירות מנטלית',
-    icon: Brain, 
-    category: 'assessment',
-    description: 'Cognitive and mental clarity assessment',
-    color: 'violet'
-  },
-  { 
-    id: 'pain-rehabilitation', 
-    name: 'Pain Rehabilitation', 
-    nameHe: 'שיקום כאב',
-    icon: Activity, 
-    category: 'assessment',
-    description: 'Pain management and rehabilitation',
-    color: 'red'
-  },
-  { 
-    id: 'immune-shield', 
-    name: 'Immune Shield', 
-    nameHe: 'מגן חיסוני',
-    icon: Shield, 
-    category: 'assessment',
-    description: 'Immune system assessment',
-    color: 'blue'
-  },
-  { 
-    id: 'zang-fu-syndromes', 
-    name: 'Zang Fu Syndromes', 
-    nameHe: 'תסמונות זאנג פו',
-    icon: Target, 
-    category: 'clinical',
-    description: 'Organ syndrome differentiation',
-    color: 'emerald'
-  },
-  { 
-    id: 'pulse-tongue-diagnosis', 
-    name: 'Pulse & Tongue Diagnosis', 
-    nameHe: 'אבחון דופק ולשון',
-    icon: Eye, 
-    category: 'clinical',
-    description: 'Comprehensive pulse and tongue diagnosis',
-    color: 'rose'
-  },
-  { 
-    id: 'acupuncture-points', 
-    name: 'Acupuncture Points', 
-    nameHe: 'נקודות דיקור',
-    icon: Palette, 
-    category: 'clinical',
-    description: 'Acupuncture point reference and selection',
-    color: 'amber'
-  },
-  
-  // ROI & Business Tools
-  { 
-    id: 'roi-simulator', 
-    name: 'ROI Simulator', 
-    nameHe: 'סימולטור החזר השקעה',
-    icon: Calculator, 
-    category: 'business',
-    description: 'Return on investment calculator',
-    color: 'cyan'
-  },
-  { 
-    id: 'therapist-roi', 
-    name: 'Therapist ROI', 
-    nameHe: 'החזר השקעה למטפל',
-    icon: Calculator, 
-    category: 'business',
-    description: 'Therapist-specific ROI calculations',
-    color: 'teal'
-  },
-  { 
-    id: 'simulation-calculators', 
-    name: 'Simulation Calculators', 
-    nameHe: 'מחשבוני סימולציה',
-    icon: Calculator, 
-    category: 'business',
-    description: 'Various business simulation tools',
-    color: 'indigo'
-  },
-  
-  // Testing & Developer Tools
-  { 
-    id: 'ui-smoke-test', 
-    name: 'UI Smoke Test', 
-    nameHe: 'בדיקת עשן ממשק',
-    icon: TestTube, 
-    category: 'dev',
-    description: 'UI component testing module',
-    color: 'gray'
-  },
-  { 
-    id: 'music-test', 
-    name: 'Music Test', 
-    nameHe: 'בדיקת מוזיקה',
-    icon: Music, 
-    category: 'dev',
-    description: 'Audio and music player testing',
-    color: 'purple'
-  },
-  { 
-    id: 'private-developer', 
-    name: 'Private Developer', 
-    nameHe: 'מפתח פרטי',
-    icon: Code, 
-    category: 'dev',
-    description: 'Developer tools and utilities',
-    color: 'slate'
-  },
-  { 
-    id: 'auth', 
-    name: 'Authentication', 
-    nameHe: 'אימות',
-    icon: Lock, 
-    category: 'core',
-    description: 'User authentication and authorization',
-    color: 'red'
-  },
-  { 
-    id: 'install', 
-    name: 'Install App', 
-    nameHe: 'התקנת אפליקציה',
-    icon: Smartphone, 
-    category: 'core',
-    description: 'PWA installation module',
-    color: 'green'
-  }
-];
+// Icon mapping for modules
+const ICON_MAP: Record<string, any> = {
+  'whole-gate': TreePine,
+  'pulse-gallery': Activity,
+  'video-session': Calendar,
+  'contact': Contact,
+  'retreat-quiz': ClipboardCheck,
+  'invite': Users,
+  'caf-clinical-browser': Stethoscope,
+  'vitality-longevity': Heart,
+  'patient-questionnaire': ClipboardCheck,
+  'admin': Settings,
+  'encyclopedia': BookOpen,
+  'internal-climate': Sun,
+  'balance-strengthening': Shield,
+  'golden-age-vitality': Sparkles,
+  'longevity-dignity': Heart,
+  'nourishing-life': Leaf,
+  'mental-clarity': Brain,
+  'pain-rehabilitation': Activity,
+  'immune-shield': Shield,
+  'zang-fu-syndromes': Target,
+  'pulse-tongue-diagnosis': Eye,
+  'acupuncture-points': Palette,
+  'roi-simulator': Calculator,
+  'therapist-roi': Calculator,
+  'simulation-calculators': Calculator,
+  'ui-smoke-test': TestTube,
+  'music-test': Music,
+  'private-developer': Code,
+  'auth': Lock,
+  'install': Smartphone,
+  'crm': Users,
+  'knowledge-registry': Database,
+  'tcm-brain': Brain,
+  'clinical-trials': Stethoscope
+};
+
+// Color mapping for categories
+const CATEGORY_COLORS: Record<string, string> = {
+  core: 'emerald',
+  clinical: 'teal',
+  crm: 'blue',
+  assessment: 'amber',
+  knowledge: 'purple',
+  business: 'cyan',
+  admin: 'gray',
+  dev: 'slate'
+};
 
 // Category definitions
 const CATEGORIES = [
-  { id: 'core', name: 'Core Modules', nameHe: 'מודולים ליבתיים', color: 'emerald' },
-  { id: 'clinical', name: 'Clinical Tools', nameHe: 'כלים קליניים', color: 'teal' },
-  { id: 'crm', name: 'CRM & Sessions', nameHe: 'CRM ופגישות', color: 'blue' },
-  { id: 'assessment', name: 'Assessments', nameHe: 'הערכות', color: 'amber' },
-  { id: 'knowledge', name: 'Knowledge Base', nameHe: 'מאגר ידע', color: 'purple' },
-  { id: 'business', name: 'Business Tools', nameHe: 'כלי עסקים', color: 'cyan' },
-  { id: 'admin', name: 'Administration', nameHe: 'ניהול', color: 'gray' },
-  { id: 'dev', name: 'Developer Tools', nameHe: 'כלי פיתוח', color: 'slate' }
+  { id: 'core', name: 'Core Modules', nameHe: 'מודולים ליבתיים' },
+  { id: 'clinical', name: 'Clinical Tools', nameHe: 'כלים קליניים' },
+  { id: 'crm', name: 'CRM & Sessions', nameHe: 'CRM ופגישות' },
+  { id: 'assessment', name: 'Assessments', nameHe: 'הערכות' },
+  { id: 'knowledge', name: 'Knowledge Base', nameHe: 'מאגר ידע' },
+  { id: 'business', name: 'Business Tools', nameHe: 'כלי עסקים' },
+  { id: 'admin', name: 'Administration', nameHe: 'ניהול' },
+  { id: 'dev', name: 'Developer Tools', nameHe: 'כלי פיתוח' }
 ];
 
-// Get color classes based on module color
-function getColorClasses(color: string) {
+// Get color classes based on category
+function getColorClasses(category: string) {
+  const color = CATEGORY_COLORS[category] || 'gray';
   const colorMap: Record<string, { bg: string; border: string; text: string; hover: string }> = {
     emerald: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-500', hover: 'hover:border-emerald-500/50' },
-    rose: { bg: 'bg-rose-500/10', border: 'border-rose-500/30', text: 'text-rose-500', hover: 'hover:border-rose-500/50' },
-    blue: { bg: 'bg-blue-500/10', border: 'border-blue-500/30', text: 'text-blue-500', hover: 'hover:border-blue-500/50' },
-    slate: { bg: 'bg-slate-500/10', border: 'border-slate-500/30', text: 'text-slate-500', hover: 'hover:border-slate-500/50' },
-    amber: { bg: 'bg-amber-500/10', border: 'border-amber-500/30', text: 'text-amber-500', hover: 'hover:border-amber-500/50' },
-    indigo: { bg: 'bg-indigo-500/10', border: 'border-indigo-500/30', text: 'text-indigo-500', hover: 'hover:border-indigo-500/50' },
     teal: { bg: 'bg-teal-500/10', border: 'border-teal-500/30', text: 'text-teal-500', hover: 'hover:border-teal-500/50' },
-    red: { bg: 'bg-red-500/10', border: 'border-red-500/30', text: 'text-red-500', hover: 'hover:border-red-500/50' },
+    blue: { bg: 'bg-blue-500/10', border: 'border-blue-500/30', text: 'text-blue-500', hover: 'hover:border-blue-500/50' },
+    amber: { bg: 'bg-amber-500/10', border: 'border-amber-500/30', text: 'text-amber-500', hover: 'hover:border-amber-500/50' },
+    purple: { bg: 'bg-purple-500/10', border: 'border-purple-500/30', text: 'text-purple-500', hover: 'hover:border-purple-500/50' },
     cyan: { bg: 'bg-cyan-500/10', border: 'border-cyan-500/30', text: 'text-cyan-500', hover: 'hover:border-cyan-500/50' },
     gray: { bg: 'bg-gray-500/10', border: 'border-gray-500/30', text: 'text-gray-500', hover: 'hover:border-gray-500/50' },
-    purple: { bg: 'bg-purple-500/10', border: 'border-purple-500/30', text: 'text-purple-500', hover: 'hover:border-purple-500/50' },
-    orange: { bg: 'bg-orange-500/10', border: 'border-orange-500/30', text: 'text-orange-500', hover: 'hover:border-orange-500/50' },
-    green: { bg: 'bg-green-500/10', border: 'border-green-500/30', text: 'text-green-500', hover: 'hover:border-green-500/50' },
-    yellow: { bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', text: 'text-yellow-500', hover: 'hover:border-yellow-500/50' },
-    pink: { bg: 'bg-pink-500/10', border: 'border-pink-500/30', text: 'text-pink-500', hover: 'hover:border-pink-500/50' },
-    lime: { bg: 'bg-lime-500/10', border: 'border-lime-500/30', text: 'text-lime-500', hover: 'hover:border-lime-500/50' },
-    violet: { bg: 'bg-violet-500/10', border: 'border-violet-500/30', text: 'text-violet-500', hover: 'hover:border-violet-500/50' },
+    slate: { bg: 'bg-slate-500/10', border: 'border-slate-500/30', text: 'text-slate-500', hover: 'hover:border-slate-500/50' },
   };
   return colorMap[color] || colorMap.gray;
 }
 
-// Download module as ZIP
-async function downloadModule(module: typeof MODULES[0]) {
+/**
+ * Generate comprehensive README for a module
+ */
+function generateModuleReadme(module: ModuleFileMapping): string {
+  const fileCount = getModuleFileCount(module);
+  const category = CATEGORIES.find(c => c.id === module.category);
+  
+  return `# ${module.name}
+## ${module.nameHe}
+
+**Category:** ${category?.name || module.category}
+**Description:** ${module.description}
+**Total Files:** ${fileCount}
+**Generated:** ${new Date().toISOString()}
+
+---
+
+## 📁 File Structure
+
+### Pages (${module.files.pages.length})
+${module.files.pages.length > 0 ? module.files.pages.map(f => `- \`${f}\``).join('\n') : '_No pages_'}
+
+### Components (${module.files.components.length})
+${module.files.components.length > 0 ? module.files.components.map(f => `- \`${f}\``).join('\n') : '_No components_'}
+
+### Hooks (${module.files.hooks.length})
+${module.files.hooks.length > 0 ? module.files.hooks.map(f => `- \`${f}\``).join('\n') : '_No hooks_'}
+
+### Utilities (${module.files.utils.length})
+${module.files.utils.length > 0 ? module.files.utils.map(f => `- \`${f}\``).join('\n') : '_No utilities_'}
+
+### Contexts (${module.files.contexts.length})
+${module.files.contexts.length > 0 ? module.files.contexts.map(f => `- \`${f}\``).join('\n') : '_No contexts_'}
+
+### Data Files (${module.files.data.length})
+${module.files.data.length > 0 ? module.files.data.map(f => `- \`${f}\``).join('\n') : '_No data files_'}
+
+### Config (${module.files.config.length})
+${module.files.config.length > 0 ? module.files.config.map(f => `- \`${f}\``).join('\n') : '_No config files_'}
+
+---
+
+## 🗄️ Database Tables
+
+${module.databaseTables.length > 0 
+  ? module.databaseTables.map(t => `- \`${t}\``).join('\n')
+  : '_No database tables required_'}
+
+---
+
+## 📦 Dependencies
+
+${module.dependencies.length > 0
+  ? module.dependencies.map(d => `- ${d}`).join('\n')
+  : '_Standard React/TypeScript dependencies only_'}
+
+---
+
+## 🔧 Installation
+
+1. Copy all files to their respective paths in your project
+2. Ensure database tables are created (see DATABASE_SCHEMA.sql)
+3. Install dependencies: \`npm install ${module.dependencies.join(' ')}\`
+4. Import and use components as needed
+
+---
+
+## 📋 Usage Example
+
+\`\`\`tsx
+import { /* Component */ } from '${module.files.pages[0] || './module'}';
+
+// Use in your app
+function App() {
+  return </* Component */ />;
+}
+\`\`\`
+
+---
+
+*Generated by TCM Clinic Module Export System*
+*Version: 1.0.0*
+`;
+}
+
+/**
+ * Generate database schema documentation
+ */
+function generateDatabaseSchema(module: ModuleFileMapping): string {
+  if (module.databaseTables.length === 0) {
+    return '-- No database tables required for this module\n';
+  }
+
+  return `-- Database Schema for ${module.name}
+-- Generated: ${new Date().toISOString()}
+-- 
+-- NOTE: These are schema references. Actual column definitions
+-- should be obtained from the main Supabase types file.
+--
+-- Tables Required:
+${module.databaseTables.map(table => `
+-- ============================================
+-- TABLE: ${table}
+-- ============================================
+-- CREATE TABLE IF NOT EXISTS public.${table} (
+--   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+--   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+--   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+--   -- Additional columns defined in src/integrations/supabase/types.ts
+-- );
+--
+-- Enable Row Level Security
+-- ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY;
+`).join('\n')}
+
+-- For complete schema definitions, refer to:
+-- src/integrations/supabase/types.ts
+`;
+}
+
+/**
+ * Generate file manifest
+ */
+function generateFileManifest(module: ModuleFileMapping): string {
+  const allFiles = [
+    ...module.files.pages.map(f => ({ path: f, type: 'page' })),
+    ...module.files.components.map(f => ({ path: f, type: 'component' })),
+    ...module.files.hooks.map(f => ({ path: f, type: 'hook' })),
+    ...module.files.utils.map(f => ({ path: f, type: 'utility' })),
+    ...module.files.contexts.map(f => ({ path: f, type: 'context' })),
+    ...module.files.data.map(f => ({ path: f, type: 'data' })),
+    ...module.files.config.map(f => ({ path: f, type: 'config' }))
+  ];
+
+  return `FILE MANIFEST: ${module.name}
+${'='.repeat(60)}
+Generated: ${new Date().toISOString()}
+Total Files: ${allFiles.length}
+
+${allFiles.map((f, i) => `${String(i + 1).padStart(3, '0')}. [${f.type.toUpperCase().padEnd(10)}] ${f.path}`).join('\n')}
+
+${'='.repeat(60)}
+End of manifest
+`;
+}
+
+/**
+ * Generate implementation notes
+ */
+function generateImplementationNotes(module: ModuleFileMapping): string {
+  return `# Implementation Notes: ${module.name}
+
+## Overview
+${module.description}
+
+## Tech Stack
+- **Framework:** React 18+ with TypeScript
+- **Styling:** Tailwind CSS + Shadcn/UI
+- **State Management:** React Query + Context API
+- **Backend:** Supabase (PostgreSQL, Auth, Storage)
+- **Animations:** Framer Motion
+
+## Key Dependencies
+${module.dependencies.map(d => `- ${d}`).join('\n') || '- No additional dependencies'}
+
+## Database Integration
+${module.databaseTables.length > 0 
+  ? `This module uses the following tables:\n${module.databaseTables.map(t => `- ${t}`).join('\n')}`
+  : 'This module does not require database access.'}
+
+## Security Considerations
+- All database tables should have RLS (Row Level Security) enabled
+- User authentication is required for data access
+- Sensitive operations should be validated server-side
+
+## File Organization
+\`\`\`
+${module.id}/
+├── pages/           # Main page components
+├── components/      # Reusable UI components  
+├── hooks/           # Custom React hooks
+├── utils/           # Utility functions
+├── contexts/        # React contexts for state
+├── data/            # Static data files
+└── config/          # Configuration files
+\`\`\`
+
+## Integration Points
+1. **Authentication:** Uses \`useAuth\` hook from \`src/hooks/useAuth.ts\`
+2. **Data Fetching:** Uses \`@tanstack/react-query\` for caching
+3. **Supabase Client:** Import from \`src/integrations/supabase/client.ts\`
+4. **UI Components:** Import from \`src/components/ui/\`
+
+## Testing
+- Unit tests should cover utility functions and hooks
+- Component tests should verify rendering and user interactions
+- Integration tests should verify database operations
+
+---
+*TCM Clinic Module Documentation*
+`;
+}
+
+// Download module as ZIP with comprehensive content
+async function downloadModule(module: ModuleFileMapping) {
   toast.loading(`Preparing ${module.name}...`, { id: `download-${module.id}` });
   
   try {
     const zip = new JSZip();
+    const fileCount = getModuleFileCount(module);
     
-    // Create README
-    const readme = `# ${module.name}
-## ${module.nameHe}
-
-**Category:** ${CATEGORIES.find(c => c.id === module.category)?.name || module.category}
-**Description:** ${module.description}
-**Generated:** ${new Date().toISOString()}
-
-## Overview
-This module is part of the TCM Clinic Management System.
-
-## Files Included
-- README.md (this file)
-- MODULE_INFO.json
-- IMPLEMENTATION_NOTES.md
-
-## Implementation
-Please refer to the main project repository for the complete source code.
-
----
-*Generated by TCM Clinic Module Export System*
-`;
+    // Add README
+    zip.file('README.md', generateModuleReadme(module));
     
-    zip.file('README.md', readme);
+    // Add file manifest
+    zip.file('FILE_MANIFEST.txt', generateFileManifest(module));
     
-    // Create module info JSON
+    // Add database schema
+    zip.file('DATABASE_SCHEMA.sql', generateDatabaseSchema(module));
+    
+    // Add implementation notes
+    zip.file('IMPLEMENTATION_NOTES.md', generateImplementationNotes(module));
+    
+    // Add module info JSON
     const moduleInfo = {
       id: module.id,
       name: module.name,
       nameHe: module.nameHe,
       category: module.category,
       description: module.description,
+      fileCount,
+      databaseTables: module.databaseTables,
+      dependencies: module.dependencies,
       exportDate: new Date().toISOString(),
       version: '1.0.0'
     };
     zip.file('MODULE_INFO.json', JSON.stringify(moduleInfo, null, 2));
     
-    // Create implementation notes
-    const implNotes = `# Implementation Notes for ${module.name}
-
-## Dependencies
-- React 18+
-- TypeScript 5+
-- Tailwind CSS
-- Shadcn/UI Components
-- Supabase (Backend)
-- React Query (Data fetching)
-- Framer Motion (Animations)
-
-## Database Tables
-Refer to DATABASE_SCHEMA.md in the main export for table structures.
-
-## Integration Points
-- Authentication: Uses Supabase Auth
-- Data Storage: Supabase PostgreSQL
-- File Storage: Supabase Storage
-- State Management: React Query + Context
-
-## Notes
-- Ensure all RLS policies are configured
-- Check environment variables are set
-- Test with sample data before production use
-`;
-    zip.file('IMPLEMENTATION_NOTES.md', implNotes);
+    // Create source file stubs organized by type
+    const sourceFolder = zip.folder('source');
+    if (sourceFolder) {
+      // Pages
+      if (module.files.pages.length > 0) {
+        const pagesFolder = sourceFolder.folder('pages');
+        module.files.pages.forEach(path => {
+          const fileName = path.split('/').pop() || 'unknown.tsx';
+          pagesFolder?.file(fileName, `// Source: ${path}\n// Copy this file from the main project\n\nexport {};\n`);
+        });
+      }
+      
+      // Components
+      if (module.files.components.length > 0) {
+        const componentsFolder = sourceFolder.folder('components');
+        module.files.components.forEach(path => {
+          const fileName = path.split('/').pop() || 'unknown.tsx';
+          componentsFolder?.file(fileName, `// Source: ${path}\n// Copy this file from the main project\n\nexport {};\n`);
+        });
+      }
+      
+      // Hooks
+      if (module.files.hooks.length > 0) {
+        const hooksFolder = sourceFolder.folder('hooks');
+        module.files.hooks.forEach(path => {
+          const fileName = path.split('/').pop() || 'unknown.ts';
+          hooksFolder?.file(fileName, `// Source: ${path}\n// Copy this file from the main project\n\nexport {};\n`);
+        });
+      }
+      
+      // Utils
+      if (module.files.utils.length > 0) {
+        const utilsFolder = sourceFolder.folder('utils');
+        module.files.utils.forEach(path => {
+          const fileName = path.split('/').pop() || 'unknown.ts';
+          utilsFolder?.file(fileName, `// Source: ${path}\n// Copy this file from the main project\n\nexport {};\n`);
+        });
+      }
+      
+      // Contexts
+      if (module.files.contexts.length > 0) {
+        const contextsFolder = sourceFolder.folder('contexts');
+        module.files.contexts.forEach(path => {
+          const fileName = path.split('/').pop() || 'unknown.tsx';
+          contextsFolder?.file(fileName, `// Source: ${path}\n// Copy this file from the main project\n\nexport {};\n`);
+        });
+      }
+      
+      // Data
+      if (module.files.data.length > 0) {
+        const dataFolder = sourceFolder.folder('data');
+        module.files.data.forEach(path => {
+          const fileName = path.split('/').pop() || 'unknown.ts';
+          dataFolder?.file(fileName, `// Source: ${path}\n// Copy this file from the main project\n\nexport {};\n`);
+        });
+      }
+      
+      // Config
+      if (module.files.config.length > 0) {
+        const configFolder = sourceFolder.folder('config');
+        module.files.config.forEach(path => {
+          const fileName = path.split('/').pop() || 'unknown.ts';
+          configFolder?.file(fileName, `// Source: ${path}\n// Copy this file from the main project\n\nexport {};\n`);
+        });
+      }
+    }
     
     // Generate ZIP
     const blob = await zip.generateAsync({ type: 'blob' });
@@ -416,7 +412,7 @@ Refer to DATABASE_SCHEMA.md in the main export for table structures.
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     
-    toast.success(`${module.name} downloaded successfully!`, { id: `download-${module.id}` });
+    toast.success(`${module.name} downloaded! (${fileCount} files)`, { id: `download-${module.id}` });
   } catch (error) {
     console.error('Download error:', error);
     toast.error(`Failed to download ${module.name}`, { id: `download-${module.id}` });
@@ -429,47 +425,66 @@ async function downloadAllModules() {
   
   try {
     const zip = new JSZip();
+    const totalFiles = MODULE_FILE_MAPPINGS.reduce((sum, m) => sum + getModuleFileCount(m), 0);
     
     // Create main README
     const mainReadme = `# TCM Clinic - Complete Module Export
 **Generated:** ${new Date().toISOString()}
-**Total Modules:** ${MODULES.length}
+**Total Modules:** ${MODULE_FILE_MAPPINGS.length}
+**Total Files:** ${totalFiles}
 
 ## Categories
 ${CATEGORIES.map(cat => {
-  const count = MODULES.filter(m => m.category === cat.id).length;
-  return `- **${cat.name}** (${cat.nameHe}): ${count} modules`;
+  const modules = MODULE_FILE_MAPPINGS.filter(m => m.category === cat.id);
+  const files = modules.reduce((sum, m) => sum + getModuleFileCount(m), 0);
+  return `- **${cat.name}** (${cat.nameHe}): ${modules.length} modules, ${files} files`;
 }).join('\n')}
 
 ## Modules List
-${MODULES.map((m, i) => `${i + 1}. ${m.name} - ${m.nameHe}`).join('\n')}
+${MODULE_FILE_MAPPINGS.map((m, i) => {
+  const fileCount = getModuleFileCount(m);
+  return `${String(i + 1).padStart(2, '0')}. **${m.name}** - ${m.nameHe} (${fileCount} files)`;
+}).join('\n')}
+
+## Quick Start
+1. Extract all modules to your project
+2. Install dependencies from each module's package requirements
+3. Set up database tables using the SQL schemas provided
+4. Import and use components as needed
 
 ---
-*TCM Clinic Module Export System*
+*TCM Clinic Module Export System v1.0*
 `;
     zip.file('README.md', mainReadme);
     
-    // Create module list Excel-compatible CSV
+    // Create master CSV
     const csvContent = [
-      '\ufeff' + 'Module ID,Name (EN),Name (HE),Category,Description',
-      ...MODULES.map(m => 
-        `"${m.id}","${m.name}","${m.nameHe}","${m.category}","${m.description}"`
+      '\ufeff' + 'Module ID,Name (EN),Name (HE),Category,Description,File Count,Database Tables,Dependencies',
+      ...MODULE_FILE_MAPPINGS.map(m => 
+        `"${m.id}","${m.name}","${m.nameHe}","${m.category}","${m.description}","${getModuleFileCount(m)}","${m.databaseTables.join('; ')}","${m.dependencies.join('; ')}"`
       )
     ].join('\n');
     zip.file('MODULES_LIST.csv', csvContent);
     
     // Add each module as a folder
-    for (const mod of MODULES) {
+    for (const mod of MODULE_FILE_MAPPINGS) {
       const folder = zip.folder(mod.id);
       if (folder) {
+        folder.file('README.md', generateModuleReadme(mod));
         folder.file('MODULE_INFO.json', JSON.stringify({
           id: mod.id,
           name: mod.name,
           nameHe: mod.nameHe,
           category: mod.category,
-          description: mod.description
+          description: mod.description,
+          fileCount: getModuleFileCount(mod),
+          files: mod.files,
+          databaseTables: mod.databaseTables,
+          dependencies: mod.dependencies
         }, null, 2));
-        folder.file('README.md', `# ${mod.name}\n${mod.description}`);
+        folder.file('FILE_MANIFEST.txt', generateFileManifest(mod));
+        folder.file('DATABASE_SCHEMA.sql', generateDatabaseSchema(mod));
+        folder.file('IMPLEMENTATION_NOTES.md', generateImplementationNotes(mod));
       }
     }
     
@@ -484,7 +499,7 @@ ${MODULES.map((m, i) => `${i + 1}. ${m.name} - ${m.nameHe}`).join('\n')}
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     
-    toast.success(`All ${MODULES.length} modules downloaded!`, { id: 'download-all' });
+    toast.success(`All ${MODULE_FILE_MAPPINGS.length} modules downloaded! (${totalFiles} total files)`, { id: 'download-all' });
   } catch (error) {
     console.error('Download error:', error);
     toast.error('Failed to download modules', { id: 'download-all' });
@@ -495,8 +510,10 @@ export default function ModuleDownloads() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
   const filteredModules = selectedCategory 
-    ? MODULES.filter(m => m.category === selectedCategory)
-    : MODULES;
+    ? MODULE_FILE_MAPPINGS.filter(m => m.category === selectedCategory)
+    : MODULE_FILE_MAPPINGS;
+  
+  const totalFiles = MODULE_FILE_MAPPINGS.reduce((sum, m) => sum + getModuleFileCount(m), 0);
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -519,14 +536,14 @@ export default function ModuleDownloads() {
                 Module Downloads
               </h1>
               <p className="text-muted-foreground mt-1">
-                הורדת מודולים | Download all system modules as ZIP files
+                הורדת מודולים | Download system modules with full documentation
               </p>
             </div>
           </div>
           
           <Button onClick={downloadAllModules} size="lg" className="gap-2">
             <FileArchive className="h-5 w-5" />
-            Download All ({MODULES.length})
+            Download All ({MODULE_FILE_MAPPINGS.length})
           </Button>
         </motion.div>
 
@@ -542,10 +559,11 @@ export default function ModuleDownloads() {
             size="sm"
             onClick={() => setSelectedCategory(null)}
           >
-            All ({MODULES.length})
+            All ({MODULE_FILE_MAPPINGS.length})
           </Button>
           {CATEGORIES.map(cat => {
-            const count = MODULES.filter(m => m.category === cat.id).length;
+            const count = MODULE_FILE_MAPPINGS.filter(m => m.category === cat.id).length;
+            if (count === 0) return null;
             return (
               <Button
                 key={cat.id}
@@ -568,20 +586,20 @@ export default function ModuleDownloads() {
         >
           <Card className="border-primary/20">
             <CardContent className="p-4 text-center">
-              <p className="text-3xl font-bold text-primary">{MODULES.length}</p>
+              <p className="text-3xl font-bold text-primary">{MODULE_FILE_MAPPINGS.length}</p>
               <p className="text-sm text-muted-foreground">Total Modules</p>
             </CardContent>
           </Card>
           <Card className="border-emerald-500/20">
             <CardContent className="p-4 text-center">
-              <p className="text-3xl font-bold text-emerald-500">{CATEGORIES.length}</p>
-              <p className="text-sm text-muted-foreground">Categories</p>
+              <p className="text-3xl font-bold text-emerald-500">{totalFiles}</p>
+              <p className="text-sm text-muted-foreground">Source Files</p>
             </CardContent>
           </Card>
           <Card className="border-amber-500/20">
             <CardContent className="p-4 text-center">
               <p className="text-3xl font-bold text-amber-500">
-                {MODULES.filter(m => m.category === 'assessment').length}
+                {MODULE_FILE_MAPPINGS.filter(m => m.category === 'assessment').length}
               </p>
               <p className="text-sm text-muted-foreground">Assessments</p>
             </CardContent>
@@ -589,9 +607,9 @@ export default function ModuleDownloads() {
           <Card className="border-teal-500/20">
             <CardContent className="p-4 text-center">
               <p className="text-3xl font-bold text-teal-500">
-                {MODULES.filter(m => m.category === 'clinical').length}
+                {new Set(MODULE_FILE_MAPPINGS.flatMap(m => m.databaseTables)).size}
               </p>
-              <p className="text-sm text-muted-foreground">Clinical Tools</p>
+              <p className="text-sm text-muted-foreground">DB Tables</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -599,9 +617,10 @@ export default function ModuleDownloads() {
         {/* Module Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredModules.map((module, index) => {
-            const colors = getColorClasses(module.color);
-            const Icon = module.icon;
+            const colors = getColorClasses(module.category);
+            const Icon = ICON_MAP[module.id] || Package;
             const category = CATEGORIES.find(c => c.id === module.category);
+            const fileCount = getModuleFileCount(module);
             
             return (
               <motion.div
@@ -619,9 +638,15 @@ export default function ModuleDownloads() {
                       <div className={`w-10 h-10 rounded-lg ${colors.bg} flex items-center justify-center`}>
                         <Icon className={`h-5 w-5 ${colors.text}`} />
                       </div>
-                      <Badge variant="secondary" className="text-[10px]">
-                        {category?.name || module.category}
-                      </Badge>
+                      <div className="flex flex-col items-end gap-1">
+                        <Badge variant="secondary" className="text-[10px]">
+                          {category?.name || module.category}
+                        </Badge>
+                        <Badge variant="outline" className="text-[9px] gap-1">
+                          <FileCode className="h-2.5 w-2.5" />
+                          {fileCount} files
+                        </Badge>
+                      </div>
                     </div>
                     <CardTitle className="text-sm mt-3 flex items-center gap-2">
                       {module.name}
@@ -632,9 +657,15 @@ export default function ModuleDownloads() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <p className="text-xs text-muted-foreground line-clamp-2">
+                    <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
                       {module.description}
                     </p>
+                    {module.databaseTables.length > 0 && (
+                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                        <Database className="h-3 w-3" />
+                        <span>{module.databaseTables.length} tables</span>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </motion.div>
@@ -647,10 +678,10 @@ export default function ModuleDownloads() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="mt-8 text-center text-sm text-muted-foreground"
+          className="mt-8 text-center text-sm text-muted-foreground space-y-1"
         >
-          <p>Click any module box to download it as a ZIP file</p>
-          <p className="mt-1">Or use "Download All" to get everything in one archive</p>
+          <p>Click any module box to download it as a ZIP file with full documentation</p>
+          <p>Each ZIP includes: README, file manifest, database schema, and implementation notes</p>
         </motion.div>
       </div>
     </div>
